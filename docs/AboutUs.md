@@ -9,15 +9,15 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### John Doe
+### Win Htut Khaung Soe
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/winhks25.png" width="200px">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/johndoe)]
+[[homepage](https://winhks25.github.io/winhtutkhaungsoe/)]
+[[github](https://github.com/winhks25)]
 [[portfolio](team/johndoe.md)]
 
-* Role: Project Advisor
+* Role: Project Lead
 
 ### Jane Doe
 
