@@ -6,6 +6,7 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_REMARK_AMY;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -90,8 +91,8 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_remark() throws Exception {
-        assertTrue(parser.parseCommand(RemarkCommand.COMMAND_WORD) instanceof RemarkCommand);
-        assertTrue(parser.parseCommand(RemarkCommand.COMMAND_WORD + " 3") instanceof RemarkCommand);
+        assertEquals(new RemarkCommand(INDEX_FIRST_PERSON, VALID_REMARK_AMY), parser.parseCommand(
+                RemarkCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased() + " r/" + VALID_REMARK_AMY));
     }
 
     @Test
