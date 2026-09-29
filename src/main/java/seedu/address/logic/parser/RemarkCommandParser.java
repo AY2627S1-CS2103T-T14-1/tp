@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_REMARK;
 
@@ -19,15 +20,12 @@ public class RemarkCommandParser implements Parser<RemarkCommand> {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public RemarkCommand parse(String args) throws ParseException {
+        requireNonNull(args);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_REMARK);
-
-        if (!argMultimap.getValue(PREFIX_REMARK).isPresent()) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, RemarkCommand.MESSAGE_USAGE));
-        }
 
         try {
             Index index = ParserUtil.parseIndex(argMultimap.getPreamble());
-            String remark = argMultimap.getValue(PREFIX_REMARK).get();
+            String remark = argMultimap.getValue(PREFIX_REMARK).orElse("");
             return new RemarkCommand(index, remark);
         } catch (ParseException pe) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, RemarkCommand.MESSAGE_USAGE), pe);
