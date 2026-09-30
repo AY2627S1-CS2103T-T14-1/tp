@@ -181,4 +181,27 @@ public class EditCommandTest {
         assertEquals(expected, editCommand.toString());
     }
 
+    @Test
+    public void execute_remarkOnly_updatesAndClearsRemark() throws Exception {
+        Person original = model.getFilteredPersonList().get(0);
+        Person withRemark = new PersonBuilder(original).withRemark("Likes to swim.").build();
+        new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder().withRemark("Likes to swim.").build())
+                .execute(model);
+        assertEquals(withRemark, model.getFilteredPersonList().get(0));
+
+        new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder().withRemark("").build()).execute(model);
+        assertEquals(original, model.getFilteredPersonList().get(0));
+    }
+
+    @Test
+    public void execute_otherFieldEdited_preservesRemark() throws Exception {
+        Person original = model.getFilteredPersonList().get(0);
+        Person withRemark = new PersonBuilder(original).withRemark("Likes to swim.").build();
+        model.setPerson(original, withRemark);
+        new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder().withPhone(VALID_PHONE_BOB).build())
+                .execute(model);
+        assertEquals(new PersonBuilder(withRemark).withPhone(VALID_PHONE_BOB).build(),
+                model.getFilteredPersonList().get(0));
+    }
+
 }

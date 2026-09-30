@@ -65,7 +65,17 @@ public class EditPersonDescriptorTest {
                 + editPersonDescriptor.getPhone().orElse(null) + ", email="
                 + editPersonDescriptor.getEmail().orElse(null) + ", address="
                 + editPersonDescriptor.getAddress().orElse(null) + ", tags="
-                + editPersonDescriptor.getTags().orElse(null) + "}";
+                + editPersonDescriptor.getTags().orElse(null) + ", remark="
+                + editPersonDescriptor.getRemark().orElse(null) + "}";
         assertEquals(expected, editPersonDescriptor.toString());
     }
+    @Test
+    public void remarkOnly_countsAsEditAndIsCopied() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withRemark("Likes to swim.").build();
+        assertTrue(descriptor.isAnyFieldEdited());
+        assertFalse(descriptor.equals(new EditPersonDescriptor()));
+        assertEquals(descriptor, new EditPersonDescriptor(descriptor));
+        assertTrue(new EditPersonDescriptorBuilder().withRemark("").build().isAnyFieldEdited());
+    }
+
 }
