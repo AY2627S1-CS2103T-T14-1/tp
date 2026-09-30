@@ -324,16 +324,39 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
+(For all use cases below, the **System** is `Fittix` and the **Actor** is the `trainer`, unless specified otherwise)
 
-**Use case: Delete a person**
+**Use case: UC01 - Add a client**
 
 **MSS**
 
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
+1.  Trainer requests to add a new client, giving the client's details.
+2.  Fittix adds the client and shows the newly added client's details.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. A compulsory detail is missing, or a detail is in an invalid format.
+
+    * 1a1. Fittix shows an error message stating the expected format.
+
+      Use case resumes at step 1.
+
+* 1b. A client with the same name and phone number already exists.
+
+    * 1b1. Fittix shows a duplicate client error and does not add the client.
+
+      Use case ends.
+
+**Use case: UC02 - Delete a client**
+
+**MSS**
+
+1.  Trainer requests to list clients.
+2.  Fittix shows a list of clients.
+3.  Trainer requests to delete a specific client in the list.
+4.  Fittix deletes the client and shows the deleted client's details.
 
     Use case ends.
 
@@ -345,24 +368,200 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 3a. The given index is invalid.
 
-    * 3a1. AddressBook shows an error message.
+    * 3a1. Fittix shows an error message.
 
       Use case resumes at step 2.
 
-*{More to be added}*
+**Use case: UC03 - Find a client by name**
+
+**MSS**
+
+1.  Trainer requests to find clients whose names match a given keyword.
+2.  Fittix shows the list of matching clients.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. No keyword is given.
+
+    * 1a1. Fittix shows an error message stating the expected format.
+
+      Use case resumes at step 1.
+
+* 2a. No client matches the keyword.
+
+    * 2a1. Fittix shows an empty list and states that no client matched.
+
+      Use case ends.
+
+**Use case: UC04 - Log a completed workout session**
+
+**MSS**
+
+1.  Trainer requests to list clients.
+2.  Fittix shows a list of clients.
+3.  Trainer requests to log a completed session for a specific client in the list, giving the exercise, weight, sets and repetitions.
+4.  Fittix records the session against that client and shows the logged entry.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. The given index is invalid.
+
+    * 3a1. Fittix shows an error message.
+
+      Use case resumes at step 2.
+
+* 3b. The weight, sets or repetitions is not a positive number.
+
+    * 3b1. Fittix shows an error message stating the expected format.
+
+      Use case resumes at step 3.
+
+**Use case: UC05 - View a client's workout history**
+
+**MSS**
+
+1.  Trainer requests to list clients.
+2.  Fittix shows a list of clients.
+3.  Trainer requests to view the workout history of a specific client in the list.
+4.  Fittix shows that client's logged sessions, most recent first.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. The given index is invalid.
+
+    * 3a1. Fittix shows an error message.
+
+      Use case resumes at step 2.
+
+* 4a. The client has no logged sessions.
+
+    * 4a1. Fittix states that no sessions have been logged for that client.
+
+      Use case ends.
+
+**Use case: UC06 - Record a workout plan for a client**
+
+**MSS**
+
+1.  Trainer requests to list clients.
+2.  Fittix shows a list of clients.
+3.  Trainer requests to set the workout plan of a specific client in the list.
+4.  Fittix saves the plan as that client's current workout plan and shows the updated plan.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. The given index is invalid.
+
+    * 3a1. Fittix shows an error message.
+
+      Use case resumes at step 2.
+
+* 3b. The client already has a current workout plan.
+
+    * 3b1. Fittix replaces the existing plan and states that the previous plan was overwritten.
+
+      Use case ends.
+
+**Use case: UC07 - Record a diet plan for a client**
+
+**MSS**
+
+1.  Trainer requests to list clients.
+2.  Fittix shows a list of clients.
+3.  Trainer requests to set the diet plan of a specific client in the list.
+4.  Fittix saves the plan as that client's current diet plan and shows the updated plan.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. The given index is invalid.
+
+    * 3a1. Fittix shows an error message.
+
+      Use case resumes at step 2.
+
+* 3b. The client has recorded dietary restrictions.
+
+    * 3b1. Fittix saves the plan and displays the client's dietary restrictions alongside it.
+
+      Use case ends.
+
+**Use case: UC08 - Schedule a session with a client**
+
+**MSS**
+
+1.  Trainer requests to list clients.
+2.  Fittix shows a list of clients.
+3.  Trainer requests to schedule a session for a specific client in the list, giving the date, time and location.
+4.  Fittix saves the appointment and shows the client's updated schedule.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. The date or time is in an invalid format, or is in the past.
+
+    * 3a1. Fittix shows an error message stating the expected format.
+
+      Use case resumes at step 3.
+
+* 3b. The requested time overlaps an existing appointment.
+
+    * 3b1. Fittix shows a clash warning naming the conflicting client and does not save the appointment.
+
+      Use case ends.
 
 ### Non-Functional Requirements
 
-1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
-2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
-3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
+**Technical and environment**
 
-*{More to be added}*
+1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed, without requiring any other installation.
+2.  Should be delivered as a single JAR file of at most 100MB that runs without an installer.
+3.  Should work fully offline, with no dependency on a remote server or network connection.
+
+**Performance and capacity**
+
+4.  Should be able to hold up to 1000 clients without noticeable sluggishness in performance for typical usage.
+5.  Every command should return a visible response within 2 seconds when the data file holds 1000 clients.
+6.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
+7.  Logging a completed workout session should require a single command line, so that a user with above average typing speed can complete it in under 15 seconds between sets.
+
+**Data and reliability**
+
+8.  Data should be saved to disk after every command that modifies it, so an unexpected shutdown loses at most the command in progress.
+9.  Data should be stored locally in a human editable text file, with no database management system.
+10. If the data file is missing or unreadable, the app should start with an empty data set rather than fail to launch.
+
+**Usability and privacy**
+
+11. Error messages should state what was rejected and the expected format, so the user can correct the command without consulting the user guide.
+12. The GUI should be usable at a screen resolution of 1280x720 and above, and remain readable at 150% display scaling.
+13. Dates and times should be displayed in one consistent, unambiguous format throughout the app.
+14. A shareable client summary should exclude _private contact details_ and the client's home address.
+
+**Product scope constraints**
+
+15. The product is for a single user; it should not support concurrent access to the same data file by multiple users.
+16. The product should not require the user to log in or create an account.
 
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
 * **Private contact detail**: A contact detail that is not meant to be shared with others
+* **Client**: A person the trainer trains, stored as a record in Fittix
+* **Session**: One completed training appointment, logged with the exercises, weights, sets and repetitions performed
+* **Package**: A block of prepaid sessions (typically 10 or 20) bought by a client
+* **Workout plan**: The client's current prescribed set of exercises; a client has at most one at a time
+* **Diet plan**: The client's current prescribed eating guidance; a client has at most one at a time
 
 --------------------------------------------------------------------------------------------------------------------
 
