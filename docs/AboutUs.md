@@ -9,15 +9,14 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### John Doe
+### Win Htut Khaung Soe
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/winhks25.png" width="200px">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[homepage](https://winhks25.github.io/winhtutkhaungsoe/)]
+[[github](https://github.com/winhks25)]
 
-* Role: Project Advisor
+* Role: Project Lead
 
 ### Jane Doe
 
@@ -29,14 +28,14 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 * Role: Team Lead
 * Responsibilities: UI
 
-### Johnny Doe
+### Pham Doan Gia Hien
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/hienpahm.png" width="200px">
 
-[[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
+[[github](https://github.com/HienPahm)]
 
 * Role: Developer
-* Responsibilities: Data
+* Responsibilities: Training schedule management
 
 ### Jean Doe
 
@@ -48,11 +47,11 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 * Role: Developer
 * Responsibilities: Dev Ops + Threading
 
-### James Doe
+### Zhang Kaiwen
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/zkw2004.png" width="200px">
 
-[[github](http://github.com/johndoe)]
+[[github](https://github.com/zkw2004)]
 [[portfolio](team/johndoe.md)]
 
 * Role: Developer
