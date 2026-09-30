@@ -260,28 +260,65 @@ _{Explain here how the data archiving feature will be implemented}_
 ### Product scope
 
 **Target user profile**:
+- **Name:** Marcus
+- **Age:** 31
+- **Job:** Freelance personal trainer
+- **Experience:** 6 years
+- **Education:** Diploma in Sports & Exercise Science
+- **Location:** Commercial gym in Tampines
+- **Clients:** 28 active clients
+- **Workload:** ~32 sessions/week, starting at 6:30am
+- **Packages:** 10 or 20 sessions
+- **Payments:** Mostly PayNow
+- **Admin:** Short breaks and late nights
+- **Tech:** Laptop user, fast typist
+<small>Marcus is a sample persona representing our target user group and their typical needs, behaviours, and workflows.</small>
 
-* has a need to manage a significant number of contacts
-* prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
-* is reasonably comfortable using CLI apps
-
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+**Value proposition**:
+- **All-in-one client management:** Keep client goals, injuries, workout plans, diet plans, progress, sessions, and payments in one place.
+- **Fast and efficient:** Quickly access and update information between sessions.
+- **Progress tracking:** Easily monitor each client's fitness progress over time.
+- **Session & payment management:** Track remaining sessions, payments, and unpaid balances.
+- **Less admin work:** Reduce time spent searching through chats, notes, spreadsheets, and payment records.
 
 
 ### User stories
 
 Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
 
-| Priority | As a …​                                    | I want to …​                     | So that I can…​                                                        |
-| -------- | ------------------------------------------ | ------------------------------ | ---------------------------------------------------------------------- |
-| `* * *`  | new user                                   | see usage instructions         | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person               |                                                                        |
-| `* * *`  | user                                       | delete a person                | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name          | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details   | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name           | locate a person easily                                                 |
+| Priority | As a …​      | I want to …​                                                   | So that I can …​                                                        |
+| -------- | ------------ | -------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `* * *`  | gym trainer  | add a client's contact details                                 | contact them easily                                                     |
+| `* * *`  | gym trainer  | record a client's gym schedule                                 | schedule my business appropriately                                      |
+| `* * *`  | gym trainer  | record the workout plan for each client                        | ensure consistent progress through a consistent workout plan            |
+| `* * *`  | gym trainer  | log a completed workout session, including exercises, weights, sets, and repetitions | review the client's training history                    |
+| `* * *`  | gym trainer  | record the diet plan for each client                           | track the impact of diet on their improvement                           |
+| `* * *`  | gym trainer  | delete a former client                                         | keep my active roster uncluttered                                       |
+| `* * *`  | gym trainer  | record when and where to meet each client                      | remind myself of upcoming client sessions                               |
+| `* *`    | gym trainer  | track the body progress of each client                         | see how effective my plan is                                            |
+| `* *`    | gym trainer  | track fee payments                                             | check which clients have paid their fees                                |
+| `* *`    | gym trainer  | search for clients by name                                     | find a particular client quickly                                        |
+| `* *`    | gym trainer  | filter clients by training goal                                | work with clients who have similar objectives                           |
+| `* *`    | gym trainer  | record a client's dietary restrictions                         | ensure their diet plan is suitable for them                             |
+| `* *`    | gym trainer  | list clients with unpaid fees                                  | quickly identify which payments need to be followed up                  |
+| `* *`    | gym trainer  | check whether a proposed session time conflicts with another client | avoid accidentally double-booking myself                           |
+| `* *`    | gym trainer  | view all clients scheduled for a particular day                | quickly prepare for the clients I will be training that day             |
+| `* *`    | gym trainer  | generate a concise training summary for a client               | brief a cover trainer without sharing unnecessary personal information  |
+| `*`      | gym trainer  | edit a client's personal details                               | correct outdated or inaccurate information                             |
+| `*`      | gym trainer  | search for clients by phone number or email                    | identify a client using their contact information                       |
+| `*`      | gym trainer  | record each client's training goal                             | tailor their training towards a clear objective                         |
+| `*`      | gym trainer  | record a client's injuries and physical limitations            | avoid exercises that may be unsafe for them                             |
+| `*`      | gym trainer  | view a client's latest workout session                         | quickly know what they did previously before starting the next session  |
+| `*`      | gym trainer  | view a client's complete workout history                       | review how their training has changed over time                         |
+| `*`      | gym trainer  | edit a previously logged workout session                       | correct mistakes in weights, sets, repetitions, or exercises            |
+| `*`      | gym trainer  | record a client's starting body measurements                   | have a baseline against which future progress can be compared           |
+| `*`      | gym trainer  | view the history of a client's body measurements               | see how their body measurements have changed over time                  |
+| `*`      | gym trainer  | compare a client's latest progress with their starting measurements | clearly show the client how much progress they have made            |
+| `*`      | gym trainer  | record the number of sessions purchased by a client            | keep track of their training package                                    |
+| `*`      | gym trainer  | view the number of sessions remaining in a client's package    | know when a client is close to needing a renewal                        |
+| `*`      | gym trainer  | record a completed session against a client's package          | keep the remaining number of sessions accurate                          |
+| `*`      | gym trainer  | list clients whose packages are running low                    | ask them about renewal before their package runs out                    |
+| `*`      | gym trainer  | list clients I have not trained recently                       | identify clients who may be becoming inactive                           |
 
 *{More to be added}*
 
