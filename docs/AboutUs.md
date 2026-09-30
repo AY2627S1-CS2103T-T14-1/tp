@@ -47,11 +47,11 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 * Role: Developer
 * Responsibilities: Dev Ops + Threading
 
-### James Doe
+### Zhang Kaiwen
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/zkw2004.png" width="200px">
 
-[[github](http://github.com/johndoe)]
+[[github](https://github.com/zkw2004)]
 [[portfolio](team/johndoe.md)]
 
 * Role: Developer
