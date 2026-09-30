@@ -15,7 +15,6 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 [[homepage](https://winhks25.github.io/winhtutkhaungsoe/)]
 [[github](https://github.com/winhks25)]
-[[portfolio](team/johndoe.md)]
 
 * Role: Project Lead
 
