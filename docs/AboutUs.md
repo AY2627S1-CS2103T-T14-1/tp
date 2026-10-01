@@ -45,7 +45,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Developer
 * Responsibilities: Workout session logging
-* 
+
 ### Zhang Kaiwen
 
 <img src="images/zkw2004.png" width="200px">
