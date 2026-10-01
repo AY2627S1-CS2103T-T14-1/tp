@@ -18,15 +18,15 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Project Lead
 
-### Jane Doe
+### Dao Anh Khoa
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/itzkhoadao.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[homepage](https://www.linkedin.com/in/anhkhoadao/)]
+[[github](https://github.com/itzkhoadao)]
 
-* Role: Team Lead
-* Responsibilities: UI
+* Role: Developer
+* Responsibilities: Diet plan management
 
 ### Pham Doan Gia Hien
 
