@@ -18,14 +18,15 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Project Lead
 
-### Frederico Samuel Halim
+### Dao Anh Khoa
 
-<img src="images/fikoww.png" width="200px">
+<img src="images/itzkhoadao.png" width="200px">
 
-[[github](http://github.com/fikoww)]
+[[homepage](https://www.linkedin.com/in/anhkhoadao/)]
+[[github](https://github.com/itzkhoadao)]
 
 * Role: Developer
-* Responsibilities: Workout session logging
+* Responsibilities: Diet plan management
 
 ### Pham Doan Gia Hien
 
@@ -36,16 +37,15 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 * Role: Developer
 * Responsibilities: Training schedule management
 
-### Jean Doe
+### Frederico Samuel Halim
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/fikoww.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](http://github.com/fikoww)]
 
 * Role: Developer
-* Responsibilities: Dev Ops + Threading
-
+* Responsibilities: Workout session logging
+* 
 ### Zhang Kaiwen
 
 <img src="images/zkw2004.png" width="200px">
