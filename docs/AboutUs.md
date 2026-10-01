@@ -18,15 +18,14 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Project Lead
 
-### Jane Doe
+### Frederico Samuel Halim
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/fikoww.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](http://github.com/fikoww)]
 
-* Role: Team Lead
-* Responsibilities: UI
+* Role: Developer
+* Responsibilities: Workout session logging
 
 ### Pham Doan Gia Hien
 
