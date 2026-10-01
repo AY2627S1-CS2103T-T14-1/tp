@@ -36,15 +36,15 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 * Role: Developer
 * Responsibilities: Training schedule management
 
-### Jean Doe
+### Dao Anh Khoa
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/itzkhoadao.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[homepage](https://www.linkedin.com/in/anhkhoadao/)]
+[[github](https://github.com/itzkhoadao)]
 
 * Role: Developer
-* Responsibilities: Dev Ops + Threading
+* Responsibilities: Diet plan management
 
 ### Zhang Kaiwen
 
