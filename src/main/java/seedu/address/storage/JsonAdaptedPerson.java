@@ -16,6 +16,8 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
+import seedu.address.model.person.Exercise;
+import seedu.address.model.person.WorkoutPlan;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -31,6 +33,7 @@ class JsonAdaptedPerson {
     private final String address;
     private final String remark;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
+    private final List<JsonAdaptedExercise> exercises = new ArrayList<>();
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
@@ -39,7 +42,8 @@ class JsonAdaptedPerson {
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
             @JsonProperty("remark") String remark,
-            @JsonProperty("tags") List<JsonAdaptedTag> tags) {
+            @JsonProperty("tags") List<JsonAdaptedTag> tags,
+            @JsonProperty("exercises") List<JsonAdaptedExercise> exercises) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -47,6 +51,9 @@ class JsonAdaptedPerson {
         this.remark = remark;
         if (tags != null) {
             this.tags.addAll(tags);
+        }
+        if (exercises != null) {
+            this.exercises.addAll(exercises);
         }
     }
 
@@ -62,6 +69,9 @@ class JsonAdaptedPerson {
         tags.addAll(source.getTags().stream()
                 .map(JsonAdaptedTag::new)
                 .collect(Collectors.toList()));
+        exercises.addAll(source.getWorkoutPlan().getExercises().stream()
+                .map(JsonAdaptedExercise::new)
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -74,6 +84,11 @@ class JsonAdaptedPerson {
         for (JsonAdaptedTag tag : tags) {
             personTags.add(tag.toModelType());
         }
+        final List<Exercise> personExercises = new ArrayList<>();
+        for (JsonAdaptedExercise exercise : exercises) {
+            personExercises.add(exercise.toModelType());
+        }
+        final WorkoutPlan modelWorkoutPlan = new WorkoutPlan(personExercises);
 
         if (name == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Name.class.getSimpleName()));
@@ -113,7 +128,7 @@ class JsonAdaptedPerson {
         final Remark modelRemark = new Remark(remark);
 
         final Set<Tag> modelTags = new HashSet<>(personTags);
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags);
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags, modelWorkoutPlan);
     }
 
 }
