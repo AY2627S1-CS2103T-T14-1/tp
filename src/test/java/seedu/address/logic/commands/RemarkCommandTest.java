@@ -90,6 +90,6 @@ public class RemarkCommandTest {
 
     private Person createPersonWithRemark(Person person, Remark remark) {
         return new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(), remark,
-                person.getTags());
+                person.getTags(), person.getWorkoutPlan());
     }
 }
