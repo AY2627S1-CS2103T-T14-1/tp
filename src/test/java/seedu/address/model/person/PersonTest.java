@@ -92,6 +92,19 @@ public class PersonTest {
         // different tags -> returns false
         editedAlice = new PersonBuilder(ALICE).withTags(VALID_TAG_HUSBAND).build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different workoutPlan -> returns false
+        editedAlice = new PersonBuilder(ALICE)
+                .withWorkoutPlan(ALICE.getWorkoutPlan().addExercise(
+                        new Exercise("Bench Press", 3, 10, 60.0)))
+                .build();
+        assertFalse(ALICE.equals(editedAlice));
+    }
+
+    @Test
+    public void constructor_sevenArgsAndGetter() {
+        Person person = new PersonBuilder().build();
+        assertEquals(new WorkoutPlan(), person.getWorkoutPlan());
     }
 
     @Test
