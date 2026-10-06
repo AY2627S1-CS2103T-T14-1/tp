@@ -3,6 +3,7 @@ package seedu.address.storage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
@@ -31,15 +33,25 @@ class JsonAdaptedPerson {
     private final String address;
     private final String remark;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
+    private final JsonAdaptedDietPlan dietPlan;
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
+     */
+    public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
+            List<JsonAdaptedTag> tags) {
+        this(name, phone, email, address, remark, tags, null);
+    }
+
+    /**
+     * Constructs an adapter with an optional diet plan; old files may omit the plan.
      */
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
             @JsonProperty("remark") String remark,
-            @JsonProperty("tags") List<JsonAdaptedTag> tags) {
+            @JsonProperty("tags") List<JsonAdaptedTag> tags,
+            @JsonProperty("dietPlan") JsonAdaptedDietPlan dietPlan) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -48,6 +60,7 @@ class JsonAdaptedPerson {
         if (tags != null) {
             this.tags.addAll(tags);
         }
+        this.dietPlan = dietPlan;
     }
 
     /**
@@ -62,6 +75,7 @@ class JsonAdaptedPerson {
         tags.addAll(source.getTags().stream()
                 .map(JsonAdaptedTag::new)
                 .collect(Collectors.toList()));
+        dietPlan = source.getDietPlan().map(JsonAdaptedDietPlan::new).orElse(null);
     }
 
     /**
@@ -113,7 +127,9 @@ class JsonAdaptedPerson {
         final Remark modelRemark = new Remark(remark);
 
         final Set<Tag> modelTags = new HashSet<>(personTags);
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags);
+        final Optional<DietPlan> modelDietPlan = dietPlan == null
+                ? Optional.empty() : Optional.of(dietPlan.toModelType());
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags, modelDietPlan);
     }
 
 }
