@@ -5,6 +5,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -25,18 +26,28 @@ public class Person {
     private final Address address;
     private final Remark remark;
     private final Set<Tag> tags = new HashSet<>();
+    private final Optional<DietPlan> dietPlan;
 
     /**
      * Every field must be present and not null.
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
-        requireAllNonNull(name, phone, email, address, remark, tags);
+        this(name, phone, email, address, remark, tags, Optional.empty());
+    }
+
+    /**
+     * Constructs a person with an optional current diet plan. All arguments must be non-null.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            Optional<DietPlan> dietPlan) {
+        requireAllNonNull(name, phone, email, address, remark, tags, dietPlan);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.remark = remark;
         this.tags.addAll(tags);
+        this.dietPlan = dietPlan;
     }
 
     public Name getName() {
@@ -57,6 +68,10 @@ public class Person {
 
     public Remark getRemark() {
         return remark;
+    }
+
+    public Optional<DietPlan> getDietPlan() {
+        return dietPlan;
     }
 
     /**
@@ -100,13 +115,14 @@ public class Person {
                 && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
                 && remark.equals(otherPerson.remark)
-                && tags.equals(otherPerson.tags);
+                && tags.equals(otherPerson.tags)
+                && dietPlan.equals(otherPerson.dietPlan);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, remark, tags);
+        return Objects.hash(name, phone, email, address, remark, tags, dietPlan);
     }
 
     @Override
@@ -118,6 +134,7 @@ public class Person {
                 .add("address", address)
                 .add("remark", remark)
                 .add("tags", tags)
+                .add("dietPlan", dietPlan)
                 .toString();
     }
 

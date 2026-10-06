@@ -17,8 +17,10 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Remark;
+import seedu.address.testutil.PersonBuilder;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for RemarkCommand.
@@ -26,6 +28,23 @@ import seedu.address.model.person.Remark;
 public class RemarkCommandTest {
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void execute_addAndRemoveRemark_preservesDietPlan() {
+        Person original = model.getFilteredPersonList().get(0);
+        Person planned = new PersonBuilder(original).withDietPlan(new DietPlan("1800 kcal", "Lean protein")).build();
+        model.setPerson(original, planned);
+        for (String text : new String[] {VALID_REMARK_AMY, ""}) {
+            Person current = model.getFilteredPersonList().get(0);
+            Person edited = createPersonWithRemark(current, new Remark(text));
+            Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+            expectedModel.setPerson(current, edited);
+            String message = text.isEmpty() ? RemarkCommand.MESSAGE_DELETE_REMARK_SUCCESS
+                    : RemarkCommand.MESSAGE_ADD_REMARK_SUCCESS;
+            assertCommandSuccess(new RemarkCommand(INDEX_FIRST_PERSON, new Remark(text)), model,
+                    String.format(message, Messages.format(edited)), expectedModel);
+        }
+    }
 
     @Test
     public void execute_addRemark_success() {
@@ -90,6 +109,6 @@ public class RemarkCommandTest {
 
     private Person createPersonWithRemark(Person person, Remark remark) {
         return new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(), remark,
-                person.getTags());
+                person.getTags(), person.getDietPlan());
     }
 }
