@@ -1,9 +1,11 @@
 package seedu.address.testutil;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.model.person.Address;
+import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
@@ -31,6 +33,7 @@ public class PersonBuilder {
     private Remark remark;
     private Set<Tag> tags;
     private WorkoutPlan workoutPlan;
+    private Optional<DietPlan> dietPlan;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -43,6 +46,7 @@ public class PersonBuilder {
         remark = new Remark(DEFAULT_REMARK);
         tags = new HashSet<>();
         workoutPlan = new WorkoutPlan();
+        dietPlan = Optional.empty();
     }
 
     /**
@@ -56,6 +60,7 @@ public class PersonBuilder {
         remark = personToCopy.getRemark();
         tags = new HashSet<>(personToCopy.getTags());
         workoutPlan = personToCopy.getWorkoutPlan();
+        dietPlan = personToCopy.getDietPlan();
     }
 
     /**
@@ -114,8 +119,16 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the current diet plan of the person being built.
+     */
+    public PersonBuilder withDietPlan(DietPlan dietPlan) {
+        this.dietPlan = Optional.of(dietPlan);
+        return this;
+    }
+
     public Person build() {
-        return new Person(name, phone, email, address, remark, tags, workoutPlan);
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
     }
 
 }

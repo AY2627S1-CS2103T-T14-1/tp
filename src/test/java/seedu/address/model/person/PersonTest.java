@@ -25,6 +25,27 @@ public class PersonTest {
     }
 
     @Test
+    public void dietPlan_defaultsToAbsentAndRejectsNullOptional() {
+        assertTrue(ALICE.getDietPlan().isEmpty());
+        assertThrows(NullPointerException.class, () -> new Person(ALICE.getName(), ALICE.getPhone(),
+                ALICE.getEmail(), ALICE.getAddress(), ALICE.getRemark(), ALICE.getTags(),
+                ALICE.getWorkoutPlan(), null));
+    }
+
+    @Test
+    public void dietPlan_affectsValueEqualityButNotIdentity() {
+        DietPlan plan = new DietPlan("1800 kcal", "Lean protein");
+        Person plannedAlice = new PersonBuilder(ALICE).withDietPlan(plan).build();
+        Person copy = new PersonBuilder(plannedAlice).build();
+        assertEquals(plan, plannedAlice.getDietPlan().orElseThrow());
+        assertEquals(plannedAlice, copy);
+        assertEquals(plannedAlice.hashCode(), copy.hashCode());
+        assertTrue(ALICE.isSamePerson(plannedAlice));
+        assertFalse(ALICE.equals(plannedAlice));
+        assertFalse(plannedAlice.equals(new PersonBuilder(ALICE).withDietPlan(new DietPlan("2000 kcal")).build()));
+    }
+
+    @Test
     public void isSamePerson() {
         // same object -> returns true
         assertTrue(ALICE.isSamePerson(ALICE));
@@ -111,7 +132,8 @@ public class PersonTest {
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", remark=" + ALICE.getRemark()
-                + ", tags=" + ALICE.getTags() + ", workoutPlan=" + ALICE.getWorkoutPlan() + "}";
+                + ", tags=" + ALICE.getTags() + ", workoutPlan=" + ALICE.getWorkoutPlan()
+                + ", dietPlan=" + ALICE.getDietPlan() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }
