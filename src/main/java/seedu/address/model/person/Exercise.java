@@ -17,12 +17,12 @@ public class Exercise {
 
     public static final String MESSAGE_CONSTRAINTS =
             "Exercise name should not be blank, sets and reps should be positive integers "
-                    + "greater than 0, and weight should be a non-negative number in kg";
+                    + "greater than 0, and weight should be a finite non-negative number in kg";
     public static final String MESSAGE_CONSTRAINTS_NAME = "Exercise name should not be blank";
     public static final String MESSAGE_CONSTRAINTS_SETS = "Sets should be a positive integer greater than 0";
     public static final String MESSAGE_CONSTRAINTS_REPS = "Reps should be a positive integer greater than 0";
     public static final String MESSAGE_CONSTRAINTS_WEIGHT =
-            "Weight should be a non-negative number in kg";
+            "Weight should be a finite non-negative number in kg";
 
     public final String name;
     public final int sets;
@@ -74,7 +74,7 @@ public class Exercise {
      * Returns true if a given double is a valid weight in kg.
      */
     public static boolean isValidWeight(double test) {
-        return test >= 0;
+        return Double.isFinite(test) && test >= 0;
     }
 
     public String getName() {

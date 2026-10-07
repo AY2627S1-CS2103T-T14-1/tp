@@ -49,6 +49,14 @@ public class ExerciseTest {
     }
 
     @Test
+    public void constructor_nonFiniteWeight_throwsIllegalArgumentException() {
+        for (double weight : new double[] {Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NaN}) {
+            assertThrows(IllegalArgumentException.class, () ->
+                    new Exercise(VALID_NAME, VALID_SETS, VALID_REPS, weight));
+        }
+    }
+
+    @Test
     public void constructor_validInputs_success() {
         Exercise bodyweight = new Exercise("Push Up", 3, 12, 0);
         assertEquals("Push Up", bodyweight.getName());
@@ -92,6 +100,9 @@ public class ExerciseTest {
     public void isValidWeight() {
         assertFalse(Exercise.isValidWeight(-0.1));
         assertFalse(Exercise.isValidWeight(-50.0));
+        assertFalse(Exercise.isValidWeight(Double.POSITIVE_INFINITY));
+        assertFalse(Exercise.isValidWeight(Double.NEGATIVE_INFINITY));
+        assertFalse(Exercise.isValidWeight(Double.NaN));
 
         assertTrue(Exercise.isValidWeight(0));
         assertTrue(Exercise.isValidWeight(20.5));
