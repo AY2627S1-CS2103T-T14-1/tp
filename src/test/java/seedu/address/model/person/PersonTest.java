@@ -28,7 +28,8 @@ public class PersonTest {
     public void dietPlan_defaultsToAbsentAndRejectsNullOptional() {
         assertTrue(ALICE.getDietPlan().isEmpty());
         assertThrows(NullPointerException.class, () -> new Person(ALICE.getName(), ALICE.getPhone(),
-                ALICE.getEmail(), ALICE.getAddress(), ALICE.getRemark(), ALICE.getTags(), ALICE.getWorkoutPlan(), null));
+                ALICE.getEmail(), ALICE.getAddress(), ALICE.getRemark(), ALICE.getTags(),
+                ALICE.getWorkoutPlan(), null));
     }
 
     @Test
