@@ -25,18 +25,29 @@ public class Person {
     private final Address address;
     private final Remark remark;
     private final Set<Tag> tags = new HashSet<>();
+    private final WorkoutPlan workoutPlan;
 
     /**
      * Every field must be present and not null.
      */
-    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
-        requireAllNonNull(name, phone, email, address, remark, tags);
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan) {
+        requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.remark = remark;
         this.tags.addAll(tags);
+        this.workoutPlan = workoutPlan;
+    }
+
+    /**
+     * Constructs a {@code Person} with an empty workout plan.
+     * Every field must be present and not null.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
+        this(name, phone, email, address, remark, tags, new WorkoutPlan());
     }
 
     public Name getName() {
@@ -57,6 +68,10 @@ public class Person {
 
     public Remark getRemark() {
         return remark;
+    }
+
+    public WorkoutPlan getWorkoutPlan() {
+        return workoutPlan;
     }
 
     /**
@@ -100,13 +115,14 @@ public class Person {
                 && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
                 && remark.equals(otherPerson.remark)
-                && tags.equals(otherPerson.tags);
+                && tags.equals(otherPerson.tags)
+                && workoutPlan.equals(otherPerson.workoutPlan);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, remark, tags);
+        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan);
     }
 
     @Override
@@ -118,6 +134,7 @@ public class Person {
                 .add("address", address)
                 .add("remark", remark)
                 .add("tags", tags)
+                .add("workoutPlan", workoutPlan)
                 .toString();
     }
 
