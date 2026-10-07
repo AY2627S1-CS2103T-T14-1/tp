@@ -26,27 +26,45 @@ public class Person {
     private final Address address;
     private final Remark remark;
     private final Set<Tag> tags = new HashSet<>();
+    private final WorkoutPlan workoutPlan;
     private final Optional<DietPlan> dietPlan;
 
     /**
      * Every field must be present and not null.
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
-        this(name, phone, email, address, remark, tags, Optional.empty());
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), Optional.empty());
     }
 
     /**
-     * Constructs a person with an optional current diet plan. All arguments must be non-null.
+     * Constructs a person with a workout plan and no diet plan.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan) {
+        this(name, phone, email, address, remark, tags, workoutPlan, Optional.empty());
+    }
+
+    /**
+     * Constructs a person with a diet plan and an empty workout plan.
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             Optional<DietPlan> dietPlan) {
-        requireAllNonNull(name, phone, email, address, remark, tags, dietPlan);
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), dietPlan);
+    }
+
+    /**
+     * Constructs a person with both plans. All arguments must be non-null.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan) {
+        requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.remark = remark;
         this.tags.addAll(tags);
+        this.workoutPlan = workoutPlan;
         this.dietPlan = dietPlan;
     }
 
@@ -68,6 +86,10 @@ public class Person {
 
     public Remark getRemark() {
         return remark;
+    }
+
+    public WorkoutPlan getWorkoutPlan() {
+        return workoutPlan;
     }
 
     public Optional<DietPlan> getDietPlan() {
@@ -116,13 +138,14 @@ public class Person {
                 && address.equals(otherPerson.address)
                 && remark.equals(otherPerson.remark)
                 && tags.equals(otherPerson.tags)
+                && workoutPlan.equals(otherPerson.workoutPlan)
                 && dietPlan.equals(otherPerson.dietPlan);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, remark, tags, dietPlan);
+        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
     }
 
     @Override
@@ -134,6 +157,7 @@ public class Person {
                 .add("address", address)
                 .add("remark", remark)
                 .add("tags", tags)
+                .add("workoutPlan", workoutPlan)
                 .add("dietPlan", dietPlan)
                 .toString();
     }

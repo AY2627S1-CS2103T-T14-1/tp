@@ -14,10 +14,12 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
+import seedu.address.model.person.WorkoutPlan;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -33,6 +35,7 @@ class JsonAdaptedPerson {
     private final String address;
     private final String remark;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
+    private final List<JsonAdaptedExercise> exercises = new ArrayList<>();
     private final JsonAdaptedDietPlan dietPlan;
 
     /**
@@ -40,17 +43,26 @@ class JsonAdaptedPerson {
      */
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags) {
-        this(name, phone, email, address, remark, tags, null);
+        this(name, phone, email, address, remark, tags, null, null);
     }
 
     /**
-     * Constructs an adapter with an optional diet plan; old files may omit the plan.
+     * Constructs an adapter with exercises and no diet plan.
+     */
+    public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
+            List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises) {
+        this(name, phone, email, address, remark, tags, exercises, null);
+    }
+
+    /**
+     * Constructs an adapter with optional exercises and diet plan; old files may omit either field.
      */
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
             @JsonProperty("remark") String remark,
             @JsonProperty("tags") List<JsonAdaptedTag> tags,
+            @JsonProperty("exercises") List<JsonAdaptedExercise> exercises,
             @JsonProperty("dietPlan") JsonAdaptedDietPlan dietPlan) {
         this.name = name;
         this.phone = phone;
@@ -59,6 +71,9 @@ class JsonAdaptedPerson {
         this.remark = remark;
         if (tags != null) {
             this.tags.addAll(tags);
+        }
+        if (exercises != null) {
+            this.exercises.addAll(exercises);
         }
         this.dietPlan = dietPlan;
     }
@@ -75,6 +90,9 @@ class JsonAdaptedPerson {
         tags.addAll(source.getTags().stream()
                 .map(JsonAdaptedTag::new)
                 .collect(Collectors.toList()));
+        exercises.addAll(source.getWorkoutPlan().getExercises().stream()
+                .map(JsonAdaptedExercise::new)
+                .collect(Collectors.toList()));
         dietPlan = source.getDietPlan().map(JsonAdaptedDietPlan::new).orElse(null);
     }
 
@@ -88,6 +106,14 @@ class JsonAdaptedPerson {
         for (JsonAdaptedTag tag : tags) {
             personTags.add(tag.toModelType());
         }
+        final List<Exercise> personExercises = new ArrayList<>();
+        for (JsonAdaptedExercise exercise : exercises) {
+            if (exercise == null) {
+                throw new IllegalValueException("Workout plan must not contain null exercises");
+            }
+            personExercises.add(exercise.toModelType());
+        }
+        final WorkoutPlan modelWorkoutPlan = new WorkoutPlan(personExercises);
 
         if (name == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Name.class.getSimpleName()));
@@ -129,7 +155,8 @@ class JsonAdaptedPerson {
         final Set<Tag> modelTags = new HashSet<>(personTags);
         final Optional<DietPlan> modelDietPlan = dietPlan == null
                 ? Optional.empty() : Optional.of(dietPlan.toModelType());
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags, modelDietPlan);
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags,
+                modelWorkoutPlan, modelDietPlan);
     }
 
 }

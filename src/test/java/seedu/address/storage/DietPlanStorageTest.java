@@ -13,7 +13,9 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.person.DietPlan;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.WorkoutPlan;
 import seedu.address.testutil.PersonBuilder;
 
 public class DietPlanStorageTest {
@@ -38,6 +40,23 @@ public class DietPlanStorageTest {
         book.setPerson(withNotes, replacement);
         new JsonAddressBookStorage(path).saveAddressBook(book);
         assertEquals(book, new AddressBook(new JsonAddressBookStorage(path).readAddressBook().orElseThrow()));
+    }
+
+    @Test
+    public void saveAndRead_preservesDietAndWorkoutPlansTogether() throws Exception {
+        DietPlan dietPlan = new DietPlan("1800 kcal", "Lean protein");
+        WorkoutPlan workoutPlan = new WorkoutPlan().addExercise(new Exercise("Bench Press", 3, 10, 60.0));
+        Person person = new PersonBuilder().withDietPlan(dietPlan).withWorkoutPlan(workoutPlan).build();
+        AddressBook book = new AddressBook();
+        book.addPerson(person);
+        Path path = testFolder.resolve("both-plans.json");
+
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(path);
+        storage.saveAddressBook(book);
+        Person reloaded = storage.readAddressBook().orElseThrow().getPersonList().get(0);
+
+        assertEquals(dietPlan, reloaded.getDietPlan().orElseThrow());
+        assertEquals(workoutPlan, reloaded.getWorkoutPlan());
     }
 
     @Test

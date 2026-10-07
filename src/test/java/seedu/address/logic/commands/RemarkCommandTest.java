@@ -18,8 +18,10 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.DietPlan;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Remark;
+import seedu.address.model.person.WorkoutPlan;
 import seedu.address.testutil.PersonBuilder;
 
 /**
@@ -44,6 +46,21 @@ public class RemarkCommandTest {
             assertCommandSuccess(new RemarkCommand(INDEX_FIRST_PERSON, new Remark(text)), model,
                     String.format(message, Messages.format(edited)), expectedModel);
         }
+    }
+
+    @Test
+    public void execute_nonemptyWorkoutPlan_preservesPlan() {
+        Person original = model.getFilteredPersonList().get(0);
+        WorkoutPlan plan = new WorkoutPlan().addExercise(new Exercise("Bench Press", 3, 10, 60.0));
+        Person person = new Person(original.getName(), original.getPhone(), original.getEmail(),
+                original.getAddress(), original.getRemark(), original.getTags(), plan);
+        model.setPerson(original, person);
+        Person editedPerson = createPersonWithRemark(person, new Remark(VALID_REMARK_AMY));
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPerson(person, editedPerson);
+
+        assertCommandSuccess(new RemarkCommand(INDEX_FIRST_PERSON, new Remark(VALID_REMARK_AMY)), model,
+                String.format(RemarkCommand.MESSAGE_ADD_REMARK_SUCCESS, Messages.format(editedPerson)), expectedModel);
     }
 
     @Test
@@ -109,6 +126,6 @@ public class RemarkCommandTest {
 
     private Person createPersonWithRemark(Person person, Remark remark) {
         return new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(), remark,
-                person.getTags(), person.getDietPlan());
+                person.getTags(), person.getWorkoutPlan(), person.getDietPlan());
     }
 }
