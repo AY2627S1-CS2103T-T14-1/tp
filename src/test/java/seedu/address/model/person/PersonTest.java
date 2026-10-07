@@ -28,7 +28,7 @@ public class PersonTest {
     public void dietPlan_defaultsToAbsentAndRejectsNullOptional() {
         assertTrue(ALICE.getDietPlan().isEmpty());
         assertThrows(NullPointerException.class, () -> new Person(ALICE.getName(), ALICE.getPhone(),
-                ALICE.getEmail(), ALICE.getAddress(), ALICE.getRemark(), ALICE.getTags(), null));
+                ALICE.getEmail(), ALICE.getAddress(), ALICE.getRemark(), ALICE.getTags(), ALICE.getWorkoutPlan(), null));
     }
 
     @Test
@@ -112,13 +112,27 @@ public class PersonTest {
         // different tags -> returns false
         editedAlice = new PersonBuilder(ALICE).withTags(VALID_TAG_HUSBAND).build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different workoutPlan -> returns false
+        editedAlice = new PersonBuilder(ALICE)
+                .withWorkoutPlan(ALICE.getWorkoutPlan().addExercise(
+                        new Exercise("Bench Press", 3, 10, 60.0)))
+                .build();
+        assertFalse(ALICE.equals(editedAlice));
+    }
+
+    @Test
+    public void constructor_sevenArgsAndGetter() {
+        Person person = new PersonBuilder().build();
+        assertEquals(new WorkoutPlan(), person.getWorkoutPlan());
     }
 
     @Test
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", remark=" + ALICE.getRemark()
-                + ", tags=" + ALICE.getTags() + ", dietPlan=" + ALICE.getDietPlan() + "}";
+                + ", tags=" + ALICE.getTags() + ", workoutPlan=" + ALICE.getWorkoutPlan()
+                + ", dietPlan=" + ALICE.getDietPlan() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }

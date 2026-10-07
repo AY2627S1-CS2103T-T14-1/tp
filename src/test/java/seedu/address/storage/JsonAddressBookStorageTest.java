@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalPersons.IDA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -16,8 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.person.Exercise;
+import seedu.address.model.person.Person;
+import seedu.address.model.person.WorkoutPlan;
 
 public class JsonAddressBookStorageTest {
     private static final Path TEST_DATA_FOLDER = Paths.get("src", "test", "data", "JsonAddressBookStorageTest");
@@ -84,6 +89,63 @@ public class JsonAddressBookStorageTest {
         readBack = jsonAddressBookStorage.readAddressBook().get(); // file path not specified
         assertEquals(original, new AddressBook(readBack));
 
+    }
+
+    @Test
+    public void readAddressBook_nullExercise_throwsDataLoadingException() throws Exception {
+        assertInvalidExercises("[null]");
+        assertInvalidExercises("[{\"name\":\"Bench Press\",\"sets\":3,\"reps\":10,\"weightKg\":60},null]");
+    }
+
+    @Test
+    public void readAddressBook_fractionalSetsOrReps_throwsDataLoadingException() throws Exception {
+        assertInvalidExercises("[{\"name\":\"Bench Press\",\"sets\":3.9,\"reps\":10,\"weightKg\":60}]");
+        assertInvalidExercises("[{\"name\":\"Bench Press\",\"sets\":3,\"reps\":10.7,\"weightKg\":60}]");
+        assertInvalidExercises("[{\"name\":\"Bench Press\",\"sets\":3.9,\"reps\":10.7,\"weightKg\":60}]");
+    }
+
+    @Test
+    public void readAddressBook_nonFiniteWeight_throwsDataLoadingException() throws Exception {
+        for (String weight : new String[] {"\"Infinity\"", "\"-Infinity\"", "\"NaN\"", "1e309"}) {
+            assertInvalidExercises("[{\"name\":\"Bench Press\",\"sets\":3,\"reps\":10,\"weightKg\":"
+                    + weight + "}]");
+        }
+    }
+
+    @Test
+    public void readAddressBook_missingOrNullExercises_loadsEmptyPlan() throws Exception {
+        for (String exercises : new String[] {"", ",\"exercises\":null", ",\"exercises\":[]"}) {
+            Path filePath = testFolder.resolve("legacy.json");
+            Files.writeString(filePath, addressBookJson(exercises));
+            ReadOnlyAddressBook loaded = new JsonAddressBookStorage(filePath).readAddressBook().orElseThrow();
+            assertEquals(ALICE, loaded.getPersonList().get(0));
+        }
+    }
+
+    @Test
+    public void readAndSaveAddressBook_nonemptyWorkoutPlan_preservesExercises() throws Exception {
+        WorkoutPlan plan = new WorkoutPlan().addExercise(new Exercise("Bench Press", 3, 10, 60.5))
+                .addExercise(new Exercise("Push Up", 2, 12, 0));
+        Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                ALICE.getRemark(), ALICE.getTags(), plan);
+        AddressBook original = new AddressBook();
+        original.addPerson(person);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("workout.json"));
+        storage.saveAddressBook(original);
+        assertEquals(original, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    private void assertInvalidExercises(String exercises) throws Exception {
+        Path filePath = testFolder.resolve("invalidWorkout.json");
+        Files.writeString(filePath, addressBookJson(",\"exercises\":" + exercises));
+        assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(filePath).readAddressBook());
+    }
+
+    private String addressBookJson(String exercisesProperty) throws Exception {
+        String personJson = JsonUtil.toJsonString(new JsonAdaptedPerson(ALICE))
+                .replaceFirst("(?s),\\s*\"exercises\"\\s*:\\s*\\[\\s*\\]", "");
+        int closingBrace = personJson.lastIndexOf('}');
+        return "{\"persons\":[" + personJson.substring(0, closingBrace) + exercisesProperty + "}]}";
     }
 
     @Test
