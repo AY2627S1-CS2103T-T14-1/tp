@@ -86,6 +86,9 @@ class JsonAdaptedPerson {
         }
         final List<Exercise> personExercises = new ArrayList<>();
         for (JsonAdaptedExercise exercise : exercises) {
+            if (exercise == null) {
+                throw new IllegalValueException("Workout plan must not contain null exercises");
+            }
             personExercises.add(exercise.toModelType());
         }
         final WorkoutPlan modelWorkoutPlan = new WorkoutPlan(personExercises);

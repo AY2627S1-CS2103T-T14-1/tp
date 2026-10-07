@@ -81,6 +81,14 @@ public class JsonAdaptedExerciseTest {
     }
 
     @Test
+    public void toModelType_nonFiniteWeight_throwsIllegalValueException() {
+        for (double weight : new double[] {Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NaN}) {
+            JsonAdaptedExercise exercise = new JsonAdaptedExercise(VALID_NAME, VALID_SETS, VALID_REPS, weight);
+            assertThrows(IllegalValueException.class, Exercise.MESSAGE_CONSTRAINTS_WEIGHT, exercise::toModelType);
+        }
+    }
+
+    @Test
     public void toModelType_invalidWeight_throwsIllegalValueException() {
         JsonAdaptedExercise exercise =
                 new JsonAdaptedExercise(VALID_NAME, VALID_SETS, VALID_REPS, INVALID_WEIGHT);
