@@ -24,7 +24,9 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.WorkoutPlan;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
 
@@ -34,6 +36,22 @@ import seedu.address.testutil.PersonBuilder;
 public class EditCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void execute_nonemptyWorkoutPlan_preservesPlan() {
+        Person original = model.getFilteredPersonList().get(0);
+        WorkoutPlan plan = new WorkoutPlan().addExercise(new Exercise("Bench Press", 3, 10, 60.0));
+        Person person = new Person(original.getName(), original.getPhone(), original.getEmail(),
+                original.getAddress(), original.getRemark(), original.getTags(), plan);
+        model.setPerson(original, person);
+        Person editedPerson = new PersonBuilder(person).withName(VALID_NAME_BOB).build();
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPerson(person, editedPerson);
+
+        assertCommandSuccess(new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB).build()), model,
+                String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson)), expectedModel);
+    }
 
     @Test
     public void execute_allFieldsSpecifiedUnfilteredList_success() {

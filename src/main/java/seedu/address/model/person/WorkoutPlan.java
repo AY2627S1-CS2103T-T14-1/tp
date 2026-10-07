@@ -31,6 +31,7 @@ public class WorkoutPlan {
     public WorkoutPlan(List<Exercise> exercises) {
         requireNonNull(exercises);
         this.exercises = new ArrayList<>(exercises);
+        this.exercises.forEach(Objects::requireNonNull);
     }
 
     /**
