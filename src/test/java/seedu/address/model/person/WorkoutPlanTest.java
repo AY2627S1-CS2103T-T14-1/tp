@@ -30,6 +30,12 @@ public class WorkoutPlanTest {
     }
 
     @Test
+    public void constructor_nullElement_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new WorkoutPlan(Arrays.asList((Exercise) null)));
+        assertThrows(NullPointerException.class, () -> new WorkoutPlan(Arrays.asList(BENCH_PRESS, null)));
+    }
+
+    @Test
     public void constructor_list_defensiveCopy() {
         List<Exercise> source = new ArrayList<>(Arrays.asList(BENCH_PRESS));
         WorkoutPlan plan = new WorkoutPlan(source);
