@@ -3,6 +3,7 @@ package seedu.address.storage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Name;
@@ -34,16 +36,34 @@ class JsonAdaptedPerson {
     private final String remark;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
     private final List<JsonAdaptedExercise> exercises = new ArrayList<>();
+    private final JsonAdaptedDietPlan dietPlan;
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
+     */
+    public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
+            List<JsonAdaptedTag> tags) {
+        this(name, phone, email, address, remark, tags, null, null);
+    }
+
+    /**
+     * Constructs an adapter with exercises and no diet plan.
+     */
+    public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
+            List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises) {
+        this(name, phone, email, address, remark, tags, exercises, null);
+    }
+
+    /**
+     * Constructs an adapter with optional exercises and diet plan; old files may omit either field.
      */
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
             @JsonProperty("remark") String remark,
             @JsonProperty("tags") List<JsonAdaptedTag> tags,
-            @JsonProperty("exercises") List<JsonAdaptedExercise> exercises) {
+            @JsonProperty("exercises") List<JsonAdaptedExercise> exercises,
+            @JsonProperty("dietPlan") JsonAdaptedDietPlan dietPlan) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -55,6 +75,7 @@ class JsonAdaptedPerson {
         if (exercises != null) {
             this.exercises.addAll(exercises);
         }
+        this.dietPlan = dietPlan;
     }
 
     /**
@@ -72,6 +93,7 @@ class JsonAdaptedPerson {
         exercises.addAll(source.getWorkoutPlan().getExercises().stream()
                 .map(JsonAdaptedExercise::new)
                 .collect(Collectors.toList()));
+        dietPlan = source.getDietPlan().map(JsonAdaptedDietPlan::new).orElse(null);
     }
 
     /**
@@ -131,7 +153,10 @@ class JsonAdaptedPerson {
         final Remark modelRemark = new Remark(remark);
 
         final Set<Tag> modelTags = new HashSet<>(personTags);
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags, modelWorkoutPlan);
+        final Optional<DietPlan> modelDietPlan = dietPlan == null
+                ? Optional.empty() : Optional.of(dietPlan.toModelType());
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags,
+                modelWorkoutPlan, modelDietPlan);
     }
 
 }
