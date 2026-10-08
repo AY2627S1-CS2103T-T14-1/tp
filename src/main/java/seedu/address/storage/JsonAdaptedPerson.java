@@ -3,6 +3,7 @@ package seedu.address.storage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -11,11 +12,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
+import seedu.address.model.person.WorkoutPlan;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -31,14 +35,35 @@ class JsonAdaptedPerson {
     private final String address;
     private final String remark;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
+    private final List<JsonAdaptedExercise> exercises = new ArrayList<>();
+    private final JsonAdaptedDietPlan dietPlan;
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
      */
+    public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
+            List<JsonAdaptedTag> tags) {
+        this(name, phone, email, address, remark, tags, null, null);
+    }
+
+    /**
+     * Constructs an adapter with exercises and no diet plan.
+     */
+    public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
+            List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises) {
+        this(name, phone, email, address, remark, tags, exercises, null);
+    }
+
+    /**
+     * Constructs an adapter with optional exercises and diet plan; old files may omit either field.
+     */
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
-            @JsonProperty("remark") String remark, @JsonProperty("tags") List<JsonAdaptedTag> tags) {
+            @JsonProperty("remark") String remark,
+            @JsonProperty("tags") List<JsonAdaptedTag> tags,
+            @JsonProperty("exercises") List<JsonAdaptedExercise> exercises,
+            @JsonProperty("dietPlan") JsonAdaptedDietPlan dietPlan) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -47,6 +72,10 @@ class JsonAdaptedPerson {
         if (tags != null) {
             this.tags.addAll(tags);
         }
+        if (exercises != null) {
+            this.exercises.addAll(exercises);
+        }
+        this.dietPlan = dietPlan;
     }
 
     /**
@@ -61,6 +90,10 @@ class JsonAdaptedPerson {
         tags.addAll(source.getTags().stream()
                 .map(JsonAdaptedTag::new)
                 .collect(Collectors.toList()));
+        exercises.addAll(source.getWorkoutPlan().getExercises().stream()
+                .map(JsonAdaptedExercise::new)
+                .collect(Collectors.toList()));
+        dietPlan = source.getDietPlan().map(JsonAdaptedDietPlan::new).orElse(null);
     }
 
     /**
@@ -73,6 +106,14 @@ class JsonAdaptedPerson {
         for (JsonAdaptedTag tag : tags) {
             personTags.add(tag.toModelType());
         }
+        final List<Exercise> personExercises = new ArrayList<>();
+        for (JsonAdaptedExercise exercise : exercises) {
+            if (exercise == null) {
+                throw new IllegalValueException("Workout plan must not contain null exercises");
+            }
+            personExercises.add(exercise.toModelType());
+        }
+        final WorkoutPlan modelWorkoutPlan = new WorkoutPlan(personExercises);
 
         if (name == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Name.class.getSimpleName()));
@@ -106,10 +147,16 @@ class JsonAdaptedPerson {
         }
         final Address modelAddress = new Address(address);
 
-        final Remark modelRemark = new Remark(remark == null ? "" : remark);
+        if (remark == null) {
+            throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Remark.class.getSimpleName()));
+        }
+        final Remark modelRemark = new Remark(remark);
 
         final Set<Tag> modelTags = new HashSet<>(personTags);
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, modelRemark);
+        final Optional<DietPlan> modelDietPlan = dietPlan == null
+                ? Optional.empty() : Optional.of(dietPlan.toModelType());
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags,
+                modelWorkoutPlan, modelDietPlan);
     }
 
 }

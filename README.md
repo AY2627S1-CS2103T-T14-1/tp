@@ -1,14 +1,19 @@
-[![CI Status](https://github.com/se-edu/addressbook-level3/workflows/Java%20CI/badge.svg)](https://github.com/se-edu/addressbook-level3/actions)
+# Fittix
 
-![Ui](docs/images/Ui.png)
+[![Java CI](https://github.com/AY2627S1-CS2103T-T14-1/tp/actions/workflows/gradle.yml/badge.svg)](https://github.com/AY2627S1-CS2103T-T14-1/tp/actions/workflows/gradle.yml)
 
-* This is **a sample project for Software Engineering (SE) students**.<br>
-  Example usages:
-  * as a starting point of a course project (as opposed to writing everything from scratch)
-  * as a case study
-* The project simulates an ongoing software project for a desktop application (called _AddressBook_) used for managing contact details.
-  * It is **written in an object-oriented programming (OOP) style** and provides a **reasonably well-written** codebase of about 6 KLoC. It is **larger** than what students typically write in beginner-level software-engineering modules, without being overwhelming.
-  * It comes with a **reasonable level of user and developer documentation**.
-* It is named `AddressBook Level 3` (`AB3` for short) because it was initially created as a part of a series of `AddressBook` projects (`Level 1`, `Level 2`, `Level 3` ...).
-* For the detailed documentation of this project, see the **[Address Book Product Website](https://se-education.org/addressbook-level3)**.
-* This project is a **part of the se-education.org** initiative. If you would like to contribute code to this project, see [se-education.org](https://se-education.org/#contributing-to-se-edu) for more info.
+Fittix is a desktop application for gym trainers to manage their clients and training work in one place. It is designed for trainers who need quick access to client information between sessions and prefer a command-driven workflow.
+
+The planned product brings together:
+
+* Client contact details and training schedules
+* Workout and diet plans for each client
+* Logs of completed workout sessions, including exercises, weights, sets, and repetitions
+
+![Mockup of the Fittix training schedule](docs/images/Ui.png)
+
+The image above is a mockup of the intended interface. The application is being developed incrementally, so the current build may look different.
+
+For more information, see the [Fittix project website](https://ay2627s1-cs2103t-t14-1.github.io/tp/), including the User Guide, Developer Guide, and team page.
+
+This project is based on the AddressBook Level 3 project created by the [SE-EDU initiative](https://se-education.org).

@@ -25,6 +25,27 @@ public class PersonTest {
     }
 
     @Test
+    public void dietPlan_defaultsToAbsentAndRejectsNullOptional() {
+        assertTrue(ALICE.getDietPlan().isEmpty());
+        assertThrows(NullPointerException.class, () -> new Person(ALICE.getName(), ALICE.getPhone(),
+                ALICE.getEmail(), ALICE.getAddress(), ALICE.getRemark(), ALICE.getTags(),
+                ALICE.getWorkoutPlan(), null));
+    }
+
+    @Test
+    public void dietPlan_affectsValueEqualityButNotIdentity() {
+        DietPlan plan = new DietPlan("1800 kcal", "Lean protein");
+        Person plannedAlice = new PersonBuilder(ALICE).withDietPlan(plan).build();
+        Person copy = new PersonBuilder(plannedAlice).build();
+        assertEquals(plan, plannedAlice.getDietPlan().orElseThrow());
+        assertEquals(plannedAlice, copy);
+        assertEquals(plannedAlice.hashCode(), copy.hashCode());
+        assertTrue(ALICE.isSamePerson(plannedAlice));
+        assertFalse(ALICE.equals(plannedAlice));
+        assertFalse(plannedAlice.equals(new PersonBuilder(ALICE).withDietPlan(new DietPlan("2000 kcal")).build()));
+    }
+
+    @Test
     public void isSamePerson() {
         // same object -> returns true
         assertTrue(ALICE.isSamePerson(ALICE));
@@ -85,15 +106,34 @@ public class PersonTest {
         editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
 
+        // different remark -> returns false
+        editedAlice = new PersonBuilder(ALICE).withRemark("Likes to swim.").build();
+        assertFalse(ALICE.equals(editedAlice));
+
         // different tags -> returns false
         editedAlice = new PersonBuilder(ALICE).withTags(VALID_TAG_HUSBAND).build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different workoutPlan -> returns false
+        editedAlice = new PersonBuilder(ALICE)
+                .withWorkoutPlan(ALICE.getWorkoutPlan().addExercise(
+                        new Exercise("Bench Press", 3, 10, 60.0)))
+                .build();
+        assertFalse(ALICE.equals(editedAlice));
+    }
+
+    @Test
+    public void constructor_sevenArgsAndGetter() {
+        Person person = new PersonBuilder().build();
+        assertEquals(new WorkoutPlan(), person.getWorkoutPlan());
     }
 
     @Test
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
-                + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";
+                + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", remark=" + ALICE.getRemark()
+                + ", tags=" + ALICE.getTags() + ", workoutPlan=" + ALICE.getWorkoutPlan()
+                + ", dietPlan=" + ALICE.getDietPlan() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }

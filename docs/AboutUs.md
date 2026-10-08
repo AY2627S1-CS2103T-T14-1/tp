@@ -9,50 +9,48 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### John Doe
+### Win Htut Khaung Soe
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/winhks25.png" width="200px">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[homepage](https://winhks25.github.io/winhtutkhaungsoe/)]
+[[github](https://github.com/winhks25)]
 
-* Role: Project Advisor
+* Role: Project Lead
 
-### Jane Doe
+### Dao Anh Khoa
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/itzkhoadao.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
-
-* Role: Team Lead
-* Responsibilities: UI
-
-### Johnny Doe
-
-<img src="images/johndoe.png" width="200px">
-
-[[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
+[[homepage](https://www.linkedin.com/in/anhkhoadao/)]
+[[github](https://github.com/itzkhoadao)]
 
 * Role: Developer
-* Responsibilities: Data
+* Responsibilities: Diet plan management
 
-### Jean Doe
+### Pham Doan Gia Hien
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/hienpahm.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](https://github.com/HienPahm)]
 
 * Role: Developer
-* Responsibilities: Dev Ops + Threading
+* Responsibilities: Training schedule management
 
-### James Doe
+### Frederico Samuel Halim
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/fikoww.png" width="200px">
 
-[[github](http://github.com/johndoe)]
+[[github](http://github.com/fikoww)]
+
+* Role: Developer
+* Responsibilities: Workout session logging
+
+### Zhang Kaiwen
+
+<img src="images/zkw2004.png" width="200px">
+
+[[github](https://github.com/zkw2004)]
 [[portfolio](team/johndoe.md)]
 
 * Role: Developer

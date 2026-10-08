@@ -5,6 +5,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -23,28 +24,48 @@ public class Person {
 
     // Data fields
     private final Address address;
-    private final Set<Tag> tags = new HashSet<>();
     private final Remark remark;
+    private final Set<Tag> tags = new HashSet<>();
+    private final WorkoutPlan workoutPlan;
+    private final Optional<DietPlan> dietPlan;
 
     /**
      * Every field must be present and not null.
-     * Remark defaults to an empty remark.
      */
-    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags) {
-        this(name, phone, email, address, tags, new Remark(""));
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), Optional.empty());
     }
 
     /**
-     * Every field must be present and not null.
+     * Constructs a person with a workout plan and no diet plan.
      */
-    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Remark remark) {
-        requireAllNonNull(name, phone, email, address, tags, remark);
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan) {
+        this(name, phone, email, address, remark, tags, workoutPlan, Optional.empty());
+    }
+
+    /**
+     * Constructs a person with a diet plan and an empty workout plan.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            Optional<DietPlan> dietPlan) {
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), dietPlan);
+    }
+
+    /**
+     * Constructs a person with both plans. All arguments must be non-null.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan) {
+        requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
-        this.tags.addAll(tags);
         this.remark = remark;
+        this.tags.addAll(tags);
+        this.workoutPlan = workoutPlan;
+        this.dietPlan = dietPlan;
     }
 
     public Name getName() {
@@ -65,6 +86,14 @@ public class Person {
 
     public Remark getRemark() {
         return remark;
+    }
+
+    public WorkoutPlan getWorkoutPlan() {
+        return workoutPlan;
+    }
+
+    public Optional<DietPlan> getDietPlan() {
+        return dietPlan;
     }
 
     /**
@@ -107,13 +136,16 @@ public class Person {
                 && phone.equals(otherPerson.phone)
                 && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
-                && tags.equals(otherPerson.tags);
+                && remark.equals(otherPerson.remark)
+                && tags.equals(otherPerson.tags)
+                && workoutPlan.equals(otherPerson.workoutPlan)
+                && dietPlan.equals(otherPerson.dietPlan);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags);
+        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
     }
 
     @Override
@@ -123,8 +155,10 @@ public class Person {
                 .add("phone", phone)
                 .add("email", email)
                 .add("address", address)
-                .add("tags", tags)
                 .add("remark", remark)
+                .add("tags", tags)
+                .add("workoutPlan", workoutPlan)
+                .add("dietPlan", dietPlan)
                 .toString();
     }
 
