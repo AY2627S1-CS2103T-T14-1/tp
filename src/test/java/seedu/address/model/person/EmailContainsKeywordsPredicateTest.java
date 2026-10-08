@@ -1,5 +1,6 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,5 +36,22 @@ public class EmailContainsKeywordsPredicateTest {
         assertFalse(firstPredicate.equals(secondPredicate));
         assertFalse(firstPredicate.equals(null));
         assertFalse(firstPredicate.equals(1));
+    }
+
+    @Test
+    public void hashCodeMethod() {
+        List<String> keywords = List.of("keyword1", "keyword2");
+        EmailContainsKeywordsPredicate predicate = new EmailContainsKeywordsPredicate(keywords);
+
+        assertEquals(keywords.hashCode(), predicate.hashCode());
+    }
+
+    @Test
+    public void toStringMethod() {
+        List<String> keywords = List.of("keyword1", "keyword2");
+        EmailContainsKeywordsPredicate predicate = new EmailContainsKeywordsPredicate(keywords);
+
+        String expected = EmailContainsKeywordsPredicate.class.getCanonicalName() + "{keywords=" + keywords + "}";
+        assertEquals(expected, predicate.toString());
     }
 }
