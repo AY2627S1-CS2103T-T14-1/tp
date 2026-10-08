@@ -15,8 +15,8 @@ import seedu.address.commons.util.ToStringBuilder;
 public final class WorkoutLogEntry {
 
     public static final String MESSAGE_CONSTRAINTS_NAME =
-            "Exercise names must be 1 to 50 characters long and may contain only "
-                    + "letters, digits, spaces, hyphens, apostrophes, and parentheses.";
+            "Exercise names must be 1 to 50 characters long, must contain at least one letter, "
+                    + "and may contain only letters, digits, spaces, hyphens, apostrophes, and parentheses.";
     public static final String MESSAGE_CONSTRAINTS_WEIGHT =
             "Exercise weight must be between 0 and 1000 kg and may have up to 2 decimal places.";
     public static final String MESSAGE_CONSTRAINTS_SETS =
