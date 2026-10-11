@@ -59,7 +59,7 @@ public class Messages {
      * otherwise as {@code (N): 1. Name SxR @Wkg; 2. ...} mirroring {@code PersonCard}.
      */
     public static String formatWorkoutPlan(WorkoutPlan plan) {
-        if (plan == null || plan.isEmpty()) {
+        if (plan.isEmpty()) {
             return "Empty";
         }
         StringBuilder builder = new StringBuilder();
