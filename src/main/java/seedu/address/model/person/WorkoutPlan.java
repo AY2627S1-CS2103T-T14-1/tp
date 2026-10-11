@@ -43,6 +43,15 @@ public class WorkoutPlan {
     }
 
     /**
+     * Returns true if the plan contains an exercise with the same name
+     * (case-insensitive) as the given exercise.
+     */
+    public boolean hasExercise(Exercise exercise) {
+        requireNonNull(exercise);
+        return exercises.stream().anyMatch(exercise::isSameExercise);
+    }
+
+    /**
      * Returns a new {@code WorkoutPlan} with {@code exercise} added.
      */
     public WorkoutPlan addExercise(Exercise exercise) {

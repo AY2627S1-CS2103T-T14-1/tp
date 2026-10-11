@@ -30,6 +30,7 @@ public class AddExerciseCommand extends Command {
             + "n/Bench Press s/3 r/10 w/60";
 
     public static final String MESSAGE_ADD_EXERCISE_SUCCESS = "Added exercise to Person: %1$s";
+    public static final String MESSAGE_DUPLICATE_EXERCISE = "This exercise already exists in the workout plan.";
 
     private final Index index;
     private final Exercise exercise;
@@ -54,6 +55,9 @@ public class AddExerciseCommand extends Command {
         }
 
         Person personToEdit = lastShownList.get(index.getZeroBased());
+        if (personToEdit.getWorkoutPlan().hasExercise(exercise)) {
+            throw new CommandException(MESSAGE_DUPLICATE_EXERCISE);
+        }
         WorkoutPlan updatedPlan = personToEdit.getWorkoutPlan().addExercise(exercise);
         Person editedPerson = new Person(
                 personToEdit.getName(), personToEdit.getPhone(), personToEdit.getEmail(),
