@@ -5,7 +5,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import seedu.address.logic.parser.Prefix;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.WorkoutPlan;
 
 /**
  * Container for user visible messages.
@@ -33,6 +35,8 @@ public class Messages {
 
     /**
      * Formats the {@code person} for display to the user.
+     * Includes the workout plan so exercise mutations (add/remove/clear)
+     * show the updated plan in the result box.
      */
     public static String format(Person person) {
         final StringBuilder builder = new StringBuilder();
@@ -45,7 +49,43 @@ public class Messages {
                 .append(person.getAddress())
                 .append("; Tags: ");
         person.getTags().forEach(builder::append);
+        builder.append("; Workout Plan: ");
+        builder.append(formatWorkoutPlan(person.getWorkoutPlan()));
         return builder.toString();
+    }
+
+    /**
+     * Formats a {@code WorkoutPlan} as {@code Empty} when it has no exercises,
+     * otherwise as {@code (N): 1. Name SxR @Wkg; 2. ...} mirroring {@code PersonCard}.
+     */
+    public static String formatWorkoutPlan(WorkoutPlan plan) {
+        if (plan == null || plan.isEmpty()) {
+            return "Empty";
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append("(").append(plan.size()).append("): ");
+        boolean isFirst = true;
+        int index = 1;
+        for (Exercise exercise : plan.getExercises()) {
+            if (!isFirst) {
+                builder.append("; ");
+            }
+            builder.append(index).append(". ").append(formatExercise(exercise));
+            isFirst = false;
+            index++;
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Formats an exercise as {@code Name SetsxReps @Weightkg}, e.g. {@code Bench Press 3x10 @60kg}.
+     */
+    public static String formatExercise(Exercise exercise) {
+        String weight = (exercise.getWeightKg() % 1 == 0)
+                ? String.valueOf((int) exercise.getWeightKg())
+                : String.valueOf(exercise.getWeightKg());
+        return String.format("%s %dx%d @%skg",
+                exercise.getName(), exercise.getSets(), exercise.getReps(), weight);
     }
 
 }
