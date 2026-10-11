@@ -155,6 +155,53 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Workout plan feature (`addex` / `delex` / `clearplan`)
+
+The workout plan MVP lets a trainer keep a per-client list of prescribed exercises. Each `Person` owns one immutable `WorkoutPlan` (possibly empty); each `Exercise` is immutable and validated at construction.
+
+#### Model: `Exercise` and `WorkoutPlan`
+
+* `model.person.Exercise` stores `name` (`String`), `sets` (`int`), `reps` (`int`), `weightKg` (`double`).
+* Validation (`Exercise#isValidName`, `#isValidSets`, `#isValidReps`, `#isValidWeight`):
+  * name is valid when `!test.trim().isEmpty()`; failure message is `Exercise name should not be blank`.
+  * sets/reps are valid when `> 0`; failure messages are `Sets should be a positive integer greater than 0` and `Reps should be a positive integer greater than 0`.
+  * weight is valid when `Double.isFinite(test) && test >= 0`; failure message is `Weight should be a finite non-negative number in kg`.
+  * Combined message is `Exercise name should not be blank, sets and reps should be positive integers greater than 0, and weight should be a finite non-negative number in kg`.
+* Identity is name-based case-insensitive (`Exercise#isSameExercise`); full equality also compares sets/reps/weight.
+* `model.person.WorkoutPlan` wraps `List<Exercise>` with defensive copies and an unmodifiable view (`#getExercises`). Key APIs: `#hasExercise` (duplicate check), `#addExercise` (returns new plan), `#removeExercise`, `#isEmpty`, `#size`. `Person` stores the plan and exposes it via `#getWorkoutPlan`; `PersonBuilder#withWorkoutPlan` is used in tests.
+
+#### Logic: commands and parsers
+
+* `logic.commands.AddExerciseCommand` (`COMMAND_WORD = addex`):
+  * `MESSAGE_USAGE = addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME s/SETS r/REPS w/WEIGHT_KG Example: addex 1 n/Bench Press s/3 r/10 w/60`.
+  * Success message `MESSAGE_ADD_EXERCISE_SUCCESS = Added exercise to Person: %1$s` (formatted with `Messages.format(editedPerson)`).
+  * Duplicate message `MESSAGE_DUPLICATE_EXERCISE = This exercise already exists in the workout plan.`
+  * `execute` checks `Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX` (`The person index provided is invalid.`) for an out-of-range person index, rejects duplicates, then builds a new `Person` with `WorkoutPlan#addExercise` and calls `model#setPerson` + `model#updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS)`.
+* `logic.commands.DeleteExerciseCommand` (`COMMAND_WORD = delex`):
+  * `MESSAGE_USAGE = delex: Removes the exercise at the specified exercise index from the workout plan of the person identified by the index number used in the last person listing. Parameters: PERSON_INDEX EXERCISE_INDEX (both must be positive integers) Example: delex 1 2`.
+  * Success message `MESSAGE_DELETE_EXERCISE_SUCCESS = Removed exercise from Person: %1$s`.
+  * Invalid exercise message `MESSAGE_INVALID_EXERCISE_DISPLAYED_INDEX = The exercise index provided is invalid.` shown when `exerciseIndex` is out of range, including when the plan is empty.
+  * `execute` checks the person index first (`MESSAGE_INVALID_PERSON_DISPLAYED_INDEX`), then the exercise index, removes that entry from a copy of the list, wraps it in a new `WorkoutPlan`, and saves via `model#setPerson`.
+* `logic.commands.ClearPlanCommand` (`COMMAND_WORD = clearplan`):
+  * `MESSAGE_USAGE = clearplan: Clears all exercises from the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) Example: clearplan 1`.
+  * Success `MESSAGE_CLEAR_PLAN_SUCCESS = Cleared workout plan for Person: %1$s`; already-empty `MESSAGE_PLAN_ALREADY_EMPTY = Workout plan is already empty for Person: %1$s` (no model change in the latter case).
+* Parsers: `AddExerciseCommandParser` tokenizes with `n/ s/ r/ w/` (`CliSyntax.PREFIX_NAME/PREFIX_SETS/PREFIX_REPS/PREFIX_WEIGHT`), requires all four prefixes, rejects duplicates via `verifyNoDuplicatePrefixesFor`, and delegates value checks to `ParserUtil#parseExerciseName/#parseExerciseSets/#parseExerciseReps/#parseExerciseWeight` (each throws the matching `Exercise.MESSAGE_CONSTRAINTS_*` message). Any `ParseException` is wrapped as `Invalid command format!` + `MESSAGE_USAGE`. `DeleteExerciseCommandParser` expects exactly two indices (`PERSON_INDEX EXERCISE_INDEX`); `ClearPlanCommandParser` expects exactly one index; both wrap failures the same way. `AddressBookParser` routes `addex`/`delex`/`clearplan` to these parsers; unknown words return `Unknown command.`
+* Feedback formatting: `Messages#format(Person)` appends `; Workout Plan: ` + `formatWorkoutPlan(plan)`, where an empty plan renders as `Empty` and a non-empty plan renders as `(N): 1. Name SxR @Wkg; 2. ...` via `formatExercise` (`%s %dx%d @%skg`, e.g. `Bench Press 3x10 @60kg`, trimming `.0` weights). This is what appears after `%1$s` in the three success messages.
+
+#### Storage: `JsonAdaptedExercise` and `JsonAdaptedPerson`
+
+* `storage.JsonAdaptedExercise` is the Jackson-friendly form with fields `name`, `sets`, `reps`, `weightKg`. `toModelType` throws `IllegalValueException` with `Exercise's %s field is missing!` for null fields, or the matching `Exercise.MESSAGE_CONSTRAINTS_*` message for invalid values, and rejects non-finite/negative weights.
+* `storage.JsonAdaptedPerson` persists the plan as JSON array `exercises`. The `@JsonCreator` constructor treats a missing/`null` `exercises` field as empty (backward compatible with old files). `toModelType` rejects `null` entries with `Workout plan must not contain null exercises`, converts each entry via `JsonAdaptedExercise#toModelType`, and builds `new WorkoutPlan(personExercises)`. Any invalid exercise therefore fails the whole person load, which `JsonSerializableAddressBook` propagates as `IllegalValueException`; the app then starts with an empty address book (same corrupted-file behavior as other fields).
+* Save path: `JsonAdaptedPerson(Person source)` copies `source.getWorkoutPlan().getExercises()` into adapted exercises, so every `addex`/`delex`/`clearplan` is persisted on the next `StorageManager` save (automatic after each mutating command).
+
+#### UI: person card rendering
+
+* `ui.PersonCard#displayWorkoutPlan` renders the plan inside `workoutPlanContainer`.
+  * Header is `Workout Plan:` when empty, otherwise `Workout Plan (N):` where `N` is the plan size.
+  * Empty (or `null`) plan shows placeholder label `No workout plan yet`.
+  * Non-empty plan adds one `Label` per exercise numbered `1. ...`, `2. ...` using the same `Name SetsxReps @Weightkg` format as `Messages#formatExercise` (e.g. `Bench Press 4x10 @60kg`). The 1-based numbering is exactly the `EXERCISE_INDEX` accepted by `delex`, so the card doubles as the index reference.
+  * Labels wrap (`setWrapText(true)`, max width 350) so long lists grow vertically without breaking the card layout. The card observes the filtered person list, so it refreshes automatically after each command.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -445,30 +492,63 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
-**Use case: UC06 - Record a workout plan for a client**
+**Use case: UC06 - Manage a client's workout plan (`addex` / `delex` / `clearplan`)**
 
 **MSS**
 
 1.  Trainer requests to list clients.
 2.  Fittix shows a list of clients.
-3.  Trainer requests to set the workout plan of a specific client in the list.
-4.  Fittix saves the plan as that client's current workout plan and shows the updated plan.
+3.  Trainer requests to add an exercise to a specific client in the list, giving the exercise name, sets, reps and weight (`addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG`, e.g. `addex 1 n/Bench Press s/3 r/10 w/60`).
+4.  Fittix appends the exercise to that client's workout plan and shows `Added exercise to Person: ` followed by the updated plan.
+5.  Trainer optionally removes an exercise (`delex PERSON_INDEX EXERCISE_INDEX`, e.g. `delex 1 2`) or clears the whole plan (`clearplan INDEX`, e.g. `clearplan 1`).
+6.  Fittix updates the plan and shows `Removed exercise from Person: ` or `Cleared workout plan for Person: ` with the updated plan.
 
     Use case ends.
 
 **Extensions**
 
-* 3a. The given index is invalid.
+* 3a-6a. The given person index is invalid (out of range for the displayed list).
 
-    * 3a1. Fittix shows an error message.
+    * 3a1-6a1. Fittix shows `The person index provided is invalid.`.
 
       Use case resumes at step 2.
 
-* 3b. The client already has a current workout plan.
+* 3b. A compulsory prefix is missing or duplicated, or sets/reps/weight is in an invalid format.
+  * Sets/reps must be positive integers greater than 0; weight must be a finite non-negative number in kg; name must not be blank.
 
-    * 3b1. Fittix replaces the existing plan and states that the previous plan was overwritten.
+    * 3b1. Fittix shows `Invalid command format!` followed by the `addex` usage (`addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME s/SETS r/REPS w/WEIGHT_KG Example: addex 1 n/Bench Press s/3 r/10 w/60`), with the specific constraint as cause (e.g. `Exercise name should not be blank`, `Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`).
+
+      Use case resumes at step 3.
+
+* 3c. An exercise with the same name (case-insensitive) is already in that client's plan.
+
+    * 3c1. Fittix shows `This exercise already exists in the workout plan.` and does not add it.
 
       Use case ends.
+
+* 5a. `delex` targets an empty plan or an out-of-range exercise index (the 1-based number on the person card).
+
+    * 5a1. Fittix shows `The exercise index provided is invalid.`.
+
+      Use case resumes at step 2.
+
+* 5b. `delex` arguments are not exactly two positive integers.
+
+    * 5b1. Fittix shows `Invalid command format!` followed by the `delex` usage (`delex: Removes the exercise at the specified exercise index from the workout plan of the person identified by the index number used in the last person listing. Parameters: PERSON_INDEX EXERCISE_INDEX (both must be positive integers) Example: delex 1 2`).
+
+      Use case resumes at step 5.
+
+* 6b. `clearplan` targets a client whose plan is already empty.
+
+    * 6b1. Fittix shows `Workout plan is already empty for Person: ` followed by that person and makes no change.
+
+      Use case ends.
+
+* 6c. `clearplan` argument is not exactly one positive integer.
+
+    * 6c1. Fittix shows `Invalid command format!` followed by the `clearplan` usage (`clearplan: Clears all exercises from the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) Example: clearplan 1`).
+
+      Use case resumes at step 5.
 
 **Use case: UC07 - Record a diet plan for a client**
 
@@ -613,6 +693,58 @@ testers are expected to do more *exploratory* testing.
 
 1. Dealing with missing/corrupted data files
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+   1. Missing file: delete `[JAR file location]/data/addressbook.json`, then relaunch.<br>
+      Expected: The app starts with an empty address book (or sample data on first run) and recreates the file after the next mutating command.
 
-1. _{ more test cases …​ }_
+   1. Corrupted top-level JSON: open `addressbook.json`, replace its contents with `not json`, save, then relaunch.<br>
+      Expected: The app starts with an empty address book rather than crashing. The invalid file stays on disk until the next save overwrites it.
+
+   1. Corrupted `exercises` entry: open `addressbook.json`, pick a person, and set one exercise to an invalid value (e.g. `"sets": 0`, `"reps": -1`, `"weightKg": -5`, `"name": "  "`, or `"weightKg": "NaN"` / `Infinity` / `null`, or a `null` array element). Save, then relaunch.<br>
+      Expected: That person fails validation (`Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`, `Exercise name should not be blank`, `Exercise's <field> field is missing!`, or `Workout plan must not contain null exercises`), so the whole file is treated as corrupted and the app starts with an empty address book.
+
+   1. Missing `exercises` field (backward compatibility): open `addressbook.json`, delete the `"exercises": [...]` array from one person, save, then relaunch.<br>
+      Expected: That person loads with an empty workout plan; the card shows `No workout plan yet` and `Messages.format` shows `Workout Plan: Empty`.
+
+1. Persistence reload for workout plans
+
+   1. Prerequisites: at least one person in the list (use `list`).
+   1. Test case: `addex 1 n/Bench Press s/3 r/10 w/60` then close the app and relaunch.<br>
+      Expected: The status message shows `Added exercise to Person: ` with `Workout Plan: (1): 1. Bench Press 3x10 @60kg`; after relaunch the same plan is still shown on the first person's card as `Workout Plan (1):` + `1. Bench Press 3x10 @60kg`, and `data/addressbook.json` contains an `exercises` array with `{"name":"Bench Press","sets":3,"reps":10,"weightKg":60.0}`.
+   1. Test case: `delex 1 1` then close and relaunch.<br>
+      Expected: The status message shows `Removed exercise from Person: ` with the remaining plan; after relaunch the plan stays removed.
+   1. Test case: `clearplan 1` then close and relaunch.<br>
+      Expected: The status message shows `Cleared workout plan for Person: ` (or `Workout plan is already empty for Person: ` if it was already empty); after relaunch the plan is still empty.
+
+### Managing workout plans
+
+1. Adding an exercise (`addex`)
+
+   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
+   1. Test case: `addex 1 n/Bench Press s/3 r/10 w/60`<br>
+      Expected: The exercise is appended to the 1st person's plan. The status message shows `Added exercise to Person: ` with `Workout Plan: (1): 1. Bench Press 3x10 @60kg`, and the card shows `Workout Plan (1):` + `1. Bench Press 3x10 @60kg`.
+   1. Test case: `addex 1 n/Squat s/4 r/8 w/80`<br>
+      Expected: The plan grows to `(2): 1. Bench Press 3x10 @60kg; 2. Squat 4x8 @80kg`, matching the card numbering.
+   1. Invalid cases to try: `addex 0 n/X s/3 r/10 w/60` (bad person index), `addex 1 n/  s/3 r/10 w/60` (blank name), `addex 1 n/X s/0 r/10 w/60` / `s/-1` / `s/abc`, `addex 1 n/X s/3 r/0 w/60` / `r/abc`, `addex 1 n/X s/3 r/10 w/-1` / `w/abc` / `w/Infinity` / `w/NaN`, missing prefix (e.g. no `w/`), duplicated prefix (e.g. two `n/`).<br>
+      Expected: No exercise is added. Out-of-range person shows `The person index provided is invalid.`; all other bad values show `Invalid command format!` + the `addex` usage with the specific constraint (`Exercise name should not be blank`, `Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`) as the cause.
+   1. Test case: add the same name twice with different casing, e.g. `addex 1 n/bench press s/3 r/10 w/60` after `Bench Press` exists.<br>
+      Expected: Rejected with `This exercise already exists in the workout plan.`
+
+1. Deleting an exercise (`delex`)
+
+   1. Prerequisites: 1st person has at least two exercises (add them as above); note the card numbering.
+   1. Test case: `delex 1 1`<br>
+      Expected: The 1st exercise is removed. The status message shows `Removed exercise from Person: ` with the remaining plan (e.g. `(1): 1. Squat 4x8 @80kg`), and the card renumbers accordingly.
+   1. Test case: `delex 1 5` where only 1 exercise remains, and `delex 1 1` on a person whose plan is empty.<br>
+      Expected: No change. Both show `The exercise index provided is invalid.`
+   1. Other incorrect commands to try: `delex`, `delex 1`, `delex 1 2 3`, `delex 0 1`, `delex x y`.<br>
+      Expected: `Invalid command format!` + the `delex` usage (`delex: Removes the exercise at the specified exercise index from the workout plan of the person identified by the index number used in the last person listing. Parameters: PERSON_INDEX EXERCISE_INDEX (both must be positive integers) Example: delex 1 2`). Out-of-range person index shows `The person index provided is invalid.`
+
+1. Clearing a workout plan (`clearplan`)
+
+   1. Prerequisites: 1st person has at least one exercise; 2nd person has an empty plan.
+   1. Test case: `clearplan 1`<br>
+      Expected: All exercises are removed. The status message shows `Cleared workout plan for Person: ` with `Workout Plan: Empty`, and the card shows `Workout Plan:` + `No workout plan yet`.
+   1. Test case: `clearplan 1` again (already empty), or `clearplan 2` on the empty-plan person.<br>
+      Expected: No change. Shows `Workout plan is already empty for Person: ` with that person.
+   1. Other incorrect commands to try: `clearplan`, `clearplan 0`, `clearplan x`, `clearplan 1 2`.<br>
+      Expected: `Invalid command format!` + the `clearplan` usage (`clearplan: Clears all exercises from the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) Example: clearplan 1`). Out-of-range index shows `The person index provided is invalid.`
