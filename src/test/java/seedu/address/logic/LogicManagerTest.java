@@ -13,13 +13,17 @@ import static seedu.address.testutil.TypicalPersons.AMY;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AddExerciseCommand;
+import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -27,7 +31,9 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.WorkoutPlan;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -68,6 +74,68 @@ public class LogicManagerTest {
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand, ListCommand.MESSAGE_SUCCESS, model);
+    }
+
+    @Test
+    public void execute_addExercise_success() throws Exception {
+        Person person = new PersonBuilder(AMY).build();
+        model.addPerson(person);
+
+        Exercise exercise = new Exercise("Bench Press", 3, 10, 60.0);
+        Person editedPerson = new PersonBuilder(person)
+                .withWorkoutPlan(person.getWorkoutPlan().addExercise(exercise)).build();
+        String expectedMessage = String.format(AddExerciseCommand.MESSAGE_ADD_EXERCISE_SUCCESS,
+                Messages.format(editedPerson));
+
+        ModelManager expectedModel = new ModelManager();
+        expectedModel.addPerson(editedPerson);
+
+        assertCommandSuccess("addex 1 n/Bench Press s/3 r/10 w/60", expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_deleteExercise_success() throws Exception {
+        Exercise benchPress = new Exercise("Bench Press", 3, 10, 60.0);
+        Exercise squat = new Exercise("Squat", 4, 8, 80.0);
+        Person person = new PersonBuilder(AMY)
+                .withWorkoutPlan(new WorkoutPlan(Arrays.asList(benchPress, squat))).build();
+        model.addPerson(person);
+
+        Person editedPerson = new PersonBuilder(person)
+                .withWorkoutPlan(new WorkoutPlan(Arrays.asList(squat))).build();
+        String expectedMessage = String.format(DeleteExerciseCommand.MESSAGE_DELETE_EXERCISE_SUCCESS,
+                Messages.format(editedPerson));
+
+        ModelManager expectedModel = new ModelManager();
+        expectedModel.addPerson(editedPerson);
+
+        assertCommandSuccess("delex 1 1", expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_clearPlan_success() throws Exception {
+        Exercise benchPress = new Exercise("Bench Press", 3, 10, 60.0);
+        Person person = new PersonBuilder(AMY)
+                .withWorkoutPlan(new WorkoutPlan(Arrays.asList(benchPress))).build();
+        model.addPerson(person);
+
+        Person editedPerson = new PersonBuilder(person).withWorkoutPlan(new WorkoutPlan()).build();
+        String expectedMessage = String.format(ClearPlanCommand.MESSAGE_CLEAR_PLAN_SUCCESS,
+                Messages.format(editedPerson));
+
+        ModelManager expectedModel = new ModelManager();
+        expectedModel.addPerson(editedPerson);
+
+        assertCommandSuccess("clearplan 1", expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_addExerciseInvalidFormat_throwsParseException() {
+        model.addPerson(new PersonBuilder(AMY).build());
+        // missing compulsory exercise prefixes
+        assertParseException("addex 1 n/Bench Press",
+                String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
+                        AddExerciseCommand.MESSAGE_USAGE));
     }
 
     @Test
