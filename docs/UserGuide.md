@@ -161,8 +161,12 @@ Format: `addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG`
 * All four prefixes `n/`, `s/`, `r/`, `w/` are required and must not be duplicated.
 * An exercise with the same name (case-insensitive) cannot be added twice to the same plan. Fittix shows `This exercise already exists in the workout plan.` and does not add it.
 * If `INDEX` is out of range, Fittix shows `The person index provided is invalid.`
-* If the format is wrong, Fittix shows `Invalid command format!` followed by:
-  `addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME s/SETS r/REPS w/WEIGHT_KG Example: addex 1 n/Bench Press s/3 r/10 w/60`
+* If the format is wrong, Fittix shows `Invalid command format!` followed by the `addex` usage (`MESSAGE_USAGE`):
+  ```
+  addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing.
+  Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME s/SETS r/REPS w/WEIGHT_KG
+  Example: addex 1 n/Bench Press s/3 r/10 w/60
+  ```
 * On success, Fittix shows `Added exercise to Person: ` followed by the updated person including the workout plan, e.g. `Workout Plan: (1): 1. Bench Press 3x10 @60kg`.
 * The workout plan is shown on each person card as `Workout Plan (N):` followed by one numbered row per exercise formatted as `NAME SETSxREPS @WEIGHTkg` (e.g. `Bench Press 3x10 @60kg`). An empty plan shows `No workout plan yet`.
 
@@ -180,8 +184,12 @@ Format: `delex PERSON_INDEX EXERCISE_INDEX`
 * `EXERCISE_INDEX` is 1-based and matches the numbering shown on the person card (e.g. `1.` is the first exercise).
 * If `PERSON_INDEX` is out of range, Fittix shows `The person index provided is invalid.`
 * If `EXERCISE_INDEX` is out of range (including when the plan is empty), Fittix shows `The exercise index provided is invalid.`
-* If the format is wrong, Fittix shows `Invalid command format!` followed by:
-  `delex: Removes the exercise at the specified exercise index from the workout plan of the person identified by the index number used in the last person listing. Parameters: PERSON_INDEX EXERCISE_INDEX (both must be positive integers) Example: delex 1 2`
+* If the format is wrong, Fittix shows `Invalid command format!` followed by the `delex` usage (`MESSAGE_USAGE`):
+  ```
+  delex: Removes the exercise at the specified exercise index from the workout plan of the person identified by the index number used in the last person listing.
+  Parameters: PERSON_INDEX EXERCISE_INDEX (both must be positive integers)
+  Example: delex 1 2
+  ```
 * On success, Fittix shows `Removed exercise from Person: ` followed by the updated person including the remaining workout plan.
 
 Examples:
@@ -196,8 +204,12 @@ Format: `clearplan INDEX`
 
 * `INDEX` refers to the index number shown in the displayed person list. It **must be a positive integer** 1, 2, 3, …​
 * If `INDEX` is out of range, Fittix shows `The person index provided is invalid.`
-* If the format is wrong, Fittix shows `Invalid command format!` followed by:
-  `clearplan: Clears all exercises from the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) Example: clearplan 1`
+* If the format is wrong, Fittix shows `Invalid command format!` followed by the `clearplan` usage (`MESSAGE_USAGE`):
+  ```
+  clearplan: Clears all exercises from the workout plan of the person identified by the index number used in the last person listing.
+  Parameters: INDEX (must be a positive integer)
+  Example: clearplan 1
+  ```
 * If the plan already has no exercises, Fittix shows `Workout plan is already empty for Person: ` followed by that person, and makes no change.
 * Otherwise Fittix clears the plan and shows `Cleared workout plan for Person: ` followed by the updated person (whose workout plan is `Empty`).
 
