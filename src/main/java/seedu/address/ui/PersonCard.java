@@ -9,6 +9,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import seedu.address.logic.Messages;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutPlan;
@@ -74,12 +75,14 @@ public class PersonCard extends UiPart<Region> {
      * Shows one row per exercise formatted as {@code Name SetsxReps @Weightkg}
      * (e.g. {@code Bench Press 4x10 @60kg}), numbered so the index matches
      * {@code DeleteExerciseCommand}'s exercise index.
-     * An empty (or {@code null}) plan shows the placeholder text instead.
+     * An empty plan shows the placeholder text instead.
      * Labels wrap so long lists grow vertically without breaking the card layout.
+     * Exercise text formatting is delegated to {@code Messages#formatExercise}
+     * so the card and command feedback stay consistent.
      */
     private void displayWorkoutPlan() {
         WorkoutPlan plan = person.getWorkoutPlan();
-        List<Exercise> exercises = (plan == null) ? List.of() : plan.getExercises();
+        List<Exercise> exercises = plan.getExercises();
 
         workoutPlanContainer.getChildren().clear();
 
@@ -96,22 +99,11 @@ public class PersonCard extends UiPart<Region> {
 
         for (int i = 0; i < exercises.size(); i++) {
             Exercise exercise = exercises.get(i);
-            Label exerciseLabel = new Label((i + 1) + ". " + formatExercise(exercise));
+            Label exerciseLabel = new Label((i + 1) + ". " + Messages.formatExercise(exercise));
             exerciseLabel.getStyleClass().add("cell_small_label");
             exerciseLabel.setWrapText(true);
             exerciseLabel.setMaxWidth(350);
             workoutPlanContainer.getChildren().add(exerciseLabel);
         }
-    }
-
-    /**
-     * Formats an exercise as {@code Name SetsxReps @Weightkg}, e.g. {@code Bench Press 4x10 @60kg}.
-     */
-    private static String formatExercise(Exercise exercise) {
-        String weight = (exercise.getWeightKg() % 1 == 0)
-                ? String.valueOf((int) exercise.getWeightKg())
-                : String.valueOf(exercise.getWeightKg());
-        return String.format("%s %dx%d @%skg",
-                exercise.getName(), exercise.getSets(), exercise.getReps(), weight);
     }
 }
