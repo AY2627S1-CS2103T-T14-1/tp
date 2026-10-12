@@ -84,8 +84,9 @@ public class Messages {
         String weight = (exercise.getWeightKg() % 1 == 0)
                 ? String.valueOf((int) exercise.getWeightKg())
                 : String.valueOf(exercise.getWeightKg());
-        return String.format("%s %dx%d @%skg",
+        String formatted = String.format("%s %dx%d @%skg",
                 exercise.getName(), exercise.getSets(), exercise.getReps(), weight);
+        return exercise.getDay().isEmpty() ? formatted : formatted + " [" + exercise.getDay() + "]";
     }
 
 }

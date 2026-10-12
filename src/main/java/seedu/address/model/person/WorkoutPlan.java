@@ -71,6 +71,14 @@ public class WorkoutPlan {
         return new WorkoutPlan(updated);
     }
 
+    /** Returns a new plan with the exercise at the zero-based index assigned to {@code day}. */
+    public WorkoutPlan setExerciseDay(int index, String day) {
+        requireNonNull(day);
+        List<Exercise> updated = new ArrayList<>(exercises);
+        updated.set(index, updated.get(index).withDay(day));
+        return new WorkoutPlan(updated);
+    }
+
     /**
      * Returns true if the plan contains no exercises.
      */
