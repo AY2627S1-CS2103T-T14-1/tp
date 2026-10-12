@@ -1,6 +1,8 @@
 package seedu.address.logic;
 
 import java.util.Set;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,17 +66,41 @@ public class Messages {
         }
         StringBuilder builder = new StringBuilder();
         builder.append("(").append(plan.size()).append("): ");
-        boolean isFirst = true;
+        List<Exercise> sortedExercises = plan.getExercises().stream()
+                .sorted(Comparator.comparingInt(Messages::daySortOrder))
+                .toList();
+        boolean firstGroup = true;
         int index = 1;
-        for (Exercise exercise : plan.getExercises()) {
-            if (!isFirst) {
+        String currentGroup = null;
+        for (Exercise exercise : sortedExercises) {
+            String group = exercise.getDay().isEmpty() ? "Unscheduled" : exercise.getDay();
+            if (!group.equals(currentGroup)) {
+                if (!firstGroup) {
+                    builder.append("; ");
+                }
+                builder.append(group).append(": ");
+                currentGroup = group;
+                firstGroup = false;
+            } else {
                 builder.append("; ");
             }
             builder.append(index).append(". ").append(formatExercise(exercise));
-            isFirst = false;
             index++;
         }
         return builder.toString();
+    }
+
+    private static int daySortOrder(Exercise exercise) {
+        return switch (exercise.getDay().toLowerCase()) {
+        case "monday" -> 0;
+        case "tuesday" -> 1;
+        case "wednesday" -> 2;
+        case "thursday" -> 3;
+        case "friday" -> 4;
+        case "saturday" -> 5;
+        case "sunday" -> 6;
+        default -> 7;
+        };
     }
 
     /**

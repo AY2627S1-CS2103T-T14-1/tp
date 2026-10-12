@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.List;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -97,8 +98,19 @@ public class PersonCard extends UiPart<Region> {
             return;
         }
 
-        for (int i = 0; i < exercises.size(); i++) {
-            Exercise exercise = exercises.get(i);
+        List<Exercise> sortedExercises = exercises.stream()
+                .sorted(Comparator.comparingInt(exercise -> switch (exercise.getDay().toLowerCase()) {
+                    case "monday" -> 0;
+                    case "tuesday" -> 1;
+                    case "wednesday" -> 2;
+                    case "thursday" -> 3;
+                    case "friday" -> 4;
+                    case "saturday" -> 5;
+                    case "sunday" -> 6;
+                    default -> 7;
+                })).toList();
+        for (int i = 0; i < sortedExercises.size(); i++) {
+            Exercise exercise = sortedExercises.get(i);
             Label exerciseLabel = new Label((i + 1) + ". " + Messages.formatExercise(exercise));
             exerciseLabel.getStyleClass().add("cell_small_label");
             exerciseLabel.setWrapText(true);
