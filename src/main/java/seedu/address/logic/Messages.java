@@ -89,7 +89,7 @@ public class Messages {
         if (exercise.getDay().isEmpty()) {
             return formatted;
         }
-        String abbreviatedDay = exercise.getDay().substring(0, Math.min(4, exercise.getDay().length()));
+        String abbreviatedDay = exercise.getDay().substring(0, Math.min(3, exercise.getDay().length()));
         return formatted + " [" + abbreviatedDay + "]";
     }
 

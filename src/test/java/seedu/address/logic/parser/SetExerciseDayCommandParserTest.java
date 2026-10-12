@@ -16,6 +16,14 @@ public class SetExerciseDayCommandParserTest {
     public void parse_validArgs_returnsCommand() throws Exception {
         assertEquals(new SetExerciseDayCommand(Index.fromOneBased(1), Index.fromOneBased(2), "Tuesday"),
                 parser.parse("1 2 Tuesday"));
+        assertEquals(new SetExerciseDayCommand(Index.fromOneBased(1), Index.fromOneBased(2), "Tuesday"),
+                parser.parse("1 2 Tue"));
+        assertEquals(new SetExerciseDayCommand(Index.fromOneBased(1), Index.fromOneBased(2), "Tuesday"),
+                parser.parse("1 2 tU"));
+        assertEquals(new SetExerciseDayCommand(Index.fromOneBased(1), Index.fromOneBased(2), "Thursday"),
+                parser.parse("1 2 th"));
+        assertEquals(new SetExerciseDayCommand(Index.fromOneBased(1), Index.fromOneBased(2), "Monday"),
+                parser.parse("1 2 m"));
     }
 
     @Test
@@ -24,5 +32,7 @@ public class SetExerciseDayCommandParserTest {
         assertThrows(ParseException.class, () -> parser.parse("0 2 Tuesday"));
         assertThrows(ParseException.class, () -> parser.parse("1 2"));
         assertThrows(ParseException.class, () -> parser.parse("1 2 3 4"));
+        assertThrows(ParseException.class, () -> parser.parse("1 2 t"));
+        assertThrows(ParseException.class, () -> parser.parse("1 2 xyz"));
     }
 }
