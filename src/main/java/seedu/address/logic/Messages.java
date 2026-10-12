@@ -89,7 +89,20 @@ public class Messages {
 
     /** Returns the heading for an exercise's day group. */
     public static String getExerciseDayHeading(Exercise exercise) {
-        return exercise.getDay().isEmpty() ? "Day not specified" : exercise.getDay();
+        if (exercise.getDay().isEmpty()) {
+            return "Day not specified";
+        }
+        String day = exercise.getDay().toLowerCase();
+        return switch (day) {
+        case "monday" -> "Monday";
+        case "tuesday" -> "Tuesday";
+        case "wednesday" -> "Wednesday";
+        case "thursday" -> "Thursday";
+        case "friday" -> "Friday";
+        case "saturday" -> "Saturday";
+        case "sunday" -> "Sunday";
+        default -> exercise.getDay();
+        };
     }
 
     /**

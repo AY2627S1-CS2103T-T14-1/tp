@@ -65,6 +65,12 @@ public class MessagesTest {
     }
 
     @Test
+    public void getExerciseDayHeading_returnsFullCanonicalWeekdayName() {
+        assertEquals("Wednesday", Messages.getExerciseDayHeading(new Exercise("Press", 1, 1, 1, "Wednesday")));
+        assertEquals("Saturday", Messages.getExerciseDayHeading(new Exercise("Squat", 1, 1, 1, "Saturday")));
+    }
+
+    @Test
     public void format_personWithNonEmptyPlan_includesNumberedExercises() {
         Person person = new PersonBuilder().withWorkoutPlan(new WorkoutPlan(Arrays.asList(
                 new Exercise("Bench Press", 3, 10, 60.0),

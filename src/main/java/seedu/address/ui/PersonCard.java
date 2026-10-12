@@ -102,6 +102,12 @@ public class PersonCard extends UiPart<Region> {
             Exercise exercise = indexed.exercise();
             String group = Messages.getExerciseDayHeading(exercise);
             if (!group.equals(currentGroup)) {
+                if (currentGroup != null) {
+                    Label spacer = new Label();
+                    spacer.setMinHeight(8);
+                    spacer.setPrefHeight(8);
+                    workoutPlanContainer.getChildren().add(spacer);
+                }
                 Label dayHeading = new Label(group);
                 dayHeading.getStyleClass().add("cell_small_label");
                 dayHeading.setStyle("-fx-font-weight: bold;");
