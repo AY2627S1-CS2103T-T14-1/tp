@@ -84,9 +84,11 @@ public class Messages {
 
     /** Returns plan exercises in display order with sequential one-based indices. */
     public static List<IndexedExercise> getExercisesInDisplayOrder(WorkoutPlan plan) {
-        return java.util.stream.IntStream.range(0, plan.getExercises().size())
-                .mapToObj(index -> new IndexedExercise(index + 1, plan.getExercises().get(index)))
-                .sorted(Comparator.comparingInt(item -> daySortOrder(item.exercise())))
+        List<Exercise> sorted = plan.getExercises().stream()
+                .sorted(Comparator.comparingInt(Messages::daySortOrder))
+                .toList();
+        return java.util.stream.IntStream.range(0, sorted.size())
+                .mapToObj(index -> new IndexedExercise(index + 1, sorted.get(index)))
                 .toList();
     }
 

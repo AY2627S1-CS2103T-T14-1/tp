@@ -63,7 +63,9 @@ public class MessagesTest {
         List<Messages.IndexedExercise> ordered = Messages.getExercisesInDisplayOrder(plan);
 
         assertEquals("Saturday exercise", ordered.get(0).exercise().getName());
+        assertEquals(1, ordered.get(0).index());
         assertEquals("Sunday exercise", ordered.get(1).exercise().getName());
+        assertEquals(2, ordered.get(1).index());
     }
 
     @Test
