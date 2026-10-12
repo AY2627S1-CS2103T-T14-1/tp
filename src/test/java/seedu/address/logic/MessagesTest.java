@@ -49,8 +49,8 @@ public class MessagesTest {
                 new Exercise("Press", 3, 10, 60, "Tuesday"),
                 new Exercise("Squat", 4, 8, 80, "Monday"),
                 new Exercise("Stretch", 1, 1, 0)));
-        assertEquals("(4):\n**Monday**\n3. Squat 4x8 @80kg\n\n**Tuesday**\n2. Press 3x10 @60kg\n\n"
-                        + "**Sunday**\n1. Run 1x1 @0kg\n\n**Day not specified**\n4. Stretch 1x1 @0kg",
+        assertEquals("(4):\n**Monday**\n1. Squat 4x8 @80kg\n\n**Tuesday**\n2. Press 3x10 @60kg\n\n"
+                        + "**Sunday**\n3. Run 1x1 @0kg\n\n**Day not specified**\n4. Stretch 1x1 @0kg",
                 Messages.formatWorkoutPlan(plan));
     }
 
