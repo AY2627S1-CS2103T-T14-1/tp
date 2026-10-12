@@ -27,6 +27,7 @@ public class SetExerciseDayCommand extends Command {
     private final Index exerciseIndex;
     private final String day;
 
+    /** Creates a command to assign {@code day} to the indexed exercise. */
     public SetExerciseDayCommand(Index personIndex, Index exerciseIndex, String day) {
         requireAllNonNull(personIndex, exerciseIndex, day);
         this.personIndex = personIndex;

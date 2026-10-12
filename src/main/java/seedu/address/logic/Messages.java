@@ -1,16 +1,15 @@
 package seedu.address.logic;
 
-import java.util.Set;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import seedu.address.logic.parser.Prefix;
-import seedu.address.logic.parser.DayParserUtil;
-import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Weekday;
 import seedu.address.model.person.WorkoutPlan;
 
 /**
@@ -93,17 +92,7 @@ public class Messages {
     }
 
     private static int daySortOrder(Exercise exercise) {
-        String day = getExerciseDayHeading(exercise).toLowerCase();
-        return switch (day) {
-        case "monday" -> 0;
-        case "tuesday" -> 1;
-        case "wednesday" -> 2;
-        case "thursday" -> 3;
-        case "friday" -> 4;
-        case "saturday" -> 5;
-        case "sunday" -> 6;
-        default -> 7;
-        };
+        return Weekday.sortOrder(exercise.getDay());
     }
 
     /** Returns the heading for an exercise's day group. */
@@ -111,11 +100,7 @@ public class Messages {
         if (exercise.getDay().isEmpty()) {
             return "Day not specified";
         }
-        try {
-            return DayParserUtil.parseDay(exercise.getDay());
-        } catch (ParseException e) {
-            return exercise.getDay();
-        }
+        return Weekday.fromPrefix(exercise.getDay()).map(Weekday::getDisplayName).orElse(exercise.getDay());
     }
 
     /**

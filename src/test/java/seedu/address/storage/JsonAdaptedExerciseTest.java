@@ -7,6 +7,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.person.Exercise;
 
 public class JsonAdaptedExerciseTest {
@@ -25,6 +26,20 @@ public class JsonAdaptedExerciseTest {
         JsonAdaptedExercise exercise =
                 new JsonAdaptedExercise(VALID_NAME, VALID_SETS, VALID_REPS, VALID_WEIGHT);
         assertEquals(new Exercise(VALID_NAME, VALID_SETS, VALID_REPS, VALID_WEIGHT), exercise.toModelType());
+    }
+
+    @Test
+    public void jsonRoundTrip_taggedExercise_preservesDay() throws Exception {
+        Exercise tagged = new Exercise(VALID_NAME, VALID_SETS, VALID_REPS, VALID_WEIGHT, "Saturday");
+        String json = JsonUtil.toJsonString(new JsonAdaptedExercise(tagged));
+        assertEquals(tagged, JsonUtil.fromJsonString(json, JsonAdaptedExercise.class).toModelType());
+    }
+
+    @Test
+    public void jsonWithoutDay_loadsAsUnspecified() throws Exception {
+        String json = "{\"name\":\"Bench Press\",\"sets\":3,\"reps\":10,\"weightKg\":60.5}";
+        assertEquals(new Exercise(VALID_NAME, VALID_SETS, VALID_REPS, VALID_WEIGHT),
+                JsonUtil.fromJsonString(json, JsonAdaptedExercise.class).toModelType());
     }
 
     @Test

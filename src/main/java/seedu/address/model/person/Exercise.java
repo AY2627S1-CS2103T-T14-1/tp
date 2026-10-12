@@ -42,6 +42,7 @@ public class Exercise {
         this(name, sets, reps, weightKg, "");
     }
 
+    /** Creates an exercise with a day label, or an empty day for an unspecified schedule. */
     public Exercise(String name, int sets, int reps, double weightKg, String day) {
         requireNonNull(name);
         requireNonNull(day);

@@ -85,16 +85,7 @@ public class WorkoutPlan {
     }
 
     private static int daySortOrder(Exercise exercise) {
-        return switch (exercise.getDay().toLowerCase()) {
-        case "monday" -> 0;
-        case "tuesday" -> 1;
-        case "wednesday" -> 2;
-        case "thursday" -> 3;
-        case "friday" -> 4;
-        case "saturday" -> 5;
-        case "sunday" -> 6;
-        default -> 7;
-        };
+        return Weekday.sortOrder(exercise.getDay());
     }
 
     /**
