@@ -22,10 +22,7 @@ class JsonAdaptedExercise {
     /**
      * Constructs a {@code JsonAdaptedExercise} with the given exercise details.
      */
-    public JsonAdaptedExercise(@JsonProperty("name") String name,
-            @JsonProperty("sets") Integer sets,
-            @JsonProperty("reps") Integer reps,
-            @JsonProperty("weightKg") Double weightKg) {
+    public JsonAdaptedExercise(String name, Integer sets, Integer reps, Double weightKg) {
         this(name, sets, reps, weightKg, "");
     }
 

@@ -54,7 +54,9 @@ public class Exercise {
         this.sets = sets;
         this.reps = reps;
         this.weightKg = weightKg;
-        this.day = day.trim();
+        // Older saves may contain the display heading instead of an empty day.
+        String trimmedDay = day.trim();
+        this.day = trimmedDay.equalsIgnoreCase("Day not specified") ? "" : trimmedDay;
     }
 
     /**

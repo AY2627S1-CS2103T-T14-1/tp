@@ -43,27 +43,38 @@ public class AddExerciseCommandParserTest {
         // missing exercise name prefix
         assertParseFailure(parser, "1 s/3 r/10 w/60", MESSAGE_INVALID_FORMAT);
 
-        // all optional prefixes omitted; defaults are used
-        assertParseSuccess(parser, "1 n/Bench Press",
-                new AddExerciseCommand(INDEX_FIRST_PERSON,
-                        new Exercise("Bench Press", 1, 1, 0.0, "")));
-
-        assertParseSuccess(parser, "1 n/Bench Press s/4",
-                new AddExerciseCommand(INDEX_FIRST_PERSON,
-                        new Exercise("Bench Press", 4, 1, 0.0, "")));
-        assertParseSuccess(parser, "1 n/Bench Press r/8",
-                new AddExerciseCommand(INDEX_FIRST_PERSON,
-                        new Exercise("Bench Press", 1, 8, 0.0, "")));
-        assertParseSuccess(parser, "1 n/Bench Press w/25",
-                new AddExerciseCommand(INDEX_FIRST_PERSON,
-                        new Exercise("Bench Press", 1, 1, 25.0, "")));
-
         // name prefix is required
         assertParseFailure(parser, "1", MESSAGE_INVALID_FORMAT);
 
         // empty args
         assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "   ", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_optionalPrefixCombinations_useDefaultsOnlyForOmittedValues() {
+        String[] optionalArgs = {" s/4", " r/8", " w/25.5", " d/w"};
+        for (int mask = 0; mask < 16; mask++) {
+            StringBuilder args = new StringBuilder("1 n/Bench Press");
+            for (int field = 0; field < optionalArgs.length; field++) {
+                if ((mask & (1 << field)) != 0) {
+                    args.append(optionalArgs[field]);
+                }
+            }
+            int sets = (mask & 1) != 0 ? 4 : 1;
+            int reps = (mask & 2) != 0 ? 8 : 1;
+            double weight = (mask & 4) != 0 ? 25.5 : 0;
+            String day = (mask & 8) != 0 ? "Wednesday" : "";
+            Exercise expected = new Exercise("Bench Press", sets, reps, weight, day);
+            assertParseSuccess(parser, args.toString(), new AddExerciseCommand(INDEX_FIRST_PERSON, expected));
+        }
+    }
+
+    @Test
+    public void parse_presentButEmptyOptionalPrefix_failure() {
+        for (String prefix : new String[] {"s/", "r/", "w/", "d/"}) {
+            assertParseFailure(parser, "1 n/Bench Press " + prefix, MESSAGE_INVALID_FORMAT);
+        }
     }
 
     @Test
