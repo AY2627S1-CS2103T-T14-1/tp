@@ -3,7 +3,6 @@ package seedu.address.logic.commands;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import seedu.address.commons.core.index.Index;
@@ -19,8 +18,8 @@ public class SetExerciseDayCommand extends Command {
     public static final String COMMAND_WORD = "dayex";
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Assigns a day tag to an exercise in a person's workout plan.\n"
-            + "Parameters: PERSON_INDEX EXERCISE_INDEX day/DAY\n"
-            + "Example: " + COMMAND_WORD + " 1 2 day/Tuesday";
+            + "Parameters: PERSON_INDEX EXERCISE_INDEX DAY\n"
+            + "Example: " + COMMAND_WORD + " 1 2 Tuesday";
     public static final String MESSAGE_SUCCESS = "Assigned day to exercise: %1$s";
     public static final String MESSAGE_INVALID_EXERCISE_INDEX = "The exercise index provided is invalid.";
 

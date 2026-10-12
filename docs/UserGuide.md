@@ -187,13 +187,13 @@ Format: `delex PERSON_INDEX EXERCISE_INDEX`
 
 Assigns a day tag to an existing exercise in a person's workout plan.
 
-Format: `dayex PERSON_INDEX EXERCISE_INDEX day/DAY`
+Format: `dayex PERSON_INDEX EXERCISE_INDEX DAY`
 
 * Both indices are positive integers; the exercise index is 1-based and matches the workout plan numbering.
 * `DAY` is a single word such as `Monday` or `LegDay`.
-* The assigned day is shown beside the exercise and is saved with the workout plan.
+* The assigned day is shown as its first four letters in brackets (for example, `[Tues]`) and is saved with the workout plan.
 
-Example: `dayex 1 2 day/Tuesday` tags the second exercise for the first person as Tuesday.
+Example: `dayex 1 2 Tuesday` tags the second exercise for the first person as Tuesday.
 * If `PERSON_INDEX` is out of range, Fittix shows `The person index provided is invalid.`
 * If `EXERCISE_INDEX` is out of range (including when the plan is empty), Fittix shows `The exercise index provided is invalid.`
 * If the format is wrong, Fittix shows `Invalid command format!` followed by the `delex` usage (`MESSAGE_USAGE`):
@@ -277,7 +277,7 @@ Action | Format, Examples
 **Clear workout plan** | `clearplan INDEX`<br> e.g., `clearplan 1`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
-**Tag exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX day/DAY`<br> e.g., `dayex 1 2 day/Tuesday`
+**Tag exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`

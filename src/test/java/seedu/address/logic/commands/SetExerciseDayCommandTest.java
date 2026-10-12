@@ -28,8 +28,10 @@ public class SetExerciseDayCommandTest {
 
         new SetExerciseDayCommand(INDEX_FIRST_PERSON, INDEX_FIRST_PERSON, "Monday").execute(model);
 
-        assertEquals("Monday", model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased())
-                .getWorkoutPlan().getExercises().get(0).getDay());
+        Exercise tagged = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased())
+                .getWorkoutPlan().getExercises().get(0);
+        assertEquals("Monday", tagged.getDay());
+        assertEquals("Bench Press 3x10 @60kg [Mond]", seedu.address.logic.Messages.formatExercise(tagged));
     }
 
     @Test

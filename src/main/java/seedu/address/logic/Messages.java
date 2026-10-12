@@ -86,7 +86,11 @@ public class Messages {
                 : String.valueOf(exercise.getWeightKg());
         String formatted = String.format("%s %dx%d @%skg",
                 exercise.getName(), exercise.getSets(), exercise.getReps(), weight);
-        return exercise.getDay().isEmpty() ? formatted : formatted + " [" + exercise.getDay() + "]";
+        if (exercise.getDay().isEmpty()) {
+            return formatted;
+        }
+        String abbreviatedDay = exercise.getDay().substring(0, Math.min(4, exercise.getDay().length()));
+        return formatted + " [" + abbreviatedDay + "]";
     }
 
 }
