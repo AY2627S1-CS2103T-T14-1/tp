@@ -1,5 +1,7 @@
 package seedu.address.logic;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -7,6 +9,7 @@ import java.util.stream.Stream;
 import seedu.address.logic.parser.Prefix;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Weekday;
 import seedu.address.model.person.WorkoutPlan;
 
 /**
@@ -62,19 +65,42 @@ public class Messages {
         if (plan.isEmpty()) {
             return "Empty";
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append("(").append(plan.size()).append("): ");
-        boolean isFirst = true;
-        int index = 1;
-        for (Exercise exercise : plan.getExercises()) {
-            if (!isFirst) {
-                builder.append("; ");
+        StringBuilder builder = new StringBuilder().append("(").append(plan.size()).append("):\n");
+        String currentGroup = null;
+        for (IndexedExercise indexed : getExercisesInDisplayOrder(plan)) {
+            String group = getExerciseDayHeading(indexed.exercise());
+            if (!group.equals(currentGroup)) {
+                if (currentGroup != null) {
+                    builder.append('\n');
+                }
+                builder.append("**").append(group).append("**\n");
+                currentGroup = group;
             }
-            builder.append(index).append(". ").append(formatExercise(exercise));
-            isFirst = false;
-            index++;
+            builder.append(indexed.index()).append(". ").append(formatExercise(indexed.exercise())).append('\n');
         }
-        return builder.toString();
+        return builder.toString().stripTrailing();
+    }
+
+    /** Returns plan exercises in display order with sequential one-based indices. */
+    public static List<IndexedExercise> getExercisesInDisplayOrder(WorkoutPlan plan) {
+        List<Exercise> sorted = plan.getExercises().stream()
+                .sorted(Comparator.comparingInt(Messages::daySortOrder))
+                .toList();
+        return java.util.stream.IntStream.range(0, sorted.size())
+                .mapToObj(index -> new IndexedExercise(index + 1, sorted.get(index)))
+                .toList();
+    }
+
+    private static int daySortOrder(Exercise exercise) {
+        return Weekday.sortOrder(exercise.getDay());
+    }
+
+    /** Returns the heading for an exercise's day group. */
+    public static String getExerciseDayHeading(Exercise exercise) {
+        if (exercise.getDay().isEmpty()) {
+            return "Day not specified";
+        }
+        return Weekday.fromPrefix(exercise.getDay()).map(Weekday::getDisplayName).orElse(exercise.getDay());
     }
 
     /**
@@ -84,8 +110,12 @@ public class Messages {
         String weight = (exercise.getWeightKg() % 1 == 0)
                 ? String.valueOf((int) exercise.getWeightKg())
                 : String.valueOf(exercise.getWeightKg());
-        return String.format("%s %dx%d @%skg",
+        String formatted = String.format("%s %dx%d @%skg",
                 exercise.getName(), exercise.getSets(), exercise.getReps(), weight);
+        return formatted;
     }
+
+    /** An exercise paired with its original one-based index in the plan. */
+    public record IndexedExercise(int index, Exercise exercise) { }
 
 }

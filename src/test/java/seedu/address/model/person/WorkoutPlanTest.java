@@ -47,6 +47,15 @@ public class WorkoutPlanTest {
     }
 
     @Test
+    public void constructor_legacyDayPrefixes_ordersSaturdayBeforeSunday() {
+        Exercise sunday = new Exercise("Run", 1, 1, 0, "Sun");
+        Exercise saturday = new Exercise("Squat", 3, 10, 80, "Sat");
+        Exercise unspecified = new Exercise("Stretch", 1, 1, 0);
+        WorkoutPlan plan = new WorkoutPlan(List.of(sunday, unspecified, saturday));
+        assertEquals(List.of(saturday, sunday, unspecified), plan.getExercises());
+    }
+
+    @Test
     public void getExercises_modifyList_throwsUnsupportedOperationException() {
         WorkoutPlan plan = new WorkoutPlan(Arrays.asList(BENCH_PRESS));
         assertThrows(UnsupportedOperationException.class, () -> plan.getExercises().remove(0));

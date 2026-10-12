@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,6 +33,7 @@ public class WorkoutPlan {
         requireNonNull(exercises);
         this.exercises = new ArrayList<>(exercises);
         this.exercises.forEach(Objects::requireNonNull);
+        this.exercises.sort(Comparator.comparingInt(WorkoutPlan::daySortOrder));
     }
 
     /**
@@ -58,6 +60,7 @@ public class WorkoutPlan {
         requireNonNull(exercise);
         List<Exercise> updated = new ArrayList<>(exercises);
         updated.add(exercise);
+        updated.sort(Comparator.comparingInt(WorkoutPlan::daySortOrder));
         return new WorkoutPlan(updated);
     }
 
@@ -68,7 +71,21 @@ public class WorkoutPlan {
         requireNonNull(exercise);
         List<Exercise> updated = new ArrayList<>(exercises);
         updated.remove(exercise);
+        updated.sort(Comparator.comparingInt(WorkoutPlan::daySortOrder));
         return new WorkoutPlan(updated);
+    }
+
+    /** Returns a new plan with the exercise at the zero-based index assigned to {@code day}. */
+    public WorkoutPlan setExerciseDay(int index, String day) {
+        requireNonNull(day);
+        List<Exercise> updated = new ArrayList<>(exercises);
+        updated.set(index, updated.get(index).withDay(day));
+        updated.sort(Comparator.comparingInt(WorkoutPlan::daySortOrder));
+        return new WorkoutPlan(updated);
+    }
+
+    private static int daySortOrder(Exercise exercise) {
+        return Weekday.sortOrder(exercise.getDay());
     }
 
     /**

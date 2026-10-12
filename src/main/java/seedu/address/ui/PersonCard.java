@@ -97,9 +97,24 @@ public class PersonCard extends UiPart<Region> {
             return;
         }
 
-        for (int i = 0; i < exercises.size(); i++) {
-            Exercise exercise = exercises.get(i);
-            Label exerciseLabel = new Label((i + 1) + ". " + Messages.formatExercise(exercise));
+        String currentGroup = null;
+        for (Messages.IndexedExercise indexed : Messages.getExercisesInDisplayOrder(plan)) {
+            Exercise exercise = indexed.exercise();
+            String group = Messages.getExerciseDayHeading(exercise);
+            if (!group.equals(currentGroup)) {
+                if (currentGroup != null) {
+                    Label spacer = new Label();
+                    spacer.setMinHeight(8);
+                    spacer.setPrefHeight(8);
+                    workoutPlanContainer.getChildren().add(spacer);
+                }
+                Label dayHeading = new Label(group);
+                dayHeading.getStyleClass().add("cell_small_label");
+                dayHeading.setStyle("-fx-font-weight: bold;");
+                workoutPlanContainer.getChildren().add(dayHeading);
+                currentGroup = group;
+            }
+            Label exerciseLabel = new Label(indexed.index() + ". " + Messages.formatExercise(exercise));
             exerciseLabel.getStyleClass().add("cell_small_label");
             exerciseLabel.setWrapText(true);
             exerciseLabel.setMaxWidth(350);

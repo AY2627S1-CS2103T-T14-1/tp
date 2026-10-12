@@ -1,6 +1,7 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
@@ -12,8 +13,10 @@ import static seedu.address.testutil.TypicalPersons.AMY;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -94,6 +97,46 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_addExerciseOptionalFields_updatesModelFeedbackAndSavedPlan() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("addex 1 n/Stretch");
+        logic.execute("addex 1 n/Squat s/4 d/m");
+        logic.execute("addex 1 n/Press r/8 w/25.5");
+        CommandResult result = logic.execute("addex 1 n/Run d/w");
+
+        WorkoutPlan expected = new WorkoutPlan(List.of(
+                new Exercise("Squat", 4, 1, 0, "Monday"),
+                new Exercise("Run", 1, 1, 0, "Wednesday"),
+                new Exercise("Stretch", 1, 1, 0),
+                new Exercise("Press", 1, 8, 25.5)));
+        assertEquals(expected, model.getFilteredPersonList().get(0).getWorkoutPlan());
+        String expectedPlan = "(4):\n**Monday**\n1. Squat 4x1 @0kg\n\n"
+                + "**Wednesday**\n2. Run 1x1 @0kg\n\n**Day not specified**\n"
+                + "3. Stretch 1x1 @0kg\n4. Press 1x8 @25.5kg";
+        assertTrue(result.getFeedbackToUser().endsWith(expectedPlan));
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        assertEquals(expected, storage.readAddressBook().orElseThrow().getPersonList().get(0).getWorkoutPlan());
+    }
+
+    @Test
+    public void execute_addExerciseInvalidOptionalFields_doesNotChangeModelOrSavedData() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("addex 1 n/Stretch");
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        String saved = Files.readString(savedPath);
+        String[] invalidArgs = {"s/", "r/", "w/", "d/", "s/0", "r/-1", "w/-1", "w/NaN",
+            "d/t", "s/2 s/3", "r/2 r/3", "w/0 w/1", "d/m d/w", "n/Other"};
+        for (String args : invalidArgs) {
+            assertParseException("addex 1 n/Press " + args,
+                    String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, AddExerciseCommand.MESSAGE_USAGE));
+            assertEquals(saved, Files.readString(savedPath));
+        }
+        assertCommandException("addex 1 n/stretch", AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE);
+        assertCommandException("addex 2 n/Press", MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertEquals(saved, Files.readString(savedPath));
+    }
+
+    @Test
     public void execute_deleteExercise_success() throws Exception {
         Exercise benchPress = new Exercise("Bench Press", 3, 10, 60.0);
         Exercise squat = new Exercise("Squat", 4, 8, 80.0);
@@ -132,8 +175,8 @@ public class LogicManagerTest {
     @Test
     public void execute_addExerciseInvalidFormat_throwsParseException() {
         model.addPerson(new PersonBuilder(AMY).build());
-        // missing compulsory exercise prefixes
-        assertParseException("addex 1 n/Bench Press",
+        // missing compulsory exercise name prefix
+        assertParseException("addex 1 s/3",
                 String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
                         AddExerciseCommand.MESSAGE_USAGE));
     }

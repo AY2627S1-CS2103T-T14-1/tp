@@ -113,6 +113,22 @@ public class DeleteExerciseCommandTest {
     }
 
     @Test
+    public void execute_legacyAbbreviatedDay_deletesExerciseAtDisplayedIndex() throws Exception {
+        Exercise saturday = new Exercise("Squat", 4, 8, 80.0, "Sat");
+        Exercise sunday = new Exercise("Run", 1, 1, 0.0, "Sunday");
+        setFirstPersonPlan(sunday, saturday);
+        Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        assertEquals("Squat", Messages.getExercisesInDisplayOrder(person.getWorkoutPlan()).get(0)
+                .exercise().getName());
+
+        new DeleteExerciseCommand(INDEX_FIRST_PERSON, INDEX_FIRST_PERSON).execute(model);
+
+        List<Exercise> remaining = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased())
+                .getWorkoutPlan().getExercises();
+        assertEquals(List.of(sunday), remaining);
+    }
+
+    @Test
     public void execute_exerciseIndexOutOfBounds_throwsCommandException() {
         setFirstPersonPlan(new Exercise("Bench Press", 3, 10, 60.0));
 

@@ -28,6 +28,7 @@ public class Exercise {
     public final int sets;
     public final int reps;
     public final double weightKg;
+    public final String day;
 
     /**
      * Constructs an {@code Exercise}.
@@ -38,7 +39,13 @@ public class Exercise {
      * @param weightKg A valid weight in kg.
      */
     public Exercise(String name, int sets, int reps, double weightKg) {
+        this(name, sets, reps, weightKg, "");
+    }
+
+    /** Creates an exercise with a day label, or an empty day for an unspecified schedule. */
+    public Exercise(String name, int sets, int reps, double weightKg, String day) {
         requireNonNull(name);
+        requireNonNull(day);
         checkArgument(isValidName(name), MESSAGE_CONSTRAINTS_NAME);
         checkArgument(isValidSets(sets), MESSAGE_CONSTRAINTS_SETS);
         checkArgument(isValidReps(reps), MESSAGE_CONSTRAINTS_REPS);
@@ -47,6 +54,9 @@ public class Exercise {
         this.sets = sets;
         this.reps = reps;
         this.weightKg = weightKg;
+        // Older saves may contain the display heading instead of an empty day.
+        String trimmedDay = day.trim();
+        this.day = trimmedDay.equalsIgnoreCase("Day not specified") ? "" : trimmedDay;
     }
 
     /**
@@ -93,6 +103,15 @@ public class Exercise {
         return weightKg;
     }
 
+    public String getDay() {
+        return day;
+    }
+
+    /** Returns a copy of this exercise assigned to {@code day}. */
+    public Exercise withDay(String day) {
+        return new Exercise(name, sets, reps, weightKg, day);
+    }
+
     /**
      * Returns true if both exercises have the same name.
      * This defines a weaker notion of equality between two exercises.
@@ -119,12 +138,13 @@ public class Exercise {
         return name.equals(otherExercise.name)
                 && sets == otherExercise.sets
                 && reps == otherExercise.reps
-                && Double.compare(weightKg, otherExercise.weightKg) == 0;
+                && Double.compare(weightKg, otherExercise.weightKg) == 0
+                && day.equals(otherExercise.day);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, sets, reps, weightKg);
+        return Objects.hash(name, sets, reps, weightKg, day);
     }
 
     @Override
@@ -134,6 +154,7 @@ public class Exercise {
                 .add("sets", sets)
                 .add("reps", reps)
                 .add("weightKg", weightKg)
+                .add("day", day)
                 .toString();
     }
 }
