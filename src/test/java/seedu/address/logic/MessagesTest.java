@@ -55,6 +55,18 @@ public class MessagesTest {
     }
 
     @Test
+    public void getExercisesInDisplayOrder_saturdayPrecedesSundayEvenWhenPlanIsReversed() {
+        WorkoutPlan plan = new WorkoutPlan(Arrays.asList(
+                new Exercise("Sunday exercise", 1, 1, 0, "Sunday"),
+                new Exercise("Saturday exercise", 1, 1, 0, "Saturday")));
+
+        List<Messages.IndexedExercise> ordered = Messages.getExercisesInDisplayOrder(plan);
+
+        assertEquals("Saturday exercise", ordered.get(0).exercise().getName());
+        assertEquals("Sunday exercise", ordered.get(1).exercise().getName());
+    }
+
+    @Test
     public void formatExercise_wholeWeight_omitsDecimalPoint() {
         assertEquals("Squat 4x8 @80kg", Messages.formatExercise(new Exercise("Squat", 4, 8, 80.0)));
     }

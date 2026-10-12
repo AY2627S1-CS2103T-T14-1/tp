@@ -86,7 +86,22 @@ public class Messages {
     public static List<IndexedExercise> getExercisesInDisplayOrder(WorkoutPlan plan) {
         return java.util.stream.IntStream.range(0, plan.getExercises().size())
                 .mapToObj(index -> new IndexedExercise(index + 1, plan.getExercises().get(index)))
+                .sorted(Comparator.comparingInt(item -> daySortOrder(item.exercise())))
                 .toList();
+    }
+
+    private static int daySortOrder(Exercise exercise) {
+        String day = getExerciseDayHeading(exercise).toLowerCase();
+        return switch (day) {
+        case "monday" -> 0;
+        case "tuesday" -> 1;
+        case "wednesday" -> 2;
+        case "thursday" -> 3;
+        case "friday" -> 4;
+        case "saturday" -> 5;
+        case "sunday" -> 6;
+        default -> 7;
+        };
     }
 
     /** Returns the heading for an exercise's day group. */
