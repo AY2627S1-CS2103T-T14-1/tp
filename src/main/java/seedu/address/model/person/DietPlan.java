@@ -5,6 +5,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import seedu.address.commons.util.ToStringBuilder;
 
@@ -17,6 +18,9 @@ public final class DietPlan {
             "Diet target must contain 1 to 200 printable characters.";
     public static final String MESSAGE_CONSTRAINTS_NOTES =
             "Diet-plan notes must contain 1 to 300 printable characters.";
+
+    private static final Pattern OUTER_WHITESPACE =
+            Pattern.compile("^[\\p{javaWhitespace}\\p{Zs}]+|[\\p{javaWhitespace}\\p{Zs}]+$");
 
     private final String target;
     private final Optional<String> notes;
@@ -39,8 +43,8 @@ public final class DietPlan {
         requireNonNull(target);
         checkArgument(isValidTarget(target), MESSAGE_CONSTRAINTS_TARGET);
         notes.ifPresent(value -> checkArgument(isValidNotes(value), MESSAGE_CONSTRAINTS_NOTES));
-        this.target = target.strip();
-        this.notes = notes.map(String::strip);
+        this.target = trimText(target);
+        this.notes = notes.map(DietPlan::trimText);
     }
 
     /**
@@ -61,9 +65,13 @@ public final class DietPlan {
     }
 
     private static boolean isValidText(String text, int maximumLength) {
-        String trimmed = text.strip();
+        String trimmed = trimText(text);
         int length = trimmed.codePointCount(0, trimmed.length());
         return length >= 1 && length <= maximumLength && text.codePoints().allMatch(DietPlan::isPrintable);
+    }
+
+    private static String trimText(String text) {
+        return OUTER_WHITESPACE.matcher(text).replaceAll("");
     }
 
     private static boolean isPrintable(int codePoint) {

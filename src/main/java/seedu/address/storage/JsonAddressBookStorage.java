@@ -3,14 +3,15 @@ package seedu.address.storage;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.exceptions.IllegalValueException;
-import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.ReadOnlyAddressBook;
 
@@ -82,8 +83,23 @@ public class JsonAddressBookStorage {
         requireNonNull(addressBook);
         requireNonNull(filePath);
 
-        FileUtil.createIfMissing(filePath);
-        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(addressBook), filePath);
+        Path destination = filePath.toAbsolutePath();
+        Files.createDirectories(destination.getParent());
+        Path temporaryFile = Files.createTempFile(destination.getParent(), ".addressbook-", ".tmp");
+        try {
+            JsonUtil.saveJsonFile(new JsonSerializableAddressBook(addressBook), temporaryFile);
+            replaceAddressBookFile(temporaryFile, destination);
+        } finally {
+            Files.deleteIfExists(temporaryFile);
+        }
+    }
+
+    /**
+     * Atomically commits a completed save. Unsupported atomic moves fail without replacing old data.
+     * Storage subclasses can override this boundary to simulate commit failures.
+     */
+    protected void replaceAddressBookFile(Path temporaryFile, Path destination) throws IOException {
+        Files.move(temporaryFile, destination, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
 
 }

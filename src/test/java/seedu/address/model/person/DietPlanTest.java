@@ -11,6 +11,15 @@ import org.junit.jupiter.api.Test;
 
 public class DietPlanTest {
     @Test
+    public void validation_trimsUnicodeSpacesAndRejectsSpaceOnlyNotes() {
+        assertEquals("1800 kcal", new DietPlan("\u00a0 1800 kcal \u2007").getTarget());
+        assertEquals(Optional.of("Lean\u00a0protein"),
+                new DietPlan("1800 kcal", "\u202fLean\u00a0protein\u202f").getNotes());
+        assertFalse(DietPlan.isValidNotes("\u00a0\u2007\u202f"));
+        assertFalse(DietPlan.isValidTarget("\u00a0\u2007\u202f"));
+    }
+
+    @Test
     public void constructor_trimsTextAndPreservesInternalFormatting() {
         DietPlan plan = new DietPlan("  1800 kcal/day,  120 g protein  ", "  Halal meals; avoid shellfish.  ");
         assertEquals("1800 kcal/day,  120 g protein", plan.getTarget());
