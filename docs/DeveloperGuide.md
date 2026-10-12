@@ -173,7 +173,7 @@ The workout plan MVP lets a trainer keep a per-client list of prescribed exercis
 #### Logic: commands and parsers
 
 * `logic.commands.AddExerciseCommand` (`COMMAND_WORD = addex`):
-  * `MESSAGE_USAGE = addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME s/SETS r/REPS w/WEIGHT_KG Example: addex 1 n/Bench Press s/3 r/10 w/60`.
+  * `MESSAGE_USAGE = addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY] Example: addex 1 n/Bench Press s/3 r/10 w/60`.
   * Success message `MESSAGE_ADD_EXERCISE_SUCCESS = Added exercise to Person: %1$s` (formatted with `Messages.format(editedPerson)`).
   * Duplicate message `MESSAGE_DUPLICATE_EXERCISE = This exercise already exists in the workout plan.`
   * `execute` checks `Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX` (`The person index provided is invalid.`) for an out-of-range person index, rejects duplicates, then builds a new `Person` with `WorkoutPlan#addExercise` and calls `model#setPerson` + `model#updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS)`.
@@ -185,7 +185,7 @@ The workout plan MVP lets a trainer keep a per-client list of prescribed exercis
 * `logic.commands.ClearPlanCommand` (`COMMAND_WORD = clearplan`):
   * `MESSAGE_USAGE = clearplan: Clears all exercises from the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) Example: clearplan 1`.
   * Success `MESSAGE_CLEAR_PLAN_SUCCESS = Cleared workout plan for Person: %1$s`; already-empty `MESSAGE_PLAN_ALREADY_EMPTY = Workout plan is already empty for Person: %1$s` (no model change in the latter case).
-* Parsers: `AddExerciseCommandParser` tokenizes with `n/ s/ r/ w/` (`CliSyntax.PREFIX_NAME/PREFIX_SETS/PREFIX_REPS/PREFIX_WEIGHT`), requires all four prefixes, rejects duplicates via `verifyNoDuplicatePrefixesFor`, and delegates value checks to `ParserUtil#parseExerciseName/#parseExerciseSets/#parseExerciseReps/#parseExerciseWeight` (each throws the matching `Exercise.MESSAGE_CONSTRAINTS_*` message). Any `ParseException` is wrapped as `Invalid command format!` + `MESSAGE_USAGE`. `DeleteExerciseCommandParser` expects exactly two indices (`PERSON_INDEX EXERCISE_INDEX`); `ClearPlanCommandParser` expects exactly one index; both wrap failures the same way. `AddressBookParser` routes `addex`/`delex`/`clearplan` to these parsers; unknown words return `Unknown command.`
+* Parsers: `AddExerciseCommandParser` tokenizes with `n/ s/ r/ w/ d/`; only `n/` is required, while omitted sets, reps, and weight default to `1`, `1`, and `0`. An omitted day uses the same empty day value as unassigned exercises, rendered under the `Day not specified` heading. It rejects duplicates via `verifyNoDuplicatePrefixesFor` and delegates provided values to the matching `ParserUtil` validation methods. Any `ParseException` is wrapped as `Invalid command format!` + `MESSAGE_USAGE`. `DeleteExerciseCommandParser` expects exactly two indices (`PERSON_INDEX EXERCISE_INDEX`); `ClearPlanCommandParser` expects exactly one index; both wrap failures the same way. `AddressBookParser` routes `addex`/`delex`/`clearplan` to these parsers; unknown words return `Unknown command.`
 * Feedback formatting: `Messages#format(Person)` appends `; Workout Plan: ` + `formatWorkoutPlan(plan)`, where an empty plan renders as `Empty` and a non-empty plan renders as `(N): 1. Name SxR @Wkg; 2. ...` via `formatExercise` (`%s %dx%d @%skg`, e.g. `Bench Press 3x10 @60kg`, trimming `.0` weights). This is what appears after `%1$s` in the three success messages.
 
 #### Storage: `JsonAdaptedExercise` and `JsonAdaptedPerson`
@@ -498,7 +498,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 1.  Trainer requests to list clients.
 2.  Fittix shows a list of clients.
-3.  Trainer requests to add an exercise to a specific client in the list, giving the exercise name, sets, reps and weight (`addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG`, e.g. `addex 1 n/Bench Press s/3 r/10 w/60`).
+3.  Trainer requests to add an exercise to a specific client in the list, giving the exercise name and optionally sets, reps, weight and day (`addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`, e.g. `addex 1 n/Bench Press s/3 r/10 w/60`).
 4.  Fittix appends the exercise to that client's workout plan and shows `Added exercise to Person: ` followed by the updated plan.
 5.  Trainer optionally removes an exercise (`delex PERSON_INDEX EXERCISE_INDEX`, e.g. `delex 1 2`) or clears the whole plan (`clearplan INDEX`, e.g. `clearplan 1`).
 6.  Fittix updates the plan and shows `Removed exercise from Person: ` or `Cleared workout plan for Person: ` with the updated plan.
@@ -516,7 +516,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * 3b. A compulsory prefix is missing or duplicated, or sets/reps/weight is in an invalid format.
   * Sets/reps must be positive integers greater than 0; weight must be a finite non-negative number in kg; name must not be blank.
 
-    * 3b1. Fittix shows `Invalid command format!` followed by the `addex` usage (`addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME s/SETS r/REPS w/WEIGHT_KG Example: addex 1 n/Bench Press s/3 r/10 w/60`), with the specific constraint as cause (e.g. `Exercise name should not be blank`, `Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`).
+    * 3b1. Fittix shows `Invalid command format!` followed by the `addex` usage (`addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY] Example: addex 1 n/Bench Press s/3 r/10 w/60`), with the specific constraint as cause (e.g. `Exercise name should not be blank`, `Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`).
 
       Use case resumes at step 3.
 

@@ -22,7 +22,7 @@ public class AddExerciseCommandParserTest {
 
     @Test
     public void parse_allFieldsPresent_success() {
-        Exercise expectedExercise = new Exercise("Bench Press", 3, 10, 60.0);
+        Exercise expectedExercise = new Exercise("Bench Press", 3, 10, 60.0, "");
         AddExerciseCommand expectedCommand = new AddExerciseCommand(INDEX_FIRST_PERSON, expectedExercise);
 
         // standard ordering
@@ -39,20 +39,26 @@ public class AddExerciseCommandParserTest {
     }
 
     @Test
-    public void parse_missingCompulsoryPrefix_failure() {
+    public void parse_missingNamePrefix_failure() {
         // missing exercise name prefix
         assertParseFailure(parser, "1 s/3 r/10 w/60", MESSAGE_INVALID_FORMAT);
 
-        // missing sets prefix
-        assertParseFailure(parser, "1 n/Bench Press r/10 w/60", MESSAGE_INVALID_FORMAT);
+        // all optional prefixes omitted; defaults are used
+        assertParseSuccess(parser, "1 n/Bench Press",
+                new AddExerciseCommand(INDEX_FIRST_PERSON,
+                        new Exercise("Bench Press", 1, 1, 0.0, "")));
 
-        // missing reps prefix
-        assertParseFailure(parser, "1 n/Bench Press s/3 w/60", MESSAGE_INVALID_FORMAT);
+        assertParseSuccess(parser, "1 n/Bench Press s/4",
+                new AddExerciseCommand(INDEX_FIRST_PERSON,
+                        new Exercise("Bench Press", 4, 1, 0.0, "")));
+        assertParseSuccess(parser, "1 n/Bench Press r/8",
+                new AddExerciseCommand(INDEX_FIRST_PERSON,
+                        new Exercise("Bench Press", 1, 8, 0.0, "")));
+        assertParseSuccess(parser, "1 n/Bench Press w/25",
+                new AddExerciseCommand(INDEX_FIRST_PERSON,
+                        new Exercise("Bench Press", 1, 1, 25.0, "")));
 
-        // missing weight prefix
-        assertParseFailure(parser, "1 n/Bench Press s/3 r/10", MESSAGE_INVALID_FORMAT);
-
-        // all prefixes missing
+        // name prefix is required
         assertParseFailure(parser, "1", MESSAGE_INVALID_FORMAT);
 
         // empty args

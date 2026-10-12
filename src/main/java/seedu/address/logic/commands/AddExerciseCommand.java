@@ -25,7 +25,7 @@ public class AddExerciseCommand extends Command {
             + ": Adds an exercise to the workout plan of the person identified "
             + "by the index number used in the last person listing.\n"
             + "Parameters: INDEX (must be a positive integer) "
-            + "n/EXERCISE_NAME s/SETS r/REPS w/WEIGHT_KG [d/DAY]\n"
+            + "n/EXERCISE_NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]\n"
             + "Example: " + COMMAND_WORD + " 1 "
             + "n/Bench Press s/3 r/10 w/60 d/M";
 

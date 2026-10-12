@@ -34,16 +34,19 @@ public class AddExerciseCommandParser implements Parser<AddExerciseCommand> {
 
         try {
             Index index = ParserUtil.parseIndex(argMultimap.getPreamble());
-            if (!arePrefixesPresent(argMultimap, PREFIX_NAME, PREFIX_SETS, PREFIX_REPS, PREFIX_WEIGHT)) {
+            if (!arePrefixesPresent(argMultimap, PREFIX_NAME)) {
                 throw new ParseException(
                         String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddExerciseCommand.MESSAGE_USAGE));
             }
             argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_SETS, PREFIX_REPS, PREFIX_WEIGHT,
                     PREFIX_EXERCISE_DAY);
             String name = ParserUtil.parseExerciseName(argMultimap.getValue(PREFIX_NAME).get());
-            int sets = ParserUtil.parseExerciseSets(argMultimap.getValue(PREFIX_SETS).get());
-            int reps = ParserUtil.parseExerciseReps(argMultimap.getValue(PREFIX_REPS).get());
-            double weight = ParserUtil.parseExerciseWeight(argMultimap.getValue(PREFIX_WEIGHT).get());
+            int sets = argMultimap.getValue(PREFIX_SETS).isPresent()
+                    ? ParserUtil.parseExerciseSets(argMultimap.getValue(PREFIX_SETS).get()) : 1;
+            int reps = argMultimap.getValue(PREFIX_REPS).isPresent()
+                    ? ParserUtil.parseExerciseReps(argMultimap.getValue(PREFIX_REPS).get()) : 1;
+            double weight = argMultimap.getValue(PREFIX_WEIGHT).isPresent()
+                    ? ParserUtil.parseExerciseWeight(argMultimap.getValue(PREFIX_WEIGHT).get()) : 0;
             String day = argMultimap.getValue(PREFIX_EXERCISE_DAY).isPresent()
                     ? DayParserUtil.parseDay(argMultimap.getValue(PREFIX_EXERCISE_DAY).get()) : "";
             return new AddExerciseCommand(index, new Exercise(name, sets, reps, weight, day));

@@ -151,20 +151,22 @@ Format: `clear`
 
 Adds an exercise to the workout plan of the person identified by the index number used in the last person listing.
 
-Format: `addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG [d/DAY]`
+Format: `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`
+
+Only `n/NAME` is required. Omitted `s/SETS` and `r/REPS` default to `1`, omitted `w/WEIGHT_KG` defaults to `0`, and omitted `d/DAY` uses the same `Day not specified` tag shown for unassigned exercises.
 
 * `INDEX` refers to the index number shown in the displayed person list. It **must be a positive integer** 1, 2, 3, …​
 * `NAME` should not be blank (after trimming spaces).
 * `SETS` should be a positive integer greater than 0.
 * `REPS` should be a positive integer greater than 0.
 * `WEIGHT_KG` should be a finite non-negative number in kg (0 is allowed, e.g. bodyweight exercises).
-* Prefixes `n/`, `s/`, `r/`, and `w/` are required and must not be duplicated. Optional `d/` assigns a weekday; it accepts the same case-insensitive weekday prefixes as `dayex`.
+* `n/` is required. Optional `s/`, `r/`, `w/`, and `d/` prefixes must not be duplicated. `d/` assigns a weekday; it accepts the same case-insensitive weekday prefixes as `dayex`.
 * An exercise with the same name (case-insensitive) cannot be added twice to the same plan. Fittix shows `This exercise already exists in the workout plan.` and does not add it.
 * If `INDEX` is out of range, Fittix shows `The person index provided is invalid.`
 * If the format is wrong, Fittix shows `Invalid command format!` followed by the `addex` usage (`MESSAGE_USAGE`):
   ```
   addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing.
-  Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME s/SETS r/REPS w/WEIGHT_KG
+  Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]
   Example: addex 1 n/Bench Press s/3 r/10 w/60
   ```
 * On success, Fittix shows `Added exercise to Person: ` followed by the updated person including the workout plan, e.g. `Workout Plan: (1): 1. Bench Press 3x10 @60kg`.
@@ -273,7 +275,7 @@ _Details coming soon ..._
 Action | Format, Examples
 --------|------------------
 **Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
-**Add exercise** | `addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG [d/DAY]`<br> e.g., `addex 1 n/Bench Press s/3 r/10 w/60 d/w`
+**Add exercise** | `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`<br> e.g., `addex 1 n/Bench Press s/3 r/10 w/60 d/w`
 **Clear** | `clear`
 **Clear workout plan** | `clearplan INDEX`<br> e.g., `clearplan 1`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
