@@ -68,6 +68,7 @@ public class MessagesTest {
     public void getExerciseDayHeading_returnsFullCanonicalWeekdayName() {
         assertEquals("Wednesday", Messages.getExerciseDayHeading(new Exercise("Press", 1, 1, 1, "Wednesday")));
         assertEquals("Saturday", Messages.getExerciseDayHeading(new Exercise("Squat", 1, 1, 1, "Saturday")));
+        assertEquals("Saturday", Messages.getExerciseDayHeading(new Exercise("Squat", 1, 1, 1, "Sat")));
     }
 
     @Test

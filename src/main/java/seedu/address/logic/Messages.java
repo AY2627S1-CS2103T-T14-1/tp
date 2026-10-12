@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import seedu.address.logic.parser.Prefix;
+import seedu.address.logic.parser.DayParserUtil;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutPlan;
@@ -92,17 +94,11 @@ public class Messages {
         if (exercise.getDay().isEmpty()) {
             return "Day not specified";
         }
-        String day = exercise.getDay().toLowerCase();
-        return switch (day) {
-        case "monday" -> "Monday";
-        case "tuesday" -> "Tuesday";
-        case "wednesday" -> "Wednesday";
-        case "thursday" -> "Thursday";
-        case "friday" -> "Friday";
-        case "saturday" -> "Saturday";
-        case "sunday" -> "Sunday";
-        default -> exercise.getDay();
-        };
+        try {
+            return DayParserUtil.parseDay(exercise.getDay());
+        } catch (ParseException e) {
+            return exercise.getDay();
+        }
     }
 
     /**
