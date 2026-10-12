@@ -17,5 +17,6 @@ public class CliSyntax {
     public static final Prefix PREFIX_REPS = new Prefix("r/");
     public static final Prefix PREFIX_WEIGHT = new Prefix("w/");
     public static final Prefix PREFIX_DAY = new Prefix("day/");
+    public static final Prefix PREFIX_EXERCISE_DAY = new Prefix("d/");
 
 }

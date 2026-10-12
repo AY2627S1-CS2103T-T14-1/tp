@@ -33,6 +33,9 @@ public class AddExerciseCommandParserTest {
 
         // different prefix ordering still succeeds
         assertParseSuccess(parser, "1 w/60 r/10 s/3 n/Bench Press", expectedCommand);
+
+        assertParseSuccess(parser, "1 n/Bench Press s/3 r/10 w/60 d/w",
+                new AddExerciseCommand(INDEX_FIRST_PERSON, new Exercise("Bench Press", 3, 10, 60.0, "Wednesday")));
     }
 
     @Test
@@ -104,5 +107,7 @@ public class AddExerciseCommandParserTest {
         assertParseFailure(parser, "1 n/Bench Press s/3 s/4 r/10 w/60", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "1 n/Bench Press s/3 r/10 r/12 w/60", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "1 n/Bench Press s/3 r/10 w/60 w/70", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 n/Bench Press s/3 r/10 w/60 d/t d/w", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 n/Bench Press s/3 r/10 w/60 d/t", MESSAGE_INVALID_FORMAT);
     }
 }

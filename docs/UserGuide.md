@@ -151,14 +151,14 @@ Format: `clear`
 
 Adds an exercise to the workout plan of the person identified by the index number used in the last person listing.
 
-Format: `addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG`
+Format: `addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG [d/DAY]`
 
 * `INDEX` refers to the index number shown in the displayed person list. It **must be a positive integer** 1, 2, 3, …​
 * `NAME` should not be blank (after trimming spaces).
 * `SETS` should be a positive integer greater than 0.
 * `REPS` should be a positive integer greater than 0.
 * `WEIGHT_KG` should be a finite non-negative number in kg (0 is allowed, e.g. bodyweight exercises).
-* All four prefixes `n/`, `s/`, `r/`, `w/` are required and must not be duplicated.
+* Prefixes `n/`, `s/`, `r/`, and `w/` are required and must not be duplicated. Optional `d/` assigns a weekday; it accepts the same case-insensitive weekday prefixes as `dayex`.
 * An exercise with the same name (case-insensitive) cannot be added twice to the same plan. Fittix shows `This exercise already exists in the workout plan.` and does not add it.
 * If `INDEX` is out of range, Fittix shows `The person index provided is invalid.`
 * If the format is wrong, Fittix shows `Invalid command format!` followed by the `addex` usage (`MESSAGE_USAGE`):
@@ -173,6 +173,7 @@ Format: `addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG`
 Examples:
 * `addex 1 n/Bench Press s/3 r/10 w/60` adds Bench Press (3 sets of 10 reps at 60kg) to the 1st person.
 * `addex 2 n/Squat s/4 r/8 w/80` adds Squat (4 sets of 8 reps at 80kg) to the 2nd person.
+* `addex 1 n/Bench Press s/3 r/10 w/60 d/w` adds Bench Press for Wednesday.
 
 ### Removing an exercise from a client's workout plan: `delex`
 
@@ -272,7 +273,7 @@ _Details coming soon ..._
 Action | Format, Examples
 --------|------------------
 **Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
-**Add exercise** | `addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG`<br> e.g., `addex 1 n/Bench Press s/3 r/10 w/60`
+**Add exercise** | `addex INDEX n/NAME s/SETS r/REPS w/WEIGHT_KG [d/DAY]`<br> e.g., `addex 1 n/Bench Press s/3 r/10 w/60 d/w`
 **Clear** | `clear`
 **Clear workout plan** | `clearplan INDEX`<br> e.g., `clearplan 1`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
