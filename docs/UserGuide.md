@@ -192,7 +192,7 @@ Format: `dayex PERSON_INDEX EXERCISE_INDEX DAY`
 
 * Both indices are positive integers; the exercise index is 1-based and matches the workout plan numbering.
 * `DAY` accepts a weekday name or prefix, without regard to letter case. `Tuesday`, `Tues`, `Tue`, or `Tu` all mean Tuesday; `Thursday` requires at least `Th`. Other weekdays accept a one-letter prefix.
-* The assigned day is saved as the canonical weekday and shown as its first three letters in brackets (for example, `[Tue]`).
+* The assigned day is saved as the canonical weekday and exercises are grouped beneath a weekday heading in the interface.
 
 Example: `dayex 1 2 Tuesday` tags the second exercise for the first person as Tuesday.
 * If `PERSON_INDEX` is out of range, Fittix shows `The person index provided is invalid.`

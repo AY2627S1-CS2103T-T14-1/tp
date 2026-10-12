@@ -31,7 +31,7 @@ public class SetExerciseDayCommandTest {
         Exercise tagged = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased())
                 .getWorkoutPlan().getExercises().get(0);
         assertEquals("Monday", tagged.getDay());
-        assertEquals("Bench Press 3x10 @60kg [Mon]", seedu.address.logic.Messages.formatExercise(tagged));
+        assertEquals("Bench Press 3x10 @60kg", seedu.address.logic.Messages.formatExercise(tagged));
     }
 
     @Test

@@ -64,30 +64,33 @@ public class Messages {
         if (plan.isEmpty()) {
             return "Empty";
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append("(").append(plan.size()).append("): ");
-        List<Exercise> sortedExercises = plan.getExercises().stream()
-                .sorted(Comparator.comparingInt(Messages::daySortOrder))
-                .toList();
-        boolean firstGroup = true;
-        int index = 1;
+        StringBuilder builder = new StringBuilder().append("(").append(plan.size()).append("):\n");
         String currentGroup = null;
-        for (Exercise exercise : sortedExercises) {
-            String group = exercise.getDay().isEmpty() ? "Unscheduled" : exercise.getDay();
+        for (IndexedExercise indexed : getExercisesInDisplayOrder(plan)) {
+            String group = getExerciseDayHeading(indexed.exercise());
             if (!group.equals(currentGroup)) {
-                if (!firstGroup) {
-                    builder.append("; ");
+                if (currentGroup != null) {
+                    builder.append('\n');
                 }
-                builder.append(group).append(": ");
+                builder.append("**").append(group).append("**\n");
                 currentGroup = group;
-                firstGroup = false;
-            } else {
-                builder.append("; ");
             }
-            builder.append(index).append(". ").append(formatExercise(exercise));
-            index++;
+            builder.append(indexed.index()).append(". ").append(formatExercise(indexed.exercise())).append('\n');
         }
-        return builder.toString();
+        return builder.toString().stripTrailing();
+    }
+
+    /** Returns plan exercises in display order while keeping their one-based plan indices. */
+    public static List<IndexedExercise> getExercisesInDisplayOrder(WorkoutPlan plan) {
+        return java.util.stream.IntStream.range(0, plan.getExercises().size())
+                .mapToObj(index -> new IndexedExercise(index + 1, plan.getExercises().get(index)))
+                .sorted(Comparator.comparingInt(item -> daySortOrder(item.exercise())))
+                .toList();
+    }
+
+    /** Returns the heading for an exercise's day group. */
+    public static String getExerciseDayHeading(Exercise exercise) {
+        return exercise.getDay().isEmpty() ? "Day not specified" : exercise.getDay();
     }
 
     private static int daySortOrder(Exercise exercise) {
@@ -112,11 +115,10 @@ public class Messages {
                 : String.valueOf(exercise.getWeightKg());
         String formatted = String.format("%s %dx%d @%skg",
                 exercise.getName(), exercise.getSets(), exercise.getReps(), weight);
-        if (exercise.getDay().isEmpty()) {
-            return formatted;
-        }
-        String abbreviatedDay = exercise.getDay().substring(0, Math.min(3, exercise.getDay().length()));
-        return formatted + " [" + abbreviatedDay + "]";
+        return formatted;
     }
+
+    /** An exercise paired with its original one-based index in the plan. */
+    public record IndexedExercise(int index, Exercise exercise) { }
 
 }

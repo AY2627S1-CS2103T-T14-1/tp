@@ -30,8 +30,7 @@ public class MessagesTest {
     @Test
     public void formatWorkoutPlan_singleExerciseWithWholeWeight_formatsWithoutDecimal() {
         WorkoutPlan plan = new WorkoutPlan(List.of(new Exercise("Bench Press", 3, 10, 60.0, "Monday")));
-        assertEquals("(1): Monday: 1. Bench Press 3x10 @60kg [Mon]", Messages.formatWorkoutPlan(
-                plan));
+        assertEquals("(1):\n**Monday**\n1. Bench Press 3x10 @60kg", Messages.formatWorkoutPlan(plan));
     }
 
     @Test
@@ -39,7 +38,7 @@ public class MessagesTest {
         WorkoutPlan plan = new WorkoutPlan(Arrays.asList(
                 new Exercise("Bench Press", 3, 10, 60.0),
                 new Exercise("Deadlift", 4, 8, 62.5)));
-        assertEquals("(2): Unscheduled: 1. Bench Press 3x10 @60kg; 2. Deadlift 4x8 @62.5kg",
+        assertEquals("(2):\n**Day not specified**\n1. Bench Press 3x10 @60kg\n2. Deadlift 4x8 @62.5kg",
                 Messages.formatWorkoutPlan(plan));
     }
 
@@ -50,8 +49,8 @@ public class MessagesTest {
                 new Exercise("Press", 3, 10, 60, "Tuesday"),
                 new Exercise("Squat", 4, 8, 80, "Monday"),
                 new Exercise("Stretch", 1, 1, 0)));
-        assertEquals("(4): Monday: 1. Squat 4x8 @80kg [Mon]; Tuesday: 2. Press 3x10 @60kg [Tue]; "
-                        + "Sunday: 3. Run 1x1 @0kg [Sun]; Unscheduled: 4. Stretch 1x1 @0kg",
+        assertEquals("(4):\n**Monday**\n3. Squat 4x8 @80kg\n\n**Tuesday**\n2. Press 3x10 @60kg\n\n"
+                        + "**Sunday**\n1. Run 1x1 @0kg\n\n**Day not specified**\n4. Stretch 1x1 @0kg",
                 Messages.formatWorkoutPlan(plan));
     }
 
@@ -71,7 +70,7 @@ public class MessagesTest {
                 new Exercise("Bench Press", 3, 10, 60.0),
                 new Exercise("Squat", 4, 8, 80.0)))).build();
         String formatted = Messages.format(person);
-        assertTrue(formatted.contains("; Workout Plan: (2): Unscheduled: 1. Bench Press 3x10 @60kg; "
+        assertTrue(formatted.contains("; Workout Plan: (2):\n**Day not specified**\n1. Bench Press 3x10 @60kg\n"
                 + "2. Squat 4x8 @80kg"));
     }
 }

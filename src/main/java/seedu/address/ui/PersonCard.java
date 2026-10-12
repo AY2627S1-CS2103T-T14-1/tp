@@ -2,7 +2,6 @@ package seedu.address.ui;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.List;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -98,20 +97,18 @@ public class PersonCard extends UiPart<Region> {
             return;
         }
 
-        List<Exercise> sortedExercises = exercises.stream()
-                .sorted(Comparator.comparingInt(exercise -> switch (exercise.getDay().toLowerCase()) {
-                    case "monday" -> 0;
-                    case "tuesday" -> 1;
-                    case "wednesday" -> 2;
-                    case "thursday" -> 3;
-                    case "friday" -> 4;
-                    case "saturday" -> 5;
-                    case "sunday" -> 6;
-                    default -> 7;
-                })).toList();
-        for (int i = 0; i < sortedExercises.size(); i++) {
-            Exercise exercise = sortedExercises.get(i);
-            Label exerciseLabel = new Label((i + 1) + ". " + Messages.formatExercise(exercise));
+        String currentGroup = null;
+        for (Messages.IndexedExercise indexed : Messages.getExercisesInDisplayOrder(plan)) {
+            Exercise exercise = indexed.exercise();
+            String group = Messages.getExerciseDayHeading(exercise);
+            if (!group.equals(currentGroup)) {
+                Label dayHeading = new Label(group);
+                dayHeading.getStyleClass().add("cell_small_label");
+                dayHeading.setStyle("-fx-font-weight: bold;");
+                workoutPlanContainer.getChildren().add(dayHeading);
+                currentGroup = group;
+            }
+            Label exerciseLabel = new Label(indexed.index() + ". " + Messages.formatExercise(exercise));
             exerciseLabel.getStyleClass().add("cell_small_label");
             exerciseLabel.setWrapText(true);
             exerciseLabel.setMaxWidth(350);
