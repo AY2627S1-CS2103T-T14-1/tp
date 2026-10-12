@@ -4,7 +4,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 
 /** Shared parsing rules for exercise weekday values. */
 public final class DayParserUtil {
-    private static final String[] DAYS = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    private static final String[] DAYS = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 
     private DayParserUtil() {
     }

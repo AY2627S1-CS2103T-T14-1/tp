@@ -24,6 +24,8 @@ public class SetExerciseDayCommandParserTest {
                 parser.parse("1 2 th"));
         assertEquals(new SetExerciseDayCommand(Index.fromOneBased(1), Index.fromOneBased(2), "Monday"),
                 parser.parse("1 2 m"));
+        assertEquals(new SetExerciseDayCommand(Index.fromOneBased(1), Index.fromOneBased(2), "Saturday"),
+                parser.parse("1 2 s"));
     }
 
     @Test
