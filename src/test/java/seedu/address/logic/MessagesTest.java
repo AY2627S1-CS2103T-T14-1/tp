@@ -79,6 +79,12 @@ public class MessagesTest {
     }
 
     @Test
+    public void formatExercise_largeWholeWeight_showsFullValue() {
+        assertEquals("Bench Press 3x10 @3000000000kg",
+                Messages.formatExercise(new Exercise("Bench Press", 3, 10, 3000000000.0)));
+    }
+
+    @Test
     public void getExerciseDayHeading_returnsFullCanonicalWeekdayName() {
         assertEquals("Wednesday", Messages.getExerciseDayHeading(new Exercise("Press", 1, 1, 1, "Wednesday")));
         assertEquals("Saturday", Messages.getExerciseDayHeading(new Exercise("Squat", 1, 1, 1, "Saturday")));
