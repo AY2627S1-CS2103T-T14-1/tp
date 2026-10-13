@@ -7,6 +7,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.TypicalPersons.CARL;
 import static seedu.address.testutil.TypicalPersons.ELLE;
 import static seedu.address.testutil.TypicalPersons.FIONA;
+import static seedu.address.testutil.TypicalPersons.GEORGE;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.List;
@@ -17,7 +18,9 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.ClientMatchesAnyPredicate;
+import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.PhoneMatchesPredicate;
 
 /**
  * Contains integration tests (interaction with the Model) for {@code FindCommand}.
@@ -71,6 +74,41 @@ public class FindCommandTest {
         expectedModel.updateFilteredPersonList(predicate);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
         assertEquals(List.of(CARL, ELLE, FIONA), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_phoneAndEmailCriteria_filtersMatchingClients() {
+        ClientMatchesAnyPredicate phonePredicate = new ClientMatchesAnyPredicate(
+                List.of(new PhoneMatchesPredicate("948 2224")));
+        FindCommand phoneCommand = new FindCommand(phonePredicate);
+        expectedModel.updateFilteredPersonList(phonePredicate);
+        assertCommandSuccess(phoneCommand, model, String.format(FindCommand.MESSAGE_FOUND, 1), expectedModel);
+        assertEquals(List.of(ELLE), model.getFilteredPersonList());
+
+        ClientMatchesAnyPredicate hyphenatedPhonePredicate = new ClientMatchesAnyPredicate(
+                List.of(new PhoneMatchesPredicate("948-2224")));
+        FindCommand hyphenatedPhoneCommand = new FindCommand(hyphenatedPhonePredicate);
+        expectedModel.updateFilteredPersonList(hyphenatedPhonePredicate);
+        assertCommandSuccess(hyphenatedPhoneCommand, model, String.format(FindCommand.MESSAGE_FOUND, 1), expectedModel);
+        assertEquals(List.of(ELLE), model.getFilteredPersonList());
+
+        ClientMatchesAnyPredicate emailPredicate = new ClientMatchesAnyPredicate(
+                List.of(new EmailContainsKeywordsPredicate(List.of("HEINZ"))));
+        FindCommand emailCommand = new FindCommand(emailPredicate);
+        expectedModel.updateFilteredPersonList(emailPredicate);
+        assertCommandSuccess(emailCommand, model, String.format(FindCommand.MESSAGE_FOUND, 1), expectedModel);
+        assertEquals(List.of(CARL), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_nameAndPhoneCriteria_returnsUnionOfMatches() {
+        ClientMatchesAnyPredicate predicate = new ClientMatchesAnyPredicate(List.of(
+                new NameContainsKeywordsPredicate(List.of("Carl")), new PhoneMatchesPredicate("9482")));
+        FindCommand command = new FindCommand(predicate);
+        expectedModel.updateFilteredPersonList(predicate);
+
+        assertCommandSuccess(command, model, String.format(FindCommand.MESSAGE_FOUND, 4), expectedModel);
+        assertEquals(List.of(CARL, ELLE, FIONA, GEORGE), model.getFilteredPersonList());
     }
 
     @Test
