@@ -57,8 +57,9 @@ public class WorkoutSessionTest {
     public void constructor_futureDate_throwsIllegalArgumentException() {
         LocalDate futureDate = LocalDate.now().plusDays(2);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> new WorkoutSession(futureDate, Optional.empty(), List.of(SQUAT)));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            new WorkoutSession(futureDate, Optional.empty(), List.of(SQUAT));
+        });
 
         assertEquals(WorkoutSession.MESSAGE_FUTURE_DATE, exception.getMessage());
     }
@@ -76,35 +77,42 @@ public class WorkoutSessionTest {
 
     @Test
     public void constructor_timeWithSecondsOrNanos_throwsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new WorkoutSession(
-                        DATE, Optional.of(LocalTime.of(18, 0, 1)), List.of(SQUAT)));
+        assertThrows(IllegalArgumentException.class, () -> {
+            new WorkoutSession(
+                    DATE, Optional.of(LocalTime.of(18, 0, 1)), List.of(SQUAT));
+        });
 
-        assertThrows(IllegalArgumentException.class,
-                () -> new WorkoutSession(
-                        DATE, Optional.of(LocalTime.of(18, 0, 0, 1)), List.of(SQUAT)));
+        assertThrows(IllegalArgumentException.class, () -> {
+            new WorkoutSession(
+                    DATE, Optional.of(LocalTime.of(18, 0, 0, 1)), List.of(SQUAT));
+        });
     }
 
     @Test
     public void constructor_nullArguments_throwsNullPointerException() {
-        assertThrows(NullPointerException.class,
-                () -> new WorkoutSession(null, Optional.empty(), List.of(SQUAT)));
+        assertThrows(NullPointerException.class, () -> {
+            new WorkoutSession(null, Optional.empty(), List.of(SQUAT));
+        });
 
-        assertThrows(NullPointerException.class,
-                () -> new WorkoutSession(DATE, null, List.of(SQUAT)));
+        assertThrows(NullPointerException.class, () -> {
+            new WorkoutSession(DATE, null, List.of(SQUAT));
+        });
 
-        assertThrows(NullPointerException.class,
-                () -> new WorkoutSession(DATE, Optional.empty(), null));
+        assertThrows(NullPointerException.class, () -> {
+            new WorkoutSession(DATE, Optional.empty(), null);
+        });
 
-        assertThrows(NullPointerException.class,
-                () -> new WorkoutSession(
-                        DATE, Optional.empty(), Arrays.asList(SQUAT, null)));
+        assertThrows(NullPointerException.class, () -> {
+            new WorkoutSession(
+                    DATE, Optional.empty(), Arrays.asList(SQUAT, null));
+        });
     }
 
     @Test
     public void constructor_emptyEntries_throwsIllegalArgumentException() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> new WorkoutSession(DATE, Optional.empty(), List.of()));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            new WorkoutSession(DATE, Optional.empty(), List.of());
+        });
 
         assertEquals(WorkoutSession.MESSAGE_MISSING_EXERCISES, exception.getMessage());
     }
@@ -121,8 +129,9 @@ public class WorkoutSessionTest {
     public void constructor_thirtyOneEntries_throwsIllegalArgumentException() {
         List<WorkoutLogEntry> entries = Collections.nCopies(31, SQUAT);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> new WorkoutSession(DATE, Optional.empty(), entries));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            new WorkoutSession(DATE, Optional.empty(), entries);
+        });
 
         assertEquals(WorkoutSession.MESSAGE_TOO_MANY_EXERCISES, exception.getMessage());
     }
@@ -143,8 +152,9 @@ public class WorkoutSessionTest {
         WorkoutSession session = new WorkoutSession(
                 DATE, Optional.empty(), List.of(SQUAT));
 
-        assertThrows(UnsupportedOperationException.class,
-                () -> session.getEntries().add(BENCH));
+        assertThrows(UnsupportedOperationException.class, () -> {
+            session.getEntries().add(BENCH);
+        });
     }
 
     @Test
