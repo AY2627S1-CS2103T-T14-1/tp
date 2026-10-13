@@ -168,7 +168,7 @@ Format: `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`
 * To use a default, omit the whole field. An empty field such as `s/` or `d/` is invalid.
 * An exercise with the same name (case-insensitive) cannot be added twice to the same person's plan, even with a different day. Fittix shows `This exercise already exists in the workout plan.` and does not add it.
 * If `INDEX` is out of range, Fittix shows `The person index provided is invalid.`
-* Missing required fields, invalid values, or repeated prefixes cause `Invalid command format!` followed by the `addex` usage:
+* Missing required fields, invalid values (including an invalid `d/DAY` such as `d/t` or `d/funday`), or repeated prefixes cause `Invalid command format!` followed by the `addex` usage:
 
   ```text
   addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing.
@@ -248,7 +248,7 @@ Format: `dayex PERSON_INDEX EXERCISE_INDEX DAY`
 * The plan is immediately sorted by weekday and renumbered. Check the updated card before entering another command that uses an exercise index.
 * If `PERSON_INDEX` is out of range, Fittix shows `The person index provided is invalid.`
 * If `EXERCISE_INDEX` is out of range (including when the plan is empty), Fittix shows `The exercise index provided is invalid.`
-* Missing arguments, non-positive or non-integer indices, or an invalid day cause `Invalid command format!` followed by the `dayex` usage:
+* Missing or extra arguments, non-positive or non-integer indices, or an invalid day cause `Invalid command format!` followed by the `dayex` usage:
 
   ```text
   dayex: Assigns a day tag to an exercise in a person's workout plan.
