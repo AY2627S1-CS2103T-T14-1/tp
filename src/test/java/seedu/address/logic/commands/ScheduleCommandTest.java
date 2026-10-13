@@ -42,4 +42,22 @@ public class ScheduleCommandTest {
                 new ScheduleCommand(missing, session).execute(model));
         assertEquals(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, exception.getMessage());
     }
+
+    @Test
+    public void viewSchedule_noSessions_showsEmptyState() throws Exception {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Person client = model.getFilteredPersonList().get(0);
+
+        assertEquals("No training sessions saved for " + client.getName() + ".",
+                new ViewScheduleCommand(INDEX_FIRST_PERSON).execute(model).getFeedbackToUser());
+    }
+
+    @Test
+    public void viewSchedule_missingClient_throwsCommandException() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        CommandException exception = assertThrows(CommandException.class, () ->
+                new ViewScheduleCommand(Index.fromOneBased(999)).execute(model));
+
+        assertEquals(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, exception.getMessage());
+    }
 }
