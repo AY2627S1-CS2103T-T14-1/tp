@@ -4,6 +4,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -28,36 +29,57 @@ public class Person {
     private final Set<Tag> tags = new HashSet<>();
     private final WorkoutPlan workoutPlan;
     private final Optional<DietPlan> dietPlan;
+    private final List<WorkoutSession> workoutSessions;
 
     /**
-     * Every field must be present and not null.
+     * Constructs a person with no plans or recorded workout sessions.
+     * Every argument must be present and not null.
      */
-    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
-        this(name, phone, email, address, remark, tags, new WorkoutPlan(), Optional.empty());
+    public Person(Name name, Phone phone, Email email, Address address,
+                  Remark remark, Set<Tag> tags) {
+        this(name, phone, email, address, remark, tags,
+                new WorkoutPlan(), Optional.empty(), List.of());
     }
 
     /**
-     * Constructs a person with a workout plan and no diet plan.
+     * Constructs a person with a workout plan, no diet plan, and no recorded sessions.
      */
-    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
-            WorkoutPlan workoutPlan) {
-        this(name, phone, email, address, remark, tags, workoutPlan, Optional.empty());
+    public Person(Name name, Phone phone, Email email, Address address,
+                  Remark remark, Set<Tag> tags, WorkoutPlan workoutPlan) {
+        this(name, phone, email, address, remark, tags,
+                workoutPlan, Optional.empty(), List.of());
     }
 
     /**
-     * Constructs a person with a diet plan and an empty workout plan.
+     * Constructs a person with a diet plan, an empty workout plan, and no recorded sessions.
      */
-    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
-            Optional<DietPlan> dietPlan) {
-        this(name, phone, email, address, remark, tags, new WorkoutPlan(), dietPlan);
+    public Person(Name name, Phone phone, Email email, Address address,
+                  Remark remark, Set<Tag> tags, Optional<DietPlan> dietPlan) {
+        this(name, phone, email, address, remark, tags,
+                new WorkoutPlan(), dietPlan, List.of());
     }
 
     /**
-     * Constructs a person with both plans. All arguments must be non-null.
+     * Constructs a person with both plans and no recorded workout sessions.
+     * All arguments must be non-null.
      */
-    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
-            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan) {
-        requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
+    public Person(Name name, Phone phone, Email email, Address address,
+                  Remark remark, Set<Tag> tags, WorkoutPlan workoutPlan,
+                  Optional<DietPlan> dietPlan) {
+        this(name, phone, email, address, remark, tags,
+                workoutPlan, dietPlan, List.of());
+    }
+
+    /**
+     * Constructs a person with plans and recorded workout sessions.
+     * All arguments and session entries must be non-null.
+     * The session list is defensively copied, preserving its order.
+     */
+    public Person(Name name, Phone phone, Email email, Address address,
+                  Remark remark, Set<Tag> tags, WorkoutPlan workoutPlan,
+                  Optional<DietPlan> dietPlan, List<WorkoutSession> workoutSessions) {
+        requireAllNonNull(name, phone, email, address, remark, tags,
+                workoutPlan, dietPlan, workoutSessions);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -66,6 +88,7 @@ public class Person {
         this.tags.addAll(tags);
         this.workoutPlan = workoutPlan;
         this.dietPlan = dietPlan;
+        this.workoutSessions = List.copyOf(workoutSessions);
     }
 
     public Name getName() {
@@ -94,6 +117,13 @@ public class Person {
 
     public Optional<DietPlan> getDietPlan() {
         return dietPlan;
+    }
+
+    /**
+     * Returns an unmodifiable list of recorded workout sessions.
+     */
+    public List<WorkoutSession> getWorkoutSessions() {
+        return workoutSessions;
     }
 
     /**
@@ -127,7 +157,6 @@ public class Person {
             return true;
         }
 
-        // instanceof handles nulls
         if (!(other instanceof Person otherPerson)) {
             return false;
         }
@@ -139,13 +168,14 @@ public class Person {
                 && remark.equals(otherPerson.remark)
                 && tags.equals(otherPerson.tags)
                 && workoutPlan.equals(otherPerson.workoutPlan)
-                && dietPlan.equals(otherPerson.dietPlan);
+                && dietPlan.equals(otherPerson.dietPlan)
+                && workoutSessions.equals(otherPerson.workoutSessions);
     }
 
     @Override
     public int hashCode() {
-        // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
+        return Objects.hash(name, phone, email, address, remark, tags,
+                workoutPlan, dietPlan, workoutSessions);
     }
 
     @Override
@@ -159,7 +189,7 @@ public class Person {
                 .add("tags", tags)
                 .add("workoutPlan", workoutPlan)
                 .add("dietPlan", dietPlan)
+                .add("workoutSessions", workoutSessions)
                 .toString();
     }
-
 }
