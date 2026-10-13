@@ -11,6 +11,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -107,6 +108,49 @@ public class AddExerciseCommandTest {
                 new AddExerciseCommand(INDEX_FIRST_PERSON, sameNameDifferentCase);
 
         assertCommandFailure(addExerciseCommand, model, AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE);
+    }
+
+    @Test
+    public void execute_seventhExerciseOnDay_success() throws Exception {
+        setExercisesOnMonday(6);
+        new AddExerciseCommand(INDEX_FIRST_PERSON, benchPress().withDay("Monday")).execute(model);
+        assertEquals(7, model.getFilteredPersonList().get(0).getWorkoutPlan().size());
+    }
+
+    @Test
+    public void execute_eighthExerciseOnDay_throwsCommandException() {
+        setExercisesOnMonday(7);
+        assertCommandFailure(new AddExerciseCommand(INDEX_FIRST_PERSON, benchPress().withDay("Monday")),
+                model, Messages.MESSAGE_DAILY_EXERCISE_LIMIT);
+    }
+
+    @Test
+    public void execute_legacyDayAlreadyOverLimit_throwsCommandException() {
+        setExercisesOnMonday(8);
+        assertCommandFailure(new AddExerciseCommand(INDEX_FIRST_PERSON, benchPress().withDay("Monday")),
+                model, Messages.MESSAGE_DAILY_EXERCISE_LIMIT);
+    }
+
+    @Test
+    public void execute_otherDayFull_success() throws Exception {
+        setExercisesOnMonday(7);
+        new AddExerciseCommand(INDEX_FIRST_PERSON, benchPress().withDay("Tuesday")).execute(model);
+        assertEquals(8, model.getFilteredPersonList().get(0).getWorkoutPlan().size());
+    }
+
+    @Test
+    public void execute_otherClientDayFull_success() throws Exception {
+        setExercisesOnMonday(7);
+        new AddExerciseCommand(INDEX_SECOND_PERSON, benchPress().withDay("Monday")).execute(model);
+        assertEquals(1, model.getFilteredPersonList().get(1).getWorkoutPlan().size());
+        assertEquals(7, model.getFilteredPersonList().get(0).getWorkoutPlan().size());
+    }
+
+    private void setExercisesOnMonday(int count) {
+        Person original = model.getFilteredPersonList().get(0);
+        WorkoutPlan plan = new WorkoutPlan(IntStream.range(0, count)
+                .mapToObj(index -> new Exercise("Exercise " + index, 1, 1, 0, "Mon")).toList());
+        model.setPerson(original, new PersonBuilder(original).withWorkoutPlan(plan).build());
     }
 
     @Test

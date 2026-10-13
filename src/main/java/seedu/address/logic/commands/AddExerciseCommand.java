@@ -59,6 +59,9 @@ public class AddExerciseCommand extends Command {
             throw new CommandException(MESSAGE_DUPLICATE_EXERCISE);
         }
         WorkoutPlan updatedPlan = personToEdit.getWorkoutPlan().addExercise(exercise);
+        if (!updatedPlan.isWithinDailyLimit(exercise.getDay())) {
+            throw new CommandException(Messages.MESSAGE_DAILY_EXERCISE_LIMIT);
+        }
         Person editedPerson = new Person(
                 personToEdit.getName(), personToEdit.getPhone(), personToEdit.getEmail(),
                 personToEdit.getAddress(), personToEdit.getRemark(), personToEdit.getTags(),

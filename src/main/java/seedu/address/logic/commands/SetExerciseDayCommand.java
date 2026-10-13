@@ -47,6 +47,9 @@ public class SetExerciseDayCommand extends Command {
             throw new CommandException(MESSAGE_INVALID_EXERCISE_INDEX);
         }
         WorkoutPlan plan = person.getWorkoutPlan().setExerciseDay(exerciseIndex.getZeroBased(), day);
+        if (!plan.isWithinDailyLimit(day)) {
+            throw new CommandException(Messages.MESSAGE_DAILY_EXERCISE_LIMIT);
+        }
         Person edited = new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(),
                 person.getRemark(), person.getTags(), plan, person.getDietPlan());
         model.setPerson(person, edited);

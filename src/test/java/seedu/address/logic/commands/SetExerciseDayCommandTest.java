@@ -5,9 +5,14 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -38,5 +43,45 @@ public class SetExerciseDayCommandTest {
     public void execute_invalidExerciseIndex_throwsCommandException() {
         assertCommandFailure(new SetExerciseDayCommand(INDEX_FIRST_PERSON, Index.fromOneBased(1), "Monday"),
                 model, SetExerciseDayCommand.MESSAGE_INVALID_EXERCISE_INDEX);
+    }
+
+    @Test
+    public void execute_assignSeventhExerciseToDay_success() throws Exception {
+        setExercisesWithUnassignedExercise(6);
+        new SetExerciseDayCommand(INDEX_FIRST_PERSON, Index.fromOneBased(7), "Monday").execute(model);
+        assertEquals(7, model.getFilteredPersonList().get(0).getWorkoutPlan().getExercises().stream()
+                .filter(exercise -> exercise.getDay().equals("Monday")).count());
+    }
+
+    @Test
+    public void execute_assignEighthExerciseToDay_throwsCommandException() {
+        setExercisesWithUnassignedExercise(7);
+        assertCommandFailure(new SetExerciseDayCommand(INDEX_FIRST_PERSON, Index.fromOneBased(8), "Monday"),
+                model, Messages.MESSAGE_DAILY_EXERCISE_LIMIT);
+    }
+
+    @Test
+    public void execute_sameDayAtLimit_success() throws Exception {
+        setExercisesWithUnassignedExercise(7);
+        Model expected = new ModelManager(model.getAddressBook(), new UserPrefs());
+        new SetExerciseDayCommand(INDEX_FIRST_PERSON, INDEX_FIRST_PERSON, "Monday").execute(model);
+        assertEquals(expected, model);
+    }
+
+    @Test
+    public void execute_moveAwayFromFullDay_success() throws Exception {
+        setExercisesWithUnassignedExercise(7);
+        new SetExerciseDayCommand(INDEX_FIRST_PERSON, INDEX_FIRST_PERSON, "Tuesday").execute(model);
+        List<Exercise> exercises = model.getFilteredPersonList().get(0).getWorkoutPlan().getExercises();
+        assertEquals(6, exercises.stream().filter(exercise -> exercise.getDay().equals("Monday")).count());
+        assertEquals("Tuesday", exercises.get(6).getDay());
+    }
+
+    private void setExercisesWithUnassignedExercise(int count) {
+        Person original = model.getFilteredPersonList().get(0);
+        List<Exercise> exercises = new ArrayList<>(IntStream.range(0, count)
+                .mapToObj(index -> new Exercise("Exercise " + index, 1, 1, 0, "Monday")).toList());
+        exercises.add(new Exercise("Stretch", 1, 1, 0));
+        model.setPerson(original, new PersonBuilder(original).withWorkoutPlan(new WorkoutPlan(exercises)).build());
     }
 }

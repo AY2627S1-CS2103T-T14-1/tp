@@ -8,6 +8,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -59,6 +60,38 @@ public class WorkoutPlanTest {
     public void getExercises_modifyList_throwsUnsupportedOperationException() {
         WorkoutPlan plan = new WorkoutPlan(Arrays.asList(BENCH_PRESS));
         assertThrows(UnsupportedOperationException.class, () -> plan.getExercises().remove(0));
+    }
+
+    @Test
+    public void isWithinDailyLimit_sevenExercisesOnEveryWeekday_success() {
+        List<Exercise> exercises = Arrays.stream(Weekday.values())
+                .flatMap(day -> IntStream.range(0, 7)
+                        .mapToObj(index -> new Exercise(day + " " + index, 1, 1, 0, day.getDisplayName())))
+                .toList();
+        WorkoutPlan plan = new WorkoutPlan(exercises);
+        for (Weekday day : Weekday.values()) {
+            assertTrue(plan.isWithinDailyLimit(day.getDisplayName()));
+            assertFalse(plan.addExercise(BENCH_PRESS.withDay(day.getDisplayName()))
+                    .isWithinDailyLimit(day.getDisplayName()));
+        }
+    }
+
+    @Test
+    public void isWithinDailyLimit_legacyPrefixes_countAsSameWeekday() {
+        List<Exercise> exercises = IntStream.range(0, 7)
+                .mapToObj(index -> new Exercise("Exercise " + index, 1, 1, 0, "mOn"))
+                .toList();
+        WorkoutPlan plan = new WorkoutPlan(exercises).addExercise(BENCH_PRESS.withDay("Monday"));
+        assertFalse(plan.isWithinDailyLimit("m"));
+        assertTrue(plan.isWithinDailyLimit("Tuesday"));
+    }
+
+    @Test
+    public void isWithinDailyLimit_unassignedExercises_noLimit() {
+        WorkoutPlan plan = new WorkoutPlan(IntStream.range(0, 8)
+                .mapToObj(index -> new Exercise("Exercise " + index, 1, 1, 0)).toList());
+        assertTrue(plan.isWithinDailyLimit(""));
+        assertTrue(plan.isWithinDailyLimit("Monday"));
     }
 
     @Test

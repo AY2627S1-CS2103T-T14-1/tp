@@ -16,6 +16,8 @@ import seedu.address.commons.util.ToStringBuilder;
  */
 public class WorkoutPlan {
 
+    public static final int MAX_EXERCISES_PER_DAY = 7;
+
     private final List<Exercise> exercises;
 
     /**
@@ -51,6 +53,17 @@ public class WorkoutPlan {
     public boolean hasExercise(Exercise exercise) {
         requireNonNull(exercise);
         return exercises.stream().anyMatch(exercise::isSameExercise);
+    }
+
+    /**
+     * Returns whether the given weekday has at most {@link #MAX_EXERCISES_PER_DAY} exercises.
+     * Weekday prefixes and letter case are treated alike. Unassigned exercises have no daily limit.
+     */
+    public boolean isWithinDailyLimit(String day) {
+        requireNonNull(day);
+        return Weekday.fromPrefix(day).map(weekday -> exercises.stream()
+                .filter(exercise -> Weekday.fromPrefix(exercise.getDay()).orElse(null) == weekday)
+                .count() <= MAX_EXERCISES_PER_DAY).orElse(true);
     }
 
     /**
