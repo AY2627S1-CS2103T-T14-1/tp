@@ -166,7 +166,7 @@ Format: `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`
 * `INDEX` refers to the index number shown in the displayed person list. It **must be a positive integer** 1, 2, 3, …​
 * Each prefix, including `n/`, may appear at most once.
 * To use a default, omit the whole field. An empty field such as `s/` or `d/` is invalid.
-* An exercise with the same name (case-insensitive) cannot be added twice to the same person's plan, even with a different day. Fittix shows `This exercise already exists in the workout plan.` and does not add it.
+* The same exercise name can appear on different days in a client's plan, for example Monday and Friday. Names are compared without regard to letter case: adding the same name twice on one day shows `This exercise already exists on this day in the workout plan.` and leaves the plan unchanged, even if sets, reps, or weight differ. Exercises under **Day not specified** share one group, so the same name can appear there only once.
 * Each client can have at most **7 exercises per weekday**. Adding an eighth exercise to the same day shows `A client cannot have more than 7 exercises on the same day.` and leaves the plan unchanged. Other weekdays and clients have separate limits. Exercises under **Day not specified** are not capped.
 * If `INDEX` is out of range, Fittix shows `The person index provided is invalid.`
 * Missing required fields, invalid values, or repeated prefixes cause `Invalid command format!` followed by the `addex` usage:
@@ -184,6 +184,7 @@ Examples:
 * `addex 1 n/Stretch` adds Stretch with 1 set, 1 rep, 0kg, and no assigned day.
 * `addex 1 n/Shoulder Press r/8 w/25.5` adds Shoulder Press with 1 set of 8 reps at 25.5kg and no assigned day.
 * `addex 1 n/Bench Press s/3 r/10 w/60 d/w` adds Bench Press with 3 sets of 10 reps at 60kg for Wednesday.
+* `addex 1 n/Bench Press s/3 r/10 w/60 d/f` also adds Bench Press for Friday, even if it is already assigned to Wednesday.
 * `addex 2 n/Squat s/4 d/s` adds Squat with 4 sets of 1 rep at 0kg for Saturday to the 2nd person's plan.
 
 #### Reading the workout plan
@@ -246,6 +247,7 @@ Format: `dayex PERSON_INDEX EXERCISE_INDEX DAY`
 * Supply all three arguments in the order shown. Enter the day directly, for example `dayex 1 2 Tuesday`.
 * `DAY` accepts the weekday names and prefixes listed below, without regard to letter case.
 * Each exercise has one assigned day. Assigning a new day replaces the previous day while keeping the exercise name, sets, reps, and weight.
+* Moving an exercise to a day that already contains the same name (case-insensitive) shows `This exercise already exists on this day in the workout plan.` and leaves the plan unchanged. Assigning an exercise to its current day is allowed.
 * A day can contain at most **7 exercises for each client**. Moving an exercise into a day that already has 7 shows `A client cannot have more than 7 exercises on the same day.` and leaves the plan unchanged. Assigning an exercise to its current day when that day has 7 exercises is allowed, as is moving an exercise away from a full day.
 * The plan is immediately sorted by weekday and renumbered. Check the updated card before entering another command that uses an exercise index.
 * If `PERSON_INDEX` is out of range, Fittix shows `The person index provided is invalid.`

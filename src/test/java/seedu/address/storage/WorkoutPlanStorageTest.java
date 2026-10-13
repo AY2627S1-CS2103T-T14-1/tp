@@ -38,6 +38,22 @@ public class WorkoutPlanStorageTest {
     }
 
     @Test
+    public void saveAndRead_sameExerciseOnDifferentDays_preservesEveryOccurrence() throws Exception {
+        WorkoutPlan plan = new WorkoutPlan(List.of(
+                new Exercise("Exercise1", 3, 10, 60, "Monday"),
+                new Exercise("Exercise1", 5, 5, 80, "Friday"),
+                new Exercise("Exercise1", 1, 1, 0)));
+        AddressBook book = new AddressBook();
+        book.addPerson(new PersonBuilder().withWorkoutPlan(plan).build());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("repeated-exercise.json"));
+        storage.saveAddressBook(book);
+
+        ReadOnlyAddressBook loaded = storage.readAddressBook().orElseThrow();
+        assertEquals(book, new AddressBook(loaded));
+        assertEquals(plan, loaded.getPersonList().get(0).getWorkoutPlan());
+    }
+
+    @Test
     public void readAndResave_legacyUnspecifiedDays_normalizesWithoutLosingExercises() throws Exception {
         String json = """
                 {"persons":[{"name":"Amy","phone":"85355255","email":"amy@example.com",

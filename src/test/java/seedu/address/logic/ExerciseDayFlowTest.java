@@ -3,12 +3,15 @@ package seedu.address.logic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.AddExerciseCommand;
+import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -36,6 +39,28 @@ public class ExerciseDayFlowTest {
         execute("delex 1 3");
         assertPlan(List.of("Press", "Stretch", "Run"),
                 List.of("Wednesday", "Friday", "Sunday"));
+    }
+
+    @Test
+    public void sameExerciseAcrossDays_addMoveAndDelete_preservesOtherOccurrences() throws Exception {
+        execute("addex 1 n/Exercise1 d/Monday");
+        execute("addex 1 n/Exercise1 d/Friday");
+        execute("addex 1 n/Exercise1");
+        assertPlan(List.of("Exercise1", "Exercise1", "Exercise1"),
+                List.of("Monday", "Friday", "Day not specified"));
+
+        WorkoutPlan beforeFailure = model.getFilteredPersonList().get(0).getWorkoutPlan();
+        assertThrows(CommandException.class,
+                AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE, () -> execute("addex 1 n/exercise1 s/5 d/mON"));
+        assertThrows(CommandException.class,
+                AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE, () -> execute("dayex 1 2 m"));
+        assertEquals(beforeFailure, model.getFilteredPersonList().get(0).getWorkoutPlan());
+
+        execute("dayex 1 3 w");
+        assertPlan(List.of("Exercise1", "Exercise1", "Exercise1"),
+                List.of("Monday", "Wednesday", "Friday"));
+        execute("delex 1 2");
+        assertPlan(List.of("Exercise1", "Exercise1"), List.of("Monday", "Friday"));
     }
 
     private void execute(String command) throws Exception {

@@ -167,7 +167,7 @@ The workout plan MVP lets a trainer keep a per-client list of prescribed exercis
   * sets/reps are valid when `> 0`; failure messages are `Sets should be a positive integer greater than 0` and `Reps should be a positive integer greater than 0`.
   * weight is valid when `Double.isFinite(test) && test >= 0`; failure message is `Weight should be a finite non-negative number in kg`.
   * Combined message is `Exercise name should not be blank, sets and reps should be positive integers greater than 0, and weight should be a finite non-negative number in kg`.
-* Identity is name-based case-insensitive (`Exercise#isSameExercise`); full equality also compares sets/reps/weight.
+* Identity is name-based case-insensitive (`Exercise#isSameExercise`); full equality also compares sets/reps/weight/day. Duplicate checking in `WorkoutPlan#hasExercise` additionally compares the day, resolving weekday prefixes and ignoring letter case. Unassigned exercises share one group; matching names on different days are allowed. `SetExerciseDayCommand` checks for a duplicate on the destination day after excluding the selected exercise.
 * `model.person.WorkoutPlan` wraps `List<Exercise>` with defensive copies and an unmodifiable view (`#getExercises`). Key APIs: `#hasExercise` (duplicate check), `#addExercise` (returns new plan), `#removeExercise`, `#isEmpty`, `#size`. `Person` stores the plan and exposes it via `#getWorkoutPlan`; `PersonBuilder#withWorkoutPlan` is used in tests.
 * `WorkoutPlan#isWithinDailyLimit` checks a weekday against `MAX_EXERCISES_PER_DAY` (7), resolving weekday prefixes and letter case through `Weekday#fromPrefix`. Unassigned exercises have no daily limit. `AddExerciseCommand` and `SetExerciseDayCommand` check the destination day in the proposed immutable plan before updating the model. A violation produces `Messages.MESSAGE_DAILY_EXERCISE_LIMIT` and leaves the model unchanged. Checking the proposed plan allows reassignment to the same day at capacity and moving exercises away from a full day. Existing saved plans are still loaded without truncation.
 
@@ -176,7 +176,7 @@ The workout plan MVP lets a trainer keep a per-client list of prescribed exercis
 * `logic.commands.AddExerciseCommand` (`COMMAND_WORD = addex`):
   * `MESSAGE_USAGE = addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) n/EXERCISE_NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY] Example: addex 1 n/Bench Press s/3 r/10 w/60`.
   * Success message `MESSAGE_ADD_EXERCISE_SUCCESS = Added exercise to Person: %1$s` (formatted with `Messages.format(editedPerson)`).
-  * Duplicate message `MESSAGE_DUPLICATE_EXERCISE = This exercise already exists in the workout plan.`
+  * Duplicate message `MESSAGE_DUPLICATE_EXERCISE = This exercise already exists on this day in the workout plan.`
   * `execute` checks `Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX` (`The person index provided is invalid.`) for an out-of-range person index, rejects duplicates, then builds a new `Person` with `WorkoutPlan#addExercise` and calls `model#setPerson` + `model#updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS)`.
 * `logic.commands.DeleteExerciseCommand` (`COMMAND_WORD = delex`):
   * `MESSAGE_USAGE = delex: Removes the exercise at the specified exercise index from the workout plan of the person identified by the index number used in the last person listing. Parameters: PERSON_INDEX EXERCISE_INDEX (both must be positive integers) Example: delex 1 2`.
@@ -521,9 +521,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
-* 3c. An exercise with the same name (case-insensitive) is already in that client's plan.
+* 3c. An exercise with the same name (case-insensitive) is already on the same day in that client's plan.
 
-    * 3c1. Fittix shows `This exercise already exists in the workout plan.` and does not add it.
+    * 3c1. Fittix shows `This exercise already exists on this day in the workout plan.` and does not add it.
 
       Use case ends.
 
@@ -727,8 +727,10 @@ testers are expected to do more *exploratory* testing.
       Expected: The plan grows to `(2): 1. Bench Press 3x10 @60kg; 2. Squat 4x8 @80kg`, matching the card numbering.
    1. Invalid cases to try: `addex 0 n/X s/3 r/10 w/60` (bad person index), `addex 1 n/  s/3 r/10 w/60` (blank name), `addex 1 n/X s/0 r/10 w/60` / `s/-1` / `s/abc`, `addex 1 n/X s/3 r/0 w/60` / `r/abc`, `addex 1 n/X s/3 r/10 w/-1` / `w/abc` / `w/Infinity` / `w/NaN`, missing prefix (e.g. no `w/`), duplicated prefix (e.g. two `n/`).<br>
       Expected: No exercise is added. Out-of-range person shows `The person index provided is invalid.`; all other bad values show `Invalid command format!` + the `addex` usage with the specific constraint (`Exercise name should not be blank`, `Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`) as the cause.
-   1. Test case: add the same name twice with different casing, e.g. `addex 1 n/bench press s/3 r/10 w/60` after `Bench Press` exists.<br>
-      Expected: Rejected with `This exercise already exists in the workout plan.`
+   1. Test case: add the same name twice with different casing, e.g. `addex 1 n/bench press s/3 r/10 w/60` after an unassigned `Bench Press` exists.<br>
+      Expected: Rejected with `This exercise already exists on this day in the workout plan.`
+   1. Test case: `addex 1 n/Exercise1 d/Monday`, then `addex 1 n/Exercise1 d/Friday`.<br>
+      Expected: Both succeed, with one Exercise1 on each day. Repeating either command is rejected without changing the plan.
 
 1. Deleting an exercise (`delex`)
 
