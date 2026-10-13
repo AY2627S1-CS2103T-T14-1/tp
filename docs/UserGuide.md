@@ -170,7 +170,7 @@ Format: `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`
 * The same exercise name can appear on different days in a client's plan, for example Monday and Friday. Names are compared without regard to letter case: adding the same name twice on one day shows `This exercise already exists on this day in the workout plan.` and leaves the plan unchanged, even if sets, reps, or weight differ. Exercises under **Day not specified** share one group, so the same name can appear there only once.
 * Each client can have at most **7 exercises per weekday**. Adding an eighth exercise to the same day shows `A client cannot have more than 7 exercises on the same day.` and leaves the plan unchanged. Other weekdays and clients have separate limits. Exercises under **Day not specified** are not capped.
 * If `INDEX` is out of range, Fittix shows `The person index provided is invalid.`
-* Missing required fields, invalid values, repeated or unknown prefixes, or extra arguments outside the exercise name cause `Invalid command format!` followed by the `addex` usage:
+* Missing required fields, invalid values (including an invalid `d/DAY` such as `d/t` or `d/funday`), repeated or unknown prefixes, or extra arguments outside the exercise name cause `Invalid command format!` followed by the `addex` usage:
 
   ```text
   addex: Adds an exercise to the workout plan of the person identified by the index number used in the last person listing.
@@ -253,7 +253,7 @@ Format: `dayex PERSON_INDEX EXERCISE_INDEX DAY`
 * The plan is immediately sorted by weekday and renumbered. Check the updated card before entering another command that uses an exercise index.
 * If `PERSON_INDEX` is out of range, Fittix shows `The person index provided is invalid.`
 * If `EXERCISE_INDEX` is out of range (including when the plan is empty), Fittix shows `The exercise index provided is invalid.`
-* Missing arguments, non-positive or non-integer indices, or an invalid day cause `Invalid command format!` followed by the `dayex` usage:
+* Missing or extra arguments, non-positive or non-integer indices, or an invalid day cause `Invalid command format!` followed by the `dayex` usage:
 
   ```text
   dayex: Assigns a day tag to an exercise in a person's workout plan.
