@@ -17,19 +17,26 @@ class JsonAdaptedExercise {
     private final Integer sets;
     private final Integer reps;
     private final Double weightKg;
+    private final String day;
 
     /**
      * Constructs a {@code JsonAdaptedExercise} with the given exercise details.
      */
+    public JsonAdaptedExercise(String name, Integer sets, Integer reps, Double weightKg) {
+        this(name, sets, reps, weightKg, "");
+    }
+
     @JsonCreator
     public JsonAdaptedExercise(@JsonProperty("name") String name,
             @JsonProperty("sets") Integer sets,
             @JsonProperty("reps") Integer reps,
-            @JsonProperty("weightKg") Double weightKg) {
+            @JsonProperty("weightKg") Double weightKg,
+            @JsonProperty("day") String day) {
         this.name = name;
         this.sets = sets;
         this.reps = reps;
         this.weightKg = weightKg;
+        this.day = day;
     }
 
     /**
@@ -40,6 +47,7 @@ class JsonAdaptedExercise {
         sets = source.getSets();
         reps = source.getReps();
         weightKg = source.getWeightKg();
+        day = source.getDay();
     }
 
     /**
@@ -76,6 +84,6 @@ class JsonAdaptedExercise {
             throw new IllegalValueException(Exercise.MESSAGE_CONSTRAINTS_WEIGHT);
         }
 
-        return new Exercise(name, sets, reps, weightKg);
+        return new Exercise(name, sets, reps, weightKg, day == null ? "" : day);
     }
 }

@@ -6,6 +6,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
 
@@ -59,5 +61,25 @@ public class ScheduleCommandTest {
                 new ViewScheduleCommand(Index.fromOneBased(999)).execute(model));
 
         assertEquals(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, exception.getMessage());
+    }
+
+    @Test
+    public void workoutCommands_preserveSavedTrainingSessions() throws Exception {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        TrainingSession session = new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "Gym");
+        new ScheduleCommand(INDEX_FIRST_PERSON, session).execute(model);
+
+        new AddExerciseCommand(INDEX_FIRST_PERSON, new Exercise("Squat", 3, 10, 60)).execute(model);
+        assertEquals(List.of(session), model.getFilteredPersonList().get(0).getTrainingSessions());
+
+        new SetExerciseDayCommand(INDEX_FIRST_PERSON, INDEX_FIRST_PERSON, "Monday").execute(model);
+        assertEquals(List.of(session), model.getFilteredPersonList().get(0).getTrainingSessions());
+
+        new DeleteExerciseCommand(INDEX_FIRST_PERSON, INDEX_FIRST_PERSON).execute(model);
+        assertEquals(List.of(session), model.getFilteredPersonList().get(0).getTrainingSessions());
+
+        new AddExerciseCommand(INDEX_FIRST_PERSON, new Exercise("Squat", 3, 10, 60)).execute(model);
+        new ClearPlanCommand(INDEX_FIRST_PERSON).execute(model);
+        assertEquals(List.of(session), model.getFilteredPersonList().get(0).getTrainingSessions());
     }
 }

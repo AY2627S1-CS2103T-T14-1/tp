@@ -8,7 +8,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -29,17 +28,22 @@ import seedu.address.testutil.PersonBuilder;
 public class PersonListPanelTest {
 
     @BeforeAll
-    public static void startJavaFx() {
+    public static void startJavaFx() throws Exception {
         System.setProperty("glass.platform", "Monocle");
         System.setProperty("monocle.platform", "Headless");
         System.setProperty("prism.order", "sw");
         System.setProperty("java.awt.headless", "true");
-        Platform.startup(() -> { });
-    }
-
-    @AfterAll
-    public static void stopJavaFx() {
-        Platform.exit();
+        FutureTask<Void> ready = new FutureTask<>(() -> {
+            Platform.setImplicitExit(false);
+            return null;
+        });
+        try {
+            Platform.startup(ready);
+        } catch (IllegalStateException e) {
+            // Other UI tests may already have started the shared toolkit.
+            Platform.runLater(ready);
+        }
+        ready.get(10, TimeUnit.SECONDS);
     }
 
     @Test
