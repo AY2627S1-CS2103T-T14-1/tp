@@ -100,6 +100,22 @@ public class PersonListPanelTest {
     }
 
     @Test
+    public void removalOfSelectedClient_selectsFirstRemainingClient() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").build();
+            ObservableList<Person> persons = FXCollections.observableArrayList(first, second);
+            PersonListPanel panel = new PersonListPanel(persons);
+
+            persons.remove(first);
+
+            assertEquals(second, listView(panel).getSelectionModel().getSelectedItem());
+            assertEquals("Priya Nair", label(panel, "selectedClientName").getText());
+            return null;
+        });
+    }
+
+    @Test
     public void longValuesRemainAvailableAndWrapAtNarrowWidth() throws Exception {
         runOnFxThread(() -> {
             String target = "Protein".repeat(28); // 196 characters
