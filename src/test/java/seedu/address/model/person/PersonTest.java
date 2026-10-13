@@ -133,7 +133,15 @@ public class PersonTest {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", remark=" + ALICE.getRemark()
                 + ", tags=" + ALICE.getTags() + ", workoutPlan=" + ALICE.getWorkoutPlan()
-                + ", dietPlan=" + ALICE.getDietPlan() + "}";
+                + ", dietPlan=" + ALICE.getDietPlan() + ", goal=" + ALICE.getGoal().orElse(null) + "}";
         assertEquals(expected, ALICE.toString());
+    }
+
+    @Test
+    public void goal_affectsValueEqualityButNotIdentity() {
+        Person goalAlice = new PersonBuilder(ALICE).withGoal("Build strength").build();
+        assertEquals(new Goal("Build strength"), goalAlice.getGoal().orElseThrow());
+        assertFalse(ALICE.equals(goalAlice));
+        assertTrue(ALICE.isSamePerson(goalAlice));
     }
 }

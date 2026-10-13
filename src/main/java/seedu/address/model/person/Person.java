@@ -28,12 +28,13 @@ public class Person {
     private final Set<Tag> tags = new HashSet<>();
     private final WorkoutPlan workoutPlan;
     private final Optional<DietPlan> dietPlan;
+    private final Goal goal;
 
     /**
      * Every field must be present and not null.
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
-        this(name, phone, email, address, remark, tags, new WorkoutPlan(), Optional.empty());
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), Optional.empty(), null);
     }
 
     /**
@@ -41,7 +42,7 @@ public class Person {
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan) {
-        this(name, phone, email, address, remark, tags, workoutPlan, Optional.empty());
+        this(name, phone, email, address, remark, tags, workoutPlan, Optional.empty(), null);
     }
 
     /**
@@ -49,7 +50,7 @@ public class Person {
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             Optional<DietPlan> dietPlan) {
-        this(name, phone, email, address, remark, tags, new WorkoutPlan(), dietPlan);
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), dietPlan, null);
     }
 
     /**
@@ -57,6 +58,14 @@ public class Person {
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, null);
+    }
+
+    /**
+     * Constructs a person with optional diet plan and fitness goal. All non-goal arguments must be non-null.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal) {
         requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
         this.name = name;
         this.phone = phone;
@@ -66,6 +75,7 @@ public class Person {
         this.tags.addAll(tags);
         this.workoutPlan = workoutPlan;
         this.dietPlan = dietPlan;
+        this.goal = goal;
     }
 
     public Name getName() {
@@ -94,6 +104,10 @@ public class Person {
 
     public Optional<DietPlan> getDietPlan() {
         return dietPlan;
+    }
+
+    public Optional<Goal> getGoal() {
+        return Optional.ofNullable(goal);
     }
 
     /**
@@ -139,13 +153,14 @@ public class Person {
                 && remark.equals(otherPerson.remark)
                 && tags.equals(otherPerson.tags)
                 && workoutPlan.equals(otherPerson.workoutPlan)
-                && dietPlan.equals(otherPerson.dietPlan);
+                && dietPlan.equals(otherPerson.dietPlan)
+                && Objects.equals(goal, otherPerson.goal);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
+        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal);
     }
 
     @Override
@@ -159,6 +174,7 @@ public class Person {
                 .add("tags", tags)
                 .add("workoutPlan", workoutPlan)
                 .add("dietPlan", dietPlan)
+                .add("goal", goal)
                 .toString();
     }
 
