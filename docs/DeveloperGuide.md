@@ -216,6 +216,18 @@ The workout plan feature lets a trainer keep a per-client list of prescribed exe
   - Non-empty plan groups exercises under bold full-weekday headings in Monday-to-Sunday order with `Day not specified` last; only non-empty groups are shown, separated by an 8px spacer. Within each group, one `Label` per exercise is numbered with the continuous 1-based display index (`1. ...`, `2. ...`) using the `Name SetsxReps @Weightkg` format (e.g. `Bench Press 4x10 @60kg`). These numbers are exactly the `EXERCISE_INDEX` values accepted by `delex` and `dayex`, so the card doubles as the index reference; `addex`/`dayex`/`delex` re-sort and renumber, so callers must always use the current card numbering.
   - Labels wrap (`setWrapText(true)`, max width 350) so long lists grow vertically without breaking the card layout. The card observes the filtered person list, so it refreshes automatically after each command.
 
+### Diet plan management
+
+Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the plan in the client's JSON record, so deleting the client also removes the plan. A client has at most one current plan; no history or structured restrictions are stored.
+
+For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw arguments to `DietCommandParser`. This preserves invalid line breaks for validation. The parser recognises single-letter prefixes only at the beginning of an argument or after horizontal whitespace; it leaves slashes inside values such as `kcal/day` untouched. It validates the displayed-list index, one required target, at most one optional notes value, and rejects unknown or repeated prefixes. `DietCommand` looks up the `Person` in the filtered list, compares the candidate with the current plan after trimming and ignoring case, then uses `Model#setPerson` to replace the client record while retaining the other fields and current list filter. An omitted `n/` creates a plan without notes, even when the previous plan had notes.
+
+`LogicManager` snapshots the address book before executing a diet command. `JsonAddressBookStorage` writes a complete JSON document to a temporary file in the data file's directory, then atomically moves it over the old file. If writing or replacing the file fails, `LogicManager` restores the snapshot and returns `The diet plan could not be saved. The previous plan remains unchanged.` The storage layer does not fall back to a non-atomic replacement when the filesystem does not support atomic moves. Validation and duplicate failures occur before any model change.
+
+`PersonListPanel` observes the selected client and the filtered client list. Its details pane shows the current target and notes, hides notes when absent, and provides an empty state for clients without a plan. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the plan's nutritional or medical suitability.
+
+`DietCommandParserTest`, `DietCommandTest`, `DietIntegrationTest`, and `PersonListPanelTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, injected commit failure, and selected-client display. The manual scenarios below cover the main user flows.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -559,22 +571,42 @@ _{More to be added}_
 
 1.  Trainer requests to list clients.
 2.  Fittix shows a list of clients.
-3.  Trainer requests to set the diet plan of a specific client in the list.
-4.  Fittix saves the plan as that client's current diet plan and shows the updated plan.
+3.  Trainer gives the displayed client index, a nutrition target, and optional notes.
+4.  Fittix saves and shows the target and notes as that client's current plan.
 
     Use case ends.
 
 **Extensions**
 
-- 3a. The given index is invalid.
-  - 3a1. Fittix shows an error message.
+* 3a. The given index is invalid.
 
-    Use case resumes at step 2.
+    * 3a1. Fittix shows an error message.
 
-- 3b. The client has recorded dietary restrictions.
-  - 3b1. Fittix saves the plan and displays the client's dietary restrictions alongside it.
+      Use case resumes at step 2.
 
-    Use case ends.
+* 3b. The target or supplied notes are invalid, or a parameter is repeated or unsupported.
+
+    * 3b1. Fittix shows the relevant validation or format error and leaves the current plan unchanged.
+
+      Use case resumes at step 3.
+
+* 3c. The candidate matches the current plan after trimming and ignoring case.
+
+    * 3c1. Fittix reports that the plan is already current and does not replace it.
+
+      Use case ends.
+
+* 4a. The client already has a different plan.
+
+    * 4a1. Fittix replaces the complete plan and reports the replacement. Old versions are not retained.
+
+      Use case ends.
+
+* 4b. Saving fails.
+
+    * 4b1. Fittix reports the failure; the previous plan remains unchanged in memory and on disk.
+
+      Use case ends.
 
 **Use case: UC08 - Schedule a session with a client**
 
@@ -684,6 +716,29 @@ testers are expected to do more *exploratory* testing.
       Expected: Similar to previous.
 
 1. _{ more test cases …​ }_
+
+### Diet plan management
+
+Use a disposable copy of the data file. Start with at least two clients; run `list` and note the displayed index and name of one client.
+
+1. Create a target-only plan: `diet 1 t/1800 kcal per day, 120 g protein`.<br>
+   Expected: `Created diet plan for NAME.` and the selected client's details pane shows the full target without notes.
+1. Add notes: `diet 1 t/1800 kcal per day, 120 g protein n/Prioritise vegetables`.<br>
+   Expected: `Replaced diet plan for NAME.` and the notes appear in the pane.
+1. Replace with `diet 1 t/2000 kcal/day`.<br>
+   Expected: The target changes, old notes disappear, and `kcal/day` remains intact.
+1. Repeat `diet 1 t/2000 KCAL/DAY`.<br>
+   Expected: `This is already the current diet plan for NAME.` and the saved spelling remains `2000 kcal/day`.
+1. Try `diet 1 t/`, `diet 1 t/2000 kcal n/`, `diet 1 t/2000 kcal r/vegan`, and `diet 0 t/2000 kcal`.<br>
+   Expected: Respectively, the target, notes, format, and client-index errors appear. The previous plan remains visible.
+1. Close and restart the app.<br>
+   Expected: Selecting the same client shows the saved target with no notes.
+1. Run `find` for that client and use the index shown in the filtered list in a `diet` command.<br>
+   Expected: Only the displayed client is updated. Run `list` to confirm the other client's plan is unchanged.
+1. Delete the client using the displayed index, then restart.<br>
+   Expected: The client and their plan are gone; the details pane no longer shows the deleted client's target.
+
+An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it forces the atomic replacement to throw, verifies the specified failure message, confirms that both the model and original JSON bytes are unchanged, and checks that the temporary file is removed.
 
 ### Saving data
 

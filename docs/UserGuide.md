@@ -32,6 +32,8 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
+   * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records a diet plan for the 2nd client shown.
+
    * `clear` : Deletes all contacts.
 
    * `exit` : Exits the app.
@@ -109,6 +111,43 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`
 Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
+
+### Recording a client's diet plan: `diet`
+
+Stores one current diet plan for a client. Select a client in the list to read the complete target and optional notes in the **CURRENT DIET PLAN** pane below the list. The pane shows **No diet plan recorded.** when that client has no plan. Long text wraps, and the pane can be scrolled.
+
+Format: `diet INDEX t/TARGET [n/NOTES]`
+
+* `INDEX` is the positive whole-number index shown in the **current** client list. For example, after `find Priya`, `diet 1 ...` updates the first displayed search result. Leading zeros are accepted; `0`, negative numbers, signs, decimals, and indices outside the displayed list are rejected.
+* `TARGET` is required. After trimming outer whitespace, it must contain 1 to 200 printable characters and at least one letter or digit. Numbers, units, punctuation, internal spaces, and letter case are preserved. Line breaks and control characters are rejected.
+* `NOTES` is optional. If `n/` is supplied, its value must contain 1 to 300 printable characters after trimming. A blank `n/` is invalid; omit `n/` when no notes are needed. Internal spacing and case are preserved, and line breaks and control characters are rejected.
+* `t/` and `n/` may appear in either order, but each may appear only once. They are recognised at the start of an argument or after whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. A separated single-letter prefix such as `r/` is reserved and rejected; structured dietary restrictions are not yet supported.
+* A different plan **replaces the complete current plan**. Omitting `n/` during replacement clears any old notes. Earlier versions are not kept. A plan with the same trimmed target and notes, ignoring case, is rejected without changing the saved plan.
+
+Examples:
+
+* `diet 2 t/1800 kcal per day, 120 g protein` creates a target-only plan.
+* `diet 2 t/1800 kcal per day, 120 g protein n/Prioritise lean protein and vegetables` adds notes.
+* `diet 2 t/2000 kcal/day n/Include fruit` replaces the full plan; the slash in `kcal/day` is ordinary text.
+* `diet 2 t/2000 kcal/day` replaces the plan again and removes its notes.
+* `diet 3 t/2000 kcal per day n/Halal meals only; avoid shellfish` records an essential restriction as free-text notes. This does not create a structured restriction field.
+
+On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan for NAME.`. Common errors include:
+
+| Cause | Message |
+| --- | --- |
+| Missing client index | `Client index is required. Use: diet INDEX t/TARGET [n/NOTES]` |
+| Invalid client index | `The client index must be a positive whole number shown in the client list.` |
+| Index outside the displayed list | `No client exists at index INDEX.` |
+| Missing target | `Diet target is required. Use: diet INDEX t/TARGET [n/NOTES]` |
+| Repeated `t/` or `n/` | `The t/ and n/ prefixes may each be used only once.` |
+| Unknown prefix or extra text | `Invalid command format. Use: diet INDEX t/TARGET [n/NOTES]` |
+| Invalid target | `Diet target must contain 1 to 200 printable characters.` |
+| Invalid supplied notes | `Diet-plan notes must contain 1 to 300 printable characters.` |
+| Same current plan | `This is already the current diet plan for NAME.` |
+| Saving fails | `The diet plan could not be saved. The previous plan remains unchanged.` |
+
+Invalid commands and failed saves leave the previous plan unchanged. Deleting a client permanently removes that client's diet plan along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
 
 ### Locating persons by name: `find`
 
@@ -358,6 +397,7 @@ Action | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
 **Assign/change exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`
+**Diet plan** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
