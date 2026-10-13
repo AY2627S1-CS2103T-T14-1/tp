@@ -93,6 +93,22 @@ Shows a list of all persons in the address book.
 
 Format: `list`
 
+### Scheduling a training session: `schedule`
+
+Adds a future training session to the client at the displayed index. Sessions are saved automatically and multiple sessions can be added to one client.
+
+Format: `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
+
+The date and 24-hour time must be valid, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client.
+
+### Viewing a client's training sessions: `viewschedule`
+
+Shows all saved sessions for the client at the displayed index, ordered by date and time. Past sessions remain visible for reference.
+
+Format: `viewschedule INDEX`
+
+Example: `viewschedule 1`
+
 ### Editing a person: `edit`
 
 Edits an existing person in the address book.
@@ -196,4 +212,6 @@ Action | Format, Examples
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
+**Schedule** | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`
+**View schedule** | `viewschedule INDEX`<br> e.g., `viewschedule 1`
 **Help** | `help`

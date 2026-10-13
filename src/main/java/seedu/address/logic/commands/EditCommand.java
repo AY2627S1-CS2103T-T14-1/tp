@@ -113,7 +113,7 @@ public class EditCommand extends Command {
         WorkoutPlan updatedWorkoutPlan = personToEdit.getWorkoutPlan();
 
         return new Person(updatedName, updatedPhone, updatedEmail, updatedAddress, updatedRemark, updatedTags,
-                updatedWorkoutPlan, personToEdit.getDietPlan());
+                updatedWorkoutPlan, personToEdit.getDietPlan(), personToEdit.getTrainingSessions());
     }
 
     @Override

@@ -19,6 +19,7 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
+import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutPlan;
 import seedu.address.model.tag.Tag;
 
@@ -37,13 +38,14 @@ class JsonAdaptedPerson {
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
     private final List<JsonAdaptedExercise> exercises = new ArrayList<>();
     private final JsonAdaptedDietPlan dietPlan;
+    private final List<JsonAdaptedTrainingSession> trainingSessions = new ArrayList<>();
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
      */
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags) {
-        this(name, phone, email, address, remark, tags, null, null);
+        this(name, phone, email, address, remark, tags, null, null, null);
     }
 
     /**
@@ -51,7 +53,7 @@ class JsonAdaptedPerson {
      */
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises) {
-        this(name, phone, email, address, remark, tags, exercises, null);
+        this(name, phone, email, address, remark, tags, exercises, null, null);
     }
 
     /**
@@ -63,7 +65,8 @@ class JsonAdaptedPerson {
             @JsonProperty("remark") String remark,
             @JsonProperty("tags") List<JsonAdaptedTag> tags,
             @JsonProperty("exercises") List<JsonAdaptedExercise> exercises,
-            @JsonProperty("dietPlan") JsonAdaptedDietPlan dietPlan) {
+            @JsonProperty("dietPlan") JsonAdaptedDietPlan dietPlan,
+            @JsonProperty("trainingSessions") List<JsonAdaptedTrainingSession> trainingSessions) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -76,6 +79,9 @@ class JsonAdaptedPerson {
             this.exercises.addAll(exercises);
         }
         this.dietPlan = dietPlan;
+        if (trainingSessions != null) {
+            this.trainingSessions.addAll(trainingSessions);
+        }
     }
 
     /**
@@ -94,6 +100,9 @@ class JsonAdaptedPerson {
                 .map(JsonAdaptedExercise::new)
                 .collect(Collectors.toList()));
         dietPlan = source.getDietPlan().map(JsonAdaptedDietPlan::new).orElse(null);
+        trainingSessions.addAll(source.getTrainingSessions().stream()
+                .map(JsonAdaptedTrainingSession::new)
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -155,8 +164,15 @@ class JsonAdaptedPerson {
         final Set<Tag> modelTags = new HashSet<>(personTags);
         final Optional<DietPlan> modelDietPlan = dietPlan == null
                 ? Optional.empty() : Optional.of(dietPlan.toModelType());
+        final List<TrainingSession> modelSessions = new ArrayList<>();
+        for (JsonAdaptedTrainingSession session : trainingSessions) {
+            if (session == null) {
+                throw new IllegalValueException("Training sessions must not contain null entries");
+            }
+            modelSessions.add(session.toModelType());
+        }
         return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags,
-                modelWorkoutPlan, modelDietPlan);
+                modelWorkoutPlan, modelDietPlan, modelSessions);
     }
 
 }

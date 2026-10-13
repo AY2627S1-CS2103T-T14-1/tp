@@ -1,6 +1,7 @@
 package seedu.address.testutil;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -11,6 +12,7 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
+import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutPlan;
 import seedu.address.model.tag.Tag;
 import seedu.address.model.util.SampleDataUtil;
@@ -34,6 +36,7 @@ public class PersonBuilder {
     private Set<Tag> tags;
     private WorkoutPlan workoutPlan;
     private Optional<DietPlan> dietPlan;
+    private List<TrainingSession> trainingSessions;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -47,6 +50,7 @@ public class PersonBuilder {
         tags = new HashSet<>();
         workoutPlan = new WorkoutPlan();
         dietPlan = Optional.empty();
+        trainingSessions = List.of();
     }
 
     /**
@@ -61,6 +65,7 @@ public class PersonBuilder {
         tags = new HashSet<>(personToCopy.getTags());
         workoutPlan = personToCopy.getWorkoutPlan();
         dietPlan = personToCopy.getDietPlan();
+        trainingSessions = personToCopy.getTrainingSessions();
     }
 
     /**
@@ -128,7 +133,7 @@ public class PersonBuilder {
     }
 
     public Person build() {
-        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, trainingSessions);
     }
 
 }

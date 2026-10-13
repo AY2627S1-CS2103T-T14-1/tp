@@ -2,8 +2,10 @@ package seedu.address.model.person;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +30,7 @@ public class Person {
     private final Set<Tag> tags = new HashSet<>();
     private final WorkoutPlan workoutPlan;
     private final Optional<DietPlan> dietPlan;
+    private final List<TrainingSession> trainingSessions;
 
     /**
      * Every field must be present and not null.
@@ -57,7 +60,14 @@ public class Person {
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, List.of());
+    }
+
+    /** Constructs a person with saved training sessions. */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, List<TrainingSession> trainingSessions) {
         requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
+        Objects.requireNonNull(trainingSessions);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -66,6 +76,7 @@ public class Person {
         this.tags.addAll(tags);
         this.workoutPlan = workoutPlan;
         this.dietPlan = dietPlan;
+        this.trainingSessions = List.copyOf(trainingSessions);
     }
 
     public Name getName() {
@@ -94,6 +105,18 @@ public class Person {
 
     public Optional<DietPlan> getDietPlan() {
         return dietPlan;
+    }
+
+    public List<TrainingSession> getTrainingSessions() {
+        return trainingSessions;
+    }
+
+    /** Returns a copy with one additional session. */
+    public Person withTrainingSession(TrainingSession session) {
+        Objects.requireNonNull(session);
+        List<TrainingSession> updated = new ArrayList<>(trainingSessions);
+        updated.add(session);
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, updated);
     }
 
     /**
@@ -139,13 +162,14 @@ public class Person {
                 && remark.equals(otherPerson.remark)
                 && tags.equals(otherPerson.tags)
                 && workoutPlan.equals(otherPerson.workoutPlan)
-                && dietPlan.equals(otherPerson.dietPlan);
+                && dietPlan.equals(otherPerson.dietPlan)
+                && trainingSessions.equals(otherPerson.trainingSessions);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
+        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, trainingSessions);
     }
 
     @Override
@@ -159,6 +183,7 @@ public class Person {
                 .add("tags", tags)
                 .add("workoutPlan", workoutPlan)
                 .add("dietPlan", dietPlan)
+                .add("trainingSessions", trainingSessions)
                 .toString();
     }
 
