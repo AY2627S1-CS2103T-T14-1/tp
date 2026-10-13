@@ -118,6 +118,31 @@ public class AddExerciseCommandParserTest {
     }
 
     @Test
+    public void parse_unknownPrefix_failure() {
+        for (String prefix : new String[] {"x/", "t/", "ex/", "unknown/", "N/"}) {
+            assertParseFailure(parser, "1 n/Stretch " + prefix + "unexpected", MESSAGE_INVALID_FORMAT);
+            assertParseFailure(parser, "1 n/Stretch " + prefix, MESSAGE_INVALID_FORMAT);
+            assertParseFailure(parser, "1 " + prefix + "unexpected n/Stretch", MESSAGE_INVALID_FORMAT);
+            assertParseFailure(parser, "1 s/3 n/Stretch " + prefix + "unexpected d/m", MESSAGE_INVALID_FORMAT);
+            assertParseFailure(parser, "1 n/Stretch\t" + prefix + "unexpected", MESSAGE_INVALID_FORMAT);
+        }
+    }
+
+    @Test
+    public void parse_extraTextOutsideName_failure() {
+        for (String args : new String[] {"1 extra n/Stretch", "1 n/Stretch s/3 extra",
+            "1 n/Stretch r/8 extra", "1 n/Stretch w/25.5 extra", "1 n/Stretch d/m extra"}) {
+            assertParseFailure(parser, args, MESSAGE_INVALID_FORMAT);
+        }
+    }
+
+    @Test
+    public void parse_multiwordNameAndEmbeddedSlash_success() {
+        assertParseSuccess(parser, "1 s/3 n/Push/Pull Stretch",
+                new AddExerciseCommand(INDEX_FIRST_PERSON, new Exercise("Push/Pull Stretch", 3, 1, 0)));
+    }
+
+    @Test
     public void parse_duplicatePrefix_failure() {
         // parser wraps duplicate-prefix errors in the generic invalid-format message
         assertParseFailure(parser, "1 n/Bench Press n/Squat s/3 r/10 w/60", MESSAGE_INVALID_FORMAT);

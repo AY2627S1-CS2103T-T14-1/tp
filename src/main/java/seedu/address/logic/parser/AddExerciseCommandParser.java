@@ -8,6 +8,9 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_REPS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_SETS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_WEIGHT;
 
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import seedu.address.commons.core.index.Index;
@@ -20,6 +23,11 @@ import seedu.address.model.person.Exercise;
  */
 public class AddExerciseCommandParser implements Parser<AddExerciseCommand> {
 
+    private static final Pattern PARAMETER_PREFIX = Pattern.compile("(?<!\\S)([A-Za-z]+/)");
+    private static final Set<String> ALLOWED_PREFIXES = Set.of(
+            PREFIX_NAME.getPrefix(), PREFIX_SETS.getPrefix(), PREFIX_REPS.getPrefix(),
+            PREFIX_WEIGHT.getPrefix(), PREFIX_EXERCISE_DAY.getPrefix());
+
     /**
      * Parses the given {@code String} of arguments in the context of the AddExerciseCommand
      * and returns an AddExerciseCommand object for execution.
@@ -28,6 +36,13 @@ public class AddExerciseCommandParser implements Parser<AddExerciseCommand> {
      */
     public AddExerciseCommand parse(String args) throws ParseException {
         requireNonNull(args);
+        Matcher prefixes = PARAMETER_PREFIX.matcher(args);
+        while (prefixes.find()) {
+            if (!ALLOWED_PREFIXES.contains(prefixes.group(1))) {
+                throw new ParseException(
+                        String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddExerciseCommand.MESSAGE_USAGE));
+            }
+        }
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_SETS, PREFIX_REPS, PREFIX_WEIGHT,
                         PREFIX_EXERCISE_DAY);
