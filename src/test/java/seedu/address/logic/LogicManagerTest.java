@@ -30,6 +30,7 @@ import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
@@ -133,6 +134,58 @@ public class LogicManagerTest {
         }
         assertCommandException("addex 1 n/stretch", AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE);
         assertCommandException("addex 2 n/Press", MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertEquals(saved, Files.readString(savedPath));
+    }
+
+    @Test
+    public void execute_dailyLimitAfterReload_rejectsOverflowWithoutChangingModelOrSavedData() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        for (int index = 0; index < 7; index++) {
+            logic.execute("addex 1 n/Exercise " + index + " d/m");
+        }
+        logic.execute("addex 1 n/Stretch");
+
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        JsonAddressBookStorage savedStorage = new JsonAddressBookStorage(savedPath);
+        Model reloadedModel = new ModelManager(savedStorage.readAddressBook().orElseThrow(), new UserPrefs());
+        Logic reloadedLogic = new LogicManager(reloadedModel, new StorageManager(savedStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
+        AddressBook expected = new AddressBook(model.getAddressBook());
+        String saved = Files.readString(savedPath);
+        assertEquals(expected, reloadedModel.getAddressBook());
+
+        for (String command : List.of("addex 1 n/Overflow d/MON", "dayex 1 8 mOnDaY")) {
+            assertThrows(CommandException.class, Messages.MESSAGE_DAILY_EXERCISE_LIMIT, () ->
+                    reloadedLogic.execute(command));
+            assertEquals(expected, reloadedModel.getAddressBook());
+            assertEquals(saved, Files.readString(savedPath));
+            assertEquals(expected, savedStorage.readAddressBook().orElseThrow());
+        }
+    }
+
+    @Test
+    public void execute_dailyLimitMoveAndRefill_persistsNewDaysAndExerciseDetails() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        for (int index = 0; index < 6; index++) {
+            logic.execute("addex 1 n/Exercise " + index + " d/m");
+        }
+        logic.execute("addex 1 n/Stretch s/3 r/12 w/25.5");
+        logic.execute("dayex 1 7 m");
+        logic.execute("dayex 1 7 tu");
+        logic.execute("addex 1 n/Replacement d/m");
+
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        JsonAddressBookStorage savedStorage = new JsonAddressBookStorage(savedPath);
+        ReadOnlyAddressBook reloaded = savedStorage.readAddressBook().orElseThrow();
+        WorkoutPlan savedPlan = reloaded.getPersonList().get(0).getWorkoutPlan();
+        assertEquals(model.getAddressBook(), reloaded);
+        assertEquals(7, savedPlan.getExercises().stream()
+                .filter(exercise -> exercise.getDay().equals("Monday")).count());
+        assertEquals(new Exercise("Replacement", 1, 1, 0, "Monday"), savedPlan.getExercises().get(6));
+        assertEquals(new Exercise("Stretch", 3, 12, 25.5, "Tuesday"), savedPlan.getExercises().get(7));
+
+        String saved = Files.readString(savedPath);
+        assertCommandException("dayex 1 8 m", Messages.MESSAGE_DAILY_EXERCISE_LIMIT);
         assertEquals(saved, Files.readString(savedPath));
     }
 
