@@ -1,7 +1,9 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.concurrent.FutureTask;
@@ -63,6 +65,24 @@ public class PersonCardTest {
                 "Workout Plan (5):", "Monday", "1. Squat 4x8 @80kg", "Day not specified",
                 "2. Sit Up 3x20 @0kg", "3. Jumping Jacks 3x30 @0kg", "4. Stretch 1x1 @0kg",
                 "5. Shoulder Press 1x1 @0kg"));
+    }
+
+    @Test
+    public void goal_isShownOnlyWhenPresent() throws Exception {
+        FutureTask<Void> assertions = new FutureTask<>(() -> {
+            PersonCard withGoal = new PersonCard(new PersonBuilder().withGoal("Build strength").build(), 1);
+            Label shownGoal = (Label) withGoal.getRoot().lookup("#goal");
+            assertEquals("Goal: Build strength", shownGoal.getText());
+            assertTrue(shownGoal.isManaged());
+
+            PersonCard withoutGoal = new PersonCard(new PersonBuilder().build(), 1);
+            Label hiddenGoal = (Label) withoutGoal.getRoot().lookup("#goal");
+            assertFalse(hiddenGoal.isVisible());
+            assertFalse(hiddenGoal.isManaged());
+            return null;
+        });
+        Platform.runLater(assertions);
+        assertions.get(10, TimeUnit.SECONDS);
     }
 
     private void assertCardLabels(Person person, List<String> expected) throws Exception {

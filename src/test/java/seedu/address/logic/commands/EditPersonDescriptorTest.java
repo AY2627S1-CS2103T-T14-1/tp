@@ -55,6 +55,15 @@ public class EditPersonDescriptorTest {
         // different tags -> returns false
         editedAmy = new EditPersonDescriptorBuilder(DESC_AMY).withTags(VALID_TAG_HUSBAND).build();
         assertFalse(DESC_AMY.equals(editedAmy));
+
+        // different goal
+        editedAmy = new EditPersonDescriptorBuilder(DESC_AMY).withGoal("Build strength").build();
+        assertFalse(DESC_AMY.equals(editedAmy));
+
+        // cleared goal differs from an absent goal edit
+        editedAmy = new EditPersonDescriptorBuilder(DESC_AMY).build();
+        editedAmy.clearGoal();
+        assertFalse(DESC_AMY.equals(editedAmy));
     }
 
     @Test

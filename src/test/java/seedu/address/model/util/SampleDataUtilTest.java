@@ -23,6 +23,12 @@ public class SampleDataUtilTest {
     }
 
     @Test
+    public void getSamplePersons_someClientsHaveGoals() {
+        Person[] samplePersons = SampleDataUtil.getSamplePersons();
+        assertTrue(java.util.Arrays.stream(samplePersons).anyMatch(person -> person.getGoal().isPresent()));
+    }
+
+    @Test
     public void getSampleAddressBook_matchesSamplePersons() {
         ReadOnlyAddressBook sampleAb = SampleDataUtil.getSampleAddressBook();
         assertEquals(SampleDataUtil.getSamplePersons().length, sampleAb.getPersonList().size());
