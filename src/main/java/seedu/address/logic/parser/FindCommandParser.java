@@ -1,6 +1,8 @@
 package seedu.address.logic.parser;
 
+import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,15 +11,17 @@ import java.util.function.Predicate;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.ClientMatchesAnyPredicate;
+import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PhoneMatchesPredicate;
 
 /**
  * Parses input arguments and creates a new FindCommand object
  */
 public class FindCommandParser implements Parser<FindCommand> {
 
-    private static final Prefix[] SUPPORTED_PREFIXES = {PREFIX_NAME};
+    private static final Prefix[] SUPPORTED_PREFIXES = {PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL};
     private static final String MESSAGE_KEYWORD_REQUIRED = "Search keyword is required. Use: find KEYWORD... or "
             + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]";
     private static final String MESSAGE_MIXED_PREAMBLE = "Invalid command format. Use: find KEYWORD... or "
@@ -56,7 +60,7 @@ public class FindCommandParser implements Parser<FindCommand> {
             }
         }
 
-        return createFindCommand(argMultimap.getValue(PREFIX_NAME).orElseThrow());
+        return createFindCommand(argMultimap);
     }
 
     private static boolean hasAnySupportedPrefix(ArgumentMultimap argMultimap) {
@@ -69,9 +73,24 @@ public class FindCommandParser implements Parser<FindCommand> {
     }
 
     private static FindCommand createFindCommand(String nameQuery) {
-        String[] nameKeywords = nameQuery.split("\\s+");
         List<Predicate<Person>> predicates = new ArrayList<>();
-        predicates.add(new NameContainsKeywordsPredicate(List.of(nameKeywords)));
+        predicates.add(new NameContainsKeywordsPredicate(List.of(nameQuery.split("\\s+"))));
+        return new FindCommand(new ClientMatchesAnyPredicate(predicates));
+    }
+
+    private static FindCommand createFindCommand(ArgumentMultimap argMultimap) throws ParseException {
+        List<Predicate<Person>> predicates = new ArrayList<>();
+        argMultimap.getValue(PREFIX_NAME).ifPresent(value ->
+                predicates.add(new NameContainsKeywordsPredicate(List.of(value.split("\\s+")))));
+        if (argMultimap.getValue(PREFIX_PHONE).isPresent()) {
+            String phoneQuery = argMultimap.getValue(PREFIX_PHONE).get();
+            if (!phoneQuery.matches(".*\\d.*")) {
+                throw new ParseException("Phone search must contain at least one digit.");
+            }
+            predicates.add(new PhoneMatchesPredicate(phoneQuery));
+        }
+        argMultimap.getValue(PREFIX_EMAIL).ifPresent(value ->
+                predicates.add(new EmailContainsKeywordsPredicate(List.of(value.split("\\s+")))));
         return new FindCommand(new ClientMatchesAnyPredicate(predicates));
     }
 

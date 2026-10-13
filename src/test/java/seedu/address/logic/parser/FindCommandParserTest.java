@@ -4,12 +4,16 @@ import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailur
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.model.person.ClientMatchesAnyPredicate;
+import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.Person;
+import seedu.address.model.person.PhoneMatchesPredicate;
 
 public class FindCommandParserTest {
 
@@ -46,6 +50,32 @@ public class FindCommandParserTest {
                 + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]");
         assertParseFailure(parser, " n/alex n/bob", "The n/, p/, e/ and g/ prefixes may each be used only once.");
         assertParseFailure(parser, " n/", "The n/ search value cannot be empty.");
+    }
+
+    @Test
+    public void parse_phoneAndEmailCriteria_returnsFindCommand() {
+        assertParseSuccess(parser, " p/9123 4567", createFindCommand(new PhoneMatchesPredicate("9123 4567")));
+        assertParseSuccess(parser, " e/example.com", createFindCommand(
+                new EmailContainsKeywordsPredicate(List.of("example.com"))));
+
+        FindCommand expectedCommand = createFindCommand(
+                new NameContainsKeywordsPredicate(List.of("Alice")), new PhoneMatchesPredicate("9123"));
+        assertParseSuccess(parser, " n/Alice p/9123", expectedCommand);
+        assertParseSuccess(parser, " p/9123 n/Alice", expectedCommand);
+    }
+
+    @Test
+    public void parse_invalidPhoneAndEmailCriteria_throwsParseException() {
+        assertParseFailure(parser, " p/1 p/2", "The n/, p/, e/ and g/ prefixes may each be used only once.");
+        assertParseFailure(parser, " e/a e/b", "The n/, p/, e/ and g/ prefixes may each be used only once.");
+        assertParseFailure(parser, " p/", "The p/ search value cannot be empty.");
+        assertParseFailure(parser, " e/", "The e/ search value cannot be empty.");
+        assertParseFailure(parser, " p/abc", "Phone search must contain at least one digit.");
+    }
+
+    @SafeVarargs
+    private static FindCommand createFindCommand(Predicate<Person>... predicates) {
+        return new FindCommand(new ClientMatchesAnyPredicate(List.of(predicates)));
     }
 
 }
