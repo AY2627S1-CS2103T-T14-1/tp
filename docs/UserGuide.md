@@ -167,6 +167,7 @@ Format: `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`
 * Each prefix, including `n/`, may appear at most once.
 * To use a default, omit the whole field. An empty field such as `s/` or `d/` is invalid.
 * An exercise with the same name (case-insensitive) cannot be added twice to the same person's plan, even with a different day. Fittix shows `This exercise already exists in the workout plan.` and does not add it.
+* Each client can have at most **7 exercises per weekday**. Adding an eighth exercise to the same day shows `A client cannot have more than 7 exercises on the same day.` and leaves the plan unchanged. Other weekdays and clients have separate limits. Exercises under **Day not specified** are not capped.
 * If `INDEX` is out of range, Fittix shows `The person index provided is invalid.`
 * Missing required fields, invalid values, or repeated prefixes cause `Invalid command format!` followed by the `addex` usage:
 
@@ -245,6 +246,7 @@ Format: `dayex PERSON_INDEX EXERCISE_INDEX DAY`
 * Supply all three arguments in the order shown. Enter the day directly, for example `dayex 1 2 Tuesday`.
 * `DAY` accepts the weekday names and prefixes listed below, without regard to letter case.
 * Each exercise has one assigned day. Assigning a new day replaces the previous day while keeping the exercise name, sets, reps, and weight.
+* A day can contain at most **7 exercises for each client**. Moving an exercise into a day that already has 7 shows `A client cannot have more than 7 exercises on the same day.` and leaves the plan unchanged. Assigning an exercise to its current day when that day has 7 exercises is allowed, as is moving an exercise away from a full day.
 * The plan is immediately sorted by weekday and renumbered. Check the updated card before entering another command that uses an exercise index.
 * If `PERSON_INDEX` is out of range, Fittix shows `The person index provided is invalid.`
 * If `EXERCISE_INDEX` is out of range (including when the plan is empty), Fittix shows `The exercise index provided is invalid.`
