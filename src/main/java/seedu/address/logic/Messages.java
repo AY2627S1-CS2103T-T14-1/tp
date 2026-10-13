@@ -107,9 +107,8 @@ public class Messages {
      * Formats an exercise as {@code Name SetsxReps @Weightkg}, e.g. {@code Bench Press 3x10 @60kg}.
      */
     public static String formatExercise(Exercise exercise) {
-        String weight = (exercise.getWeightKg() % 1 == 0)
-                ? String.valueOf((int) exercise.getWeightKg())
-                : String.valueOf(exercise.getWeightKg());
+        String weight = java.math.BigDecimal.valueOf(exercise.getWeightKg())
+                .stripTrailingZeros().toPlainString();
         String formatted = String.format("%s %dx%d @%skg",
                 exercise.getName(), exercise.getSets(), exercise.getReps(), weight);
         return formatted;
