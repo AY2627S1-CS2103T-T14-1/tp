@@ -28,6 +28,7 @@ import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.SetExerciseDayCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
@@ -135,6 +136,29 @@ public class LogicManagerTest {
         assertCommandException("addex 1 n/stretch", AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE);
         assertCommandException("addex 2 n/Press", MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
         assertEquals(saved, Files.readString(savedPath));
+    }
+
+    @Test
+    public void execute_workoutExtraParameters_doesNotChangeModelOrSavedData() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("addex 1 n/Stretch d/m");
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        String saved = Files.readString(savedPath);
+        String[][] invalidCommands = {
+            {"addex 1 n/Press x/unexpected", AddExerciseCommand.MESSAGE_USAGE},
+            {"addex 1 s/3 n/Press ex/unexpected d/tu", AddExerciseCommand.MESSAGE_USAGE},
+            {"addex 1 n/Press s/3 extra", AddExerciseCommand.MESSAGE_USAGE},
+            {"delex 1 1 x/unexpected", DeleteExerciseCommand.MESSAGE_USAGE},
+            {"delex 1 1 extra", DeleteExerciseCommand.MESSAGE_USAGE},
+            {"dayex 1 1 Tuesday x/unexpected", SetExerciseDayCommand.MESSAGE_USAGE},
+            {"dayex 1 1 Tuesday extra", SetExerciseDayCommand.MESSAGE_USAGE},
+            {"clearplan 1 x/unexpected", ClearPlanCommand.MESSAGE_USAGE},
+            {"clearplan 1 extra", ClearPlanCommand.MESSAGE_USAGE}
+        };
+        for (String[] command : invalidCommands) {
+            assertParseException(command[0], String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, command[1]));
+            assertEquals(saved, Files.readString(savedPath));
+        }
     }
 
     @Test
