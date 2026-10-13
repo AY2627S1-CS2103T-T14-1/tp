@@ -1,8 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+<VBox spacing="8" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
   <ListView fx:id="personListView" VBox.vgrow="ALWAYS" />
+  <ScrollPane id="dietPlanPanel" fitToWidth="true" hbarPolicy="NEVER" prefViewportHeight="160">
+    <VBox spacing="4">
+      <padding>
+        <Insets top="8" right="10" bottom="8" left="10" />
+      </padding>
+      <Label fx:id="selectedClientName" styleClass="cell_big_label" wrapText="true" />
+      <Label fx:id="dietPlanHeading" styleClass="cell_small_label" text="CURRENT DIET PLAN" />
+      <Label fx:id="dietTarget" styleClass="cell_small_label" wrapText="true" />
+      <Label fx:id="dietNotes" styleClass="cell_small_label" wrapText="true" />
+      <Label fx:id="dietEmpty" styleClass="cell_small_label" text="No diet plan recorded." />
+    </VBox>
+  </ScrollPane>
 </VBox>

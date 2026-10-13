@@ -2,12 +2,15 @@ package seedu.address.ui;
 
 import java.util.logging.Logger;
 
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.Region;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
 
 /**
@@ -19,6 +22,16 @@ public class PersonListPanel extends UiPart<Region> {
 
     @FXML
     private ListView<Person> personListView;
+    @FXML
+    private Label selectedClientName;
+    @FXML
+    private Label dietPlanHeading;
+    @FXML
+    private Label dietTarget;
+    @FXML
+    private Label dietNotes;
+    @FXML
+    private Label dietEmpty;
 
     /**
      * Creates a {@code PersonListPanel} with the given {@code ObservableList}.
@@ -27,6 +40,54 @@ public class PersonListPanel extends UiPart<Region> {
         super(FXML);
         personListView.setItems(personList);
         personListView.setCellFactory(listView -> new PersonListViewCell());
+        personListView.getSelectionModel().selectedItemProperty().addListener((observable, previous, selected) ->
+                showDietPlan(selected));
+        ListChangeListener<Person> listChangeListener = change ->
+                showDietPlan(personListView.getSelectionModel().getSelectedItem());
+        personList.addListener(listChangeListener);
+        configureWrapping(selectedClientName);
+        configureWrapping(dietTarget);
+        configureWrapping(dietNotes);
+        personListView.getSelectionModel().selectFirst();
+        showDietPlan(personListView.getSelectionModel().getSelectedItem());
+    }
+
+    private void configureWrapping(Label label) {
+        label.setMinWidth(0);
+        label.setMaxWidth(Double.MAX_VALUE);
+        label.setWrapText(true);
+    }
+
+    private void showDietPlan(Person selected) {
+        if (selected == null) {
+            selectedClientName.setText("Select a client to view their current diet plan.");
+            setShown(dietPlanHeading, false);
+            setShown(dietTarget, false);
+            setShown(dietNotes, false);
+            setShown(dietEmpty, false);
+            return;
+        }
+        selectedClientName.setText(selected.getName().fullName);
+        setShown(dietPlanHeading, true);
+        if (selected.getDietPlan().isEmpty()) {
+            setShown(dietTarget, false);
+            setShown(dietNotes, false);
+            setShown(dietEmpty, true);
+            return;
+        }
+        DietPlan plan = selected.getDietPlan().get();
+        dietTarget.setText("Target: " + plan.getTarget());
+        setShown(dietTarget, true);
+        plan.getNotes().ifPresentOrElse(notes -> {
+            dietNotes.setText("Notes: " + notes);
+            setShown(dietNotes, true);
+        }, () -> setShown(dietNotes, false));
+        setShown(dietEmpty, false);
+    }
+
+    private void setShown(Label label, boolean shown) {
+        label.setVisible(shown);
+        label.setManaged(shown);
     }
 
     /**
