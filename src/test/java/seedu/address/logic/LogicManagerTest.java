@@ -194,6 +194,48 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_failingAddExerciseSave_rollback() {
+        Person person = new PersonBuilder(AMY).build();
+        model.addPerson(person);
+        ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+
+        setFailingStorage(DUMMY_IO_EXCEPTION);
+        String command = "addex 1 n/Bench Press s/3 r/10 w/60";
+        assertCommandFailure(command, CommandException.class,
+                String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()),
+                expectedModel);
+    }
+
+    @Test
+    public void execute_failingDeleteExerciseSave_rollback() {
+        Exercise benchPress = new Exercise("Bench Press", 3, 10, 60.0);
+        Exercise squat = new Exercise("Squat", 4, 8, 80.0);
+        Person person = new PersonBuilder(AMY)
+                .withWorkoutPlan(new WorkoutPlan(Arrays.asList(benchPress, squat))).build();
+        model.addPerson(person);
+        ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+
+        setFailingStorage(DUMMY_IO_EXCEPTION);
+        assertCommandFailure("delex 1 1", CommandException.class,
+                String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()),
+                expectedModel);
+    }
+
+    @Test
+    public void execute_failingClearPlanSave_rollback() {
+        Exercise benchPress = new Exercise("Bench Press", 3, 10, 60.0);
+        Person person = new PersonBuilder(AMY)
+                .withWorkoutPlan(new WorkoutPlan(Arrays.asList(benchPress))).build();
+        model.addPerson(person);
+        ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+
+        setFailingStorage(DUMMY_IO_EXCEPTION);
+        assertCommandFailure("clearplan 1", CommandException.class,
+                String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()),
+                expectedModel);
+    }
+
+    @Test
     public void getFilteredPersonList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().remove(0));
     }
@@ -257,6 +299,30 @@ public class LogicManagerTest {
      * @param e the exception to be thrown by the Storage component
      * @param expectedMessage the message expected inside exception thrown by the Logic component
      */
+    private void setFailingStorage(IOException e) {
+        Path prefPath = temporaryFolder.resolve("ExceptionUserPrefs.json");
+
+        // Inject LogicManager with a JsonAddressBookStorage that throws the IOException e when saving
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(prefPath) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                throw e;
+            }
+        };
+
+        JsonUserPrefsStorage userPrefsStorage =
+                new JsonUserPrefsStorage(temporaryFolder.resolve("ExceptionUserPrefs.json"));
+        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+
+        logic = new LogicManager(model, storage);
+    }
+
+    /**
+     * Tests the Logic component's handling of an {@code IOException} thrown by the Storage component.
+     *
+     * @param e the exception to be thrown by the Storage component
+     * @param expectedMessage the message expected inside exception thrown by the Logic component
+     */
     private void assertCommandFailureForExceptionFromStorage(IOException e, String expectedMessage) {
         Path prefPath = temporaryFolder.resolve("ExceptionUserPrefs.json");
 
@@ -277,9 +343,8 @@ public class LogicManagerTest {
         // Triggers the saveAddressBook method by executing an add command
         String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
                 + EMAIL_DESC_AMY + ADDRESS_DESC_AMY;
-        Person expectedPerson = new PersonBuilder(AMY).withTags().build();
-        ModelManager expectedModel = new ModelManager();
-        expectedModel.addPerson(expectedPerson);
+        // After a failed save the model must be rolled back to its previous state.
+        ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);
     }
 }
