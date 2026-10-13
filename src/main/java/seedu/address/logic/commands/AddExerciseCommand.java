@@ -30,7 +30,8 @@ public class AddExerciseCommand extends Command {
             + "n/Bench Press s/3 r/10 w/60 d/M";
 
     public static final String MESSAGE_ADD_EXERCISE_SUCCESS = "Added exercise to Person: %1$s";
-    public static final String MESSAGE_DUPLICATE_EXERCISE = "This exercise already exists in the workout plan.";
+    public static final String MESSAGE_DUPLICATE_EXERCISE =
+            "This exercise already exists on this day in the workout plan.";
 
     private final Index index;
     private final Exercise exercise;

@@ -111,6 +111,25 @@ public class AddExerciseCommandTest {
     }
 
     @Test
+    public void execute_sameNameOnDifferentDays_success() throws Exception {
+        Exercise monday = benchPress().withDay("Monday");
+        Exercise friday = new Exercise("bench press", 5, 5, 100, "Friday");
+        new AddExerciseCommand(INDEX_FIRST_PERSON, monday).execute(model);
+        new AddExerciseCommand(INDEX_FIRST_PERSON, friday).execute(model);
+        new AddExerciseCommand(INDEX_FIRST_PERSON, benchPress()).execute(model);
+        assertEquals(Arrays.asList(monday, friday, benchPress()),
+                model.getFilteredPersonList().get(0).getWorkoutPlan().getExercises());
+    }
+
+    @Test
+    public void execute_sameNameOnSameDay_throwsCommandException() throws Exception {
+        new AddExerciseCommand(INDEX_FIRST_PERSON, benchPress().withDay("Mon")).execute(model);
+        Exercise duplicate = new Exercise("bench press", 5, 5, 100, "MONDAY");
+        assertCommandFailure(new AddExerciseCommand(INDEX_FIRST_PERSON, duplicate),
+                model, AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE);
+    }
+
+    @Test
     public void execute_seventhExerciseOnDay_success() throws Exception {
         setExercisesOnMonday(6);
         new AddExerciseCommand(INDEX_FIRST_PERSON, benchPress().withDay("Monday")).execute(model);

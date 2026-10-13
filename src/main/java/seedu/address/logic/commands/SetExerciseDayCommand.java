@@ -10,6 +10,7 @@ import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutPlan;
 
@@ -42,9 +43,13 @@ public class SetExerciseDayCommand extends Command {
             throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
         }
         Person person = people.get(personIndex.getZeroBased());
-        List<seedu.address.model.person.Exercise> exercises = person.getWorkoutPlan().getExercises();
+        List<Exercise> exercises = person.getWorkoutPlan().getExercises();
         if (exerciseIndex.getZeroBased() >= exercises.size()) {
             throw new CommandException(MESSAGE_INVALID_EXERCISE_INDEX);
+        }
+        Exercise exercise = exercises.get(exerciseIndex.getZeroBased());
+        if (person.getWorkoutPlan().removeExercise(exercise).hasExercise(exercise.withDay(day))) {
+            throw new CommandException(AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE);
         }
         WorkoutPlan plan = person.getWorkoutPlan().setExerciseDay(exerciseIndex.getZeroBased(), day);
         if (!plan.isWithinDailyLimit(day)) {

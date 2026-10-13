@@ -48,11 +48,13 @@ public class WorkoutPlan {
 
     /**
      * Returns true if the plan contains an exercise with the same name
-     * (case-insensitive) as the given exercise.
+     * (case-insensitive) on the same day as the given exercise. Weekday prefixes
+     * are treated alike, and unassigned exercises share the same day group.
      */
     public boolean hasExercise(Exercise exercise) {
         requireNonNull(exercise);
-        return exercises.stream().anyMatch(exercise::isSameExercise);
+        return exercises.stream().anyMatch(existing -> exercise.isSameExercise(existing)
+                && normalizedDay(exercise).equalsIgnoreCase(normalizedDay(existing)));
     }
 
     /**
@@ -95,6 +97,10 @@ public class WorkoutPlan {
         updated.set(index, updated.get(index).withDay(day));
         updated.sort(Comparator.comparingInt(WorkoutPlan::daySortOrder));
         return new WorkoutPlan(updated);
+    }
+
+    private static String normalizedDay(Exercise exercise) {
+        return Weekday.fromPrefix(exercise.getDay()).map(Weekday::getDisplayName).orElse(exercise.getDay());
     }
 
     private static int daySortOrder(Exercise exercise) {

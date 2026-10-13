@@ -40,6 +40,38 @@ public class SetExerciseDayCommandTest {
     }
 
     @Test
+    public void execute_moveSameNameToOccupiedDay_throwsCommandException() {
+        setRepeatedExerciseOnDifferentDays();
+        assertCommandFailure(new SetExerciseDayCommand(INDEX_FIRST_PERSON, Index.fromOneBased(2), "MONDAY"),
+                model, AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE);
+        assertCommandFailure(new SetExerciseDayCommand(INDEX_FIRST_PERSON, Index.fromOneBased(3), "m"),
+                model, AddExerciseCommand.MESSAGE_DUPLICATE_EXERCISE);
+    }
+
+    @Test
+    public void execute_moveSameNameToFreeDay_success() throws Exception {
+        setRepeatedExerciseOnDifferentDays();
+        new SetExerciseDayCommand(INDEX_FIRST_PERSON, Index.fromOneBased(2), "Tuesday").execute(model);
+        assertEquals(List.of("Mon", "Tuesday", ""), model.getFilteredPersonList().get(0)
+                .getWorkoutPlan().getExercises().stream().map(Exercise::getDay).toList());
+    }
+
+    @Test
+    public void execute_sameDayWithRepeatedNameOnOtherDays_success() throws Exception {
+        setRepeatedExerciseOnDifferentDays();
+        new SetExerciseDayCommand(INDEX_FIRST_PERSON, INDEX_FIRST_PERSON, "Monday").execute(model);
+        assertEquals(List.of("Monday", "Friday", ""), model.getFilteredPersonList().get(0)
+                .getWorkoutPlan().getExercises().stream().map(Exercise::getDay).toList());
+    }
+
+    private void setRepeatedExerciseOnDifferentDays() {
+        Person original = model.getFilteredPersonList().get(0);
+        WorkoutPlan plan = new WorkoutPlan(List.of(new Exercise("Bench Press", 3, 10, 60, "Mon"),
+                new Exercise("bench press", 5, 5, 100, "Friday"), new Exercise("Bench Press", 1, 1, 0)));
+        model.setPerson(original, new PersonBuilder(original).withWorkoutPlan(plan).build());
+    }
+
+    @Test
     public void execute_invalidExerciseIndex_throwsCommandException() {
         assertCommandFailure(new SetExerciseDayCommand(INDEX_FIRST_PERSON, Index.fromOneBased(1), "Monday"),
                 model, SetExerciseDayCommand.MESSAGE_INVALID_EXERCISE_INDEX);

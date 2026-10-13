@@ -63,6 +63,38 @@ public class WorkoutPlanTest {
     }
 
     @Test
+    public void hasExercise_sameNameAndWeekday_ignoresCasePrefixesAndWorkoutValues() {
+        WorkoutPlan plan = new WorkoutPlan(List.of(BENCH_PRESS.withDay("mOn")));
+        assertTrue(plan.hasExercise(new Exercise("bench press", 5, 5, 100, "Monday")));
+        assertTrue(plan.hasExercise(BENCH_PRESS.withDay("M")));
+        assertFalse(plan.hasExercise(SQUAT.withDay("Monday")));
+    }
+
+    @Test
+    public void hasExercise_sameNameOnDifferentDays_returnsFalse() {
+        for (Weekday day : Weekday.values()) {
+            WorkoutPlan plan = new WorkoutPlan(List.of(BENCH_PRESS.withDay(day.getDisplayName())));
+            for (Weekday otherDay : Weekday.values()) {
+                assertEquals(day == otherDay, plan.hasExercise(BENCH_PRESS.withDay(otherDay.getDisplayName())));
+            }
+            assertFalse(plan.hasExercise(BENCH_PRESS));
+        }
+    }
+
+    @Test
+    public void hasExercise_unassignedOnlyMatchesUnassigned() {
+        WorkoutPlan plan = new WorkoutPlan(List.of(BENCH_PRESS));
+        assertTrue(plan.hasExercise(new Exercise("bench press", 5, 5, 100)));
+        assertTrue(plan.hasExercise(BENCH_PRESS.withDay("Day not specified")));
+        assertFalse(plan.hasExercise(BENCH_PRESS.withDay("Monday")));
+    }
+
+    @Test
+    public void hasExercise_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new WorkoutPlan().hasExercise(null));
+    }
+
+    @Test
     public void isWithinDailyLimit_sevenExercisesOnEveryWeekday_success() {
         List<Exercise> exercises = Arrays.stream(Weekday.values())
                 .flatMap(day -> IntStream.range(0, 7)
