@@ -7,6 +7,7 @@ import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_REMARK_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
+import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,8 +15,11 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AddExerciseCommand;
 import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
@@ -24,6 +28,7 @@ import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Remark;
@@ -94,6 +99,30 @@ public class AddressBookParserTest {
     public void parseCommand_remark() throws Exception {
         assertEquals(new RemarkCommand(INDEX_FIRST_PERSON, new Remark(VALID_REMARK_AMY)), parser.parseCommand(
                 RemarkCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased() + " r/" + VALID_REMARK_AMY));
+    }
+
+    @Test
+    public void parseCommand_addExercise() throws Exception {
+        Exercise exercise = new Exercise("Bench Press", 3, 10, 60.0);
+        AddExerciseCommand command = (AddExerciseCommand) parser.parseCommand(
+                AddExerciseCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased()
+                        + " n/Bench Press s/3 r/10 w/60");
+        assertEquals(new AddExerciseCommand(INDEX_FIRST_PERSON, exercise), command);
+    }
+
+    @Test
+    public void parseCommand_deleteExercise() throws Exception {
+        DeleteExerciseCommand command = (DeleteExerciseCommand) parser.parseCommand(
+                DeleteExerciseCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased()
+                        + " " + INDEX_SECOND_PERSON.getOneBased());
+        assertEquals(new DeleteExerciseCommand(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON), command);
+    }
+
+    @Test
+    public void parseCommand_clearPlan() throws Exception {
+        ClearPlanCommand command = (ClearPlanCommand) parser.parseCommand(
+                ClearPlanCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased());
+        assertEquals(new ClearPlanCommand(INDEX_FIRST_PERSON), command);
     }
 
     @Test

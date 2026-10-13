@@ -4,10 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.storage.JsonAdaptedExercise.MISSING_FIELD_MESSAGE_FORMAT;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.commons.util.JsonUtil;
+import seedu.address.logic.Messages;
 import seedu.address.model.person.Exercise;
+import seedu.address.model.person.WorkoutPlan;
 
 public class JsonAdaptedExerciseTest {
     private static final String VALID_NAME = "Bench Press";
@@ -25,6 +30,40 @@ public class JsonAdaptedExerciseTest {
         JsonAdaptedExercise exercise =
                 new JsonAdaptedExercise(VALID_NAME, VALID_SETS, VALID_REPS, VALID_WEIGHT);
         assertEquals(new Exercise(VALID_NAME, VALID_SETS, VALID_REPS, VALID_WEIGHT), exercise.toModelType());
+    }
+
+    @Test
+    public void jsonRoundTrip_taggedExercise_preservesDay() throws Exception {
+        Exercise tagged = new Exercise(VALID_NAME, VALID_SETS, VALID_REPS, VALID_WEIGHT, "Saturday");
+        String json = JsonUtil.toJsonString(new JsonAdaptedExercise(tagged));
+        assertEquals(tagged, JsonUtil.fromJsonString(json, JsonAdaptedExercise.class).toModelType());
+    }
+
+    @Test
+    public void jsonWithoutDay_loadsAsUnspecified() throws Exception {
+        String json = "{\"name\":\"Bench Press\",\"sets\":3,\"reps\":10,\"weightKg\":60.5}";
+        assertEquals(new Exercise(VALID_NAME, VALID_SETS, VALID_REPS, VALID_WEIGHT),
+                JsonUtil.fromJsonString(json, JsonAdaptedExercise.class).toModelType());
+    }
+
+    @Test
+    public void jsonLegacyUnspecifiedDays_loadUnderOneHeading() throws Exception {
+        String json = "{\"name\":\"Shoulder Press\",\"sets\":1,\"reps\":1,\"weightKg\":0,\"day\":\"%s\"}";
+        for (String day : List.of("day not specified", "Day not specified", " DAY NOT SPECIFIED ")) {
+            Exercise loaded = JsonUtil.fromJsonString(String.format(json, day),
+                    JsonAdaptedExercise.class).toModelType();
+            assertEquals("", loaded.getDay());
+            WorkoutPlan plan = new WorkoutPlan(List.of(
+                    new Exercise("Sit Up", 3, 20, 0), loaded,
+                    new Exercise("Jumping Jacks", 3, 30, 0)));
+            assertEquals("(3):\n**Day not specified**\n1. Sit Up 3x20 @0kg\n"
+                    + "2. Shoulder Press 1x1 @0kg\n3. Jumping Jacks 3x30 @0kg",
+                    Messages.formatWorkoutPlan(plan));
+            assertEquals(List.of("Day not specified"), Messages.getExercisesInDisplayOrder(plan).stream()
+                    .map(item -> Messages.getExerciseDayHeading(item.exercise())).distinct().toList());
+            assertEquals(loaded, JsonUtil.fromJsonString(
+                    JsonUtil.toJsonString(new JsonAdaptedExercise(loaded)), JsonAdaptedExercise.class).toModelType());
+        }
     }
 
     @Test

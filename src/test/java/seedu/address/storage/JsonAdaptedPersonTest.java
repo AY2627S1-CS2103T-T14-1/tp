@@ -13,7 +13,9 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Name;
@@ -57,6 +59,36 @@ public class JsonAdaptedPersonTest {
                 .build();
         JsonAdaptedPerson adaptedPerson = new JsonAdaptedPerson(personWithExercises);
         assertEquals(personWithExercises, adaptedPerson.toModelType());
+    }
+
+    @Test
+    public void jsonRoundTrip_personWithAllFields_preservesData() throws Exception {
+        Exercise benchPress = new Exercise("Bench Press", 3, 10, 60.5);
+        Exercise squat = new Exercise("Squat", 4, 8, 80.0);
+        Person personWithAllFields = new PersonBuilder(BENSON)
+                .withRemark("Likes rowing.")
+                .withWorkoutPlan(new WorkoutPlan(Arrays.asList(benchPress, squat)))
+                .withDietPlan(new DietPlan("1800 kcal", "Lean protein"))
+                .build();
+        String json = JsonUtil.toJsonString(new JsonAdaptedPerson(personWithAllFields));
+        assertEquals(personWithAllFields,
+                JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType());
+    }
+
+    @Test
+    public void jsonRoundTrip_personWithMinimalFields_preservesData() throws Exception {
+        // BENSON has no exercises and no diet plan
+        String json = JsonUtil.toJsonString(new JsonAdaptedPerson(BENSON));
+        assertEquals(BENSON, JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType());
+    }
+
+    @Test
+    public void jsonRoundTrip_missingExercisesAndDietPlan_returnsPersonWithEmptyPlanAndNoDiet() throws Exception {
+        String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[]}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        Person expectedPerson = new PersonBuilder(BENSON).withWorkoutPlan(new WorkoutPlan()).withTags().build();
+        assertEquals(expectedPerson, JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType());
     }
 
     @Test

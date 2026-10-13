@@ -12,5 +12,11 @@ public class CliSyntax {
     public static final Prefix PREFIX_ADDRESS = new Prefix("a/");
     public static final Prefix PREFIX_TAG = new Prefix("t/");
     public static final Prefix PREFIX_REMARK = new Prefix("r/");
+    public static final Prefix PREFIX_SETS = new Prefix("s/");
+    /* Reps share the "r/" marker per addex syntax; never mixed with PREFIX_REMARK in one parser. */
+    public static final Prefix PREFIX_REPS = new Prefix("r/");
+    public static final Prefix PREFIX_WEIGHT = new Prefix("w/");
+    public static final Prefix PREFIX_DAY = new Prefix("day/");
+    public static final Prefix PREFIX_EXERCISE_DAY = new Prefix("d/");
 
 }

@@ -11,6 +11,7 @@ import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
@@ -120,5 +121,77 @@ public class ParserUtil {
             tagSet.add(parseTag(tagName));
         }
         return tagSet;
+    }
+
+    /**
+     * Parses a {@code String name} into a validated exercise name.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if the given {@code name} is invalid.
+     */
+    public static String parseExerciseName(String name) throws ParseException {
+        requireNonNull(name);
+        String trimmedName = name.trim();
+        if (!Exercise.isValidName(trimmedName)) {
+            throw new ParseException(Exercise.MESSAGE_CONSTRAINTS_NAME);
+        }
+        return trimmedName;
+    }
+
+    /**
+     * Parses a {@code String sets} into a validated sets count.
+     *
+     * @throws ParseException if the given {@code sets} is invalid.
+     */
+    public static int parseExerciseSets(String sets) throws ParseException {
+        requireNonNull(sets);
+        String trimmedSets = sets.trim();
+        try {
+            int value = Integer.parseInt(trimmedSets);
+            if (!Exercise.isValidSets(value)) {
+                throw new ParseException(Exercise.MESSAGE_CONSTRAINTS_SETS);
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new ParseException(Exercise.MESSAGE_CONSTRAINTS_SETS);
+        }
+    }
+
+    /**
+     * Parses a {@code String reps} into a validated reps count.
+     *
+     * @throws ParseException if the given {@code reps} is invalid.
+     */
+    public static int parseExerciseReps(String reps) throws ParseException {
+        requireNonNull(reps);
+        String trimmedReps = reps.trim();
+        try {
+            int value = Integer.parseInt(trimmedReps);
+            if (!Exercise.isValidReps(value)) {
+                throw new ParseException(Exercise.MESSAGE_CONSTRAINTS_REPS);
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new ParseException(Exercise.MESSAGE_CONSTRAINTS_REPS);
+        }
+    }
+
+    /**
+     * Parses a {@code String weight} into a validated weight in kg.
+     *
+     * @throws ParseException if the given {@code weight} is invalid.
+     */
+    public static double parseExerciseWeight(String weight) throws ParseException {
+        requireNonNull(weight);
+        String trimmedWeight = weight.trim();
+        try {
+            double value = Double.parseDouble(trimmedWeight);
+            if (!Exercise.isValidWeight(value)) {
+                throw new ParseException(Exercise.MESSAGE_CONSTRAINTS_WEIGHT);
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new ParseException(Exercise.MESSAGE_CONSTRAINTS_WEIGHT);
+        }
     }
 }

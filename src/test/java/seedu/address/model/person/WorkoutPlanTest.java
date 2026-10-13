@@ -8,6 +8,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -47,9 +48,82 @@ public class WorkoutPlanTest {
     }
 
     @Test
+    public void constructor_legacyDayPrefixes_ordersSaturdayBeforeSunday() {
+        Exercise sunday = new Exercise("Run", 1, 1, 0, "Sun");
+        Exercise saturday = new Exercise("Squat", 3, 10, 80, "Sat");
+        Exercise unspecified = new Exercise("Stretch", 1, 1, 0);
+        WorkoutPlan plan = new WorkoutPlan(List.of(sunday, unspecified, saturday));
+        assertEquals(List.of(saturday, sunday, unspecified), plan.getExercises());
+    }
+
+    @Test
     public void getExercises_modifyList_throwsUnsupportedOperationException() {
         WorkoutPlan plan = new WorkoutPlan(Arrays.asList(BENCH_PRESS));
         assertThrows(UnsupportedOperationException.class, () -> plan.getExercises().remove(0));
+    }
+
+    @Test
+    public void hasExercise_sameNameAndWeekday_ignoresCasePrefixesAndWorkoutValues() {
+        WorkoutPlan plan = new WorkoutPlan(List.of(BENCH_PRESS.withDay("mOn")));
+        assertTrue(plan.hasExercise(new Exercise("bench press", 5, 5, 100, "Monday")));
+        assertTrue(plan.hasExercise(BENCH_PRESS.withDay("M")));
+        assertFalse(plan.hasExercise(SQUAT.withDay("Monday")));
+    }
+
+    @Test
+    public void hasExercise_sameNameOnDifferentDays_returnsFalse() {
+        for (Weekday day : Weekday.values()) {
+            WorkoutPlan plan = new WorkoutPlan(List.of(BENCH_PRESS.withDay(day.getDisplayName())));
+            for (Weekday otherDay : Weekday.values()) {
+                assertEquals(day == otherDay, plan.hasExercise(BENCH_PRESS.withDay(otherDay.getDisplayName())));
+            }
+            assertFalse(plan.hasExercise(BENCH_PRESS));
+        }
+    }
+
+    @Test
+    public void hasExercise_unassignedOnlyMatchesUnassigned() {
+        WorkoutPlan plan = new WorkoutPlan(List.of(BENCH_PRESS));
+        assertTrue(plan.hasExercise(new Exercise("bench press", 5, 5, 100)));
+        assertTrue(plan.hasExercise(BENCH_PRESS.withDay("Day not specified")));
+        assertFalse(plan.hasExercise(BENCH_PRESS.withDay("Monday")));
+    }
+
+    @Test
+    public void hasExercise_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new WorkoutPlan().hasExercise(null));
+    }
+
+    @Test
+    public void isWithinDailyLimit_sevenExercisesOnEveryWeekday_success() {
+        List<Exercise> exercises = Arrays.stream(Weekday.values())
+                .flatMap(day -> IntStream.range(0, 7)
+                        .mapToObj(index -> new Exercise(day + " " + index, 1, 1, 0, day.getDisplayName())))
+                .toList();
+        WorkoutPlan plan = new WorkoutPlan(exercises);
+        for (Weekday day : Weekday.values()) {
+            assertTrue(plan.isWithinDailyLimit(day.getDisplayName()));
+            assertFalse(plan.addExercise(BENCH_PRESS.withDay(day.getDisplayName()))
+                    .isWithinDailyLimit(day.getDisplayName()));
+        }
+    }
+
+    @Test
+    public void isWithinDailyLimit_legacyPrefixes_countAsSameWeekday() {
+        List<Exercise> exercises = IntStream.range(0, 7)
+                .mapToObj(index -> new Exercise("Exercise " + index, 1, 1, 0, "mOn"))
+                .toList();
+        WorkoutPlan plan = new WorkoutPlan(exercises).addExercise(BENCH_PRESS.withDay("Monday"));
+        assertFalse(plan.isWithinDailyLimit("m"));
+        assertTrue(plan.isWithinDailyLimit("Tuesday"));
+    }
+
+    @Test
+    public void isWithinDailyLimit_unassignedExercises_noLimit() {
+        WorkoutPlan plan = new WorkoutPlan(IntStream.range(0, 8)
+                .mapToObj(index -> new Exercise("Exercise " + index, 1, 1, 0)).toList());
+        assertTrue(plan.isWithinDailyLimit(""));
+        assertTrue(plan.isWithinDailyLimit("Monday"));
     }
 
     @Test

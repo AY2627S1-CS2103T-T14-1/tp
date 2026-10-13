@@ -2,7 +2,6 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -16,7 +15,6 @@ import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
-import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.person.Person;
 import seedu.address.storage.Storage;
 
@@ -50,15 +48,16 @@ public class LogicManager implements Logic {
 
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
-        Optional<ReadOnlyAddressBook> previousData = command instanceof DietCommand
-                ? Optional.of(new AddressBook(model.getAddressBook())) : Optional.empty();
+        // Snapshot the address book before execution so a failed save can restore
+        // the previous model state instead of leaving in-memory changes behind.
+        AddressBook backup = new AddressBook(model.getAddressBook());
         commandResult = command.execute(model);
 
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (IOException ioe) {
-            if (previousData.isPresent()) {
-                model.setAddressBook(previousData.get());
+            model.setAddressBook(backup);
+            if (command instanceof DietCommand) {
                 throw new CommandException(DietCommand.MESSAGE_SAVE_FAILURE, ioe);
             }
             if (ioe instanceof AccessDeniedException) {
