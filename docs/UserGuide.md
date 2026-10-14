@@ -345,6 +345,58 @@ Format: `clearplan INDEX`
 Example:
 * `clearplan 1` clears the workout plan of the 1st person.
 
+### Recording a completed workout session: `log`
+
+Records a completed workout session for a client, including the exercises, weights, sets, and repetitions performed. Logging a session does not change the client's workout plan.
+
+Format: `log INDEX d/DATE [t/TIME] ex/EXERCISE|WEIGHT|SETS|REPS [ex/EXERCISE|WEIGHT|SETS|REPS]...`
+
+* `INDEX` is the positive whole-number index shown in the current client list. After a `find` command, use the index shown in the search results.
+* `DATE` is required and must be a valid date in `yyyy-MM-dd` format, such as `2020-01-15`. Today and past dates are accepted; future dates are rejected.
+* `TIME` is optional and uses the 24-hour `HH:mm` format, from `00:00` to `23:59`. Seconds are not accepted. Omitting `t/` leaves the time unspecified.
+* Provide between 1 and 30 exercise entries. Each entry requires all four values, separated by `|`, in the order `EXERCISE|WEIGHT|SETS|REPS`.
+* `d/` and `t/` may each appear only once. Repeat `ex/` to record multiple exercises. Prefixed parameters may appear in any order.
+* Exercise entries are stored and displayed in the order entered. Leading and trailing spaces around each exercise value are removed.
+
+Exercise values must satisfy these rules:
+
+| Value | Accepted input |
+| --- | --- |
+| `EXERCISE` | 1 to 50 characters, including at least one letter. Only letters, digits, spaces, hyphens, apostrophes, and parentheses are allowed. |
+| `WEIGHT` | A number from 0 to 1000, inclusive, in kilograms, with at most 2 decimal places. Enter the number without a unit, for example `40.25`. |
+| `SETS` | A whole number from 1 to 100, inclusive. |
+| `REPS` | A whole number from 1 to 1000, inclusive. |
+
+Examples:
+
+* `log 1 d/2020-01-15 t/18:00 ex/Back squat|60|3|10 ex/Bench press|40.25|3|8`
+* `log 1 d/2020-01-16 ex/Push-up|0|3|12`
+
+On success, Fittix reports `Logged workout session for NAME on DATE at TIME.` When no time is supplied, it reports `Logged workout session for NAME on DATE.` Sessions are saved with the client's details and remain available after restarting the app.
+
+#### Duplicate sessions and invalid input
+
+A client cannot have two sessions with the same date and time, even if their exercise entries differ.
+
+* Two sessions on the same date with different specified times are allowed.
+* Two sessions on the same date with both times unspecified are duplicates.
+* An unspecified time is different from a specified time. For example, a session without `t/` and another with `t/18:00` on the same date are allowed.
+* Different clients may have sessions with the same date and time.
+
+A duplicate is rejected with `This client already has a workout session with the same date and time.`
+
+If any exercise entry or other required value is invalid, the entire command is rejected. No part of that session is added.
+
+#### Viewing the recorded session
+
+Select a client in the list to view **LAST RECORDED WORKOUT SESSION** below their diet plan.
+
+The panel shows the date, time, and all exercise entries. An omitted time appears as `Time: Not specified`. Text wraps, and the details pane can be scrolled.
+
+The displayed session is the one most recently added using `log`, even if its workout date is earlier than another recorded session. A client without sessions shows `No workout sessions recorded.`
+
+Earlier sessions remain saved, but browsing the complete history and editing or deleting individual sessions are not currently supported.
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -402,3 +454,4 @@ Action | Format, Examples
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
 **Help** | `help`
+**Log workout session** | `log INDEX d/DATE [t/TIME] ex/EXERCISE\|WEIGHT\|SETS\|REPS [ex/EXERCISE\|WEIGHT\|SETS\|REPS]...`<br> e.g., `log 1 d/2020-01-15 t/18:00 ex/Back squat\|60\|3\|10`

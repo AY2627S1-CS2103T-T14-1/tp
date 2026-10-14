@@ -228,6 +228,26 @@ For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw argument
 
 `DietCommandParserTest`, `DietCommandTest`, `DietIntegrationTest`, and `PersonListPanelTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, injected commit failure, and selected-client display. The manual scenarios below cover the main user flows.
 
+### Workout session logging
+
+Each `Person` owns an immutable list of `WorkoutSession` objects. Each session contains a required `LocalDate`, an optional `LocalTime`, and an ordered list of 1 to 30 `WorkoutLogEntry` objects.
+
+`WorkoutSession` rejects future dates, times containing seconds or nanoseconds, empty exercise lists, and lists exceeding the entry limit. Each `WorkoutLogEntry` validates its exercise name, weight, sets, and repetitions. Weight uses `BigDecimal` and is displayed with `toPlainString()`.
+
+For `log INDEX d/DATE [t/TIME] ex/EXERCISE|WEIGHT|SETS|REPS ...`, `AddressBookParser` delegates to `LogCommandParser`. The parser checks required arguments, repeated date or time prefixes, date and time formats, and the four values in every exercise entry. It constructs the complete validated session before returning a `LogCommand`.
+
+`LogCommand` resolves the index against the filtered client list. It rejects a session if that client already has the same date and optional time, using `WorkoutSession#hasSameDateTime`. Exercise contents do not affect this duplicate check. An unspecified time is distinct from every specified time.
+
+On success, the command appends the session to a copy of the existing session list and replaces the client through `Model#setPerson`, preserving their other fields and the current filter. Sessions remain in recording order rather than chronological order.
+
+`JsonAdaptedWorkoutLogEntry`, `JsonAdaptedWorkoutSession`, and `JsonAdaptedPerson` handle persistence. Dates use `yyyy-MM-dd`, specified times use `HH:mm`, and exercise order is preserved. Older person records without a workout-session field load with an empty session list. Invalid entries and duplicate session keys are rejected during conversion to model objects.
+
+`LogicManager` saves the updated address book through the storage component. If saving throws an `IOException`, it restores the address-book snapshot taken before command execution and reports the save error.
+
+`PersonListPanel` observes the selected client and changes to the client list. It displays the last session in the selected client's session list, including every exercise entry. It shows an empty state when the client has no sessions and hides the workout details when no client is selected. Labels wrap, and the details pane supports scrolling.
+
+Automated coverage includes model validation and immutability, JSON round trips and legacy records, parser validation, duplicate rejection, filtered-list targeting, preservation of sessions by other client-update commands, and selected-client display.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -816,3 +836,34 @@ An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it
       Expected: No change. Shows `Workout plan is already empty for Person: ` with that person.
    1. Other incorrect commands to try: `clearplan`, `clearplan 0`, `clearplan x`, `clearplan 1 2`.<br>
       Expected: `Invalid command format!` + the `clearplan` usage (`clearplan: Clears all exercises from the workout plan of the person identified by the index number used in the last person listing. Parameters: INDEX (must be a positive integer) Example: clearplan 1`). Out-of-range index shows `The person index provided is invalid.`
+
+### Workout session logging
+
+Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, providing the required contact fields, then run `find WorkoutLogManualTest`. The following commands assume that client is displayed at index 1.
+
+1. Run `log 1 d/2020-01-15 t/18:00 ex/Back squat|60|3|10 ex/Bench press|40.25|3|8`.
+   Expected: The success message names the client and session date and time. Selecting the client shows both exercises in the entered order under LAST RECORDED WORKOUT SESSION.
+
+2. Repeat the same command.
+   Expected: `This client already has a workout session with the same date and time.` The existing session remains unchanged.
+
+3. Run `log 1 d/2020-01-16 ex/Push-up|0|3|12`.
+   Expected: The session is recorded. The panel shows `Date: 2020-01-16`, `Time: Not specified`, and the Push-up entry.
+
+4. Run `log 1 d/2020-01-16 t/19:00 ex/Push-up|0|3|12`.
+   Expected: The session is accepted because a specified time differs from an unspecified time.
+
+5. Run `log 1 d/2020-01-17 ex/Back squat|60|3|10 ex/Bench press|-1|3|8`.
+   Expected: A weight validation error appears. Neither exercise is saved as a new session.
+
+6. Run `log 1 d/2020-01-17 ex/Back squat|60|3|10 ex/Bench press|40|3|8`.
+   Expected: The corrected command succeeds, confirming that the rejected command did not reserve the session's date and time.
+
+7. Run `log 1 d/2020-01-14 ex/Stretch|0|1|1`.
+   Expected: The panel displays this newly recorded session despite its earlier workout date.
+
+8. Close and restart the app, then find and select the same client.
+   Expected: The panel still displays the session dated 2020-01-14. Repeating the command from step 1 is rejected as a duplicate, confirming that earlier sessions were also retained.
+
+9. Select another client with no recorded sessions.
+   Expected: `No workout sessions recorded.` appears, and the previous client's workout details disappear.
