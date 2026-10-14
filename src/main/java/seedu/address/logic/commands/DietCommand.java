@@ -56,7 +56,8 @@ public class DietCommand extends Command {
             throw new CommandException(String.format(MESSAGE_DUPLICATE, client.getName()));
         }
         Person updated = new Person(client.getName(), client.getPhone(), client.getEmail(), client.getAddress(),
-                client.getRemark(), client.getTags(), client.getWorkoutPlan(), Optional.of(dietPlan));
+                client.getRemark(), client.getTags(), client.getWorkoutPlan(), Optional.of(dietPlan),
+                client.getGoal().orElse(null));
         model.setPerson(client, updated);
         // Keep the displayed list's filter and indexes stable; only diet data changed.
         String message = previousPlan.isPresent() ? MESSAGE_REPLACED : MESSAGE_CREATED;
