@@ -44,8 +44,7 @@ public class PersonListPanel extends UiPart<Region> {
         personListView.setCellFactory(listView -> new PersonListViewCell());
         personListView.getSelectionModel().selectedItemProperty().addListener((observable, previous, selected) ->
                 showDietPlan(selected));
-        ListChangeListener<Person> listChangeListener = change ->
-                showDietPlan(personListView.getSelectionModel().getSelectedItem());
+        ListChangeListener<Person> listChangeListener = change -> updateSelectionAfterListChange();
         personList.addListener(listChangeListener);
         configureWrapping(selectedClientName);
         configureWrapping(goal);
@@ -59,6 +58,24 @@ public class PersonListPanel extends UiPart<Region> {
         label.setMinWidth(0);
         label.setMaxWidth(Double.MAX_VALUE);
         label.setWrapText(true);
+    }
+
+    /**
+     * Updates the client selection after the displayed list changes.
+     */
+    private void updateSelectionAfterListChange() {
+        Person selected = personListView.getSelectionModel().getSelectedItem();
+        if (selected != null && personListView.getItems().contains(selected)) {
+            showDietPlan(selected);
+            return;
+        }
+
+        if (personListView.getItems().isEmpty()) {
+            personListView.getSelectionModel().clearSelection();
+        } else {
+            personListView.getSelectionModel().selectFirst();
+        }
+        showDietPlan(personListView.getSelectionModel().getSelectedItem());
     }
 
     private void showDietPlan(Person selected) {
