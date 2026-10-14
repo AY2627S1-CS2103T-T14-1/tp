@@ -55,6 +55,15 @@ public class EditPersonDescriptorTest {
         // different tags -> returns false
         editedAmy = new EditPersonDescriptorBuilder(DESC_AMY).withTags(VALID_TAG_HUSBAND).build();
         assertFalse(DESC_AMY.equals(editedAmy));
+
+        // different goal
+        editedAmy = new EditPersonDescriptorBuilder(DESC_AMY).withGoal("Build strength").build();
+        assertFalse(DESC_AMY.equals(editedAmy));
+
+        // cleared goal differs from an absent goal edit
+        editedAmy = new EditPersonDescriptorBuilder(DESC_AMY).build();
+        editedAmy.clearGoal();
+        assertFalse(DESC_AMY.equals(editedAmy));
     }
 
     @Test
@@ -65,7 +74,9 @@ public class EditPersonDescriptorTest {
                 + editPersonDescriptor.getPhone().orElse(null) + ", email="
                 + editPersonDescriptor.getEmail().orElse(null) + ", address="
                 + editPersonDescriptor.getAddress().orElse(null) + ", tags="
-                + editPersonDescriptor.getTags().orElse(null) + "}";
+                + editPersonDescriptor.getTags().orElse(null) + ", goal="
+                + editPersonDescriptor.getGoal().orElse(null) + ", isGoalCleared="
+                + editPersonDescriptor.isGoalCleared() + "}";
         assertEquals(expected, editPersonDescriptor.toString());
     }
 }

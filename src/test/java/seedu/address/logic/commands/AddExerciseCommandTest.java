@@ -62,6 +62,18 @@ public class AddExerciseCommandTest {
     }
 
     @Test
+    public void execute_addExercise_preservesGoal() throws Exception {
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Person withGoal = new PersonBuilder(original).withGoal("Build strength").build();
+        model.setPerson(original, withGoal);
+
+        new AddExerciseCommand(INDEX_FIRST_PERSON, benchPress()).execute(model);
+
+        assertEquals("Build strength", model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased())
+                .getGoal().orElseThrow().value);
+    }
+
+    @Test
     public void execute_addSecondExercise_appendsToExistingPlan() {
         Exercise existing = new Exercise("Squat", 4, 8, 80.0);
         Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());

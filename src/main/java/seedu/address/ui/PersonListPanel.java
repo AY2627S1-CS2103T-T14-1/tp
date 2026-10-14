@@ -25,6 +25,8 @@ public class PersonListPanel extends UiPart<Region> {
     @FXML
     private Label selectedClientName;
     @FXML
+    private Label goal;
+    @FXML
     private Label dietPlanHeading;
     @FXML
     private Label dietTarget;
@@ -46,6 +48,7 @@ public class PersonListPanel extends UiPart<Region> {
                 showDietPlan(personListView.getSelectionModel().getSelectedItem());
         personList.addListener(listChangeListener);
         configureWrapping(selectedClientName);
+        configureWrapping(goal);
         configureWrapping(dietTarget);
         configureWrapping(dietNotes);
         personListView.getSelectionModel().selectFirst();
@@ -61,6 +64,7 @@ public class PersonListPanel extends UiPart<Region> {
     private void showDietPlan(Person selected) {
         if (selected == null) {
             selectedClientName.setText("Select a client to view their current diet plan.");
+            setShown(goal, false);
             setShown(dietPlanHeading, false);
             setShown(dietTarget, false);
             setShown(dietNotes, false);
@@ -68,6 +72,10 @@ public class PersonListPanel extends UiPart<Region> {
             return;
         }
         selectedClientName.setText(selected.getName().fullName);
+        selected.getGoal().ifPresentOrElse(value -> {
+            goal.setText("Goal: " + value.value);
+            setShown(goal, true);
+        }, () -> setShown(goal, false));
         setShown(dietPlanHeading, true);
         if (selected.getDietPlan().isEmpty()) {
             setShown(dietTarget, false);

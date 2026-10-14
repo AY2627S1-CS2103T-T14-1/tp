@@ -40,6 +40,20 @@ public class SetExerciseDayCommandTest {
     }
 
     @Test
+    public void execute_setExerciseDay_preservesGoal() throws Exception {
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Exercise exercise = new Exercise("Bench Press", 3, 10, 60.0);
+        Person withGoalAndPlan = new PersonBuilder(original).withGoal("Build strength")
+                .withWorkoutPlan(new WorkoutPlan().addExercise(exercise)).build();
+        model.setPerson(original, withGoalAndPlan);
+
+        new SetExerciseDayCommand(INDEX_FIRST_PERSON, INDEX_FIRST_PERSON, "Monday").execute(model);
+
+        assertEquals("Build strength", model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased())
+                .getGoal().orElseThrow().value);
+    }
+
+    @Test
     public void execute_moveSameNameToOccupiedDay_throwsCommandException() {
         setRepeatedExerciseOnDifferentDays();
         assertCommandFailure(new SetExerciseDayCommand(INDEX_FIRST_PERSON, Index.fromOneBased(2), "MONDAY"),
