@@ -46,6 +46,8 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private Label remark;
     @FXML
+    private Label goal;
+    @FXML
     private FlowPane tags;
     @FXML
     private VBox workoutPlanContainer;
@@ -64,6 +66,14 @@ public class PersonCard extends UiPart<Region> {
         address.setText(person.getAddress().value);
         email.setText(person.getEmail().value);
         remark.setText(person.getRemark().value);
+        person.getGoal().ifPresentOrElse(value -> {
+            goal.setText("Goal: " + value.value);
+            goal.setVisible(true);
+            goal.setManaged(true);
+        }, () -> {
+            goal.setVisible(false);
+            goal.setManaged(false);
+        });
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
                 .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));

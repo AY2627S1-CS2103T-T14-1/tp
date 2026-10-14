@@ -1,17 +1,20 @@
 package seedu.address.testutil;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.model.person.Address;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.Goal;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
 import seedu.address.model.person.WorkoutPlan;
+import seedu.address.model.person.WorkoutSession;
 import seedu.address.model.tag.Tag;
 import seedu.address.model.util.SampleDataUtil;
 
@@ -34,6 +37,8 @@ public class PersonBuilder {
     private Set<Tag> tags;
     private WorkoutPlan workoutPlan;
     private Optional<DietPlan> dietPlan;
+    private Goal goal;
+    private List<WorkoutSession> workoutSessions;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -47,6 +52,8 @@ public class PersonBuilder {
         tags = new HashSet<>();
         workoutPlan = new WorkoutPlan();
         dietPlan = Optional.empty();
+        goal = null;
+        workoutSessions = List.of();
     }
 
     /**
@@ -61,6 +68,8 @@ public class PersonBuilder {
         tags = new HashSet<>(personToCopy.getTags());
         workoutPlan = personToCopy.getWorkoutPlan();
         dietPlan = personToCopy.getDietPlan();
+        goal = personToCopy.getGoal().orElse(null);
+        workoutSessions = personToCopy.getWorkoutSessions();
     }
 
     /**
@@ -127,8 +136,26 @@ public class PersonBuilder {
         return this;
     }
 
+    /** Sets the fitness goal of the {@code Person} that we are building. */
+    public PersonBuilder withGoal(String goal) {
+        this.goal = new Goal(goal);
+        return this;
+    }
+
+    /**
+     * Sets the recorded workout sessions of the person being built.
+     */
+    public PersonBuilder withWorkoutSessions(List<WorkoutSession> workoutSessions) {
+        this.workoutSessions = List.copyOf(workoutSessions);
+        return this;
+    }
+
+    /**
+     * Builds a {@code Person} with the details set in this builder.
+     */
     public Person build() {
-        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
+        return new Person(name, phone, email, address, remark, tags,
+                workoutPlan, dietPlan, goal, workoutSessions);
     }
 
 }

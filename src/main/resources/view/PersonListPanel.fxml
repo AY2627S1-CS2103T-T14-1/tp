@@ -14,6 +14,7 @@
         <Insets top="8" right="10" bottom="8" left="10" />
       </padding>
       <Label fx:id="selectedClientName" styleClass="cell_big_label" wrapText="true" />
+      <Label fx:id="goal" styleClass="cell_small_label" wrapText="true" />
       <Label fx:id="dietPlanHeading" styleClass="cell_small_label" text="CURRENT DIET PLAN" />
       <Label fx:id="dietTarget" styleClass="cell_small_label" wrapText="true" />
       <Label fx:id="dietNotes" styleClass="cell_small_label" wrapText="true" />

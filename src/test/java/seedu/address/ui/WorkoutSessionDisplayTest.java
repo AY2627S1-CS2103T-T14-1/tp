@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -82,11 +83,13 @@ public class WorkoutSessionDisplayTest {
                     DATE, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
             WorkoutSession lastRecorded = new WorkoutSession(
                     DATE.minusDays(1), Optional.empty(), List.of(SQUAT, BENCH));
-            Person client = withSessions(new PersonBuilder().build(),
+            Person client = withSessions(new PersonBuilder().withGoal("Build strength").build(),
                     List.of(firstRecorded, lastRecorded));
             PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(client));
 
             assertTrue(label(panel, "workoutHeading").isVisible());
+            assertEquals("Goal: Build strength", label(panel, "goal").getText());
+            assertTrue(label(panel, "goal").isVisible());
             assertEquals("Date: 2020-01-14", label(panel, "workoutDate").getText());
             assertEquals("Time: Not specified", label(panel, "workoutTime").getText());
             assertEquals("1. Back squat: 60 kg, 3 sets x 10 reps\n"
@@ -173,11 +176,43 @@ public class WorkoutSessionDisplayTest {
         });
     }
 
+    @Test
+    public void filtering_refreshesGoalAndWorkoutDetails() throws Exception {
+        runOnFxThread(() -> {
+            WorkoutSession session = new WorkoutSession(DATE, Optional.empty(), List.of(SQUAT));
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").withGoal("Build strength")
+                    .withWorkoutSessions(List.of(session)).build();
+            FilteredList<Person> displayed = new FilteredList<>(FXCollections.observableArrayList(first, second));
+            PersonListPanel panel = new PersonListPanel(displayed);
+
+            displayed.setPredicate(person -> person.equals(second));
+
+            assertEquals(second, listView(panel).getSelectionModel().getSelectedItem());
+            assertEquals("Goal: Build strength", label(panel, "goal").getText());
+            assertEquals("Date: 2020-01-15", label(panel, "workoutDate").getText());
+            assertTrue(label(panel, "workoutEntries").isVisible());
+
+            displayed.setPredicate(person -> false);
+
+            assertFalse(label(panel, "goal").isManaged());
+            assertFalse(label(panel, "workoutHeading").isManaged());
+            assertFalse(label(panel, "workoutEntries").isManaged());
+
+            displayed.setPredicate(person -> true);
+
+            assertEquals(first, listView(panel).getSelectionModel().getSelectedItem());
+            assertFalse(label(panel, "goal").isManaged());
+            assertTrue(label(panel, "workoutEmpty").isVisible());
+            return null;
+        });
+    }
+
     private static Person withSessions(Person base, List<WorkoutSession> sessions) {
         return new Person(
                 base.getName(), base.getPhone(), base.getEmail(), base.getAddress(),
                 base.getRemark(), base.getTags(), base.getWorkoutPlan(), base.getDietPlan(),
-                sessions);
+                base.getGoal().orElse(null), sessions);
     }
 
     private static Label label(PersonListPanel panel, String id) {

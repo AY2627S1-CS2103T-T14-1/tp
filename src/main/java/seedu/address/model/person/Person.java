@@ -29,57 +29,60 @@ public class Person {
     private final Set<Tag> tags = new HashSet<>();
     private final WorkoutPlan workoutPlan;
     private final Optional<DietPlan> dietPlan;
+    private final Goal goal;
     private final List<WorkoutSession> workoutSessions;
 
     /**
-     * Constructs a person with no plans or recorded workout sessions.
+     * Constructs a person with no plans, fitness goal, or recorded workout sessions.
      * Every argument must be present and not null.
      */
-    public Person(Name name, Phone phone, Email email, Address address,
-                  Remark remark, Set<Tag> tags) {
-        this(name, phone, email, address, remark, tags,
-                new WorkoutPlan(), Optional.empty(), List.of());
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), Optional.empty(), null, List.of());
     }
 
     /**
-     * Constructs a person with a workout plan, no diet plan, and no recorded sessions.
+     * Constructs a person with a workout plan, no diet plan, no goal, and no recorded sessions.
      */
-    public Person(Name name, Phone phone, Email email, Address address,
-                  Remark remark, Set<Tag> tags, WorkoutPlan workoutPlan) {
-        this(name, phone, email, address, remark, tags,
-                workoutPlan, Optional.empty(), List.of());
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan) {
+        this(name, phone, email, address, remark, tags, workoutPlan, Optional.empty(), null, List.of());
     }
 
     /**
-     * Constructs a person with a diet plan, an empty workout plan, and no recorded sessions.
+     * Constructs a person with a diet plan, an empty workout plan, no goal, and no recorded sessions.
      */
-    public Person(Name name, Phone phone, Email email, Address address,
-                  Remark remark, Set<Tag> tags, Optional<DietPlan> dietPlan) {
-        this(name, phone, email, address, remark, tags,
-                new WorkoutPlan(), dietPlan, List.of());
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            Optional<DietPlan> dietPlan) {
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), dietPlan, null, List.of());
     }
 
     /**
-     * Constructs a person with both plans and no recorded workout sessions.
+     * Constructs a person with both plans, no fitness goal, and no recorded workout sessions.
      * All arguments must be non-null.
      */
-    public Person(Name name, Phone phone, Email email, Address address,
-                  Remark remark, Set<Tag> tags, WorkoutPlan workoutPlan,
-                  Optional<DietPlan> dietPlan) {
-        this(name, phone, email, address, remark, tags,
-                workoutPlan, dietPlan, List.of());
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, null, List.of());
     }
 
     /**
-     * Constructs a person with plans and recorded workout sessions.
-     * All arguments and session entries must be non-null.
+     * Constructs a person with plans and an optional goal, but no recorded workout sessions.
+     * All arguments except the goal must be non-null.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, List.of());
+    }
+
+    /**
+     * Constructs a person with plans, an optional goal, and recorded workout sessions.
+     * All arguments except the goal, and all session entries, must be non-null.
      * The session list is defensively copied, preserving its order.
      */
-    public Person(Name name, Phone phone, Email email, Address address,
-                  Remark remark, Set<Tag> tags, WorkoutPlan workoutPlan,
-                  Optional<DietPlan> dietPlan, List<WorkoutSession> workoutSessions) {
-        requireAllNonNull(name, phone, email, address, remark, tags,
-                workoutPlan, dietPlan, workoutSessions);
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<WorkoutSession> workoutSessions) {
+        requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan, workoutSessions);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -88,6 +91,7 @@ public class Person {
         this.tags.addAll(tags);
         this.workoutPlan = workoutPlan;
         this.dietPlan = dietPlan;
+        this.goal = goal;
         this.workoutSessions = List.copyOf(workoutSessions);
     }
 
@@ -117,6 +121,10 @@ public class Person {
 
     public Optional<DietPlan> getDietPlan() {
         return dietPlan;
+    }
+
+    public Optional<Goal> getGoal() {
+        return Optional.ofNullable(goal);
     }
 
     /**
@@ -169,13 +177,14 @@ public class Person {
                 && tags.equals(otherPerson.tags)
                 && workoutPlan.equals(otherPerson.workoutPlan)
                 && dietPlan.equals(otherPerson.dietPlan)
+                && Objects.equals(goal, otherPerson.goal)
                 && workoutSessions.equals(otherPerson.workoutSessions);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(name, phone, email, address, remark, tags,
-                workoutPlan, dietPlan, workoutSessions);
+                workoutPlan, dietPlan, goal, workoutSessions);
     }
 
     @Override
@@ -189,6 +198,7 @@ public class Person {
                 .add("tags", tags)
                 .add("workoutPlan", workoutPlan)
                 .add("dietPlan", dietPlan)
+                .add("goal", goal)
                 .add("workoutSessions", workoutSessions)
                 .toString();
     }

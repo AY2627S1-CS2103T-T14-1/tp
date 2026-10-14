@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Exercise;
+import seedu.address.model.person.Goal;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutLogEntry;
 import seedu.address.model.person.WorkoutPlan;
@@ -63,6 +65,26 @@ public class WorkoutSessionPreservationTest {
         assertSessionsPreserved("dayex 1 1 Monday");
     }
 
+    @Test
+    public void execute_editAndClearGoal_preservesWorkoutSessions() throws Exception {
+        Person original = createPersonWithSessions();
+        Model model = new ModelManager(new AddressBook(), new UserPrefs());
+        model.addPerson(original);
+        AddressBookParser parser = new AddressBookParser();
+
+        parser.parseCommand("edit 1 g/Improve mobility").execute(model);
+
+        Person updated = model.getAddressBook().getPersonList().get(0);
+        assertEquals(new Goal("Improve mobility"), updated.getGoal().orElseThrow());
+        assertEquals(original.getWorkoutSessions(), updated.getWorkoutSessions());
+
+        parser.parseCommand("edit 1 g/").execute(model);
+
+        Person cleared = model.getAddressBook().getPersonList().get(0);
+        assertTrue(cleared.getGoal().isEmpty());
+        assertEquals(original.getWorkoutSessions(), cleared.getWorkoutSessions());
+    }
+
     private void assertSessionsPreserved(String commandText) throws Exception {
         Person original = createPersonWithSessions();
         Model model = new ModelManager(new AddressBook(), new UserPrefs());
@@ -76,6 +98,8 @@ public class WorkoutSessionPreservationTest {
 
         assertEquals(original.getWorkoutSessions(), updated.getWorkoutSessions(),
                 "Workout sessions must be preserved after: " + commandText);
+        assertEquals(original.getGoal(), updated.getGoal(),
+                "Goal must be preserved after: " + commandText);
         assertFalse(original.equals(updated),
                 "The command should still update its intended field: " + commandText);
     }
@@ -91,11 +115,11 @@ public class WorkoutSessionPreservationTest {
 
         WorkoutPlan plan = new WorkoutPlan(
                 List.of(new Exercise("Bench Press", 3, 10, 40.0)));
-        Person base = new PersonBuilder().withWorkoutPlan(plan).build();
+        Person base = new PersonBuilder().withGoal("Build strength").withWorkoutPlan(plan).build();
 
         return new Person(
                 base.getName(), base.getPhone(), base.getEmail(), base.getAddress(),
                 base.getRemark(), base.getTags(), base.getWorkoutPlan(), base.getDietPlan(),
-                List.of(firstSession, secondSession));
+                base.getGoal().orElse(null), List.of(firstSession, secondSession));
     }
 }

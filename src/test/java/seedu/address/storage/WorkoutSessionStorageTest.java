@@ -50,6 +50,7 @@ public class WorkoutSessionStorageTest {
                 LocalDate.of(2020, 1, 15), Optional.of(LocalTime.of(18, 0)), List.of(bench));
 
         Person base = new PersonBuilder()
+                .withGoal("Build strength")
                 .withWorkoutPlan(new WorkoutPlan(
                         List.of(new Exercise("Bench Press", 3, 10, 40.0))))
                 .withDietPlan(new DietPlan("2000 kcal", "More vegetables"))
@@ -58,7 +59,7 @@ public class WorkoutSessionStorageTest {
         Person person = new Person(
                 base.getName(), base.getPhone(), base.getEmail(), base.getAddress(),
                 base.getRemark(), base.getTags(), base.getWorkoutPlan(), base.getDietPlan(),
-                List.of(first, second));
+                base.getGoal().orElse(null), List.of(first, second));
 
         AddressBook original = new AddressBook();
         original.addPerson(person);
@@ -70,6 +71,7 @@ public class WorkoutSessionStorageTest {
         AddressBook loaded = new AddressBook(storage.readAddressBook().orElseThrow());
 
         assertEquals(original, loaded);
+        assertEquals(person.getGoal(), loaded.getPersonList().get(0).getGoal());
         assertEquals(List.of(first, second),
                 loaded.getPersonList().get(0).getWorkoutSessions());
     }
@@ -91,6 +93,59 @@ public class WorkoutSessionStorageTest {
 
         assertEquals("Legacy Client", loaded.getName().fullName);
         assertTrue(loaded.getWorkoutSessions().isEmpty());
+        assertTrue(loaded.getGoal().isEmpty());
+    }
+
+    @Test
+    public void fromJson_missingSessions_preservesLegacyGoal() throws Exception {
+        String json = """
+                {
+                  "name": "Legacy Client",
+                  "phone": "91234567",
+                  "email": "legacy@example.com",
+                  "address": "123 Main Street",
+                  "remark": "",
+                  "tags": [],
+                  "goal": "Build strength"
+                }
+                """;
+
+        Person loaded = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType();
+
+        assertEquals("Build strength", loaded.getGoal().orElseThrow().value);
+        assertTrue(loaded.getWorkoutSessions().isEmpty());
+    }
+
+    @Test
+    public void fromJson_missingGoal_preservesLegacySessions() throws Exception {
+        String json = """
+                {
+                  "name": "Legacy Client",
+                  "phone": "91234567",
+                  "email": "legacy@example.com",
+                  "address": "123 Main Street",
+                  "remark": "",
+                  "tags": [],
+                  "workoutSessions": [{
+                    "date": "2020-01-15",
+                    "time": "18:00",
+                    "entries": [{
+                      "name": "Back squat",
+                      "weightKg": 60,
+                      "sets": 3,
+                      "reps": 10
+                    }]
+                  }]
+                }
+                """;
+
+        Person loaded = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType();
+        WorkoutSession expected = new WorkoutSession(LocalDate.of(2020, 1, 15),
+                Optional.of(LocalTime.of(18, 0)),
+                List.of(new WorkoutLogEntry("Back squat", new BigDecimal("60"), 3, 10)));
+
+        assertTrue(loaded.getGoal().isEmpty());
+        assertEquals(List.of(expected), loaded.getWorkoutSessions());
     }
 
     @Test
@@ -206,6 +261,6 @@ public class WorkoutSessionStorageTest {
         return new JsonAdaptedPerson(
                 base.getName().fullName, base.getPhone().value, base.getEmail().value,
                 base.getAddress().value, base.getRemark().value,
-                List.of(), List.of(), null, sessions);
+                List.of(), List.of(), null, null, sessions);
     }
 }

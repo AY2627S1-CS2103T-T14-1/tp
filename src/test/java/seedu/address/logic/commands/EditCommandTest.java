@@ -68,6 +68,31 @@ public class EditCommandTest {
     }
 
     @Test
+    public void execute_goalEdits_setAndClearGoal() {
+        Person original = model.getFilteredPersonList().get(0);
+        EditPersonDescriptor setGoal = new EditPersonDescriptorBuilder().withGoal("Build strength").build();
+        Person withGoal = new PersonBuilder(original).withGoal("Build strength").build();
+        Model expectedAfterSet = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedAfterSet.setPerson(original, withGoal);
+
+        assertCommandSuccess(new EditCommand(INDEX_FIRST_PERSON, setGoal), model,
+                String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(withGoal)), expectedAfterSet);
+
+        EditPersonDescriptor clearGoal = new EditPersonDescriptor();
+        clearGoal.clearGoal();
+        Person clearedGoal = new PersonBuilder(withGoal).build();
+        // PersonBuilder preserves a goal, so construct the expected person without one.
+        clearedGoal = new Person(withGoal.getName(), withGoal.getPhone(), withGoal.getEmail(), withGoal.getAddress(),
+                withGoal.getRemark(), withGoal.getTags(), withGoal.getWorkoutPlan(), withGoal.getDietPlan(), null);
+        Model expectedAfterClear = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedAfterClear.setPerson(withGoal, clearedGoal);
+
+        assertCommandSuccess(new EditCommand(INDEX_FIRST_PERSON, clearGoal), model,
+                String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(clearedGoal)),
+                expectedAfterClear);
+    }
+
+    @Test
     public void execute_allFieldsSpecifiedUnfilteredList_success() {
         Person editedPerson = new PersonBuilder()
                 .withRemark(model.getFilteredPersonList().get(0).getRemark().value).build();

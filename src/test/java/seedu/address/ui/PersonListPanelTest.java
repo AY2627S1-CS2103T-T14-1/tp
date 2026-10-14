@@ -78,6 +78,23 @@ public class PersonListPanelTest {
     }
 
     @Test
+    public void selectionShowsGoalOnlyWhenClientHasOne() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").withGoal("Build strength").build();
+            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
+            assertFalse(label(panel, "goal").isVisible());
+            assertFalse(label(panel, "goal").isManaged());
+
+            listView(panel).getSelectionModel().select(1);
+            assertEquals("Goal: Build strength", label(panel, "goal").getText());
+            assertTrue(label(panel, "goal").isVisible());
+            assertTrue(label(panel, "goal").isManaged());
+            return null;
+        });
+    }
+
+    @Test
     public void replacementAndDeletionRefreshSelectedDetails() throws Exception {
         runOnFxThread(() -> {
             Person original = new PersonBuilder().withName("Priya Nair")
@@ -95,6 +112,22 @@ public class PersonListPanelTest {
             assertEquals("Select a client to view their current diet plan.",
                     label(panel, "selectedClientName").getText());
             assertFalse(label(panel, "dietTarget").isVisible());
+            return null;
+        });
+    }
+
+    @Test
+    public void removalOfSelectedClient_selectsFirstRemainingClient() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").build();
+            ObservableList<Person> persons = FXCollections.observableArrayList(first, second);
+            PersonListPanel panel = new PersonListPanel(persons);
+
+            persons.remove(first);
+
+            assertEquals(second, listView(panel).getSelectionModel().getSelectedItem());
+            assertEquals("Priya Nair", label(panel, "selectedClientName").getText());
             return null;
         });
     }

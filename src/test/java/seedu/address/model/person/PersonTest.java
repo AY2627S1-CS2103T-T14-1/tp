@@ -12,6 +12,12 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.testutil.PersonBuilder;
@@ -139,8 +145,47 @@ public class PersonTest {
                 + ", tags=" + ALICE.getTags()
                 + ", workoutPlan=" + ALICE.getWorkoutPlan()
                 + ", dietPlan=" + ALICE.getDietPlan()
+                + ", goal=" + ALICE.getGoal().orElse(null)
                 + ", workoutSessions=" + ALICE.getWorkoutSessions()
                 + "}";
         assertEquals(expected, ALICE.toString());
+    }
+
+    @Test
+    public void goal_affectsValueEqualityButNotIdentity() {
+        Person goalAlice = new PersonBuilder(ALICE).withGoal("Build strength").build();
+        assertEquals(new Goal("Build strength"), goalAlice.getGoal().orElseThrow());
+        assertFalse(ALICE.equals(goalAlice));
+        assertTrue(ALICE.isSamePerson(goalAlice));
+    }
+
+    @Test
+    public void workoutSessions_copyPreservesGoalAndValueEquality() {
+        WorkoutSession session = new WorkoutSession(LocalDate.of(2020, 1, 15), Optional.empty(),
+                List.of(new WorkoutLogEntry("Back squat", new BigDecimal("60"), 3, 10)));
+        Person goalAlice = new PersonBuilder(ALICE).withGoal("Build strength").build();
+        Person loggedAlice = new PersonBuilder(goalAlice).withWorkoutSessions(List.of(session)).build();
+        Person copy = new PersonBuilder(loggedAlice).build();
+
+        assertEquals(loggedAlice, copy);
+        assertEquals(loggedAlice.hashCode(), copy.hashCode());
+        assertEquals(goalAlice.getGoal(), copy.getGoal());
+        assertEquals(List.of(session), copy.getWorkoutSessions());
+        assertFalse(goalAlice.equals(loggedAlice));
+        assertTrue(goalAlice.isSamePerson(loggedAlice));
+    }
+
+    @Test
+    public void constructor_workoutSessions_defensivelyCopiesList() {
+        WorkoutSession session = new WorkoutSession(LocalDate.of(2020, 1, 15), Optional.empty(),
+                List.of(new WorkoutLogEntry("Back squat", new BigDecimal("60"), 3, 10)));
+        List<WorkoutSession> sessions = new ArrayList<>(List.of(session));
+        Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                ALICE.getRemark(), ALICE.getTags(), ALICE.getWorkoutPlan(), ALICE.getDietPlan(), null, sessions);
+
+        sessions.clear();
+
+        assertEquals(List.of(session), person.getWorkoutSessions());
+        assertThrows(UnsupportedOperationException.class, () -> person.getWorkoutSessions().clear());
     }
 }

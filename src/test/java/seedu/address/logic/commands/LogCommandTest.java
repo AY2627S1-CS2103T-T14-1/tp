@@ -50,6 +50,7 @@ public class LogCommandTest {
                 DATE, Optional.of(TIME), List.of(BENCH, SQUAT));
 
         Person base = new PersonBuilder()
+                .withGoal("Build strength")
                 .withRemark("Likes swimming")
                 .withTags("regular")
                 .withWorkoutPlan(new WorkoutPlan(
@@ -64,6 +65,7 @@ public class LogCommandTest {
         Person expected = withSessions(original, List.of(existing, added));
         assertEquals(List.of(expected), model.getAddressBook().getPersonList());
         assertEquals(List.of(existing), original.getWorkoutSessions());
+        assertEquals(original.getGoal(), model.getAddressBook().getPersonList().get(0).getGoal());
         assertEquals(String.format(
                         LogCommand.MESSAGE_SUCCESS, original.getName(), "2020-01-15 at 18:00"),
                 result.getFeedbackToUser());
@@ -208,6 +210,6 @@ public class LogCommandTest {
         return new Person(
                 person.getName(), person.getPhone(), person.getEmail(), person.getAddress(),
                 person.getRemark(), person.getTags(), person.getWorkoutPlan(), person.getDietPlan(),
-                sessions);
+                person.getGoal().orElse(null), sessions);
     }
 }
