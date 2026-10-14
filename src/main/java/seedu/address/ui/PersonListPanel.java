@@ -25,6 +25,8 @@ public class PersonListPanel extends UiPart<Region> {
     @FXML
     private Label selectedClientName;
     @FXML
+    private Label goal;
+    @FXML
     private Label dietPlanHeading;
     @FXML
     private Label dietTarget;
@@ -42,10 +44,10 @@ public class PersonListPanel extends UiPart<Region> {
         personListView.setCellFactory(listView -> new PersonListViewCell());
         personListView.getSelectionModel().selectedItemProperty().addListener((observable, previous, selected) ->
                 showDietPlan(selected));
-        ListChangeListener<Person> listChangeListener = change ->
-                showDietPlan(personListView.getSelectionModel().getSelectedItem());
+        ListChangeListener<Person> listChangeListener = change -> updateSelectionAfterListChange();
         personList.addListener(listChangeListener);
         configureWrapping(selectedClientName);
+        configureWrapping(goal);
         configureWrapping(dietTarget);
         configureWrapping(dietNotes);
         personListView.getSelectionModel().selectFirst();
@@ -58,9 +60,28 @@ public class PersonListPanel extends UiPart<Region> {
         label.setWrapText(true);
     }
 
+    /**
+     * Updates the client selection after the displayed list changes.
+     */
+    private void updateSelectionAfterListChange() {
+        Person selected = personListView.getSelectionModel().getSelectedItem();
+        if (selected != null && personListView.getItems().contains(selected)) {
+            showDietPlan(selected);
+            return;
+        }
+
+        if (personListView.getItems().isEmpty()) {
+            personListView.getSelectionModel().clearSelection();
+        } else {
+            personListView.getSelectionModel().selectFirst();
+        }
+        showDietPlan(personListView.getSelectionModel().getSelectedItem());
+    }
+
     private void showDietPlan(Person selected) {
         if (selected == null) {
             selectedClientName.setText("Select a client to view their current diet plan.");
+            setShown(goal, false);
             setShown(dietPlanHeading, false);
             setShown(dietTarget, false);
             setShown(dietNotes, false);
@@ -68,6 +89,10 @@ public class PersonListPanel extends UiPart<Region> {
             return;
         }
         selectedClientName.setText(selected.getName().fullName);
+        selected.getGoal().ifPresentOrElse(value -> {
+            goal.setText("Goal: " + value.value);
+            setShown(goal, true);
+        }, () -> setShown(goal, false));
         setShown(dietPlanHeading, true);
         if (selected.getDietPlan().isEmpty()) {
             setShown(dietTarget, false);

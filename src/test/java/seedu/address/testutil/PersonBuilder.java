@@ -8,6 +8,7 @@ import java.util.Set;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.Goal;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -37,6 +38,7 @@ public class PersonBuilder {
     private WorkoutPlan workoutPlan;
     private Optional<DietPlan> dietPlan;
     private List<TrainingSession> trainingSessions;
+    private Goal goal;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -51,6 +53,7 @@ public class PersonBuilder {
         workoutPlan = new WorkoutPlan();
         dietPlan = Optional.empty();
         trainingSessions = List.of();
+        goal = null;
     }
 
     /**
@@ -66,6 +69,7 @@ public class PersonBuilder {
         workoutPlan = personToCopy.getWorkoutPlan();
         dietPlan = personToCopy.getDietPlan();
         trainingSessions = personToCopy.getTrainingSessions();
+        goal = personToCopy.getGoal().orElse(null);
     }
 
     /**
@@ -132,8 +136,14 @@ public class PersonBuilder {
         return this;
     }
 
+    /** Sets the fitness goal of the {@code Person} that we are building. */
+    public PersonBuilder withGoal(String goal) {
+        this.goal = new Goal(goal);
+        return this;
+    }
+
     public Person build() {
-        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, trainingSessions);
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions);
     }
 
 }

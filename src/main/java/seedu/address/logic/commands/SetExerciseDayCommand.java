@@ -56,7 +56,8 @@ public class SetExerciseDayCommand extends Command {
             throw new CommandException(Messages.MESSAGE_DAILY_EXERCISE_LIMIT);
         }
         Person edited = new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(),
-                person.getRemark(), person.getTags(), plan, person.getDietPlan(), person.getTrainingSessions());
+                person.getRemark(), person.getTags(), plan, person.getDietPlan(), person.getGoal().orElse(null),
+                person.getTrainingSessions());
         model.setPerson(person, edited);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
         return new CommandResult(String.format(MESSAGE_SUCCESS, Messages.format(edited)));

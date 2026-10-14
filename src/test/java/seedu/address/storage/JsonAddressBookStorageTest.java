@@ -135,6 +135,17 @@ public class JsonAddressBookStorageTest {
         assertEquals(original, new AddressBook(storage.readAddressBook().orElseThrow()));
     }
 
+    @Test
+    public void readAndSaveAddressBook_goal_preservesGoal() throws Exception {
+        AddressBook original = new AddressBook();
+        original.addPerson(new seedu.address.testutil.PersonBuilder(ALICE).withGoal("Build strength").build());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("goal.json"));
+
+        storage.saveAddressBook(original);
+
+        assertEquals(original, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
     private void assertInvalidExercises(String exercises) throws Exception {
         Path filePath = testFolder.resolve("invalidWorkout.json");
         Files.writeString(filePath, addressBookJson(",\"exercises\":" + exercises));

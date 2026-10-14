@@ -18,6 +18,7 @@ import seedu.address.model.person.Address;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Exercise;
+import seedu.address.model.person.Goal;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -69,6 +70,7 @@ public class JsonAdaptedPersonTest {
                 .withRemark("Likes rowing.")
                 .withWorkoutPlan(new WorkoutPlan(Arrays.asList(benchPress, squat)))
                 .withDietPlan(new DietPlan("1800 kcal", "Lean protein"))
+                .withGoal("Build strength")
                 .build();
         String json = JsonUtil.toJsonString(new JsonAdaptedPerson(personWithAllFields));
         assertEquals(personWithAllFields,
@@ -193,6 +195,20 @@ public class JsonAdaptedPersonTest {
                 new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK, VALID_TAGS,
                         invalidExercises);
         assertThrows(IllegalValueException.class, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_invalidGoal_throwsIllegalValueException() {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
+                VALID_REMARK, VALID_TAGS, VALID_EXERCISES, null, null, "!!!");
+        assertThrows(IllegalValueException.class, Goal.MESSAGE_CONSTRAINTS, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullGoal_returnsPersonWithoutGoal() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
+                VALID_REMARK, VALID_TAGS, VALID_EXERCISES, null, null, null);
+        assertEquals(new PersonBuilder(BENSON).build(), person.toModelType());
     }
 
 }

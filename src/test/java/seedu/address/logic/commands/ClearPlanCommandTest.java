@@ -58,6 +58,17 @@ public class ClearPlanCommandTest {
     }
 
     @Test
+    public void execute_clearPlan_preservesGoal() throws Exception {
+        Person withGoalAndPlan = new PersonBuilder(personWithPlan()).withGoal("Build strength").build();
+        model.setPerson(model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased()), withGoalAndPlan);
+
+        new ClearPlanCommand(INDEX_FIRST_PERSON).execute(model);
+
+        assertEquals("Build strength", model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased())
+                .getGoal().orElseThrow().value);
+    }
+
+    @Test
     public void execute_alreadyEmptyPlan_returnsAlreadyEmptyMessage() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         assertTrue(person.getWorkoutPlan().isEmpty());

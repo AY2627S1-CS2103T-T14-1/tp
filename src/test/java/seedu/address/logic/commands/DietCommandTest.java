@@ -71,6 +71,17 @@ public class DietCommandTest {
     }
 
     @Test
+    public void execute_createDietPlan_preservesGoal() throws Exception {
+        Person original = new PersonBuilder().withGoal("Build strength").build();
+        ModelManager model = new ModelManager();
+        model.addPerson(original);
+
+        new DietCommand(Index.fromOneBased(1), new DietPlan("1800 kcal")).execute(model);
+
+        assertEquals("Build strength", model.getFilteredPersonList().get(0).getGoal().orElseThrow().value);
+    }
+
+    @Test
     public void execute_filteredIndex_targetsDisplayedClientAndKeepsFilter() throws Exception {
         ModelManager model = new ModelManager();
         Person amy = new PersonBuilder().build();

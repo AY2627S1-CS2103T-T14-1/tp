@@ -19,6 +19,7 @@ import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
+import seedu.address.testutil.PersonBuilder;
 
 public class ScheduleCommandTest {
     @Test
@@ -66,6 +67,8 @@ public class ScheduleCommandTest {
     @Test
     public void workoutCommands_preserveSavedTrainingSessions() throws Exception {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Person original = model.getFilteredPersonList().get(0);
+        model.setPerson(original, new PersonBuilder(original).withGoal("Build strength").build());
         TrainingSession session = new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "Gym");
         new ScheduleCommand(INDEX_FIRST_PERSON, session).execute(model);
 
@@ -81,5 +84,6 @@ public class ScheduleCommandTest {
         new AddExerciseCommand(INDEX_FIRST_PERSON, new Exercise("Squat", 3, 10, 60)).execute(model);
         new ClearPlanCommand(INDEX_FIRST_PERSON).execute(model);
         assertEquals(List.of(session), model.getFilteredPersonList().get(0).getTrainingSessions());
+        assertEquals("Build strength", model.getFilteredPersonList().get(0).getGoal().orElseThrow().value);
     }
 }

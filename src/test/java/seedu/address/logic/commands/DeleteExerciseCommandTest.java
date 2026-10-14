@@ -89,6 +89,20 @@ public class DeleteExerciseCommandTest {
     }
 
     @Test
+    public void execute_deleteExercise_preservesGoal() throws Exception {
+        Exercise benchPress = new Exercise("Bench Press", 3, 10, 60.0);
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Person withGoalAndPlan = new PersonBuilder(original).withGoal("Build strength")
+                .withWorkoutPlan(new WorkoutPlan(List.of(benchPress))).build();
+        model.setPerson(original, withGoalAndPlan);
+
+        new DeleteExerciseCommand(INDEX_FIRST_PERSON, INDEX_FIRST_PERSON).execute(model);
+
+        assertEquals("Build strength", model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased())
+                .getGoal().orElseThrow().value);
+    }
+
+    @Test
     public void execute_invalidPersonIndexUnfilteredList_throwsCommandException() {
         setFirstPersonPlan(new Exercise("Bench Press", 3, 10, 60.0));
 
