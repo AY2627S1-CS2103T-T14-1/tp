@@ -610,6 +610,8 @@ _{More to be added}_
 
 **Use case: UC08 - Schedule a session with a client**
 
+The first increment stores an immutable `TrainingSession` (date/time and location) in each client's `Person` record. The `schedule` command validates a future ISO date and 24-hour time, then replaces the client record with a copy containing the new session. `viewschedule` orders saved sessions by date/time. JSON storage writes a `trainingSessions` list for each client; when that field is absent, older data loads with an empty list. Editing a client or its remark preserves its sessions. Session conflict detection and recurring appointments remain separate increments.
+
 **MSS**
 
 1.  Trainer requests to list clients.

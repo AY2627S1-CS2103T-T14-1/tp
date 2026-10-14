@@ -200,14 +200,14 @@ public class JsonAdaptedPersonTest {
     @Test
     public void toModelType_invalidGoal_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
-                VALID_REMARK, VALID_TAGS, VALID_EXERCISES, null, "!!!");
+                VALID_REMARK, VALID_TAGS, VALID_EXERCISES, null, null, "!!!");
         assertThrows(IllegalValueException.class, Goal.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
     @Test
     public void toModelType_nullGoal_returnsPersonWithoutGoal() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
-                VALID_REMARK, VALID_TAGS, VALID_EXERCISES, null, null);
+                VALID_REMARK, VALID_TAGS, VALID_EXERCISES, null, null, null);
         assertEquals(new PersonBuilder(BENSON).build(), person.toModelType());
     }
 

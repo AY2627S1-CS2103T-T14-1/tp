@@ -6,12 +6,16 @@ import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
+import seedu.address.model.person.Person;
+import seedu.address.model.person.TrainingSession;
+import seedu.address.testutil.PersonBuilder;
 import seedu.address.testutil.TypicalPersons;
 
 public class JsonSerializableAddressBookTest {
@@ -29,6 +33,18 @@ public class JsonSerializableAddressBookTest {
         AddressBook addressBookFromFile = dataFromFile.toModelType();
         AddressBook typicalPersonsAddressBook = TypicalPersons.getTypicalAddressBook();
         assertEquals(addressBookFromFile, typicalPersonsAddressBook);
+    }
+
+    @Test
+    public void jsonRoundTrip_personWithTrainingSession_preservesSession() throws Exception {
+        AddressBook book = new AddressBook();
+        Person client = new PersonBuilder(TypicalPersons.BENSON).withGoal("Build strength").build()
+                .withTrainingSession(
+                        new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "Main gym"));
+        book.addPerson(client);
+        String json = JsonUtil.toJsonString(new JsonSerializableAddressBook(book));
+        JsonSerializableAddressBook loaded = JsonUtil.fromJsonString(json, JsonSerializableAddressBook.class);
+        assertEquals(book, loaded.toModelType());
     }
 
     @Test

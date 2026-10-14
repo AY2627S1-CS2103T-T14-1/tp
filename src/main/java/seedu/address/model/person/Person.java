@@ -2,8 +2,10 @@ package seedu.address.model.person;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -29,12 +31,13 @@ public class Person {
     private final WorkoutPlan workoutPlan;
     private final Optional<DietPlan> dietPlan;
     private final Goal goal;
+    private final List<TrainingSession> trainingSessions;
 
     /**
      * Every field must be present and not null.
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
-        this(name, phone, email, address, remark, tags, new WorkoutPlan(), Optional.empty(), null);
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), Optional.empty());
     }
 
     /**
@@ -42,7 +45,7 @@ public class Person {
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan) {
-        this(name, phone, email, address, remark, tags, workoutPlan, Optional.empty(), null);
+        this(name, phone, email, address, remark, tags, workoutPlan, Optional.empty());
     }
 
     /**
@@ -50,7 +53,7 @@ public class Person {
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             Optional<DietPlan> dietPlan) {
-        this(name, phone, email, address, remark, tags, new WorkoutPlan(), dietPlan, null);
+        this(name, phone, email, address, remark, tags, new WorkoutPlan(), dietPlan);
     }
 
     /**
@@ -58,15 +61,26 @@ public class Person {
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan) {
-        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, null);
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, List.of());
     }
 
-    /**
-     * Constructs a person with optional diet plan and fitness goal. All non-goal arguments must be non-null.
-     */
+    /** Constructs a person with saved training sessions. */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, List<TrainingSession> trainingSessions) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, null, trainingSessions);
+    }
+
+    /** Constructs a person with a fitness goal and no training sessions. */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, List.of());
+    }
+
+    /** Constructs a person with a fitness goal and saved training sessions. */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal, List<TrainingSession> trainingSessions) {
         requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan);
+        Objects.requireNonNull(trainingSessions);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -76,6 +90,7 @@ public class Person {
         this.workoutPlan = workoutPlan;
         this.dietPlan = dietPlan;
         this.goal = goal;
+        this.trainingSessions = List.copyOf(trainingSessions);
     }
 
     public Name getName() {
@@ -108,6 +123,18 @@ public class Person {
 
     public Optional<Goal> getGoal() {
         return Optional.ofNullable(goal);
+    }
+
+    public List<TrainingSession> getTrainingSessions() {
+        return trainingSessions;
+    }
+
+    /** Returns a copy with one additional session. */
+    public Person withTrainingSession(TrainingSession session) {
+        Objects.requireNonNull(session);
+        List<TrainingSession> updated = new ArrayList<>(trainingSessions);
+        updated.add(session);
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, updated);
     }
 
     /**
@@ -154,13 +181,14 @@ public class Person {
                 && tags.equals(otherPerson.tags)
                 && workoutPlan.equals(otherPerson.workoutPlan)
                 && dietPlan.equals(otherPerson.dietPlan)
-                && Objects.equals(goal, otherPerson.goal);
+                && Objects.equals(goal, otherPerson.goal)
+                && trainingSessions.equals(otherPerson.trainingSessions);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal);
+        return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions);
     }
 
     @Override
@@ -175,6 +203,7 @@ public class Person {
                 .add("workoutPlan", workoutPlan)
                 .add("dietPlan", dietPlan)
                 .add("goal", goal)
+                .add("trainingSessions", trainingSessions)
                 .toString();
     }
 

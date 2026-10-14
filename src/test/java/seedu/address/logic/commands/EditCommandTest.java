@@ -83,7 +83,8 @@ public class EditCommandTest {
         Person clearedGoal = new PersonBuilder(withGoal).build();
         // PersonBuilder preserves a goal, so construct the expected person without one.
         clearedGoal = new Person(withGoal.getName(), withGoal.getPhone(), withGoal.getEmail(), withGoal.getAddress(),
-                withGoal.getRemark(), withGoal.getTags(), withGoal.getWorkoutPlan(), withGoal.getDietPlan(), null);
+                withGoal.getRemark(), withGoal.getTags(), withGoal.getWorkoutPlan(), withGoal.getDietPlan(),
+                null, withGoal.getTrainingSessions());
         Model expectedAfterClear = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
         expectedAfterClear.setPerson(withGoal, clearedGoal);
 

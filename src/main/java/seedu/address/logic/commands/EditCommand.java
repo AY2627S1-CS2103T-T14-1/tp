@@ -118,7 +118,7 @@ public class EditCommand extends Command {
                 : editPersonDescriptor.getGoal().orElse(personToEdit.getGoal().orElse(null));
 
         return new Person(updatedName, updatedPhone, updatedEmail, updatedAddress, updatedRemark, updatedTags,
-                updatedWorkoutPlan, personToEdit.getDietPlan(), updatedGoal);
+                updatedWorkoutPlan, personToEdit.getDietPlan(), updatedGoal, personToEdit.getTrainingSessions());
     }
 
     @Override
