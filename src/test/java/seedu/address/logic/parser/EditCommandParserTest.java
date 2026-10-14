@@ -1,6 +1,5 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
@@ -22,10 +21,7 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_FRIEND;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_GOAL;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
@@ -36,7 +32,6 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_THIRD_PERSON;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
-import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Address;
@@ -53,36 +48,33 @@ public class EditCommandParserTest {
     private static final String GOAL_DESC = " g/Build strength";
     private static final String GOAL_EMPTY = " " + PREFIX_GOAL;
 
-    private static final String MESSAGE_INVALID_FORMAT =
-            String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
-
     private EditCommandParser parser = new EditCommandParser();
 
     @Test
     public void parse_missingParts_failure() {
         // no index specified
-        assertParseFailure(parser, VALID_NAME_AMY, MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, NAME_DESC_AMY, EditCommand.MESSAGE_INDEX_REQUIRED);
 
         // no field specified
         assertParseFailure(parser, "1", EditCommand.MESSAGE_NOT_EDITED);
 
         // no index and no field specified
-        assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "", EditCommand.MESSAGE_INDEX_REQUIRED);
     }
 
     @Test
     public void parse_invalidPreamble_failure() {
         // negative index
-        assertParseFailure(parser, "-5" + NAME_DESC_AMY, MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "-5" + NAME_DESC_AMY, EditCommand.MESSAGE_INVALID_INDEX);
 
         // zero index
-        assertParseFailure(parser, "0" + NAME_DESC_AMY, MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "0" + NAME_DESC_AMY, EditCommand.MESSAGE_INVALID_INDEX);
 
         // invalid arguments being parsed as preamble
-        assertParseFailure(parser, "1 some random string", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 some random string", EditCommand.MESSAGE_INVALID_INDEX);
 
         // invalid prefix being parsed as preamble
-        assertParseFailure(parser, "1 i/ string", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 i/ string", EditCommand.MESSAGE_INVALID_INDEX);
     }
 
     @Test
@@ -93,6 +85,9 @@ public class EditCommandParserTest {
         assertParseFailure(parser, "1" + INVALID_ADDRESS_DESC, Address.MESSAGE_CONSTRAINTS); // invalid address
         assertParseFailure(parser, "1" + INVALID_TAG_DESC, Tag.MESSAGE_CONSTRAINTS); // invalid tag
         assertParseFailure(parser, "1 g/!!!", Goal.MESSAGE_CONSTRAINTS); // invalid goal
+        assertParseFailure(parser, "1 n/", Name.MESSAGE_CONSTRAINTS); // empty name
+        assertParseFailure(parser, "1 p/", Phone.MESSAGE_CONSTRAINTS); // empty phone
+        assertParseFailure(parser, "1 e/", Email.MESSAGE_CONSTRAINTS); // empty email
 
         // invalid phone followed by valid email
         assertParseFailure(parser, "1" + INVALID_PHONE_DESC + EMAIL_DESC_AMY, Phone.MESSAGE_CONSTRAINTS);
@@ -183,27 +178,25 @@ public class EditCommandParserTest {
         Index targetIndex = INDEX_FIRST_PERSON;
         String userInput = targetIndex.getOneBased() + INVALID_PHONE_DESC + PHONE_DESC_BOB;
 
-        assertParseFailure(parser, userInput, Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE));
+        assertParseFailure(parser, userInput, EditCommand.MESSAGE_REPEATED_PREFIX);
 
         // invalid followed by valid
         userInput = targetIndex.getOneBased() + PHONE_DESC_BOB + INVALID_PHONE_DESC;
 
-        assertParseFailure(parser, userInput, Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE));
+        assertParseFailure(parser, userInput, EditCommand.MESSAGE_REPEATED_PREFIX);
 
         // multiple valid fields repeated
         userInput = targetIndex.getOneBased() + PHONE_DESC_AMY + ADDRESS_DESC_AMY + EMAIL_DESC_AMY
                 + TAG_DESC_FRIEND + PHONE_DESC_AMY + ADDRESS_DESC_AMY + EMAIL_DESC_AMY + TAG_DESC_FRIEND
                 + PHONE_DESC_BOB + ADDRESS_DESC_BOB + EMAIL_DESC_BOB + TAG_DESC_HUSBAND;
 
-        assertParseFailure(parser, userInput,
-                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS));
+        assertParseFailure(parser, userInput, EditCommand.MESSAGE_REPEATED_PREFIX);
 
         // multiple invalid values
         userInput = targetIndex.getOneBased() + INVALID_PHONE_DESC + INVALID_ADDRESS_DESC + INVALID_EMAIL_DESC
                 + INVALID_PHONE_DESC + INVALID_ADDRESS_DESC + INVALID_EMAIL_DESC;
 
-        assertParseFailure(parser, userInput,
-                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS));
+        assertParseFailure(parser, userInput, EditCommand.MESSAGE_REPEATED_PREFIX);
     }
 
     @Test
@@ -228,6 +221,16 @@ public class EditCommandParserTest {
     @Test
     public void parse_repeatedGoal_failure() {
         assertParseFailure(parser, INDEX_FIRST_PERSON.getOneBased() + GOAL_DESC + " g/Run 5 km",
-                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_GOAL));
+                EditCommand.MESSAGE_REPEATED_PREFIX);
+    }
+
+    @Test
+    public void parse_repeatedPersonalPrefixes_failure() {
+        String index = Integer.toString(INDEX_FIRST_PERSON.getOneBased());
+
+        assertParseFailure(parser, index + NAME_DESC_AMY + " n/Amy Tan", EditCommand.MESSAGE_REPEATED_PREFIX);
+        assertParseFailure(parser, index + EMAIL_DESC_AMY + EMAIL_DESC_BOB, EditCommand.MESSAGE_REPEATED_PREFIX);
+        assertParseFailure(parser, index + ADDRESS_DESC_AMY + ADDRESS_DESC_BOB,
+                EditCommand.MESSAGE_REPEATED_PREFIX);
     }
 }
