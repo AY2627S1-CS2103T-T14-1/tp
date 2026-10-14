@@ -22,7 +22,7 @@ public class FindCommandParserTest {
     @Test
     public void parse_emptyArg_throwsParseException() {
         assertParseFailure(parser, "     ", "Search keyword is required. Use: find KEYWORD... or "
-                + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]");
+                + "find [n/NAME] [p/PHONE] [e/EMAIL]");
     }
 
     @Test
@@ -47,8 +47,8 @@ public class FindCommandParserTest {
     @Test
     public void parse_invalidArgs_throwsParseException() {
         assertParseFailure(parser, " alex n/bob", "Invalid command format. Use: find KEYWORD... or "
-                + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]");
-        assertParseFailure(parser, " n/alex n/bob", "The n/, p/, e/ and g/ prefixes may each be used only once.");
+                + "find [n/NAME] [p/PHONE] [e/EMAIL]");
+        assertParseFailure(parser, " n/alex n/bob", "The n/, p/ and e/ prefixes may each be used only once.");
         assertParseFailure(parser, " n/", "The n/ search value cannot be empty.");
     }
 
@@ -66,8 +66,8 @@ public class FindCommandParserTest {
 
     @Test
     public void parse_invalidPhoneAndEmailCriteria_throwsParseException() {
-        assertParseFailure(parser, " p/1 p/2", "The n/, p/, e/ and g/ prefixes may each be used only once.");
-        assertParseFailure(parser, " e/a e/b", "The n/, p/, e/ and g/ prefixes may each be used only once.");
+        assertParseFailure(parser, " p/1 p/2", "The n/, p/ and e/ prefixes may each be used only once.");
+        assertParseFailure(parser, " e/a e/b", "The n/, p/ and e/ prefixes may each be used only once.");
         assertParseFailure(parser, " p/", "The p/ search value cannot be empty.");
         assertParseFailure(parser, " e/", "The e/ search value cannot be empty.");
         assertParseFailure(parser, " p/abc", "Phone search must contain at least one digit.");

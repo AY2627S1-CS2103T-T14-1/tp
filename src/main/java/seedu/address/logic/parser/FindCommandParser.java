@@ -23,11 +23,11 @@ public class FindCommandParser implements Parser<FindCommand> {
 
     private static final Prefix[] SUPPORTED_PREFIXES = {PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL};
     private static final String MESSAGE_KEYWORD_REQUIRED = "Search keyword is required. Use: find KEYWORD... or "
-            + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]";
+            + "find [n/NAME] [p/PHONE] [e/EMAIL]";
     private static final String MESSAGE_MIXED_PREAMBLE = "Invalid command format. Use: find KEYWORD... or "
-            + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]";
+            + "find [n/NAME] [p/PHONE] [e/EMAIL]";
     private static final String MESSAGE_REPEATED_PREFIX =
-            "The n/, p/, e/ and g/ prefixes may each be used only once.";
+            "The n/, p/ and e/ prefixes may each be used only once.";
     private static final String MESSAGE_EMPTY_VALUE = "The %s search value cannot be empty.";
 
     /**
