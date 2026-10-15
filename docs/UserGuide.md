@@ -75,18 +75,21 @@ Shows a message explaining how to access the help page.
 Format: `help`
 
 
-### Adding a person: `add`
+### Adding a client: `add`
 
-Adds a person to the address book.
+Adds a client to Fittix.
 
-Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​`
+Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…​`
 
 <div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-A person can have any number of tags, including zero.
+A client can have any number of tags, including zero.
 </div>
 
+* `g/GOAL` is optional. A goal must contain 1 to 50 characters after trimming and include at least one letter or digit.
+* A supplied goal is saved with the client and shown on the client card.
+
 Examples:
-* `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01`
+* `add n/Priya Nair p/91234567 e/priya@example.com a/123 Clementi Road g/Build strength`
 * `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
 
 ### Listing all persons: `list`
@@ -111,22 +114,37 @@ Format: `viewschedule INDEX`
 
 Example: `viewschedule 1`
 
-### Editing a person: `edit`
+### Editing a client: `edit`
 
-Edits an existing person in the address book.
+Edits an existing client in Fittix.
 
-Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`
+Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`
 
-* Edits the person at the specified `INDEX`. The index refers to the index number shown in the displayed person list. The index **must be a positive integer** 1, 2, 3, …​
-* At least one of the optional fields must be provided.
+* Edits the client at the specified `INDEX`. The index refers to the index number shown in the displayed client list. The index must be a positive whole number; leading zeros are accepted.
+* At least one field must be provided.
 * Existing values will be updated to the input values.
-* If the values you enter are identical to the client's current details, Fittix tells you that no changes were made.
-* When editing tags, all of the person's existing tags are removed; adding tags is not cumulative.
-* To remove all of a person's tags, enter `t/` without a tag after it.
+* `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags.
+* Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
+* When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative.
+* An edit that would duplicate another client's name is rejected. Changing only the letter case of the same client's name is allowed.
+* If the values are identical to the client's current details, Fittix reports `No changes made: the new values are the same as the current details.`
+* On success, Fittix reports `Edited client: NAME; Phone: PHONE.`
+
+Common errors:
+
+| Cause | Message |
+| --- | --- |
+| Missing index | `Client index is required. Use: edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]...` |
+| Invalid index | `The client index must be a positive whole number shown in the client list.` |
+| Index outside the displayed list | `No client exists at index INDEX.` |
+| Repeated `n/`, `p/`, `e/`, `a/`, or `g/` | `The n/, p/, e/, a/ and g/ prefixes may each be used only once. Repeat t/ for multiple tags.` |
+| No fields supplied | `At least one field to edit must be provided.` |
+| Duplicate client | `This person already exists in the address book.` |
 
 Examples:
-*  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
-*  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
+* `edit 1 p/91234567 e/johndoe@example.com` edits the phone number and email address of the first client.
+* `edit 2 n/Betsy Crower t/` edits the name and clears all existing tags.
+* `edit 3 g/Marathon prep` sets a fitness goal; `edit 3 g/` clears it.
 
 ### Recording a client's diet plan: `diet`
 
@@ -165,22 +183,42 @@ On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan 
 
 Invalid commands and failed saves leave the previous plan unchanged. Deleting a client permanently removes that client's diet plan along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
 
-### Locating persons by name: `find`
+### Finding clients: `find`
 
-Finds persons whose names contain any of the given keywords.
+Finds clients matching one or more name, phone, email, or fitness-goal criteria.
 
-Format: `find KEYWORD [MORE_KEYWORDS]`
+Format:
 
-* The search is case-insensitive; for example, `hans` matches `Hans`.
-* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
-* The search considers only names.
-* Partial words are matched; for example, `Han` matches `Hans`.
-* Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* `find KEYWORD [MORE_KEYWORDS]...`
+* `find [n/NAME_KEYWORDS] [p/PHONE] [e/EMAIL_KEYWORDS] [g/GOAL_KEYWORDS]`
+
+The first form is a name search and behaves exactly like `find n/KEYWORD [MORE_KEYWORDS]...`.
+
+* `n/` splits its value into keywords. A client's name matches if it contains any keyword as a case-insensitive substring. For example, `find n/pri` matches `Priya`.
+* `p/` searches one phone query. Spaces and hyphens are ignored, and the normalised phone must contain the normalised query. The query must contain at least one digit.
+* `e/` splits its value into keywords. A client's email matches if it contains any keyword as a case-insensitive substring.
+* `g/` splits its value into keywords. A client's fitness goal matches if it contains any keyword as a case-insensitive substring. Clients without a goal do not match a goal search.
+* Criteria are combined with OR. For example, `find n/tan g/fat loss` returns clients whose name contains `tan` or whose goal contains `fat` or `loss`.
+* Each of `n/`, `p/`, `e/`, and `g/` may appear at most once. A bare keyword cannot be combined with a prefix.
 
 Examples:
-* `find John` returns `john` and `John Doe`
-* `find alex david` returns `Alex Yeoh`, `David Li`<br>
-  ![result for 'find alex david'](images/findAlexDavidResult.png)
+* `find pri` and `find n/pri` find clients whose names contain `pri`.
+* `find p/9123 4567` and `find p/9123-4567` find a client with phone `91234567`.
+* `find e/example.com` finds clients with an email containing `example.com`.
+* `find g/strength` finds clients with a goal containing `strength`.
+* `find n/tan g/fat loss` combines name and goal criteria using OR.
+
+Common errors:
+
+| Cause | Message |
+| --- | --- |
+| No search value | `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]` |
+| Bare keyword mixed with a prefix | `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]` |
+| Repeated supported prefix | `The n/, p/, e/ and g/ prefixes may each be used only once.` |
+| Empty `n/` value | `The n/ search value cannot be empty.` The same message uses `p/`, `e/`, or `g/` for those prefixes. |
+| Phone query without a digit | `Phone search must contain at least one digit.` |
+
+Fittix reports `Found N client(s).` when there are matches, or `Found 0 client(s). Use list to show all clients.` when there are none.
 
 ### Deleting a person: `delete`
 
@@ -406,7 +444,7 @@ _Details coming soon ..._
 
 Action | Format, Examples
 --------|------------------
-**Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
+**Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 g/Build strength t/friend t/colleague`
 **Add exercise** | `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`<br> e.g., `addex 1 n/Stretch` or `addex 1 n/Bench Press s/3 r/10 w/60 d/w`
 **Clear** | `clear`
 **Clear workout plan** | `clearplan INDEX`<br> e.g., `clearplan 1`
@@ -414,8 +452,8 @@ Action | Format, Examples
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
 **Assign/change exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`
 **Diet plan** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
-**Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
+**Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
+**Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]`<br> e.g., `find n/James g/strength`
 **List** | `list`
 **Schedule** | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`
 **View schedule** | `viewschedule INDEX`<br> e.g., `viewschedule 1`
