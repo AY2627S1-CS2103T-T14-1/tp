@@ -13,6 +13,7 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
+import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutPlan;
 import seedu.address.model.person.WorkoutSession;
 import seedu.address.model.tag.Tag;
@@ -37,6 +38,7 @@ public class PersonBuilder {
     private Set<Tag> tags;
     private WorkoutPlan workoutPlan;
     private Optional<DietPlan> dietPlan;
+    private List<TrainingSession> trainingSessions;
     private Goal goal;
     private List<WorkoutSession> workoutSessions;
 
@@ -52,6 +54,7 @@ public class PersonBuilder {
         tags = new HashSet<>();
         workoutPlan = new WorkoutPlan();
         dietPlan = Optional.empty();
+        trainingSessions = List.of();
         goal = null;
         workoutSessions = List.of();
     }
@@ -68,6 +71,7 @@ public class PersonBuilder {
         tags = new HashSet<>(personToCopy.getTags());
         workoutPlan = personToCopy.getWorkoutPlan();
         dietPlan = personToCopy.getDietPlan();
+        trainingSessions = personToCopy.getTrainingSessions();
         goal = personToCopy.getGoal().orElse(null);
         workoutSessions = personToCopy.getWorkoutSessions();
     }
@@ -155,7 +159,7 @@ public class PersonBuilder {
      */
     public Person build() {
         return new Person(name, phone, email, address, remark, tags,
-                workoutPlan, dietPlan, goal, workoutSessions);
+                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions);
     }
 
 }

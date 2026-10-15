@@ -1,7 +1,6 @@
 package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_GOAL;
@@ -36,15 +35,21 @@ public class EditCommandParser implements Parser<EditCommand> {
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS, PREFIX_TAG,
                         PREFIX_GOAL);
 
-        Index index;
-
-        try {
-            index = ParserUtil.parseIndex(argMultimap.getPreamble());
-        } catch (ParseException pe) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE), pe);
+        String preamble = argMultimap.getPreamble();
+        if (preamble.isEmpty()) {
+            throw new ParseException(EditCommand.MESSAGE_INDEX_REQUIRED);
         }
 
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS, PREFIX_GOAL);
+        Index index;
+        try {
+            index = ParserUtil.parseIndex(preamble);
+        } catch (ParseException pe) {
+            throw new ParseException(EditCommand.MESSAGE_INVALID_INDEX, pe);
+        }
+
+        if (hasRepeatedPrefix(argMultimap)) {
+            throw new ParseException(EditCommand.MESSAGE_REPEATED_PREFIX);
+        }
 
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
 
@@ -75,6 +80,14 @@ public class EditCommandParser implements Parser<EditCommand> {
         }
 
         return new EditCommand(index, editPersonDescriptor);
+    }
+
+    private static boolean hasRepeatedPrefix(ArgumentMultimap argMultimap) {
+        return argMultimap.getAllValues(PREFIX_NAME).size() > 1
+                || argMultimap.getAllValues(PREFIX_PHONE).size() > 1
+                || argMultimap.getAllValues(PREFIX_EMAIL).size() > 1
+                || argMultimap.getAllValues(PREFIX_ADDRESS).size() > 1
+                || argMultimap.getAllValues(PREFIX_GOAL).size() > 1;
     }
 
     /**

@@ -146,6 +146,7 @@ public class PersonTest {
                 + ", workoutPlan=" + ALICE.getWorkoutPlan()
                 + ", dietPlan=" + ALICE.getDietPlan()
                 + ", goal=" + ALICE.getGoal().orElse(null)
+                + ", trainingSessions=" + ALICE.getTrainingSessions()
                 + ", workoutSessions=" + ALICE.getWorkoutSessions()
                 + "}";
         assertEquals(expected, ALICE.toString());
@@ -181,7 +182,8 @@ public class PersonTest {
                 List.of(new WorkoutLogEntry("Back squat", new BigDecimal("60"), 3, 10)));
         List<WorkoutSession> sessions = new ArrayList<>(List.of(session));
         Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
-                ALICE.getRemark(), ALICE.getTags(), ALICE.getWorkoutPlan(), ALICE.getDietPlan(), null, sessions);
+                ALICE.getRemark(), ALICE.getTags(), ALICE.getWorkoutPlan(), ALICE.getDietPlan(), null,
+                List.of(), sessions);
 
         sessions.clear();
 

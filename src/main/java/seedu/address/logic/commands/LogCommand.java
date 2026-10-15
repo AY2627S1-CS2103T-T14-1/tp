@@ -73,7 +73,7 @@ public class LogCommand extends Command {
         Person updatedClient = new Person(
                 client.getName(), client.getPhone(), client.getEmail(), client.getAddress(),
                 client.getRemark(), client.getTags(), client.getWorkoutPlan(), client.getDietPlan(),
-                client.getGoal().orElse(null), updatedSessions);
+                client.getGoal().orElse(null), client.getTrainingSessions(), updatedSessions);
 
         model.setPerson(client, updatedClient);
 

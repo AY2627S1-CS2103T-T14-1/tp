@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -20,13 +21,14 @@ import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Goal;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutLogEntry;
 import seedu.address.model.person.WorkoutPlan;
 import seedu.address.model.person.WorkoutSession;
 import seedu.address.testutil.PersonBuilder;
 
 /**
- * Checks that editing other client details preserves recorded workout sessions.
+ * Checks that commands preserve scheduled training and recorded workout sessions.
  */
 public class WorkoutSessionPreservationTest {
 
@@ -77,12 +79,36 @@ public class WorkoutSessionPreservationTest {
         Person updated = model.getAddressBook().getPersonList().get(0);
         assertEquals(new Goal("Improve mobility"), updated.getGoal().orElseThrow());
         assertEquals(original.getWorkoutSessions(), updated.getWorkoutSessions());
+        assertEquals(original.getTrainingSessions(), updated.getTrainingSessions());
 
         parser.parseCommand("edit 1 g/").execute(model);
 
         Person cleared = model.getAddressBook().getPersonList().get(0);
         assertTrue(cleared.getGoal().isEmpty());
         assertEquals(original.getWorkoutSessions(), cleared.getWorkoutSessions());
+        assertEquals(original.getTrainingSessions(), cleared.getTrainingSessions());
+    }
+
+    @Test
+    public void execute_logAndSchedule_preserveBothSessionTypes() throws Exception {
+        Person original = createPersonWithSessions();
+        Model model = new ModelManager(new AddressBook(), new UserPrefs());
+        model.addPerson(original);
+        AddressBookParser parser = new AddressBookParser();
+
+        parser.parseCommand("log 1 d/2020-01-17 ex/Bench press|40|3|8").execute(model);
+        Person logged = model.getAddressBook().getPersonList().get(0);
+        assertEquals(original.getTrainingSessions(), logged.getTrainingSessions());
+        assertEquals(3, logged.getWorkoutSessions().size());
+        assertEquals(original.getWorkoutSessions(), logged.getWorkoutSessions().subList(0, 2));
+
+        parser.parseCommand("schedule 1 d/2099-03-16 tm/09:00 l/Studio").execute(model);
+        Person scheduled = model.getAddressBook().getPersonList().get(0);
+        assertEquals(logged.getWorkoutSessions(), scheduled.getWorkoutSessions());
+        assertEquals(2, scheduled.getTrainingSessions().size());
+        assertEquals(original.getTrainingSessions(), scheduled.getTrainingSessions().subList(0, 1));
+        assertEquals(new TrainingSession(LocalDateTime.of(2099, 3, 16, 9, 0), "Studio"),
+                scheduled.getTrainingSessions().get(1));
     }
 
     private void assertSessionsPreserved(String commandText) throws Exception {
@@ -98,6 +124,8 @@ public class WorkoutSessionPreservationTest {
 
         assertEquals(original.getWorkoutSessions(), updated.getWorkoutSessions(),
                 "Workout sessions must be preserved after: " + commandText);
+        assertEquals(original.getTrainingSessions(), updated.getTrainingSessions(),
+                "Training sessions must be preserved after: " + commandText);
         assertEquals(original.getGoal(), updated.getGoal(),
                 "Goal must be preserved after: " + commandText);
         assertFalse(original.equals(updated),
@@ -115,11 +143,12 @@ public class WorkoutSessionPreservationTest {
 
         WorkoutPlan plan = new WorkoutPlan(
                 List.of(new Exercise("Bench Press", 3, 10, 40.0)));
-        Person base = new PersonBuilder().withGoal("Build strength").withWorkoutPlan(plan).build();
+        Person base = new PersonBuilder().withGoal("Build strength").withWorkoutPlan(plan).build()
+                .withTrainingSession(new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "Main gym"));
 
         return new Person(
                 base.getName(), base.getPhone(), base.getEmail(), base.getAddress(),
                 base.getRemark(), base.getTags(), base.getWorkoutPlan(), base.getDietPlan(),
-                base.getGoal().orElse(null), List.of(firstSession, secondSession));
+                base.getGoal().orElse(null), base.getTrainingSessions(), List.of(firstSession, secondSession));
     }
 }

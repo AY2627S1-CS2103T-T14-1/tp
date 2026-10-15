@@ -13,6 +13,9 @@ public class CliSyntax {
     public static final Prefix PREFIX_TAG = new Prefix("t/");
     public static final Prefix PREFIX_GOAL = new Prefix("g/");
     public static final Prefix PREFIX_REMARK = new Prefix("r/");
+    public static final Prefix PREFIX_DATE = new Prefix("d/");
+    public static final Prefix PREFIX_TIME = new Prefix("tm/");
+    public static final Prefix PREFIX_LOCATION = new Prefix("l/");
     public static final Prefix PREFIX_SETS = new Prefix("s/");
     /* Reps share the "r/" marker per addex syntax; never mixed with PREFIX_REMARK in one parser. */
     public static final Prefix PREFIX_REPS = new Prefix("r/");

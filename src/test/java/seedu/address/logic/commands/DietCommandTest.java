@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
@@ -15,10 +16,23 @@ import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutPlan;
 import seedu.address.testutil.PersonBuilder;
 
 public class DietCommandTest {
+    @Test
+    public void execute_replacePlan_preservesTrainingSessions() throws Exception {
+        ModelManager model = new ModelManager();
+        model.addPerson(new PersonBuilder().build());
+        TrainingSession session = new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "Main gym");
+        new ScheduleCommand(Index.fromOneBased(1), session).execute(model);
+
+        new DietCommand(Index.fromOneBased(1), new DietPlan("1800 kcal")).execute(model);
+
+        assertEquals(Arrays.asList(session), model.getFilteredPersonList().get(0).getTrainingSessions());
+    }
+
     @Test
     public void execute_createAndReplace_preservesOtherClientDataAndClearsOmittedNotes() throws Exception {
         Person original = new PersonBuilder().withRemark("Regular client").withTags("regular")

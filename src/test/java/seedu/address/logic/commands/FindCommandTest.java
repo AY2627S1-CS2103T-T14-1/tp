@@ -14,13 +14,17 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.ClientMatchesAnyPredicate;
 import seedu.address.model.person.EmailContainsKeywordsPredicate;
+import seedu.address.model.person.GoalContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.PhoneMatchesPredicate;
+import seedu.address.testutil.PersonBuilder;
 
 /**
  * Contains integration tests (interaction with the Model) for {@code FindCommand}.
@@ -109,6 +113,36 @@ public class FindCommandTest {
 
         assertCommandSuccess(command, model, String.format(FindCommand.MESSAGE_FOUND, 4), expectedModel);
         assertEquals(List.of(CARL, ELLE, FIONA, GEORGE), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_goalCriteria_filtersMatchingClientsAndCombinesWithName() {
+        Person strengthClient = new PersonBuilder().withName("Priya Nair").withPhone("91234567")
+                .withGoal("Build strength").build();
+        Person fatLossClient = new PersonBuilder().withName("Marcus Tan").withPhone("98765432")
+                .withGoal("Fat loss").build();
+        Person clientWithoutGoal = new PersonBuilder().withName("Lim Wei Ling").withPhone("90000000").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(strengthClient);
+        addressBook.addPerson(fatLossClient);
+        addressBook.addPerson(clientWithoutGoal);
+        Model goalModel = new ModelManager(addressBook, new UserPrefs());
+        Model expectedGoalModel = new ModelManager(addressBook, new UserPrefs());
+
+        ClientMatchesAnyPredicate goalPredicate = new ClientMatchesAnyPredicate(
+                List.of(new GoalContainsKeywordsPredicate(List.of("STRENGTH"))));
+        FindCommand goalCommand = new FindCommand(goalPredicate);
+        expectedGoalModel.updateFilteredPersonList(goalPredicate);
+        assertCommandSuccess(goalCommand, goalModel, String.format(FindCommand.MESSAGE_FOUND, 1), expectedGoalModel);
+        assertEquals(List.of(strengthClient), goalModel.getFilteredPersonList());
+
+        ClientMatchesAnyPredicate unionPredicate = new ClientMatchesAnyPredicate(List.of(
+                new NameContainsKeywordsPredicate(List.of("Marcus")),
+                new GoalContainsKeywordsPredicate(List.of("strength"))));
+        FindCommand unionCommand = new FindCommand(unionPredicate);
+        expectedGoalModel.updateFilteredPersonList(unionPredicate);
+        assertCommandSuccess(unionCommand, goalModel, String.format(FindCommand.MESSAGE_FOUND, 2), expectedGoalModel);
+        assertEquals(List.of(strengthClient, fatLossClient), goalModel.getFilteredPersonList());
     }
 
     @Test

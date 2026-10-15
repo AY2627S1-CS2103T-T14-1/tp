@@ -19,7 +19,6 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.CollectionUtil;
 import seedu.address.commons.util.ToStringBuilder;
-import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Address;
@@ -53,7 +52,14 @@ public class EditCommand extends Command {
             + PREFIX_PHONE + "91234567 "
             + PREFIX_EMAIL + "johndoe@example.com";
 
-    public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Edited person: %1$s";
+    public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Edited client: %1$s; Phone: %2$s.";
+    public static final String MESSAGE_INDEX_REQUIRED = "Client index is required. Use: edit INDEX "
+            + "[n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]...";
+    public static final String MESSAGE_INVALID_INDEX =
+            "The client index must be a positive whole number shown in the client list.";
+    public static final String MESSAGE_OUT_OF_RANGE = "No client exists at index %d.";
+    public static final String MESSAGE_REPEATED_PREFIX =
+            "The n/, p/, e/, a/ and g/ prefixes may each be used only once. Repeat t/ for multiple tags.";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
     public static final String MESSAGE_DUPLICATE_PERSON = "This person already exists in the address book.";
     public static final String MESSAGE_NO_CHANGES =
@@ -80,7 +86,7 @@ public class EditCommand extends Command {
         List<Person> lastShownList = model.getFilteredPersonList();
 
         if (index.getZeroBased() >= lastShownList.size()) {
-            throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+            throw new CommandException(String.format(MESSAGE_OUT_OF_RANGE, index.getOneBased()));
         }
 
         Person personToEdit = lastShownList.get(index.getZeroBased());
@@ -97,7 +103,8 @@ public class EditCommand extends Command {
 
         model.setPerson(personToEdit, editedPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
-        return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson)));
+        return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS,
+                editedPerson.getName(), editedPerson.getPhone()));
     }
 
     /**
@@ -118,7 +125,8 @@ public class EditCommand extends Command {
                 : editPersonDescriptor.getGoal().orElse(personToEdit.getGoal().orElse(null));
 
         return new Person(updatedName, updatedPhone, updatedEmail, updatedAddress, updatedRemark, updatedTags,
-                updatedWorkoutPlan, personToEdit.getDietPlan(), updatedGoal, personToEdit.getWorkoutSessions());
+                updatedWorkoutPlan, personToEdit.getDietPlan(), updatedGoal,
+                personToEdit.getTrainingSessions(), personToEdit.getWorkoutSessions());
     }
 
     @Override

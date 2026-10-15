@@ -58,7 +58,8 @@ public class DietCommand extends Command {
         Person updated = new Person(
                 client.getName(), client.getPhone(), client.getEmail(), client.getAddress(),
                 client.getRemark(), client.getTags(), client.getWorkoutPlan(),
-                Optional.of(dietPlan), client.getGoal().orElse(null), client.getWorkoutSessions());
+                Optional.of(dietPlan), client.getGoal().orElse(null), client.getTrainingSessions(),
+                client.getWorkoutSessions());
 
         model.setPerson(client, updated);
         // Keep the displayed list's filter and indexes stable; only diet data changed.

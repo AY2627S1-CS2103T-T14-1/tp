@@ -210,6 +210,6 @@ public class LogCommandTest {
         return new Person(
                 person.getName(), person.getPhone(), person.getEmail(), person.getAddress(),
                 person.getRemark(), person.getTags(), person.getWorkoutPlan(), person.getDietPlan(),
-                person.getGoal().orElse(null), sessions);
+                person.getGoal().orElse(null), person.getTrainingSessions(), sessions);
     }
 }

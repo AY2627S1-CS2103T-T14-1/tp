@@ -23,7 +23,9 @@ import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
 import seedu.address.logic.commands.RemarkCommand;
+import seedu.address.logic.commands.ScheduleCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
+import seedu.address.logic.commands.ViewScheduleCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
@@ -75,6 +77,8 @@ public class AddressBookParser {
             case ListCommand.COMMAND_WORD -> new ListCommand();
             case LogCommand.COMMAND_WORD -> new LogCommandParser().parse(arguments);
             case RemarkCommand.COMMAND_WORD -> new RemarkCommandParser().parse(arguments);
+            case ScheduleCommand.COMMAND_WORD -> new ScheduleCommandParser().parse(arguments);
+            case ViewScheduleCommand.COMMAND_WORD -> new ViewScheduleCommandParser().parse(arguments);
             case AddExerciseCommand.COMMAND_WORD -> new AddExerciseCommandParser().parse(arguments);
             case DeleteExerciseCommand.COMMAND_WORD -> new DeleteExerciseCommandParser().parse(arguments);
             case ClearPlanCommand.COMMAND_WORD -> new ClearPlanCommandParser().parse(arguments);

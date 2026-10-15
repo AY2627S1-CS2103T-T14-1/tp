@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutLogEntry;
 import seedu.address.model.person.WorkoutPlan;
 import seedu.address.model.person.WorkoutSession;
@@ -54,12 +56,13 @@ public class WorkoutSessionStorageTest {
                 .withWorkoutPlan(new WorkoutPlan(
                         List.of(new Exercise("Bench Press", 3, 10, 40.0))))
                 .withDietPlan(new DietPlan("2000 kcal", "More vegetables"))
-                .build();
+                .build()
+                .withTrainingSession(new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "Main gym"));
 
         Person person = new Person(
                 base.getName(), base.getPhone(), base.getEmail(), base.getAddress(),
                 base.getRemark(), base.getTags(), base.getWorkoutPlan(), base.getDietPlan(),
-                base.getGoal().orElse(null), List.of(first, second));
+                base.getGoal().orElse(null), base.getTrainingSessions(), List.of(first, second));
 
         AddressBook original = new AddressBook();
         original.addPerson(person);
@@ -72,6 +75,7 @@ public class WorkoutSessionStorageTest {
 
         assertEquals(original, loaded);
         assertEquals(person.getGoal(), loaded.getPersonList().get(0).getGoal());
+        assertEquals(person.getTrainingSessions(), loaded.getPersonList().get(0).getTrainingSessions());
         assertEquals(List.of(first, second),
                 loaded.getPersonList().get(0).getWorkoutSessions());
     }
@@ -261,6 +265,6 @@ public class WorkoutSessionStorageTest {
         return new JsonAdaptedPerson(
                 base.getName().fullName, base.getPhone().value, base.getEmail().value,
                 base.getAddress().value, base.getRemark().value,
-                List.of(), List.of(), null, null, sessions);
+                List.of(), List.of(), null, null, null, sessions);
     }
 }

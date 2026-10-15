@@ -20,6 +20,7 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
+import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutPlan;
 import seedu.address.model.person.WorkoutSession;
 import seedu.address.model.tag.Tag;
@@ -40,6 +41,7 @@ class JsonAdaptedPerson {
     private final List<JsonAdaptedExercise> exercises = new ArrayList<>();
     private final JsonAdaptedDietPlan dietPlan;
     private final String goal;
+    private final List<JsonAdaptedTrainingSession> trainingSessions = new ArrayList<>();
     private final List<JsonAdaptedWorkoutSession> workoutSessions = new ArrayList<>();
 
     /**
@@ -47,7 +49,7 @@ class JsonAdaptedPerson {
      */
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags) {
-        this(name, phone, email, address, remark, tags, null, null, null);
+        this(name, phone, email, address, remark, tags, null, null, null, null, null);
     }
 
     /**
@@ -55,7 +57,7 @@ class JsonAdaptedPerson {
      */
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises) {
-        this(name, phone, email, address, remark, tags, exercises, null, null);
+        this(name, phone, email, address, remark, tags, exercises, null, null, null, null);
     }
 
     /**
@@ -73,12 +75,19 @@ class JsonAdaptedPerson {
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises,
             JsonAdaptedDietPlan dietPlan, String goal) {
-        this(name, phone, email, address, remark, tags, exercises, dietPlan, goal, null);
+        this(name, phone, email, address, remark, tags, exercises, dietPlan, null, goal, null);
+    }
+
+    /** Constructs an adapter with scheduled training and no recorded workouts. */
+    public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
+            List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises,
+            JsonAdaptedDietPlan dietPlan, List<JsonAdaptedTrainingSession> trainingSessions, String goal) {
+        this(name, phone, email, address, remark, tags, exercises, dietPlan, trainingSessions, goal, null);
     }
 
     /**
      * Constructs an adapter from stored person details.
-     * Older files may omit exercises, dietPlan, goal, and workoutSessions.
+     * Older files may omit exercises, dietPlan, goal, trainingSessions, and workoutSessions.
      */
     @JsonCreator
     public JsonAdaptedPerson(
@@ -90,6 +99,7 @@ class JsonAdaptedPerson {
             @JsonProperty("tags") List<JsonAdaptedTag> tags,
             @JsonProperty("exercises") List<JsonAdaptedExercise> exercises,
             @JsonProperty("dietPlan") JsonAdaptedDietPlan dietPlan,
+            @JsonProperty("trainingSessions") List<JsonAdaptedTrainingSession> trainingSessions,
             @JsonProperty("goal") String goal,
             @JsonProperty("workoutSessions") List<JsonAdaptedWorkoutSession> workoutSessions) {
         this.name = name;
@@ -105,6 +115,9 @@ class JsonAdaptedPerson {
         }
         this.dietPlan = dietPlan;
         this.goal = goal;
+        if (trainingSessions != null) {
+            this.trainingSessions.addAll(trainingSessions);
+        }
         if (workoutSessions != null) {
             this.workoutSessions.addAll(workoutSessions);
         }
@@ -127,6 +140,9 @@ class JsonAdaptedPerson {
                 .collect(Collectors.toList()));
         dietPlan = source.getDietPlan().map(JsonAdaptedDietPlan::new).orElse(null);
         goal = source.getGoal().map(value -> value.value).orElse(null);
+        trainingSessions.addAll(source.getTrainingSessions().stream()
+                .map(JsonAdaptedTrainingSession::new)
+                .collect(Collectors.toList()));
         workoutSessions.addAll(source.getWorkoutSessions().stream()
                 .map(JsonAdaptedWorkoutSession::new)
                 .collect(Collectors.toList()));
@@ -198,6 +214,14 @@ class JsonAdaptedPerson {
         }
         final Goal modelGoal = goal == null ? null : new Goal(goal);
 
+        final List<TrainingSession> modelTrainingSessions = new ArrayList<>();
+        for (JsonAdaptedTrainingSession session : trainingSessions) {
+            if (session == null) {
+                throw new IllegalValueException("Training sessions must not contain null entries");
+            }
+            modelTrainingSessions.add(session.toModelType());
+        }
+
         final List<WorkoutSession> modelSessions = new ArrayList<>();
         for (JsonAdaptedWorkoutSession adaptedSession : workoutSessions) {
             if (adaptedSession == null) {
@@ -213,6 +237,6 @@ class JsonAdaptedPerson {
         }
 
         return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags,
-                modelWorkoutPlan, modelDietPlan, modelGoal, modelSessions);
+                modelWorkoutPlan, modelDietPlan, modelGoal, modelTrainingSessions, modelSessions);
     }
 }

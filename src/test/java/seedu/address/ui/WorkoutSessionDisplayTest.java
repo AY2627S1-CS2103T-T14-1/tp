@@ -212,7 +212,7 @@ public class WorkoutSessionDisplayTest {
         return new Person(
                 base.getName(), base.getPhone(), base.getEmail(), base.getAddress(),
                 base.getRemark(), base.getTags(), base.getWorkoutPlan(), base.getDietPlan(),
-                base.getGoal().orElse(null), sessions);
+                base.getGoal().orElse(null), base.getTrainingSessions(), sessions);
     }
 
     private static Label label(PersonListPanel panel, String id) {
