@@ -15,6 +15,7 @@ import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
 import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutPlan;
+import seedu.address.model.person.WorkoutSession;
 import seedu.address.model.tag.Tag;
 import seedu.address.model.util.SampleDataUtil;
 
@@ -39,6 +40,7 @@ public class PersonBuilder {
     private Optional<DietPlan> dietPlan;
     private List<TrainingSession> trainingSessions;
     private Goal goal;
+    private List<WorkoutSession> workoutSessions;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -54,6 +56,7 @@ public class PersonBuilder {
         dietPlan = Optional.empty();
         trainingSessions = List.of();
         goal = null;
+        workoutSessions = List.of();
     }
 
     /**
@@ -70,6 +73,7 @@ public class PersonBuilder {
         dietPlan = personToCopy.getDietPlan();
         trainingSessions = personToCopy.getTrainingSessions();
         goal = personToCopy.getGoal().orElse(null);
+        workoutSessions = personToCopy.getWorkoutSessions();
     }
 
     /**
@@ -142,8 +146,20 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the recorded workout sessions of the person being built.
+     */
+    public PersonBuilder withWorkoutSessions(List<WorkoutSession> workoutSessions) {
+        this.workoutSessions = List.copyOf(workoutSessions);
+        return this;
+    }
+
+    /**
+     * Builds a {@code Person} with the details set in this builder.
+     */
     public Person build() {
-        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions);
+        return new Person(name, phone, email, address, remark, tags,
+                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions);
     }
 
 }

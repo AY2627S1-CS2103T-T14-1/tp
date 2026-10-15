@@ -8,7 +8,7 @@
 
 <VBox spacing="8" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
   <ListView fx:id="personListView" VBox.vgrow="ALWAYS" />
-  <ScrollPane id="dietPlanPanel" fitToWidth="true" hbarPolicy="NEVER" prefViewportHeight="160">
+  <ScrollPane id="dietPlanPanel" fitToWidth="true" hbarPolicy="NEVER" prefViewportHeight="240">
     <VBox spacing="4">
       <padding>
         <Insets top="8" right="10" bottom="8" left="10" />
@@ -19,6 +19,18 @@
       <Label fx:id="dietTarget" styleClass="cell_small_label" wrapText="true" />
       <Label fx:id="dietNotes" styleClass="cell_small_label" wrapText="true" />
       <Label fx:id="dietEmpty" styleClass="cell_small_label" text="No diet plan recorded." />
+
+      <Label fx:id="workoutHeading" styleClass="cell_small_label"
+             text="LAST RECORDED WORKOUT SESSION" wrapText="true">
+        <VBox.margin>
+          <Insets top="12" />
+        </VBox.margin>
+      </Label>
+      <Label fx:id="workoutDate" styleClass="cell_small_label" wrapText="true" />
+      <Label fx:id="workoutTime" styleClass="cell_small_label" wrapText="true" />
+      <Label fx:id="workoutEntries" styleClass="cell_small_label" wrapText="true" />
+      <Label fx:id="workoutEmpty" styleClass="cell_small_label"
+             text="No workout sessions recorded." wrapText="true" />
     </VBox>
   </ScrollPane>
 </VBox>
