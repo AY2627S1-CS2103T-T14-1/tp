@@ -1,0 +1,60 @@
+// Release packaging is separate from the existing development and shadowJar tasks.
+// JavaFX 25 supplies native libraries for all five supported release platforms.
+def releaseJavaFxVersion = '25'
+def releasePlatforms = ['win', 'mac', 'mac-aarch64', 'linux', 'linux-aarch64']
+def releaseModules = ['base', 'controls', 'fxml', 'graphics']
+def platformLibraries = releasePlatforms.collectEntries { platform ->
+    def libraries = configurations.create("releaseJavaFx_${platform.replace('-', '_')}") {
+        canBeConsumed = false
+        transitive = false
+    }
+    releaseModules.each { module ->
+        dependencies.add(libraries.name, "org.openjfx:javafx-${module}:${releaseJavaFxVersion}:${platform}")
+    }
+    [(platform): libraries]
+}
+
+tasks.named('jar', Jar) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.register('universalJar', Jar) {
+    group = 'build'
+    description = 'Builds the runnable Fittix release for Windows, macOS and Linux.'
+    archiveFileName = 'fittix-v1.jar'
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+    manifest {
+        attributes 'Main-Class': 'seedu.address.launcher.UniversalLauncher'
+    }
+    from(sourceSets.main.output) {
+        include 'seedu/address/launcher/**'
+    }
+    into('lib/common') {
+        from(tasks.named('jar')) {
+            rename { 'fittix-app.jar' }
+        }
+        from(configurations.runtimeClasspath.filter { !it.name.startsWith('javafx-') })
+    }
+    platformLibraries.each { platform, libraries ->
+        into("lib/${platform}") {
+            from(libraries)
+        }
+    }
+}
+
+// Run the real packaged entry point on a clean classpath, then close its JavaFX stage.
+tasks.register('universalJarSmokeTest', JavaExec) {
+    group = 'verification'
+    description = 'Launches and closes the universal JAR in an isolated working directory.'
+    dependsOn tasks.named('universalJar'), tasks.named('testClasses')
+    classpath = files(sourceSets.test.output)
+    mainClass = 'seedu.address.launcher.UniversalJarSmokeTest'
+    args tasks.named('universalJar').flatMap { it.archiveFile }.get().asFile.absolutePath
+    workingDir = layout.buildDirectory.dir('universal-smoke').get().asFile
+    doFirst {
+        workingDir.mkdirs()
+    }
+}

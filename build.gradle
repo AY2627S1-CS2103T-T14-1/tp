@@ -81,3 +81,5 @@ shadowJar {
 }
 
 defaultTasks 'clean', 'test'
+
+apply from: 'gradle/universal-jar.gradle'
