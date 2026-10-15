@@ -3,7 +3,7 @@ layout: page
 title: User Guide
 ---
 
-AddressBook Level 3 (AB3) is a **desktop application for managing contacts, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, AB3 can help you manage contacts faster than traditional GUI applications.
+Fittix is a **desktop application for gym trainers to manage clients, workout plans, diet plans and training sessions through a Command Line Interface (CLI)**, with a Graphical User Interface (GUI) for viewing client details.
 
 * Table of Contents
 {:toc}
@@ -15,11 +15,12 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 1. Ensure that Java `25` or later is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the latest `.jar` file from [here](https://github.com/se-edu/addressbook-level3/releases).
+1. Download **`fittix-v1.jar`** from the **Assets** section of the [Fittix release](https://github.com/AY2627S1-CS2103T-T14-1/tp/releases/latest). The same JAR supports Windows x64, macOS Intel or Apple silicon, and Linux x64 or ARM64.
 
-1. Copy the file to the folder you want to use as the _home folder_ for your AddressBook.
+1. Copy the file to a folder where you have write permission. Use this folder as your Fittix _home folder_.
 
-1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar addressbook.jar`.<br>
+1. Open a terminal, `cd` to that folder, and run `java -jar fittix-v1.jar`.<br>
+   Fittix saves its `data` folder and `preferences.json` in the terminal's current folder. Always start it from the same home folder to use the same client records.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Ui](images/Ui.png)
 
