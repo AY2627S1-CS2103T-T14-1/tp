@@ -241,6 +241,8 @@ Clears all entries from the address book.
 
 Format: `clear`
 
+This also removes every membership plan and all client membership assignments.
+
 ### Adding an exercise to a client's workout plan: `addex`
 
 Adds an exercise to the workout plan of the person identified by the index number used in the last person listing.
@@ -506,6 +508,16 @@ Example: `delmem n/Silver`
 
 A plan assigned to any client cannot be deleted. Remove all its client assignments with `rmem` first. Plan names supplied to `amem` and `delmem` are matched without regard to case or extra whitespace. Command words and the `mem` or `membership` argument of `view` are case-sensitive; parameter prefixes are case-insensitive.
 
+Failed membership commands leave every plan, assignment, and balance unchanged. The most common errors are:
+
+* `A membership plan named Gold already exists.` — `addmem` with a duplicate name.
+* `No membership plan named Silver exists.` — `amem` or `delmem` for an unknown plan.
+* `Priya Nair already has an assigned membership plan.` — `amem` for a client who already has one.
+* `Membership plan Gold is in use and cannot be deleted. Remove its assignments with rmem first.` — `delmem` for a referenced plan.
+* `This client has no membership plan to remove or adjust.` — `rmem`, `imem`, or `dmem` for a client without one.
+* `Cannot decrease sessions below zero. The balance remains unchanged.` and `Cannot increase sessions above 1000. The balance remains unchanged.` — adjustments past the 0 to 1000 limits.
+* `The membership change could not be saved. No plan, assignment, or balance was changed.` — the change could not be written to disk.
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -517,6 +529,8 @@ Format: `exit`
 AddressBook automatically saves data after every command. You do not need to save manually.
 
 Workout exercises, their sets, reps, weight, and assigned weekdays are restored when you reopen the app. Exercises saved without a day, including older entries labelled `day not specified` or `Day not specified`, appear together under the single **Day not specified** heading.
+
+Membership plans and each client's plan name, remaining sessions, and expiry date are restored the same way. An assignment whose expiry date has passed is still shown so you can act on it.
 
 ### Editing the data file
 
