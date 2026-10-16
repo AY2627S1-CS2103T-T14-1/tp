@@ -183,7 +183,7 @@ public class Person {
         List<TrainingSession> updated = new ArrayList<>(trainingSessions);
         updated.add(session);
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, updated,
-                workoutSessions);
+                workoutSessions, membershipAssignment);
     }
 
     /**
