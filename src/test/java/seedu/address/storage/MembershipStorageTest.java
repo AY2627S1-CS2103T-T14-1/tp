@@ -38,12 +38,12 @@ public class MembershipStorageTest {
 
     @Test
     public void planAdapter_missingFields_throwsIllegalValueException() {
-        assertThrows(IllegalValueException.class,
-                () -> new JsonAdaptedMembershipPlan(null, "150.00", 30).toModelType());
-        assertThrows(IllegalValueException.class,
-                () -> new JsonAdaptedMembershipPlan("Gold", null, 30).toModelType());
-        assertThrows(IllegalValueException.class,
-                () -> new JsonAdaptedMembershipPlan("Gold", "150.00", null).toModelType());
+        assertThrows(IllegalValueException.class, () -> new JsonAdaptedMembershipPlan(null,
+                "150.00", 30).toModelType());
+        assertThrows(IllegalValueException.class, () -> new JsonAdaptedMembershipPlan("Gold",
+                null, 30).toModelType());
+        assertThrows(IllegalValueException.class, () -> new JsonAdaptedMembershipPlan("Gold",
+                "150.00", null).toModelType());
     }
 
     @Test

@@ -51,7 +51,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_add_allFieldsPresent_success() {
+    public void parse_addAllFieldsPresent_success() {
         AddMembershipPlanCommandParser parser = new AddMembershipPlanCommandParser();
         assertParseSuccess(parser, " n/Gold p/150 s/30", addCommand("Gold", "150", 30));
         assertParseSuccess(parser, " s/30 p/150 n/Gold", addCommand("Gold", "150", 30));
@@ -59,14 +59,14 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_add_prefixLettersCaseInsensitive_success() {
+    public void parse_addPrefixLetters_success() {
         AddMembershipPlanCommandParser parser = new AddMembershipPlanCommandParser();
         assertParseSuccess(parser, " N/Gold P/150 S/30", addCommand("Gold", "150", 30));
         assertParseSuccess(parser, " n/Gold P/150.50 s/12", addCommand("Gold", "150.50", 12));
     }
 
     @Test
-    public void parse_add_missingOrRepeatedPrefix_failure() {
+    public void parse_addMissingPrefix_failure() {
         AddMembershipPlanCommandParser parser = new AddMembershipPlanCommandParser();
         assertParseFailure(parser, " n/Gold p/150", ADD_INVALID_FORMAT);
         assertParseFailure(parser, " n/Gold s/30", ADD_INVALID_FORMAT);
@@ -84,7 +84,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_add_unknownPrefixAndPreamble_failure() {
+    public void parse_addUnknownPrefix_failure() {
         AddMembershipPlanCommandParser parser = new AddMembershipPlanCommandParser();
         assertParseFailure(parser, " n/Gold p/150 s/30 x/1", ADD_INVALID_FORMAT);
         assertParseFailure(parser, " n/Gold p/150 s/30 e/2026-12-30", ADD_INVALID_FORMAT);
@@ -93,7 +93,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_add_invalidValues_failure() {
+    public void parse_addInvalidValues_failure() {
         AddMembershipPlanCommandParser parser = new AddMembershipPlanCommandParser();
         assertParseFailure(parser, " n/ p/150 s/30", MembershipName.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, " n/Gold@ p/150 s/30", MembershipName.MESSAGE_CONSTRAINTS);
@@ -108,7 +108,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_assign_basicAndMultiWord_success() {
+    public void parse_assignBasicMultiWord_success() {
         AssignMembershipPlanCommandParser parser = new AssignMembershipPlanCommandParser(FIXED_CLOCK);
         assertParseSuccess(parser, " Gold 1",
                 new AssignMembershipPlanCommand(new MembershipName("Gold"),
@@ -125,7 +125,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_assign_lastTokenIsIndex_success() {
+    public void parse_assignLastTokenIndex_success() {
         AssignMembershipPlanCommandParser parser = new AssignMembershipPlanCommandParser(FIXED_CLOCK);
         assertParseSuccess(parser, " Gold Plus Extra 3",
                 new AssignMembershipPlanCommand(new MembershipName("Gold Plus Extra"),
@@ -133,7 +133,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_assign_missingOrExtraText_failure() {
+    public void parse_assignMissingText_failure() {
         AssignMembershipPlanCommandParser parser = new AssignMembershipPlanCommandParser(FIXED_CLOCK);
         assertParseFailure(parser, "", ASSIGN_INVALID_FORMAT);
         assertParseFailure(parser, " Gold", ASSIGN_INVALID_FORMAT);
@@ -147,13 +147,13 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_assign_invalidName_failure() {
+    public void parse_assignInvalidName_failure() {
         AssignMembershipPlanCommandParser parser = new AssignMembershipPlanCommandParser(FIXED_CLOCK);
         assertParseFailure(parser, " Gold@ 1", MembershipName.MESSAGE_CONSTRAINTS);
     }
 
     @Test
-    public void parse_assign_expiryBoundaries() {
+    public void parse_assignExpiryBoundaries() {
         AssignMembershipPlanCommandParser parser = new AssignMembershipPlanCommandParser(FIXED_CLOCK);
         assertParseFailure(parser, " Gold 1 e/2026-06-15",
                 MembershipAssignment.MESSAGE_EXPIRY_CONSTRAINTS);
@@ -173,7 +173,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_assign_leapDate() {
+    public void parse_assignLeapDate() {
         AssignMembershipPlanCommandParser leapParser = new AssignMembershipPlanCommandParser(Clock.fixed(
                 Instant.parse("2024-02-28T00:00:00Z"), ZoneId.of("UTC")));
         assertParseSuccess(leapParser, " Gold 1 e/2024-02-29",
@@ -184,7 +184,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_adjust_validAndInvalid() {
+    public void parse_adjustValidInvalid() {
         AdjustMembershipSessionsCommandParser increase = new AdjustMembershipSessionsCommandParser(true);
         AdjustMembershipSessionsCommandParser decrease = new AdjustMembershipSessionsCommandParser(false);
         assertParseSuccess(increase, " 1 3",
@@ -203,7 +203,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_remove_strictForm() {
+    public void parse_removeStrictForm() {
         RemoveMembershipPlanCommandParser parser = new RemoveMembershipPlanCommandParser();
         assertParseSuccess(parser, " 1", new RemoveMembershipPlanCommand(Index.fromOneBased(1)));
         assertParseFailure(parser, "", REMOVE_INVALID_FORMAT);
@@ -214,7 +214,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_delete_strictForm() {
+    public void parse_deleteStrictForm() {
         DeleteMembershipPlanCommandParser parser = new DeleteMembershipPlanCommandParser();
         assertParseSuccess(parser, " n/Gold", new DeleteMembershipPlanCommand(new MembershipName("Gold")));
         assertParseSuccess(parser, " N/Gold", new DeleteMembershipPlanCommand(new MembershipName("Gold")));
@@ -229,7 +229,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_view_aliases() throws Exception {
+    public void parse_viewAliases() throws Exception {
         ViewMembershipPlansCommandParser parser = new ViewMembershipPlansCommandParser();
         assertParseSuccess(parser, " mem", new ViewMembershipPlansCommand());
         assertParseSuccess(parser, " membership", new ViewMembershipPlansCommand());
@@ -242,7 +242,7 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_addressBookParser_dispatch() throws Exception {
+    public void parse_parserDispatch() throws Exception {
         AddressBookParser parser = new AddressBookParser();
         org.junit.jupiter.api.Assertions.assertEquals(addCommand("Gold", "150", 30),
                 parser.parseCommand("addmem n/Gold p/150 s/30"));
@@ -261,16 +261,15 @@ public class MembershipParserTest {
     }
 
     @Test
-    public void parse_addressBookParser_commandWordsCaseSensitive() {
+    public void parse_parserCaseSensitive() {
         AddressBookParser parser = new AddressBookParser();
-        org.junit.jupiter.api.Assertions.assertThrows(
-                seedu.address.logic.parser.exceptions.ParseException.class,
-                () -> parser.parseCommand("Addmem n/Gold p/150 s/30"));
-        org.junit.jupiter.api.Assertions.assertThrows(
-                seedu.address.logic.parser.exceptions.ParseException.class,
-                () -> parser.parseCommand("ADDMEM n/Gold p/150 s/30"));
-        org.junit.jupiter.api.Assertions.assertThrows(
-                seedu.address.logic.parser.exceptions.ParseException.class,
-                () -> parser.parseCommand("view Mem"));
+        Class<seedu.address.logic.parser.exceptions.ParseException> parseException =
+                seedu.address.logic.parser.exceptions.ParseException.class;
+        org.junit.jupiter.api.Assertions.assertThrows(parseException, () -> parser.parseCommand(
+                "Addmem n/Gold p/150 s/30"));
+        org.junit.jupiter.api.Assertions.assertThrows(parseException, () -> parser.parseCommand(
+                "ADDMEM n/Gold p/150 s/30"));
+        org.junit.jupiter.api.Assertions.assertThrows(parseException, () -> parser.parseCommand(
+                "view Mem"));
     }
 }

@@ -17,10 +17,10 @@ public class MembershipPlanTest {
 
     @Test
     public void constructor_null_throwsNullPointerException() {
-        assertThrows(NullPointerException.class,
-                () -> new MembershipPlan(null, new BigDecimal("10"), 10));
-        assertThrows(NullPointerException.class,
-                () -> new MembershipPlan(new MembershipName("Gold"), null, 10));
+        MembershipName name = new MembershipName("Gold");
+        assertThrows(NullPointerException.class, () -> new MembershipPlan(null,
+                new BigDecimal("10"), 10));
+        assertThrows(NullPointerException.class, () -> new MembershipPlan(name, null, 10));
     }
 
     @Test

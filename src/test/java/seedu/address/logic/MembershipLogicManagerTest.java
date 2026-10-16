@@ -85,10 +85,9 @@ public class MembershipLogicManagerTest {
         CommandResult decrease = logic.execute("dmem 2 2");
         assertTrueContains(decrease.getFeedbackToUser(), "Sessions remaining: 28.");
 
-        assertThrows(CommandException.class,
-                "Membership plan Gold is in use and cannot be deleted. "
-                        + "Remove its assignments with rmem first.",
-                () -> logic.execute("delmem n/Gold"));
+        String inUseMessage = "Membership plan Gold is in use and cannot be deleted. "
+                + "Remove its assignments with rmem first.";
+        assertThrows(CommandException.class, inUseMessage, () -> logic.execute("delmem n/Gold"));
 
         CommandResult remove = logic.execute("rmem 1");
         assertTrueContains(remove.getFeedbackToUser(), "remaining sessions lost.");
