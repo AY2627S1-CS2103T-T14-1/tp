@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddExerciseCommand;
+import seedu.address.logic.commands.AddMembershipPlanCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.Command;
@@ -25,6 +26,7 @@ import seedu.address.logic.commands.LogCommand;
 import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.ScheduleCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
+import seedu.address.logic.commands.ViewMembershipPlansCommand;
 import seedu.address.logic.commands.ViewScheduleCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -83,6 +85,9 @@ public class AddressBookParser {
             case DeleteExerciseCommand.COMMAND_WORD -> new DeleteExerciseCommandParser().parse(arguments);
             case ClearPlanCommand.COMMAND_WORD -> new ClearPlanCommandParser().parse(arguments);
             case SetExerciseDayCommand.COMMAND_WORD -> new SetExerciseDayCommandParser().parse(arguments);
+            case AddMembershipPlanCommand.COMMAND_WORD -> new AddMembershipPlanCommandParser().parse(arguments);
+            case ViewMembershipPlansCommand.COMMAND_WORD ->
+                new ViewMembershipPlansCommandParser().parse(arguments);
             case ExitCommand.COMMAND_WORD -> new ExitCommand();
             case HelpCommand.COMMAND_WORD -> new HelpCommand();
             default -> {
