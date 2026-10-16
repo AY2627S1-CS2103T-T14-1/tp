@@ -1,0 +1,753 @@
+.root {
+    -fx-font-family: "Manrope";
+    -fx-font-size: 14px;
+    -fx-background-color: #121213;
+}
+
+.window {
+    -fx-background-color: #121213;
+}
+
+.label {
+    -fx-text-fill: #f4f4f2;
+}
+
+.mono {
+    -fx-font-family: "JetBrains Mono";
+}
+
+.muted {
+    -fx-text-fill: #a3a3a8;
+}
+
+.caps-label {
+    -fx-font-size: 10.5px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #85858b;
+}
+
+.section-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: 700;
+}
+
+.app-header {
+    -fx-background-color: #121213;
+}
+
+.brand {
+    -fx-padding: 0 12 0 0;
+}
+
+.brand-mark {
+    -fx-background-color: #d4f25a;
+    -fx-background-radius: 10;
+    -fx-text-fill: #141414;
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+}
+
+.brand-name {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+}
+
+.menu-pills {
+    -fx-background-color: #1c1c1e;
+    -fx-background-radius: 999;
+    -fx-border-color: #26262a;
+    -fx-border-radius: 999;
+    -fx-padding: 4;
+}
+
+.menu-pills .menu {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999;
+    -fx-padding: 7 16;
+}
+
+.menu-pills .menu:hover,
+.menu-pills .menu:showing {
+    -fx-background-color: #2a2a2d;
+}
+
+.menu-pills .menu .label {
+    -fx-text-fill: #d6d6d9;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.context-menu {
+    -fx-background-color: #242427;
+    -fx-border-color: #34343a;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 5;
+}
+
+.menu-item {
+    -fx-background-radius: 7;
+    -fx-padding: 7 14;
+}
+
+.menu-item:focused {
+    -fx-background-color: #34343a;
+}
+
+.filter-pill,
+.date-pill {
+    -fx-background-color: #1c1c1e;
+    -fx-background-radius: 999;
+    -fx-border-color: #26262a;
+    -fx-border-radius: 999;
+    -fx-padding: 9 16;
+}
+
+.filter-dot {
+    -fx-background-color: #d4f25a;
+    -fx-background-radius: 999;
+}
+
+.filter-pill:filtered .filter-dot {
+    -fx-background-color: #a99ffb;
+}
+
+.filter-state {
+    -fx-font-weight: 600;
+}
+
+.date-pill {
+    -fx-font-weight: 600;
+}
+
+.body {
+    -fx-background-color: #121213;
+}
+
+.card {
+    -fx-background-color: #1c1c1e;
+    -fx-background-radius: 22;
+    -fx-border-color: #2a2a2d;
+    -fx-border-radius: 22;
+    -fx-padding: 18 22;
+}
+
+.client-list-card {
+    -fx-padding: 0;
+}
+
+.client-list-card .scroll-bar:horizontal {
+    -fx-opacity: 0;
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+}
+
+.client-list-header {
+    -fx-padding: 18 18 10 18;
+}
+
+.count-badge {
+    -fx-background-color: #2a2a2d;
+    -fx-background-radius: 999;
+    -fx-padding: 3 9;
+    -fx-text-fill: #d6d6d9;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+.header-command-hint,
+.profile-command-hint,
+.context-command-hint {
+    -fx-text-fill: #85858b;
+    -fx-font-size: 11px;
+}
+
+.profile-command-hint,
+.command-chip {
+    -fx-background-color: #232326;
+    -fx-background-radius: 999;
+    -fx-padding: 5 10;
+}
+
+.list-view {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 4 10 12 10;
+}
+
+.list-view .virtual-flow,
+.list-view .corner {
+    -fx-background-color: transparent;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 2 0;
+}
+
+.list-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.client-cell {
+    -fx-background-color: transparent;
+    -fx-background-radius: 16;
+    -fx-border-color: transparent;
+    -fx-border-radius: 16;
+}
+
+.client-cell:hover {
+    -fx-border-color: #3a3a3e;
+}
+
+.list-cell:selected .client-cell {
+    -fx-background-color: #26262a;
+    -fx-border-color: #34343a;
+}
+
+.index-badge {
+    -fx-font-family: "JetBrains Mono";
+    -fx-font-weight: 700;
+    -fx-background-color: #2a2a2d;
+    -fx-background-radius: 10;
+    -fx-text-fill: #f4f4f2;
+}
+
+.list-cell:selected .index-badge {
+    -fx-background-color: #d4f25a;
+    -fx-text-fill: #141414;
+}
+
+.client-name {
+    -fx-font-size: 14.5px;
+    -fx-font-weight: 700;
+}
+
+.client-phone {
+    -fx-font-size: 12px;
+    -fx-text-fill: #a3a3a8;
+}
+
+.client-meta {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #85858b;
+}
+
+.tag {
+    -fx-background-color: #26262a;
+    -fx-background-radius: 999;
+    -fx-padding: 2 8;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #d6d6d9;
+}
+
+.empty-box {
+    -fx-border-color: #2f2f33;
+    -fx-border-style: segments(6, 4);
+    -fx-border-width: 1.5;
+    -fx-border-radius: 14;
+    -fx-padding: 14;
+}
+
+.list-empty-state {
+    -fx-padding: 22 18;
+}
+
+.empty-count {
+    -fx-background-color: #232326;
+    -fx-background-radius: 999;
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-text-fill: #85858b;
+    -fx-font-weight: 700;
+}
+
+.empty-title {
+    -fx-font-weight: 700;
+}
+
+.empty-heading {
+    -fx-font-size: 24px;
+    -fx-font-weight: 700;
+}
+
+.empty-command {
+    -fx-background-color: #232326;
+    -fx-background-radius: 10;
+    -fx-padding: 7 12;
+    -fx-text-fill: #d4f25a;
+    -fx-font-size: 12px;
+}
+
+.detail-empty {
+    -fx-padding: 40;
+}
+
+.profile-card {
+    -fx-padding: 20 22;
+}
+
+.profile-index {
+    -fx-background-color: #d4f25a;
+    -fx-background-radius: 12;
+    -fx-text-fill: #141414;
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+}
+
+.profile-name {
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+}
+
+.profile-grid {
+    -fx-border-color: #2f2f33 transparent transparent transparent;
+    -fx-border-style: segments(4, 4) none none none;
+    -fx-padding: 14 0 0 0;
+}
+
+.profile-field {
+    -fx-padding: 0 16 0 0;
+}
+
+.profile-field-divided {
+    -fx-border-color: transparent transparent transparent #2a2a2d;
+    -fx-padding: 0 16;
+}
+
+.profile-value {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: 500;
+}
+
+.goal-label {
+    -fx-text-fill: #d4f25a;
+}
+
+.goal-value {
+    -fx-font-weight: 600;
+}
+
+.remark-box,
+.diet-notes {
+    -fx-background-color: #242427;
+    -fx-background-radius: 14;
+    -fx-padding: 10 12;
+}
+
+.workout-card {
+    -fx-padding: 0;
+}
+
+.workout-header {
+    -fx-padding: 18 22 12 22;
+}
+
+.command-chip {
+    -fx-font-size: 10px;
+    -fx-padding: 3 7;
+    -fx-text-fill: #a3a3a8;
+}
+
+.workout-scroll,
+.workout-scroll > .viewport,
+.context-scroll,
+.context-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.workout-scroll {
+    -fx-padding: 0 22 16 22;
+}
+
+.workout-empty {
+    -fx-padding: 24;
+    -fx-border-radius: 18;
+    -fx-border-insets: 0 22 22 22;
+    -fx-padding: 24 46 46 46;
+}
+
+.day-row {
+    -fx-border-color: #2c2c30 transparent transparent transparent;
+    -fx-border-style: segments(4, 4) none none none;
+    -fx-padding: 10 0;
+}
+
+.day-code {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+
+.day-subtitle {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #85858b;
+}
+
+.today-text {
+    -fx-text-fill: #d4f25a;
+}
+
+.today-pill {
+    -fx-background-color: #d4f25a;
+    -fx-background-radius: 999;
+    -fx-padding: 2 7;
+    -fx-text-fill: #141414;
+    -fx-font-size: 10px;
+    -fx-font-weight: 800;
+}
+
+.rest-label {
+    -fx-padding: 6 0 0 0;
+    -fx-text-fill: #6f6f76;
+    -fx-font-size: 12.5px;
+}
+
+.tile {
+    -fx-background-color: #242427;
+    -fx-background-radius: 14;
+    -fx-border-color: #2e2e32;
+    -fx-border-radius: 14;
+    -fx-padding: 10 12;
+}
+
+.tile.today {
+    -fx-border-color: #3d4420;
+}
+
+.exercise-index {
+    -fx-background-color: #34343a;
+    -fx-background-radius: 7;
+    -fx-padding: 2 7;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: 700;
+}
+
+.exercise-name {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: 700;
+}
+
+.exercise-metric {
+    -fx-text-fill: #a3a3a8;
+    -fx-font-size: 12.5px;
+}
+
+.exercise-weight {
+    -fx-font-size: 12.5px;
+}
+
+.context-scroll {
+    -fx-fit-to-width: true;
+}
+
+.context-card {
+    -fx-padding: 18;
+}
+
+.context-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+}
+
+.context-body {
+    -fx-font-size: 13px;
+    -fx-text-fill: #d6d6d9;
+}
+
+.context-empty {
+    -fx-min-height: 220;
+}
+
+.diet-marker {
+    -fx-background-color: #f0a54b;
+    -fx-background-radius: 3;
+}
+
+.diet-label,
+.diet-command {
+    -fx-text-fill: #f0a54b;
+}
+
+.diet-target {
+    -fx-font-size: 22px;
+    -fx-font-weight: 700;
+}
+
+.session-marker {
+    -fx-background-color: #a99ffb;
+    -fx-background-radius: 999;
+}
+
+.schedule-label,
+.schedule-command {
+    -fx-text-fill: #a99ffb;
+}
+
+.session-row {
+    -fx-background-color: #242427;
+    -fx-background-radius: 16;
+    -fx-padding: 10 12;
+}
+
+.session-row.next {
+    -fx-background-color: #5d4fd8;
+}
+
+.session-row.past {
+    -fx-opacity: 0.55;
+}
+
+.session-dow,
+.session-month {
+    -fx-font-size: 10px;
+    -fx-font-weight: 800;
+}
+
+.session-day {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+}
+
+.session-location {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+
+.session-status {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #a3a3a8;
+}
+
+.session-row.next .session-status {
+    -fx-text-fill: #e4e0ff;
+}
+
+.session-time {
+    -fx-font-size: 12px;
+}
+
+.history-header-icon {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999;
+    -fx-border-color: #d4f25a;
+    -fx-border-radius: 999;
+    -fx-text-fill: #d4f25a;
+    -fx-font-size: 10px;
+}
+
+.history-command {
+    -fx-text-fill: #d4f25a;
+}
+
+.history-row {
+    -fx-border-color: #2c2c30 transparent transparent transparent;
+    -fx-border-style: segments(4, 4) none none none;
+    -fx-padding: 10 0;
+}
+
+.history-icon {
+    -fx-background-color: #d4f25a;
+    -fx-background-radius: 999;
+    -fx-text-fill: #141414;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+}
+
+.history-date {
+    -fx-font-weight: 700;
+}
+
+.history-time,
+.history-exercise {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #a3a3a8;
+}
+
+.result-list {
+    -fx-background-color: #161618;
+    -fx-background-radius: 18;
+    -fx-border-color: #26262a;
+    -fx-border-radius: 18;
+    -fx-padding: 8 12;
+}
+
+.result-list .list-cell {
+    -fx-padding: 3 4;
+}
+
+.result-row {
+    -fx-padding: 1 0;
+}
+
+.result-icon {
+    -fx-background-radius: 999;
+    -fx-text-fill: #141414;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+}
+
+.result-icon.success {
+    -fx-background-color: #d4f25a;
+}
+
+.result-icon.error {
+    -fx-background-color: #ff6b5e;
+}
+
+.result-icon.info {
+    -fx-background-color: #a99ffb;
+}
+
+.result-icon.warning {
+    -fx-background-color: #f3d34a;
+}
+
+.result-command {
+    -fx-font-size: 12px;
+    -fx-text-fill: #85858b;
+}
+
+.result-message {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: 600;
+}
+
+.result-message.error {
+    -fx-text-fill: #ff8a7f;
+}
+
+.result-detail {
+    -fx-font-size: 12px;
+    -fx-text-fill: #a3a3a8;
+}
+
+.command-zone {
+    -fx-background-color: #121213;
+}
+
+.command-bar {
+    -fx-background-color: #1c1c1e;
+    -fx-background-radius: 999;
+    -fx-border-color: #2a2a2d;
+    -fx-border-radius: 999;
+    -fx-border-width: 1.5;
+}
+
+.command-bar:focused-field {
+    -fx-border-color: #d4f25a;
+}
+
+.command-bar:error {
+    -fx-border-color: #ff6b5e;
+}
+
+.command-prompt {
+    -fx-font-size: 17px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #d4f25a;
+}
+
+.command-bar:error .command-prompt,
+.command-bar:error .text-field {
+    -fx-text-fill: #ff8a7f;
+}
+
+.command-bar .text-field {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+    -fx-text-fill: #f4f4f2;
+    -fx-font-family: "JetBrains Mono";
+    -fx-font-size: 15px;
+    -fx-prompt-text-fill: #6f6f76;
+}
+
+.history-hint {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #6f6f76;
+}
+
+.btn-primary {
+    -fx-background-color: #d4f25a;
+    -fx-background-radius: 999;
+    -fx-text-fill: #141414;
+    -fx-font-weight: 700;
+    -fx-pref-height: 44;
+    -fx-padding: 0 20;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #e3ff7a;
+}
+
+.hint-label {
+    -fx-font-size: 11.5px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #85858b;
+}
+
+.hint-chip {
+    -fx-background-color: #1c1c1e;
+    -fx-background-radius: 999;
+    -fx-border-color: #2a2a2d;
+    -fx-border-radius: 999;
+    -fx-padding: 4 10;
+    -fx-font-family: "JetBrains Mono";
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #c4c4c8;
+    -fx-cursor: hand;
+}
+
+.hint-chip:hover {
+    -fx-border-color: #d4f25a;
+    -fx-text-fill: #f4f4f2;
+}
+
+.status-bar {
+    -fx-background-color: #121213;
+    -fx-border-color: #1d1d20 transparent transparent transparent;
+    -fx-padding: 7 24 8 24;
+}
+
+.status-bar .label {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #85858b;
+}
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #333337;
+    -fx-background-radius: 8;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-padding: 0;
+}
+
+.tooltip {
+    -fx-background-color: #242427;
+    -fx-text-fill: #f4f4f2;
+    -fx-font-size: 12px;
+    -fx-wrap-text: true;
+}
+
+.dialog-pane {
+    -fx-background-color: #1c1c1e;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #242427;
+}
+
+.dialog-pane .button {
+    -fx-background-color: #d4f25a;
+    -fx-background-radius: 999;
+    -fx-text-fill: #141414;
+}

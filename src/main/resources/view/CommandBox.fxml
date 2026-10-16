@@ -1,9 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<StackPane styleClass="stack-pane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <TextField fx:id="commandTextField" onAction="#handleCommandEntered" promptText="Enter command here..."/>
-</StackPane>
-
+<VBox spacing="8" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <HBox fx:id="commandBar" alignment="CENTER_LEFT" prefHeight="58" minHeight="58" spacing="12"
+        styleClass="command-bar">
+    <padding>
+      <Insets top="0" right="7" bottom="0" left="22" />
+    </padding>
+    <Label text="›" styleClass="command-prompt,mono" />
+    <TextField fx:id="commandTextField" HBox.hgrow="ALWAYS" onAction="#handleCommandEntered"
+               onKeyPressed="#handleHistoryKey"
+               promptText="Enter command — type “help” to see all commands" />
+    <Label text="↑ ↓ history" styleClass="history-hint,mono" />
+    <Button mnemonicParsing="false" onAction="#handleCommandEntered" text="Run ↵" styleClass="btn-primary" />
+  </HBox>
+  <HBox alignment="CENTER_LEFT" spacing="8" minHeight="28">
+    <Label fx:id="hintLabel" styleClass="hint-label" />
+    <FlowPane fx:id="hintContainer" hgap="8" vgap="4" prefWrapLength="1100" HBox.hgrow="ALWAYS" />
+  </HBox>
+</VBox>
