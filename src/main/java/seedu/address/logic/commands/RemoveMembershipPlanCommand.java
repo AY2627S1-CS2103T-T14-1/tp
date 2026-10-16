@@ -18,7 +18,7 @@ import seedu.address.model.person.Person;
  * The whole assignment is discarded: the copied plan name, the remaining balance,
  * the plan reference, and any expiry date. All other client fields are preserved.
  */
-public class RemoveMembershipPlanCommand extends Command {
+public class RemoveMembershipPlanCommand extends Command implements MembershipCommand {
 
     public static final String COMMAND_WORD = "rmem";
 

@@ -13,7 +13,7 @@ import seedu.address.model.membership.MembershipPlan;
 /**
  * Adds a membership plan to the address book.
  */
-public class AddMembershipPlanCommand extends Command {
+public class AddMembershipPlanCommand extends Command implements MembershipCommand {
 
     public static final String COMMAND_WORD = "addmem";
 

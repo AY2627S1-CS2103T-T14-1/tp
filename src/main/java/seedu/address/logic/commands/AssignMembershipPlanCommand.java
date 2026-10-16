@@ -22,7 +22,7 @@ import seedu.address.model.person.Person;
  * The client must not already have an assigned plan. The assignment copies the plan's
  * display name and starting session balance and records an optional expiry date.
  */
-public class AssignMembershipPlanCommand extends Command {
+public class AssignMembershipPlanCommand extends Command implements MembershipCommand {
 
     public static final String COMMAND_WORD = "amem";
 

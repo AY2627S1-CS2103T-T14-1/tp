@@ -14,7 +14,7 @@ import seedu.address.model.membership.MembershipPlan;
  * A plan referenced by any client assignment cannot be deleted; those assignments
  * must be removed with {@code rmem} first. Failed deletions change nothing.
  */
-public class DeleteMembershipPlanCommand extends Command {
+public class DeleteMembershipPlanCommand extends Command implements MembershipCommand {
 
     public static final String COMMAND_WORD = "delmem";
 

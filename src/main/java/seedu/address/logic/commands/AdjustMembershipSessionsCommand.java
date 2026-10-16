@@ -18,7 +18,7 @@ import seedu.address.model.person.Person;
  * Only the selected client's balance changes: the shared plan definition, the copied
  * plan name, the expiry date, and every other client are untouched.
  */
-public class AdjustMembershipSessionsCommand extends Command {
+public class AdjustMembershipSessionsCommand extends Command implements MembershipCommand {
 
     public static final String COMMAND_WORD_INCREASE = "imem";
     public static final String COMMAND_WORD_DECREASE = "dmem";
