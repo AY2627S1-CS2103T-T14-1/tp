@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,6 +10,8 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.membership.MembershipName;
+import seedu.address.model.membership.MembershipPlan;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Exercise;
@@ -203,6 +206,60 @@ public class ParserUtil {
             return value;
         } catch (NumberFormatException e) {
             throw new ParseException(Exercise.MESSAGE_CONSTRAINTS_WEIGHT);
+        }
+    }
+
+    /**
+     * Parses a {@code String name} into a {@code MembershipName}.
+     * Leading and trailing whitespaces are trimmed and internal whitespace is collapsed.
+     *
+     * @throws ParseException if the given {@code name} is invalid.
+     */
+    public static MembershipName parseMembershipName(String name) throws ParseException {
+        requireNonNull(name);
+        String trimmedName = name.trim();
+        if (!MembershipName.isValidMembershipName(trimmedName)) {
+            throw new ParseException(MembershipName.MESSAGE_CONSTRAINTS);
+        }
+        return new MembershipName(trimmedName);
+    }
+
+    /**
+     * Parses a {@code String price} into a validated membership plan price.
+     * The price must be a positive amount with at most two decimal places,
+     * written without a currency symbol or thousands separators.
+     *
+     * @throws ParseException if the given {@code price} is invalid.
+     */
+    public static BigDecimal parseMembershipPrice(String price) throws ParseException {
+        requireNonNull(price);
+        String trimmedPrice = price.trim();
+        if (!trimmedPrice.matches("\\d+(\\.\\d{1,2})?")) {
+            throw new ParseException(MembershipPlan.MESSAGE_PRICE_CONSTRAINTS);
+        }
+        BigDecimal value = new BigDecimal(trimmedPrice);
+        if (!MembershipPlan.isValidPrice(value)) {
+            throw new ParseException(MembershipPlan.MESSAGE_PRICE_CONSTRAINTS);
+        }
+        return value;
+    }
+
+    /**
+     * Parses a {@code String sessions} into a validated membership plan starting session count.
+     *
+     * @throws ParseException if the given {@code sessions} is not a whole number from 1 to 1000.
+     */
+    public static int parseMembershipSessions(String sessions) throws ParseException {
+        requireNonNull(sessions);
+        String trimmedSessions = sessions.trim();
+        try {
+            int value = Integer.parseInt(trimmedSessions);
+            if (!MembershipPlan.isValidStartingSessions(value)) {
+                throw new ParseException(MembershipPlan.MESSAGE_SESSIONS_CONSTRAINTS);
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new ParseException(MembershipPlan.MESSAGE_SESSIONS_CONSTRAINTS);
         }
     }
 }
