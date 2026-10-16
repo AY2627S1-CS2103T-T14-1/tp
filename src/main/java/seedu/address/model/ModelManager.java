@@ -3,6 +3,7 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -10,6 +11,8 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.model.membership.MembershipName;
+import seedu.address.model.membership.MembershipPlan;
 import seedu.address.model.person.Person;
 
 /**
@@ -91,6 +94,31 @@ public class ModelManager implements Model {
         requireAllNonNull(target, editedPerson);
 
         addressBook.setPerson(target, editedPerson);
+    }
+
+    //=========== Membership Plan Accessors ====================================================================
+
+    @Override
+    public boolean hasMembershipPlan(MembershipPlan plan) {
+        requireNonNull(plan);
+        return addressBook.hasMembershipPlan(plan);
+    }
+
+    @Override
+    public void addMembershipPlan(MembershipPlan plan) {
+        requireNonNull(plan);
+        addressBook.addMembershipPlan(plan);
+    }
+
+    @Override
+    public Optional<MembershipPlan> findMembershipPlan(MembershipName name) {
+        requireNonNull(name);
+        return addressBook.findMembershipPlan(name);
+    }
+
+    @Override
+    public ObservableList<MembershipPlan> getMembershipPlanList() {
+        return addressBook.getMembershipPlanList();
     }
 
     //=========== Filtered Person List Accessors =============================================================

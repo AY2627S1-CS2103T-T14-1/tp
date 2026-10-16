@@ -1,9 +1,12 @@
 package seedu.address.model;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.model.membership.MembershipName;
+import seedu.address.model.membership.MembershipPlan;
 import seedu.address.model.person.Person;
 
 /**
@@ -68,4 +71,26 @@ public interface Model {
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPersonList(Predicate<Person> predicate);
+
+    /**
+     * Returns true if a plan with the same normalized name as {@code plan} exists in the address book.
+     */
+    boolean hasMembershipPlan(MembershipPlan plan);
+
+    /**
+     * Adds the given plan.
+     * {@code plan} must not already exist in the address book.
+     */
+    void addMembershipPlan(MembershipPlan plan);
+
+    /**
+     * Returns the plan with the same normalized name as {@code name}, if present.
+     */
+    Optional<MembershipPlan> findMembershipPlan(MembershipName name);
+
+    /**
+     * Returns an unmodifiable view of the membership plan list in insertion order.
+     * The returned list is a snapshot; it does not reflect later catalog changes.
+     */
+    ObservableList<MembershipPlan> getMembershipPlanList();
 }
