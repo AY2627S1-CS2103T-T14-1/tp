@@ -148,6 +148,7 @@ public class PersonTest {
                 + ", goal=" + ALICE.getGoal().orElse(null)
                 + ", trainingSessions=" + ALICE.getTrainingSessions()
                 + ", workoutSessions=" + ALICE.getWorkoutSessions()
+                + ", membershipAssignment=" + ALICE.getMembershipAssignment()
                 + "}";
         assertEquals(expected, ALICE.toString());
     }

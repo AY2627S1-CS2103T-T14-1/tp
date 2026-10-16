@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -33,6 +34,7 @@ public class Person {
     private final Goal goal;
     private final List<TrainingSession> trainingSessions;
     private final List<WorkoutSession> workoutSessions;
+    private final Optional<MembershipAssignment> membershipAssignment;
 
     /**
      * Every field must be present and not null.
@@ -87,12 +89,27 @@ public class Person {
      * Constructs a person with plans, an optional goal, scheduled training, and recorded workouts.
      * All arguments except the goal, and all session entries, must be non-null.
      * Both session lists are defensively copied, preserving their order.
+     * The client starts with no membership assignment.
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
             List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
+                trainingSessions, workoutSessions, Optional.empty());
+    }
+
+    /**
+     * Constructs a person with plans, an optional goal, scheduled training, recorded workouts,
+     * and an optional membership assignment.
+     * All arguments except the goal, and all session entries, must be non-null.
+     * Both session lists are defensively copied, preserving their order.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
+            Optional<MembershipAssignment> membershipAssignment) {
         requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan,
-                trainingSessions, workoutSessions);
+                trainingSessions, workoutSessions, membershipAssignment);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -104,6 +121,7 @@ public class Person {
         this.goal = goal;
         this.trainingSessions = List.copyOf(trainingSessions);
         this.workoutSessions = List.copyOf(workoutSessions);
+        this.membershipAssignment = membershipAssignment;
     }
 
     public Name getName() {
@@ -145,6 +163,18 @@ public class Person {
 
     public List<TrainingSession> getTrainingSessions() {
         return trainingSessions;
+    }
+
+    /** Returns the client's optional membership assignment. */
+    public Optional<MembershipAssignment> getMembershipAssignment() {
+        return membershipAssignment;
+    }
+
+    /** Returns a copy of this person with the membership assignment replaced. */
+    public Person withMembershipAssignment(Optional<MembershipAssignment> membershipAssignment) {
+        Objects.requireNonNull(membershipAssignment);
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
+                trainingSessions, workoutSessions, membershipAssignment);
     }
 
     /** Returns a copy with one additional session. */
@@ -202,14 +232,15 @@ public class Person {
                 && dietPlan.equals(otherPerson.dietPlan)
                 && Objects.equals(goal, otherPerson.goal)
                 && trainingSessions.equals(otherPerson.trainingSessions)
-                && workoutSessions.equals(otherPerson.workoutSessions);
+                && workoutSessions.equals(otherPerson.workoutSessions)
+                && membershipAssignment.equals(otherPerson.membershipAssignment);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
         return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions);
+                trainingSessions, workoutSessions, membershipAssignment);
     }
 
     @Override
@@ -226,6 +257,7 @@ public class Person {
                 .add("goal", goal)
                 .add("trainingSessions", trainingSessions)
                 .add("workoutSessions", workoutSessions)
+                .add("membershipAssignment", membershipAssignment)
                 .toString();
     }
 
