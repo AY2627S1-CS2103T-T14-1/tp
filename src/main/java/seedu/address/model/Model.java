@@ -84,6 +84,18 @@ public interface Model {
     void addMembershipPlan(MembershipPlan plan);
 
     /**
+     * Removes the given plan.
+     * {@code plan} must exist in the address book and must not be referenced
+     * by any client assignment.
+     */
+    void removeMembershipPlan(MembershipPlan plan);
+
+    /**
+     * Returns true if any client assignment references the given plan.
+     */
+    boolean isMembershipPlanInUse(MembershipPlan plan);
+
+    /**
      * Returns the plan with the same normalized name as {@code name}, if present.
      */
     Optional<MembershipPlan> findMembershipPlan(MembershipName name);

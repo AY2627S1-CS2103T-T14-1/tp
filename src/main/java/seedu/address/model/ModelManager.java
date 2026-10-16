@@ -111,6 +111,18 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public void removeMembershipPlan(MembershipPlan plan) {
+        requireNonNull(plan);
+        addressBook.removeMembershipPlan(plan);
+    }
+
+    @Override
+    public boolean isMembershipPlanInUse(MembershipPlan plan) {
+        requireNonNull(plan);
+        return addressBook.isMembershipPlanInUse(plan);
+    }
+
+    @Override
     public Optional<MembershipPlan> findMembershipPlan(MembershipName name) {
         requireNonNull(name);
         return addressBook.findMembershipPlan(name);

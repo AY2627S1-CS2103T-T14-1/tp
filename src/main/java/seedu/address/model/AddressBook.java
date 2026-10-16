@@ -132,6 +132,32 @@ public class AddressBook implements ReadOnlyAddressBook {
     }
 
     /**
+     * Removes the plan with the same normalized name as {@code plan} from the address book.
+     * The plan must exist and must not be referenced by any client assignment.
+     */
+    public void removeMembershipPlan(MembershipPlan plan) {
+        requireNonNull(plan);
+        checkArgument(hasMembershipPlan(plan), "Membership plan does not exist.");
+        checkArgument(!isMembershipPlanInUse(plan), "Membership plan is in use.");
+        membershipPlans.remove(plan.getKey());
+    }
+
+    /**
+     * Returns true if any client assignment references the same normalized plan name as {@code plan}.
+     */
+    public boolean isMembershipPlanInUse(MembershipPlan plan) {
+        requireNonNull(plan);
+        String planKey = plan.getKey();
+        for (Person person : persons) {
+            if (person.getMembershipAssignment().isPresent()
+                    && person.getMembershipAssignment().get().getPlanKey().equals(planKey)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Replaces the contents of the plan list with {@code plans}, preserving their order.
      * {@code plans} must not contain duplicate normalized names.
      */
