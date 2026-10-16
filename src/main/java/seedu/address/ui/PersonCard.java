@@ -53,6 +53,8 @@ public class PersonCard extends UiPart<Region> {
     private VBox workoutPlanContainer;
     @FXML
     private Label workoutPlanPlaceholder;
+    @FXML
+    private VBox membershipContainer;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -77,7 +79,39 @@ public class PersonCard extends UiPart<Region> {
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
                 .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+        displayMembership();
         displayWorkoutPlan();
+    }
+
+    /**
+     * Populates the membership section of this card.
+     * Shows the copied plan name, the independent remaining balance, and the expiry date
+     * when the assignment defines one. The whole section is hidden when the client
+     * has no assigned plan.
+     */
+    private void displayMembership() {
+        membershipContainer.getChildren().clear();
+        person.getMembershipAssignment().ifPresentOrElse(assignment -> {
+            membershipContainer.getChildren().add(membershipLabel(
+                    "Membership plan: " + assignment.getPlanName()));
+            membershipContainer.getChildren().add(membershipLabel(
+                    "Sessions remaining: " + assignment.getRemainingSessions()));
+            assignment.getExpiryDate().ifPresent(date -> membershipContainer.getChildren()
+                    .add(membershipLabel("Expiry: " + date)));
+            membershipContainer.setVisible(true);
+            membershipContainer.setManaged(true);
+        }, () -> {
+            membershipContainer.setVisible(false);
+            membershipContainer.setManaged(false);
+        });
+    }
+
+    private static Label membershipLabel(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("cell_small_label");
+        label.setWrapText(true);
+        label.setMaxWidth(350);
+        return label;
     }
 
     /**
