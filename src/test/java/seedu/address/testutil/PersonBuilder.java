@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Email;
@@ -41,6 +42,7 @@ public class PersonBuilder {
     private List<TrainingSession> trainingSessions;
     private Goal goal;
     private List<WorkoutSession> workoutSessions;
+    private Optional<MembershipAssignment> membershipAssignment;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -57,6 +59,7 @@ public class PersonBuilder {
         trainingSessions = List.of();
         goal = null;
         workoutSessions = List.of();
+        membershipAssignment = Optional.empty();
     }
 
     /**
@@ -74,6 +77,7 @@ public class PersonBuilder {
         trainingSessions = personToCopy.getTrainingSessions();
         goal = personToCopy.getGoal().orElse(null);
         workoutSessions = personToCopy.getWorkoutSessions();
+        membershipAssignment = personToCopy.getMembershipAssignment();
     }
 
     /**
@@ -155,11 +159,19 @@ public class PersonBuilder {
     }
 
     /**
+     * Sets the membership assignment of the {@code Person} that we are building.
+     */
+    public PersonBuilder withMembershipAssignment(Optional<MembershipAssignment> membershipAssignment) {
+        this.membershipAssignment = membershipAssignment;
+        return this;
+    }
+
+    /**
      * Builds a {@code Person} with the details set in this builder.
      */
     public Person build() {
         return new Person(name, phone, email, address, remark, tags,
-                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions);
+                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions, membershipAssignment);
     }
 
 }
