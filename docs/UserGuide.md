@@ -452,6 +452,60 @@ The displayed session is the one most recently added using `log`, even if its wo
 
 Earlier sessions remain saved, but browsing the complete history and editing or deleting individual sessions are not currently supported.
 
+### Managing membership plans
+
+Membership plans define a price and starting number of training sessions. Each client can have one assigned plan, and their remaining sessions are tracked independently of other clients on the same plan. Use the positive client index shown in the current list, including search results.
+
+#### Adding and viewing plans: `addmem`, `view`
+
+Format: `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`
+
+Example: `addmem n/Gold Plus p/150.50 s/30`
+
+Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
+
+Format: `view mem` or `view membership`
+
+Both commands show each plan's price and starting sessions. If there are no plans, Fittix shows `No membership plans available.`
+
+#### Assigning and removing a client's plan: `amem`, `rmem`
+
+Format: `amem MEMBERSHIP_NAME PERSON_INDEX [e/YYYY-MM-DD]`
+
+Examples:
+
+* `amem Gold Plus 1 e/2026-12-30`
+* `amem Gold Plus 1`
+
+For a name with spaces, put the client index after the complete name. If supplied, `e/` follows the index. The expiry date must be a valid future calendar date when the plan is assigned. An assignment without `e/` has no specified expiry. The client card shows the plan name, remaining sessions, and expiry date if supplied. A past expiry date remains visible and does not automatically remove the plan or change its balance.
+
+Assigning a plan gives the client its starting sessions. A client who already has a plan must have it removed before another can be assigned; trying to assign another leaves the existing balance unchanged. Different clients can use the same plan with separate balances and expiry dates.
+
+Format: `rmem PERSON_INDEX`
+
+Example: `rmem 1`
+
+Removing a plan discards that client's remaining sessions and expiry date. The client card then shows no membership plan or session balance.
+
+#### Adjusting remaining sessions: `imem`, `dmem`
+
+Formats:
+
+* `imem PERSON_INDEX NUMBER_TO_INCREMENT`
+* `dmem PERSON_INDEX NUMBER_TO_DECREMENT`
+
+Examples: `imem 1 3`, `dmem 1 2`
+
+The client must have an assigned plan. Each adjustment must be a whole number from 1 to 1000. The resulting balance must stay between 0 and 1000; reducing it to zero is allowed. An adjustment outside that range is rejected without changing the balance.
+
+#### Deleting a plan: `delmem`
+
+Format: `delmem n/NAME`
+
+Example: `delmem n/Silver`
+
+A plan assigned to any client cannot be deleted. Remove all its client assignments with `rmem` first. Plan names supplied to `amem` and `delmem` are matched without regard to case or extra whitespace. Command words and the `mem` or `membership` argument of `view` are case-sensitive; parameter prefixes are case-insensitive.
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -508,6 +562,13 @@ Action | Format, Examples
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
 **Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]`<br> e.g., `find n/James g/strength`
 **List** | `list`
+**Add membership plan** | `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`<br> e.g., `addmem n/Gold p/150 s/30`
+**View membership plans** | `view mem` or `view membership`
+**Assign membership plan** | `amem MEMBERSHIP_NAME PERSON_INDEX [e/YYYY-MM-DD]`<br> e.g., `amem Gold 1 e/2026-12-30`
+**Remove membership plan** | `rmem PERSON_INDEX`<br> e.g., `rmem 1`
+**Increase remaining sessions** | `imem PERSON_INDEX NUMBER_TO_INCREMENT`<br> e.g., `imem 1 3`
+**Decrease remaining sessions** | `dmem PERSON_INDEX NUMBER_TO_DECREMENT`<br> e.g., `dmem 1 2`
+**Delete membership plan** | `delmem n/NAME`<br> e.g., `delmem n/Silver`
 **Schedule** | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`
 **View schedule** | `viewschedule INDEX`<br> e.g., `viewschedule 1`
 **Help** | `help`
