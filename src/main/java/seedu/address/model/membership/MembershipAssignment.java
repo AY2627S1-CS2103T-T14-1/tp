@@ -20,6 +20,8 @@ public class MembershipAssignment {
 
     public static final String MESSAGE_SESSIONS_CONSTRAINTS =
             "Remaining sessions must be a whole number from 0 to 1000.";
+    public static final String MESSAGE_EXPIRY_CONSTRAINTS =
+            "Expiry date must be a valid future date in YYYY-MM-DD format.";
 
     public static final int MIN_SESSIONS = 0;
     public static final int MAX_SESSIONS = 1000;

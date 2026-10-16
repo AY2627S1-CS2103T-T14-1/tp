@@ -28,5 +28,6 @@ public class CliSyntax {
     public static final Prefix PREFIX_MEMBERSHIP_NAME = new Prefix("n/");
     public static final Prefix PREFIX_MEMBERSHIP_PRICE = new Prefix("p/");
     public static final Prefix PREFIX_MEMBERSHIP_SESSIONS = new Prefix("s/");
+    public static final Prefix PREFIX_MEMBERSHIP_EXPIRY = new Prefix("e/");
 
 }

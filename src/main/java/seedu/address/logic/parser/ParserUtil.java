@@ -3,6 +3,9 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,6 +13,7 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.membership.MembershipName;
 import seedu.address.model.membership.MembershipPlan;
 import seedu.address.model.person.Address;
@@ -260,6 +264,40 @@ public class ParserUtil {
             return value;
         } catch (NumberFormatException e) {
             throw new ParseException(MembershipPlan.MESSAGE_SESSIONS_CONSTRAINTS);
+        }
+    }
+
+    /**
+     * Parses a {@code String expiry} into a validated membership assignment expiry date.
+     * The date must use the {@code YYYY-MM-DD} format and lie after the current local date.
+     *
+     * @throws ParseException if the given {@code expiry} is not a valid future date.
+     */
+    public static LocalDate parseMembershipExpiry(String expiry) throws ParseException {
+        return parseMembershipExpiry(expiry, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Parses a {@code String expiry} into a validated membership assignment expiry date,
+     * comparing against the local date of the given {@code clock}.
+     *
+     * @throws ParseException if the given {@code expiry} is not a valid future date.
+     */
+    public static LocalDate parseMembershipExpiry(String expiry, Clock clock) throws ParseException {
+        requireNonNull(expiry);
+        requireNonNull(clock);
+        String trimmedExpiry = expiry.trim();
+        if (!trimmedExpiry.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new ParseException(MembershipAssignment.MESSAGE_EXPIRY_CONSTRAINTS);
+        }
+        try {
+            LocalDate date = LocalDate.parse(trimmedExpiry);
+            if (!date.isAfter(LocalDate.now(clock))) {
+                throw new ParseException(MembershipAssignment.MESSAGE_EXPIRY_CONSTRAINTS);
+            }
+            return date;
+        } catch (DateTimeParseException e) {
+            throw new ParseException(MembershipAssignment.MESSAGE_EXPIRY_CONSTRAINTS);
         }
     }
 }
