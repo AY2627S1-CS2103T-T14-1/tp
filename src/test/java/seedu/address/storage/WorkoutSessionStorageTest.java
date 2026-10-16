@@ -265,6 +265,6 @@ public class WorkoutSessionStorageTest {
         return new JsonAdaptedPerson(
                 base.getName().fullName, base.getPhone().value, base.getEmail().value,
                 base.getAddress().value, base.getRemark().value,
-                List.of(), List.of(), null, null, null, sessions);
+                List.of(), List.of(), null, null, null, sessions, null);
     }
 }

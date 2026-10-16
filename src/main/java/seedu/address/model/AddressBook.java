@@ -110,7 +110,15 @@ public class AddressBook implements ReadOnlyAddressBook {
      */
     public Optional<MembershipPlan> findMembershipPlan(MembershipName name) {
         requireNonNull(name);
-        return Optional.ofNullable(membershipPlans.get(name.getKey()));
+        return findMembershipPlanByKey(name.getKey());
+    }
+
+    /**
+     * Returns the plan stored under the given canonical {@code planKey}, if present.
+     */
+    public Optional<MembershipPlan> findMembershipPlanByKey(String planKey) {
+        requireNonNull(planKey);
+        return Optional.ofNullable(membershipPlans.get(planKey));
     }
 
     /**

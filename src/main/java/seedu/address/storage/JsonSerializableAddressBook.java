@@ -22,6 +22,8 @@ class JsonSerializableAddressBook {
 
     public static final String MESSAGE_DUPLICATE_PERSON = "Persons list contains duplicate person(s).";
     public static final String MESSAGE_DUPLICATE_PLAN = "Membership plans list contains duplicate plan(s).";
+    public static final String MESSAGE_UNKNOWN_PLAN_REFERENCE =
+            "Membership assignment references an unknown membership plan.";
 
     private final List<JsonAdaptedPerson> persons = new ArrayList<>();
     private final List<JsonAdaptedMembershipPlan> membershipPlans = new ArrayList<>();
@@ -68,6 +70,11 @@ class JsonSerializableAddressBook {
             Person person = jsonAdaptedPerson.toModelType();
             if (addressBook.hasPerson(person)) {
                 throw new IllegalValueException(MESSAGE_DUPLICATE_PERSON);
+            }
+            if (person.getMembershipAssignment().isPresent()
+                    && addressBook.findMembershipPlanByKey(
+                            person.getMembershipAssignment().get().getPlanKey()).isEmpty()) {
+                throw new IllegalValueException(MESSAGE_UNKNOWN_PLAN_REFERENCE);
             }
             addressBook.addPerson(person);
         }
