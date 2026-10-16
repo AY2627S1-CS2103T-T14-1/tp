@@ -11,6 +11,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddExerciseCommand;
 import seedu.address.logic.commands.AddMembershipPlanCommand;
+import seedu.address.logic.commands.AdjustMembershipSessionsCommand;
 import seedu.address.logic.commands.AssignMembershipPlanCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.ClearPlanCommand;
@@ -89,6 +90,10 @@ public class AddressBookParser {
             case AddMembershipPlanCommand.COMMAND_WORD -> new AddMembershipPlanCommandParser().parse(arguments);
             case AssignMembershipPlanCommand.COMMAND_WORD ->
                 new AssignMembershipPlanCommandParser().parse(arguments);
+            case AdjustMembershipSessionsCommand.COMMAND_WORD_INCREASE ->
+                new AdjustMembershipSessionsCommandParser(true).parse(arguments);
+            case AdjustMembershipSessionsCommand.COMMAND_WORD_DECREASE ->
+                new AdjustMembershipSessionsCommandParser(false).parse(arguments);
             case ViewMembershipPlansCommand.COMMAND_WORD ->
                 new ViewMembershipPlansCommandParser().parse(arguments);
             case ExitCommand.COMMAND_WORD -> new ExitCommand();
