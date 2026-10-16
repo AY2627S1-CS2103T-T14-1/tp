@@ -248,6 +248,23 @@ On success, the command appends the session to a copy of the existing session li
 
 Automated coverage includes model validation and immutability, JSON round trips and legacy records, parser validation, duplicate rejection, filtered-list targeting, preservation of sessions by other client-update commands, and selected-client display.
 
+### Membership plan management
+
+#### Model and persistence
+
+- `AddressBook` owns an insertion-ordered collection of uniquely named `MembershipPlan` definitions. A plan has a normalized display name, a positive `BigDecimal` price stored at two decimal places, and 1 to 1000 starting sessions. Names are compared without regard to case after trimming and collapsing internal whitespace.
+- Each `Person` has at most one optional `MembershipAssignment`. It keeps a reference to the shared plan, a copy of its display name, an independent remaining balance from 0 to 1000, and an optional expiry date. Assigning a plan copies its starting sessions; subsequent adjustments change only that client's balance. A referenced plan cannot be deleted.
+- JSON stores `membershipPlans` at the address-book root and `membershipAssignment` on each person. Missing fields in older files mean an empty catalog or an unassigned client. Loading rejects duplicate plan keys, malformed values, and assignments referring to missing plans. Expired assignments remain loadable; expiry is checked against the local date only when `amem` runs.
+- Address-book snapshots and person replacement copy membership data. On an `IOException` during save, `LogicManager` restores the complete pre-command state and reports that the membership change could not be saved.
+
+#### Commands and UI
+
+`AddressBookParser` routes `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`, `delmem n/NAME`, `amem MEMBERSHIP_NAME PERSON_INDEX [e/YYYY-MM-DD]`, `rmem PERSON_INDEX`, `imem PERSON_INDEX NUMBER_TO_INCREMENT`, `dmem PERSON_INDEX NUMBER_TO_DECREMENT`, and both `view mem` and `view membership`. Command words and the `view` argument are case-sensitive; prefix letters and plan name matching are case-insensitive. Client indexes refer to the currently displayed client list. For `amem`, the final non-prefixed token before an optional `e/` is the client index, allowing spaces in the plan name.
+
+Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
+
+The client card shows `Membership plan: NAME`, `Sessions remaining: COUNT`, and `Expiry: YYYY-MM-DD` when an expiry exists. It shows none of these fields for an unassigned client. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -598,35 +615,30 @@ _{More to be added}_
 
 **Extensions**
 
-* 3a. The given index is invalid.
+- 3a. The given index is invalid.
+  - 3a1. Fittix shows an error message.
 
-    * 3a1. Fittix shows an error message.
+    Use case resumes at step 2.
 
-      Use case resumes at step 2.
+- 3b. The target or supplied notes are invalid, or a parameter is repeated or unsupported.
+  - 3b1. Fittix shows the relevant validation or format error and leaves the current plan unchanged.
 
-* 3b. The target or supplied notes are invalid, or a parameter is repeated or unsupported.
+    Use case resumes at step 3.
 
-    * 3b1. Fittix shows the relevant validation or format error and leaves the current plan unchanged.
+- 3c. The candidate matches the current plan after trimming and ignoring case.
+  - 3c1. Fittix reports that the plan is already current and does not replace it.
 
-      Use case resumes at step 3.
+    Use case ends.
 
-* 3c. The candidate matches the current plan after trimming and ignoring case.
+- 4a. The client already has a different plan.
+  - 4a1. Fittix replaces the complete plan and reports the replacement. Old versions are not retained.
 
-    * 3c1. Fittix reports that the plan is already current and does not replace it.
+    Use case ends.
 
-      Use case ends.
+- 4b. Saving fails.
+  - 4b1. Fittix reports the failure; the previous plan remains unchanged in memory and on disk.
 
-* 4a. The client already has a different plan.
-
-    * 4a1. Fittix replaces the complete plan and reports the replacement. Old versions are not retained.
-
-      Use case ends.
-
-* 4b. Saving fails.
-
-    * 4b1. Fittix reports the failure; the previous plan remains unchanged in memory and on disk.
-
-      Use case ends.
+    Use case ends.
 
 **Use case: UC08 - Schedule a session with a client**
 
@@ -869,3 +881,18 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
 
 9. Select another client with no recorded sessions.
    Expected: `No workout sessions recorded.` appears, and the previous client's workout details disappear.
+
+### Membership plan management
+
+Use a disposable address book with at least two clients.
+
+1. Run `addmem n/Gold p/150 s/30` and `addmem n/Silver p/80 s/12`, then `view mem` and `view membership`.<br>
+   Expected: Both views list Gold then Silver with two-decimal prices and starting session counts. Adding `n/gold` again is rejected.
+2. Run `amem Gold 1 e/YYYY-MM-DD` with a real date later than today, then `amem Gold 2`.<br>
+   Expected: Both clients start with 30 sessions. Only the first card shows an expiry date; another assignment to either client is rejected.
+3. Run `imem 1 3` and `dmem 2 2`.<br>
+   Expected: The clients show 33 and 28 remaining sessions. Decreasing below zero or increasing above 1000 is rejected without changing either balance.
+4. Run `delmem n/Gold`, `rmem 1`, `delmem n/Gold`, `rmem 2`, and `delmem n/Gold` in that order.<br>
+   Expected: Both deletion attempts while Gold is assigned fail. Each removal clears that client's membership fields. The final deletion succeeds.
+5. Restart the app and view the catalog and both clients.<br>
+   Expected: Silver remains, Gold is absent, and neither client has a membership assignment.
