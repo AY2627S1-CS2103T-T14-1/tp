@@ -916,7 +916,7 @@ rmem 1
 
 imem 1 3
 
-dmem 2 2
+dmem 1 2
 
 view mem
 
