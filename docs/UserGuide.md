@@ -35,7 +35,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 
    * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records a diet plan for the 2nd client shown.
 
-   * `clear` : Deletes all contacts.
+   * `clear` : Deletes all contacts, but keeps membership plans.
 
    * `exit` : Exits the app.
 
@@ -61,7 +61,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 * Prefixed parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable. Positional parameters, such as the indices and day in `dayex PERSON_INDEX EXERCISE_INDEX DAY`, must follow the order shown.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, `clear`, and `clearmem`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -237,9 +237,11 @@ Examples:
 
 ### Clearing all entries: `clear`
 
-Clears all entries from the address book.
+Clears all client entries from the address book.
 
 Format: `clear`
+
+* `clear` deletes client records only. It does **not** delete any membership plans; use [`clearmem`](#clearing-all-membership-plans-clearmem) to remove membership plans.
 
 ### Adding an exercise to a client's workout plan: `addex`
 
@@ -506,6 +508,14 @@ Example: `delmem n/Silver`
 
 A plan assigned to any client cannot be deleted. Remove all its client assignments with `rmem` first. Plan names supplied to `amem` and `delmem` are matched without regard to case or extra whitespace. Command words and the `mem` or `membership` argument of `view` are case-sensitive; parameter prefixes are case-insensitive.
 
+#### Clearing all membership plans: `clearmem`
+
+Format: `clearmem`
+
+Deletes all membership plans and nothing else. Every plan in the catalog is removed. No other data is deleted: client records, workout plans, schedules, diet plans, and workout logs are left unchanged. The command takes no parameters. To delete a single plan instead, use [`delmem`](#deleting-a-plan-delmem).
+
+Example: `clearmem`
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -553,8 +563,9 @@ Action | Format, Examples
 --------|------------------
 **Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 g/Build strength t/friend t/colleague`
 **Add exercise** | `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`<br> e.g., `addex 1 n/Stretch` or `addex 1 n/Bench Press s/3 r/10 w/60 d/w`
-**Clear** | `clear`
+**Clear** | `clear` (deletes all clients; membership plans are kept)
 **Clear workout plan** | `clearplan INDEX`<br> e.g., `clearplan 1`
+**Clear membership plans** | `clearmem` (deletes all membership plans and nothing else)
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
 **Assign/change exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`
