@@ -1,6 +1,7 @@
 # Fittix Feature Specification
 
 **Team** - CS2103T-T14-01
+
 ## Features covered
 
 1. Add client
@@ -9,6 +10,7 @@
 4. Workout plan management
 5. Workout session logging
 6. Diet plan management
+7. Membership Plan
 
 ## Feature 1A: Add client
 
@@ -40,12 +42,12 @@ add n/Mdm Lim p/+65 9876 5432 e/lim@example.com a/10 Sample Road t/morning t/reg
 
 #### Name parameter
 
-| Aspect | Rule, message and rationale |
-|---|---|
+| Aspect         | Rule, message and rationale                                                                                                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Accepted value | 1 to 70 characters after normalization. Unicode letters, spaces, apostrophes, hyphens, and full stops are accepted. At least one letter is required. Supports real names; excludes delimiters and unrelated symbols. |
-| Whitespace | Leading and trailing spaces are removed. Consecutive internal whitespace becomes one space. Ensures consistent comparison and display. |
-| Letter case | The original case is displayed. Duplicate comparison ignores cases. Preserves display case; prevents case-only duplicates. |
-| Error | Names must be 1 to 70 characters long and may contain only letters, spaces, apostrophes, hyphens, and full stops. |
+| Whitespace     | Leading and trailing spaces are removed. Consecutive internal whitespace becomes one space. Ensures consistent comparison and display.                                                                               |
+| Letter case    | The original case is displayed. Duplicate comparison ignores cases. Preserves display case; prevents case-only duplicates.                                                                                           |
+| Error          | Names must be 1 to 70 characters long and may contain only letters, spaces, apostrophes, hyphens, and full stops.                                                                                                    |
 
 **Accepted examples**
 
@@ -61,26 +63,26 @@ Priya Nair   Anne-Marie Tan   D'Angelo Lim   Dr. Ahmad Rahman
 
 #### Phone parameter
 
-| Aspect | Rule, message and rationale |
-|---|---|
+| Aspect         | Rule, message and rationale                                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | Accepted value | An optional leading plus sign followed by 7 to 15 digits. Spaces and hyphens may separate digits. Supports local and international numbers. |
-| Normalization | Spaces and hyphens are removed. A leading plus sign is retained. Values such as 8123 4567 and 8123-4567 compare consistently. |
-| Rejected value | Parentheses, letters, decimal points, multiple plus signs, and other symbols are rejected. Keeps phone values comparable. |
-| Error | Phone numbers must contain 7 to 15 digits and may begin with one plus sign. Spaces and hyphens may be used as separators. |
+| Normalization  | Spaces and hyphens are removed. A leading plus sign is retained. Values such as 8123 4567 and 8123-4567 compare consistently.               |
+| Rejected value | Parentheses, letters, decimal points, multiple plus signs, and other symbols are rejected. Keeps phone values comparable.                   |
+| Error          | Phone numbers must contain 7 to 15 digits and may begin with one plus sign. Spaces and hyphens may be used as separators.                   |
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| 9123 4567 | 91234567 Spaces removed |
-| 8123-4567 | 81234567 Hyphen removed |
+| Aspect        | Rule, message and rationale               |
+| ------------- | ----------------------------------------- |
+| 9123 4567     | 91234567 Spaces removed                   |
+| 8123-4567     | 81234567 Hyphen removed                   |
 | +65 9876 5432 | +6598765432 International prefix retained |
 
 #### Optional contact parameters
 
-| Parameter | Rule, rationale and error |
-|---|---|
-| Email `e/` | Trim; maximum 254 ASCII characters; one @; no whitespace. Nonempty local part: letters/digits/._+-; no edge or consecutive dots. Domain: 2+ dot-separated labels, each 1–63 letters/digits/hyphens with alphanumeric ends. Preserve local case; lowercase domain. Common addresses supported; delivery unverified.<br><br>Error: Email must be a valid address such as lim@example.com (maximum 254 characters). |
-| Address `a/` | Trim; 1–200 printable characters, no line breaks. Preserve internal spacing and case. Free text supports varied postal addresses; no address verification.<br><br>Error: Address must contain 1 to 200 printable characters without line breaks. |
-| Tags `t/` | Trim; 1–30 ASCII letters/digits per tag. Store lowercase; collapse repeated tags after normalization, retaining first-entry order. At most 10 distinct tags. Compact labels avoid spelling/case duplicates.<br><br>Error: Tags must contain 1 to 30 letters or digits; at most 10 distinct tags are allowed. |
+| Parameter    | Rule, rationale and error                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Email `e/`   | Trim; maximum 254 ASCII characters; one @; no whitespace. Nonempty local part: letters/digits/.\_+-; no edge or consecutive dots. Domain: 2+ dot-separated labels, each 1–63 letters/digits/hyphens with alphanumeric ends. Preserve local case; lowercase domain. Common addresses supported; delivery unverified.<br><br>Error: Email must be a valid address such as lim@example.com (maximum 254 characters). |
+| Address `a/` | Trim; 1–200 printable characters, no line breaks. Preserve internal spacing and case. Free text supports varied postal addresses; no address verification.<br><br>Error: Address must contain 1 to 200 printable characters without line breaks.                                                                                                                                                                  |
+| Tags `t/`    | Trim; 1–30 ASCII letters/digits per tag. Store lowercase; collapse repeated tags after normalization, retaining first-entry order. At most 10 distinct tags. Compact labels avoid spelling/case duplicates.<br><br>Error: Tags must contain 1 to 30 letters or digits; at most 10 distinct tags are allowed.                                                                                                      |
 
 Omitted email/address remain absent and omitted tags form an empty set. Any invalid supplied field rejects the entire command; no partial client is saved. Prefix tokens after whitespace are reserved and cannot occur literally inside values.
 
@@ -172,13 +174,13 @@ If Priya Nair is shown at index 3, `delete 3` removes Priya Nair.
 
 ### 5. Parameters
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Accepted index | A positive whole number identifying a client in the displayed list. Fast input consistent with AB3. |
-| Leading zeros | Leading zeros are accepted. For example, 03 means 3. The numeric meaning is unambiguous. |
-| Rejected index | Zero, negative values, decimals, signs, and nonnumeric text are rejected. The command must identify one visible record. |
-| Invalid value error | The client index must be a positive whole number shown in the client list. |
-| Out of range error | No client exists at index {INDEX}. |
+| Aspect              | Rule, message and rationale                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Accepted index      | A positive whole number identifying a client in the displayed list. Fast input consistent with AB3.                     |
+| Leading zeros       | Leading zeros are accepted. For example, 03 means 3. The numeric meaning is unambiguous.                                |
+| Rejected index      | Zero, negative values, decimals, signs, and nonnumeric text are rejected. The command must identify one visible record. |
+| Invalid value error | The client index must be a positive whole number shown in the client list.                                              |
+| Out of range error  | No client exists at index {INDEX}.                                                                                      |
 
 ### 6. Output
 
@@ -264,29 +266,29 @@ INDEX follows the shared client index rules.
 
 #### Day or date parameter
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Weekday | Mon to Sun or the corresponding full weekday name. Matching ignores case and display uses the three letter form. Fast recurring-session input. |
-| Date | A real Gregorian date in yyyy-MM-dd format. It must be today or later. ISO dates are unambiguous and sortable. |
-| Invalid format error | Day/date must be a weekday such as Mon or a date in yyyy-MM-dd format. |
-| Impossible date error | {DATE} is not a valid calendar date. |
-| Past date error | A one-off schedule date cannot be in the past. Keeps upcoming schedules separate from history. |
+| Aspect                | Rule, message and rationale                                                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Weekday               | Mon to Sun or the corresponding full weekday name. Matching ignores case and display uses the three letter form. Fast recurring-session input. |
+| Date                  | A real Gregorian date in yyyy-MM-dd format. It must be today or later. ISO dates are unambiguous and sortable.                                 |
+| Invalid format error  | Day/date must be a weekday such as Mon or a date in yyyy-MM-dd format.                                                                         |
+| Impossible date error | {DATE} is not a valid calendar date.                                                                                                           |
+| Past date error       | A one-off schedule date cannot be in the past. Keeps upcoming schedules separate from history.                                                 |
 
 #### Time range parameter
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Accepted value | START-END using 24 hour HH:mm times. Hours are 00 to 23 and minutes are 00 to 59. Compact start/end input. |
-| Ordering | The end must be later than the start. Both times are on the same day. The MVP does not represent overnight sessions. |
-| Format error | Time must use START-END in 24-hour HH:mm format, for example `t/18:00-19:00`. |
-| Order error | Schedule end time must be later than its start time. |
+| Aspect         | Rule, message and rationale                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Accepted value | START-END using 24 hour HH:mm times. Hours are 00 to 23 and minutes are 00 to 59. Compact start/end input.           |
+| Ordering       | The end must be later than the start. Both times are on the same day. The MVP does not represent overnight sessions. |
+| Format error   | Time must use START-END in 24-hour HH:mm format, for example `t/18:00-19:00`.                                        |
+| Order error    | Schedule end time must be later than its start time.                                                                 |
 
 #### Location parameter
 
-| Aspect | Rule, message and rationale |
-|---|---|
+| Aspect         | Rule, message and rationale                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Accepted value | Optional. 1 to 100 printable characters after trimming. Internal spacing and case are preserved. Line breaks are rejected. Supports any meeting place. |
-| Error | Location must contain 1 to 100 printable characters. |
+| Error          | Location must contain 1 to 100 printable characters.                                                                                                   |
 
 ### 6. Output
 
@@ -400,51 +402,51 @@ PERSON_INDEX follows the shared client index rules: a positive integer identifyi
 
 #### Exercise name (`addex n/`)
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Accepted value | A non-blank exercise name. Required. Supports common exercise names. |
-| Repeated prefix | Each prefix, including `n/`, may appear at most once. |
-| Empty value | An empty field such as `n/` is invalid. To use a default, omit the whole optional field. |
-| Error | Missing required fields, invalid values, or repeated prefixes cause `Invalid command format!` followed by the `addex` usage. |
+| Aspect          | Rule, message and rationale                                                                                                  |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Accepted value  | A non-blank exercise name. Required. Supports common exercise names.                                                         |
+| Repeated prefix | Each prefix, including `n/`, may appear at most once.                                                                        |
+| Empty value     | An empty field such as `n/` is invalid. To use a default, omit the whole optional field.                                     |
+| Error           | Missing required fields, invalid values, or repeated prefixes cause `Invalid command format!` followed by the `addex` usage. |
 
 #### Sets, reps, weight
 
-| Parameter | Rule, rationale and error |
-|---|---|
-| Sets `s/` | Optional. A positive integer greater than 0. Default `1` when omitted. An empty `s/` is invalid. Supports set counts. |
-| Reps `r/` | Optional. A positive integer greater than 0. Default `1` when omitted. An empty `r/` is invalid. Supports strength and conditioning. |
+| Parameter   | Rule, rationale and error                                                                                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sets `s/`   | Optional. A positive integer greater than 0. Default `1` when omitted. An empty `s/` is invalid. Supports set counts.                                                         |
+| Reps `r/`   | Optional. A positive integer greater than 0. Default `1` when omitted. An empty `r/` is invalid. Supports strength and conditioning.                                          |
 | Weight `w/` | Optional. A finite, non-negative number in kg; decimals are allowed. Default `0` when omitted. Zero means bodyweight or unweighted. An empty `w/` is invalid. No upper bound. |
 
 To use a default, omit the whole field. An empty field such as `s/` or `d/` is invalid. Only `n/`, `s/`, `r/`, `w/`, and `d/` are accepted prefixes; an unknown `x/`-style prefix causes `Invalid command format!`.
 
 #### Day tag (`addex d/` and `dayex DAY`)
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Accepted value | Optional in `addex`; required as positional `DAY` in `dayex`. A full weekday name or accepted prefix, ignoring letter case. Omitted `d/` groups the exercise under **Day not specified**. Each exercise has one assigned day; assigning a new day replaces the previous day while keeping name, sets, reps, and weight. Assigning an exercise to its current day is allowed. |
-| Shortest prefixes | Monday `m`; Tuesday `tu`; Wednesday `w`; Thursday `th`; Friday `f`; Saturday `s`; Sunday `su`. Other examples: `Mon`, `MONDAY`, `Tue`, `Tues`, `Tuesday`, `Wed`, `Wednesday`, `Thu`, `Thurs`, `Thursday`, `Fri`, `Friday`, `Sa`, `Sat`, `Saturday`, `Sun`, `Sunday`. |
-| Invalid day | `t` is invalid; use `tu` for Tuesday or `th` for Thursday. `s` means Saturday; Sunday requires at least `su`. Invalid `d/DAY` such as `d/t` or `d/funday` causes `Invalid command format!` followed by usage. The heading `Day not specified` is not a valid `DAY` argument. |
-| Display | The card always displays the full weekday name, regardless of the prefix entered. |
-| Repeated prefix | The `d/` prefix may appear at most once in `addex`. `dayex` takes exactly three arguments in order: `PERSON_INDEX EXERCISE_INDEX DAY`. |
+| Aspect            | Rule, message and rationale                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accepted value    | Optional in `addex`; required as positional `DAY` in `dayex`. A full weekday name or accepted prefix, ignoring letter case. Omitted `d/` groups the exercise under **Day not specified**. Each exercise has one assigned day; assigning a new day replaces the previous day while keeping name, sets, reps, and weight. Assigning an exercise to its current day is allowed. |
+| Shortest prefixes | Monday `m`; Tuesday `tu`; Wednesday `w`; Thursday `th`; Friday `f`; Saturday `s`; Sunday `su`. Other examples: `Mon`, `MONDAY`, `Tue`, `Tues`, `Tuesday`, `Wed`, `Wednesday`, `Thu`, `Thurs`, `Thursday`, `Fri`, `Friday`, `Sa`, `Sat`, `Saturday`, `Sun`, `Sunday`.                                                                                                         |
+| Invalid day       | `t` is invalid; use `tu` for Tuesday or `th` for Thursday. `s` means Saturday; Sunday requires at least `su`. Invalid `d/DAY` such as `d/t` or `d/funday` causes `Invalid command format!` followed by usage. The heading `Day not specified` is not a valid `DAY` argument.                                                                                                 |
+| Display           | The card always displays the full weekday name, regardless of the prefix entered.                                                                                                                                                                                                                                                                                            |
+| Repeated prefix   | The `d/` prefix may appear at most once in `addex`. `dayex` takes exactly three arguments in order: `PERSON_INDEX EXERCISE_INDEX DAY`.                                                                                                                                                                                                                                       |
 
 #### Exercise index (`delex` / `dayex`)
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Accepted value | A positive integer 1, 2, 3, … matching the current numbering across all day groups on that person's card. The plan is immediately sorted by weekday and renumbered after `addex`, `dayex`, or `delex`. Check the updated card before entering another command that uses an exercise index. |
-| Ordering effect | Adding an exercise, changing its day, or deleting an exercise can change the numbers shown. Always use the current displayed exercise number for `dayex` and `delex`. Exercises already in the same day group keep their relative order when the plan is sorted. |
-| Person out of range | `The person index provided is invalid.` |
-| Exercise out of range | `The exercise index provided is invalid.` This includes when the plan is empty. |
-| Remaining exercises | Remaining exercises are renumbered after deletion. A day heading disappears when its last exercise is removed. |
+| Aspect                | Rule, message and rationale                                                                                                                                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Accepted value        | A positive integer 1, 2, 3, … matching the current numbering across all day groups on that person's card. The plan is immediately sorted by weekday and renumbered after `addex`, `dayex`, or `delex`. Check the updated card before entering another command that uses an exercise index. |
+| Ordering effect       | Adding an exercise, changing its day, or deleting an exercise can change the numbers shown. Always use the current displayed exercise number for `dayex` and `delex`. Exercises already in the same day group keep their relative order when the plan is sorted.                           |
+| Person out of range   | `The person index provided is invalid.`                                                                                                                                                                                                                                                    |
+| Exercise out of range | `The exercise index provided is invalid.` This includes when the plan is empty.                                                                                                                                                                                                            |
+| Remaining exercises   | Remaining exercises are renumbered after deletion. A day heading disappears when its last exercise is removed.                                                                                                                                                                             |
 
 #### Daily capacity limit (`addex` / `dayex`)
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Limit | Each client can have at most 7 exercises per weekday. Other weekdays and other clients have separate limits. Exercises under **Day not specified** are not capped. |
-| `addex` | Adding an 8th exercise to the same weekday is rejected with `A client cannot have more than 7 exercises on the same day.` The plan is left unchanged. |
-| `dayex` | Moving an exercise into a weekday that already has 7 exercises is rejected with the same message. Assigning an exercise to its current day when that day already has 7 is allowed, as is moving an exercise away from a full day. |
-| Day resolution | Weekday prefixes and letter case are resolved through the same weekday table above. |
+| Aspect         | Rule, message and rationale                                                                                                                                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Limit          | Each client can have at most 7 exercises per weekday. Other weekdays and other clients have separate limits. Exercises under **Day not specified** are not capped.                                                                |
+| `addex`        | Adding an 8th exercise to the same weekday is rejected with `A client cannot have more than 7 exercises on the same day.` The plan is left unchanged.                                                                             |
+| `dayex`        | Moving an exercise into a weekday that already has 7 exercises is rejected with the same message. Assigning an exercise to its current day when that day already has 7 is allowed, as is moving an exercise away from a full day. |
+| Day resolution | Weekday prefixes and letter case are resolved through the same weekday table above.                                                                                                                                               |
 
 ### 6. Output
 
@@ -618,36 +620,36 @@ INDEX follows the shared client index rules.
 
 #### Session date
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Accepted value | A real date in yyyy-MM-dd format that is today or earlier. Unambiguous dates for completed sessions. |
-| Format error | Session date must use yyyy-MM-dd. |
-| Impossible date error | {DATE} is not a valid calendar date. |
-| Future date error | A completed workout session cannot have a future date. |
+| Aspect                | Rule, message and rationale                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------- |
+| Accepted value        | A real date in yyyy-MM-dd format that is today or earlier. Unambiguous dates for completed sessions. |
+| Format error          | Session date must use yyyy-MM-dd.                                                                    |
+| Impossible date error | {DATE} is not a valid calendar date.                                                                 |
+| Future date error     | A completed workout session cannot have a future date.                                               |
 
 #### Session time
 
-| Aspect | Rule, message and rationale |
-|---|---|
+| Aspect         | Rule, message and rationale                                                                                    |
+| -------------- | -------------------------------------------------------------------------------------------------------------- |
 | Accepted value | Optional 24 hour HH:mm time with hours 00 to 23 and minutes 00 to 59. Distinguishes sessions on the same date. |
-| Error | Session time must use 24-hour HH:mm format, for example `t/18:00`. |
+| Error          | Session time must use 24-hour HH:mm format, for example `t/18:00`.                                             |
 
 #### Exercise entry
 
 Every `ex/` value contains exactly four components separated by vertical bars.
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Exercise | 1 to 50 characters with at least one letter. Letters, digits, spaces, hyphens, apostrophes, and parentheses are accepted. The vertical bar is rejected. This supports common exercise names while reserving the separator. |
-| Exercise error | Exercise names must be 1 to 50 characters long and may contain letters, digits, spaces, hyphens, apostrophes, and parentheses. |
-| Weight | A number from 0 to 1000 with up to two decimal places. The value is kilograms. Zero means bodyweight or unweighted. Supports gym equipment and incremental loads. |
-| Weight error | Exercise weight must be between 0 and 1000 kg and may have up to 2 decimal places. |
-| Sets | A whole number from 1 to 100. Requires a set; catches excessive values. |
-| Sets error | Sets must be a whole number from 1 to 100. |
-| Repetitions | A whole number from 1 to 1000. Supports strength and conditioning. |
-| Repetitions error | Repetitions must be a whole number from 1 to 1000. |
-| Entry structure error | Exercise entries must use `ex/EXERCISE\|WEIGHT\|SETS\|REPS`. |
-| Entry count error | A workout session may contain at most 30 exercise entries. |
+| Aspect                | Rule, message and rationale                                                                                                                                                                                                |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Exercise              | 1 to 50 characters with at least one letter. Letters, digits, spaces, hyphens, apostrophes, and parentheses are accepted. The vertical bar is rejected. This supports common exercise names while reserving the separator. |
+| Exercise error        | Exercise names must be 1 to 50 characters long and may contain letters, digits, spaces, hyphens, apostrophes, and parentheses.                                                                                             |
+| Weight                | A number from 0 to 1000 with up to two decimal places. The value is kilograms. Zero means bodyweight or unweighted. Supports gym equipment and incremental loads.                                                          |
+| Weight error          | Exercise weight must be between 0 and 1000 kg and may have up to 2 decimal places.                                                                                                                                         |
+| Sets                  | A whole number from 1 to 100. Requires a set; catches excessive values.                                                                                                                                                    |
+| Sets error            | Sets must be a whole number from 1 to 100.                                                                                                                                                                                 |
+| Repetitions           | A whole number from 1 to 1000. Supports strength and conditioning.                                                                                                                                                         |
+| Repetitions error     | Repetitions must be a whole number from 1 to 1000.                                                                                                                                                                         |
+| Entry structure error | Exercise entries must use `ex/EXERCISE\|WEIGHT\|SETS\|REPS`.                                                                                                                                                               |
+| Entry count error     | A workout session may contain at most 30 exercise entries.                                                                                                                                                                 |
 
 ### 6. Output
 
@@ -754,21 +756,21 @@ INDEX follows the shared client index rules.
 
 #### Diet target
 
-| Aspect | Rule, message and rationale |
-|---|---|
+| Aspect         | Rule, message and rationale                                                                                                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Accepted value | 1 to 200 printable characters after trimming, with at least one letter or digit. Internal spaces, punctuation, numbers, units, and case are preserved. Supports varied nutrition targets. |
-| Line breaks | Line breaks are rejected. The current plan must remain readable in the details panel. |
-| Error | Diet target must contain 1 to 200 printable characters. |
+| Line breaks    | Line breaks are rejected. The current plan must remain readable in the details panel.                                                                                                     |
+| Error          | Diet target must contain 1 to 200 printable characters.                                                                                                                                   |
 
 Fittix records the trainer's text. It does not decide whether the target is medically appropriate.
 
 #### Diet notes
 
-| Aspect | Rule, message and rationale |
-|---|---|
+| Aspect         | Rule, message and rationale                                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | Accepted value | Optional. 1 to 300 printable characters after trimming. Internal spacing, punctuation, and case are preserved. Optional coaching instructions. |
-| Line breaks | Line breaks are rejected. The plan remains compact and easy to scan. |
-| Error | Diet-plan notes must contain 1 to 300 printable characters. |
+| Line breaks    | Line breaks are rejected. The plan remains compact and easy to scan.                                                                           |
+| Error          | Diet-plan notes must contain 1 to 300 printable characters.                                                                                    |
 
 ### 6. Output
 
@@ -837,3 +839,217 @@ Store, replace, and display one required target with optional notes per client.
 #### Nice to have or later
 
 Structured restrictions/macros, version history, meal templates, partial edits, and suitability checks.
+
+# Feature 10 Membership Plan
+
+### 1. Feature
+
+Users can create and view membership plans with a unique name, number of training sessions, and price. They can assign one plan at a time to a client, with an optional expiry date for that assignment, or remove the assignment. The plan name, sessions remaining, and any expiry date appear on the client information card. Users can increment or decrement each client's session balance.
+
+### 2. Purpose
+
+Trainers can offer several plans and track each client's remaining sessions independently.
+
+### 3. Command Format
+
+#### Adding a new membership plan
+
+```text
+addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS
+```
+
+#### Deleting a plan
+
+```text
+delmem n/NAME
+```
+
+#### Assign the membership plan to a client
+
+```text
+amem MEMBERSHIP_NAME PERSON_INDEX [e/YYYY-MM-DD]
+```
+
+#### Remove membership plan from a client
+
+```text
+rmem PERSON_INDEX
+```
+
+#### Increment the number of sessions left
+
+```text
+imem PERSON_INDEX NUMBER_TO_INCREMENT
+```
+
+#### Decrement the number of sessions
+
+```text
+dmem PERSON_INDEX NUMBER_TO_DECREMENT
+```
+
+#### View membership plans
+
+```text
+view mem[bership]
+```
+
+`view mem` and `view membership` are aliases. They display the same membership plans in the same order and use the same empty-list message.
+
+#### Clearing all membership plans
+
+```text
+clearmem
+```
+
+`clearmem` deletes every membership plan in the catalog and nothing else. It takes no parameters. It does not delete clients, workout plans, schedules, diet plans, workout logs, or any other data. If any membership plan is assigned to a client, no plans are deleted and Fittix shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` Remove every assignment with `rmem` first, or use `delmem` to delete individual unreferenced plans. The general client command `clear` removes clients only and does **not** delete membership plans; use `clearmem` when the catalog must be emptied.
+
+### 4. Example Commands
+
+```text
+addmem n/Gold p/150 s/30
+
+delmem n/Silver
+
+amem Gold 1 e/2026-12-30
+
+rmem 1
+
+imem 1 3
+
+dmem 2 2
+
+view mem
+
+view membership
+
+clearmem
+```
+
+Command words and the `mem` or `membership` argument of `view` are case-sensitive. Plan names and parameter prefixes (`n/`, `p/`, `s/`, `e/`) are case-insensitive; for example, `addmem N/Gold P/150 S/30` is valid.
+
+### 5. Parameters
+
+#### Membership plan name
+
+| Aspect              | Rule, message and rationale                                                                                                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Accepted value      | 1 to 50 characters after trimming. Letters, digits, spaces, apostrophes, hyphens, and full stops are accepted; at least one letter or digit is required. This keeps plan names readable in the client card.                    |
+| Whitespace and case | Remove leading/trailing spaces and collapse consecutive internal whitespace. Preserve the entered case for display; compare names case-insensitively. The name passed to `amem` and `delmem` follows the same comparison rule. |
+| Error               | Membership plan name must contain 1 to 50 characters and may contain only letters, digits, spaces, apostrophes, hyphens, and full stops.                                                                                       |
+
+For a plan name containing spaces, `amem` treats the final non-prefixed argument as PERSON_INDEX and the preceding text as MEMBERSHIP_NAME. If supplied, `e/` must follow PERSON_INDEX. For example: `amem Gold Plus 1 e/2026-12-30`.
+
+#### Price
+
+| Aspect         | Rule, message and rationale                                                                                                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accepted value | A positive amount with at most two decimal places, written without a currency symbol or thousands separators (for example, `150` or `150.50`). Store it to two decimal places to avoid rounding ambiguity. |
+| Error          | Price must be greater than zero and have at most two decimal places.                                                                                                                                       |
+
+#### Number of sessions
+
+| Aspect             | Rule, message and rationale                                                                                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plan sessions `s/` | A whole number from 1 to 1000. This is the starting balance when the plan is assigned to a client.                                                                                  |
+| Session adjustment | `NUMBER_TO_INCREMENT` and `NUMBER_TO_DECREMENT` must each be a whole number from 1 to 1000. The resulting balance must be from 0 to 1000. Zero is allowed after using all sessions. |
+| Error              | Number of sessions must be a whole number from 1 to 1000.                                                                                                                           |
+
+#### Expiry date
+
+| Aspect         | Rule, message and rationale                                                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Accepted value | Optional valid calendar date in `YYYY-MM-DD` format on `amem`. It must be later than the local date when the command runs. An omitted date means the client's assignment has no specified expiry date. |
+| Error          | Expiry date must be a valid future date in YYYY-MM-DD format.                                                                                                                                          |
+
+The expiry date belongs to the client's assignment, so clients on the same plan can have different dates. Check the future-date rule only when `amem` runs; an assignment remains valid to load after its date passes. Expiry does not automatically change the remaining session balance.
+
+#### Client index
+
+PERSON_INDEX follows the shared client index rules: a positive integer identifying a client in the displayed list. An index outside the displayed list is rejected. `rmem`, `imem`, and `dmem` require that client to have an assigned plan.
+
+### 6. Output
+
+#### Successful commands
+
+`addmem` saves the plan definition. `view mem` and `view membership` show the available plans with their prices and starting session counts. `amem` stores a copy of the plan name and starting session count on the client, together with a reference to the shared plan and any supplied expiry date. The client's copied count becomes their independent remaining balance. The reference remains attached until `rmem` removes the assignment, including its remaining balance and expiry date. Session adjustments affect only the selected client. When no plan is assigned, `clearmem` removes every plan definition and leaves all other data untouched. When any plan is still assigned to a client, `clearmem` removes nothing and reports that the plans are in use.
+
+```text
+Added membership plan: Gold; Price: 150.00; Sessions: 30.
+Assigned Gold to Priya Nair; Sessions remaining: 30; Expiry: 2026-12-30.
+Removed Gold plan from Priya Nair; 12 remaining sessions lost.
+Increased sessions for Priya Nair by 3; Sessions remaining: 33.
+Decreased sessions for Priya Nair by 2; Sessions remaining: 31.
+Deleted membership plan: Silver.
+Cleared all membership plans.
+Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.
+```
+
+For an assignment without an expiry date, omit the `Expiry` field in the success message and client card. After `rmem`, the client's card shows no membership plan or session balance. When no plans exist, `view mem` reports `No membership plans available.` After a successful `clearmem`, the catalog is empty and `view mem` reports the same message, while client records and all other data remain unchanged. If any plan is still assigned, `clearmem` deletes nothing and shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.`
+
+#### Failed commands
+
+**Missing or repeated parameter:** Required `n/`, `p/`, and `s/` values must each appear once in `addmem`. `delmem` requires one `n/` value. Optional `e/` may appear at most once in `amem`.
+
+**Unknown parameter or extra text:** Invalid command format. Use the relevant format in Section 3.
+
+**Invalid client index:** The client index must identify a client in the displayed list.
+
+**No assigned plan:** This client has no membership plan to remove or adjust.
+
+**Insufficient sessions:** Cannot decrease sessions below zero. The balance remains unchanged.
+
+**Session limit exceeded:** Cannot increase sessions above 1000. The balance remains unchanged.
+
+Any failed command leaves plan definitions, assignments, and balances unchanged.
+
+### 7. Duplicate handling
+
+Plan names must be unique after whitespace normalization and case-insensitive comparison. `addmem n/gold ...` is rejected when `Gold` already exists, even if its price or session count differs.
+
+```text
+A membership plan named Gold already exists.
+```
+
+A client may have at most one assigned plan. Assigning a plan to a client who already has one is rejected, including when it is the same plan; the existing balance is preserved. Use `rmem` before assigning a new plan. Removing an assignment discards its copied name, unused sessions, plan reference, and expiry date.
+
+```text
+Priya Nair already has an assigned membership plan.
+```
+
+Multiple clients may be assigned the same plan. Their session balances are independent.
+
+### 8. Possible errors
+
+**Plan not found:** No membership plan named Silver exists. This applies to `delmem` and `amem`.
+
+**Plan in use:** A plan referenced by any client assignment cannot be deleted. Remove those clients' assignments with `rmem` first; no client card is changed by a failed deletion.
+
+**Plans in use during clearing:** If any membership plan is assigned to a client, `clearmem` deletes nothing and shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` All plans, assignments, and balances remain unchanged.
+
+**Expired assignment:** An expiry date in the past does not silently remove an assignment or deduct sessions. Display the date so the trainer can act on it.
+
+**Data cannot be saved:** The membership change could not be saved. No plan, assignment, or balance was changed.
+
+### 9. Relevant UI mockup
+
+```text
+Membership plans  | Gold — 150.00 — 30 sessions
+                  | Silver — 80.00 — 12 sessions
+
+Clients           | Priya Nair [SELECTED]
+1. Priya Nair     | Membership plan: Gold
+                  | Sessions remaining: 31
+                  | Expiry: 2026-12-30
+Result: Decreased sessions for Priya Nair by 2; Sessions remaining: 31.
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Create, view, and delete uniquely named plans with a price and 1 to 1000 starting sessions; clear all plans with `clearmem` only when no plan is assigned, otherwise report that the plans are in use; assign at most one plan per client with an optional future, client-specific expiry date; store a copied name and independent balance plus a reference to the plan; block deletion while referenced; remove assignments; show each client's plan and balance on the client card; keep adjustments within 0 to 1000.
+
+#### Nice to have or later
+
+Edit plan definitions, replace an assignment without first removing it, preserve unused sessions on renewal, automatic deductions from workout logs, renewal history, expiry enforcement and alerts, and payment tracking.
