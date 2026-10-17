@@ -265,7 +265,7 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
-The client card shows a single membership tag reading `PLAN_NAME Member: N sessions left`, with `[expires YYYY-MM-DD]` appended when an expiry exists. It shows no tag for an unassigned client. The plan-list output of `view mem`/`view membership` prefixes each price with `S$`. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
+The client card shows a single membership tag reading `Plan_name Member: N sessions left`, with `[expires YYYY-MM-DD]` appended when an expiry exists and the plan name's first letter upper-cased. The tag sits side by side with the client's other tags, directly under the name. It shows no tag for an unassigned client. The plan-list output of `view mem`/`view membership` prefixes each price with `S$` and upper-cases the first letter of each plan name. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
 
 ### \[Proposed\] Undo/redo feature
 

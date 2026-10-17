@@ -65,6 +65,17 @@ public class MembershipNameTest {
     }
 
     @Test
+    public void toDisplayName_capitalizesFirstLetterOnly() {
+        assertEquals("Gold", MembershipName.toDisplayName("gold"));
+        assertEquals("Gold plus", MembershipName.toDisplayName("gold plus"));
+        assertEquals("Gold Plus", MembershipName.toDisplayName("Gold Plus"));
+        assertEquals("GOLD", MembershipName.toDisplayName("GOLD"));
+        assertEquals("1-day", MembershipName.toDisplayName("1-day"));
+        assertEquals("...", MembershipName.toDisplayName("..."));
+        assertEquals("", MembershipName.toDisplayName(""));
+    }
+
+    @Test
     public void getKey_localeIndependentCaseFolding() {
         assertEquals("gold", new MembershipName("Gold").getKey());
         assertEquals("gold plus", new MembershipName("GOLD Plus").getKey());

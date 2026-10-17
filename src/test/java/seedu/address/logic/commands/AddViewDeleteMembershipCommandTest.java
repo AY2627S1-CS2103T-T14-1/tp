@@ -86,6 +86,13 @@ public class AddViewDeleteMembershipCommandTest {
     }
 
     @Test
+    public void execute_viewCapitalizesFirstLetterOfLowercasePlanName() throws Exception {
+        model.addMembershipPlan(plan("gold plus", "150", 30));
+        assertEquals("Membership plans:\n1. Gold plus — S$150.00 — 30 sessions",
+                new ViewMembershipPlansCommand().execute(model).getFeedbackToUser());
+    }
+
+    @Test
     public void execute_deleteUnknownPlan_failureNoMutation() {
         model.addMembershipPlan(plan("Gold", "150", 30));
         assertCommandFailure(new DeleteMembershipPlanCommand(new MembershipName("Silver")),

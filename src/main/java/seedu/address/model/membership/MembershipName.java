@@ -58,6 +58,19 @@ public class MembershipName {
     }
 
     /**
+     * Returns {@code name} with its first character upper-cased for display,
+     * leaving the remaining characters unchanged. Used by the plan-list and client-card
+     * views so a lower-case entry such as {@code gold} reads as {@code Gold}.
+     */
+    public static String toDisplayName(String name) {
+        requireNonNull(name);
+        if (name.isEmpty()) {
+            return name;
+        }
+        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+
+    /**
      * Returns true if a given string is a valid membership plan name after normalization.
      */
     public static boolean isValidMembershipName(String test) {

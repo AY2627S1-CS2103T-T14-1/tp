@@ -10,6 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.logic.Messages;
+import seedu.address.model.membership.MembershipName;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutPlan;
@@ -53,8 +54,6 @@ public class PersonCard extends UiPart<Region> {
     private VBox workoutPlanContainer;
     @FXML
     private Label workoutPlanPlaceholder;
-    @FXML
-    private VBox membershipContainer;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -84,15 +83,16 @@ public class PersonCard extends UiPart<Region> {
     }
 
     /**
-     * Populates the membership section of this card as a single tag reading
-     * {@code PLAN_NAME Member: N sessions left}, with {@code [expires YYYY-MM-DD]}
-     * appended when the assignment defines an expiry date.
-     * The whole section is hidden when the client has no assigned plan.
+     * Adds the client's membership as a single tag reading
+     * {@code Plan_Name Member: N sessions left}, with {@code [expires YYYY-MM-DD]}
+     * appended when the assignment defines an expiry date. The tag joins the other
+     * tags in the {@code tags} flow pane so they render side by side under the name;
+     * nothing is added when the client has no assigned plan.
      */
     private void displayMembership() {
-        membershipContainer.getChildren().clear();
-        person.getMembershipAssignment().ifPresentOrElse(assignment -> {
-            StringBuilder text = new StringBuilder(assignment.getPlanName())
+        person.getMembershipAssignment().ifPresent(assignment -> {
+            StringBuilder text = new StringBuilder(
+                    MembershipName.toDisplayName(assignment.getPlanName()))
                     .append(" Member: ").append(assignment.getRemainingSessions())
                     .append(" sessions left");
             assignment.getExpiryDate().ifPresent(date ->
@@ -100,13 +100,7 @@ public class PersonCard extends UiPart<Region> {
             Label tag = new Label(text.toString());
             tag.getStyleClass().add("membership-tag");
             tag.setWrapText(true);
-            tag.setMaxWidth(350);
-            membershipContainer.getChildren().add(tag);
-            membershipContainer.setVisible(true);
-            membershipContainer.setManaged(true);
-        }, () -> {
-            membershipContainer.setVisible(false);
-            membershipContainer.setManaged(false);
+            tags.getChildren().add(tag);
         });
     }
 

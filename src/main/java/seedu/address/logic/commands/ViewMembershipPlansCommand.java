@@ -6,6 +6,7 @@ import java.util.List;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.model.Model;
+import seedu.address.model.membership.MembershipName;
 import seedu.address.model.membership.MembershipPlan;
 
 /**
@@ -41,7 +42,7 @@ public class ViewMembershipPlansCommand extends Command {
         for (int i = 0; i < plans.size(); i++) {
             MembershipPlan plan = plans.get(i);
             result.append("\n").append(i + 1).append(". ")
-                    .append(plan.getName().value)
+                    .append(MembershipName.toDisplayName(plan.getName().value))
                     .append(" — S$").append(plan.getPrice().toPlainString())
                     .append(" — ").append(plan.getStartingSessions())
                     .append(plan.getStartingSessions() == 1 ? " session" : " sessions");

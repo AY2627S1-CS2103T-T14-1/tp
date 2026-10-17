@@ -33,11 +33,6 @@
       <Label fx:id="email" styleClass="cell_small_label" text="\$email" />
       <Label fx:id="remark" styleClass="cell_small_label" text="\$remark" />
       <Label fx:id="goal" styleClass="cell_small_label" />
-      <VBox fx:id="membershipContainer" spacing="2" fillWidth="false">
-        <padding>
-          <Insets top="5" right="0" bottom="0" left="0" />
-        </padding>
-      </VBox>
       <VBox fx:id="workoutPlanContainer" spacing="2">
         <padding>
           <Insets top="5" right="0" bottom="0" left="0" />
