@@ -232,28 +232,27 @@ Confirmation, undo, archiving, and bulk deletion.
 
 ### 1. Feature
 
-Record a client's recurring or one-off training schedule.
+Record and view a client's dated training sessions.
 
 ### 2. Purpose
 
-Records weekly sessions and dated appointments, with optional locations, so trainers know when and where to meet clients.
+Records future appointments with a date, time, and location, so trainers know when and where to meet clients. Saved appointments remain visible after their date has passed.
 
 ### 3. Command format
 
 ```text
-schedule INDEX d/DAY_OR_DATE t/START-END [l/LOCATION]
+schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION
+viewschedule INDEX
 ```
 
-One command records one entry. Repeating the command records additional entries for the same client.
+Each `schedule` command appends one session to the client at the displayed index. `viewschedule` lists all saved sessions for that client in date/time order.
 
 ### 4. Example commands
 
 ```text
-schedule 2 d/Mon t/18:00-19:00 l/Tampines Gym
-
-schedule 2 d/2026-10-03 t/09:30-10:30 l/Client home
-
-schedule 2 d/Mon t/18:00-19:30 l/Tampines Gym Level 2
+schedule 2 d/2099-03-15 tm/14:30 l/Main gym
+schedule 2 d/2099-03-16 tm/09:00 l/Studio
+viewschedule 2
 ```
 
 ### 5. Parameters
@@ -262,97 +261,72 @@ schedule 2 d/Mon t/18:00-19:30 l/Tampines Gym Level 2
 
 INDEX follows the shared client index rules.
 
-#### Day or date parameter
+#### Date and time parameters
 
 | Aspect | Rule, message and rationale |
 |---|---|
-| Weekday | Mon to Sun or the corresponding full weekday name. Matching ignores case and display uses the three letter form. Fast recurring-session input. |
-| Date | A real Gregorian date in yyyy-MM-dd format. It must be today or later. ISO dates are unambiguous and sortable. |
-| Invalid format error | Day/date must be a weekday such as Mon or a date in yyyy-MM-dd format. |
-| Impossible date error | {DATE} is not a valid calendar date. |
-| Past date error | A one-off schedule date cannot be in the past. Keeps upcoming schedules separate from history. |
-
-#### Time range parameter
-
-| Aspect | Rule, message and rationale |
-|---|---|
-| Accepted value | START-END using 24 hour HH:mm times. Hours are 00 to 23 and minutes are 00 to 59. Compact start/end input. |
-| Ordering | The end must be later than the start. Both times are on the same day. The MVP does not represent overnight sessions. |
-| Format error | Time must use START-END in 24-hour HH:mm format, for example `t/18:00-19:00`. |
-| Order error | Schedule end time must be later than its start time. |
+| Date | `d/` takes a real calendar date in `YYYY-MM-DD` format. |
+| Time | `tm/` takes one 24-hour time in `HH:mm` format. There is no end time or duration. |
+| Future requirement | The combined date and time must be later than the current local date and time. Otherwise: `Training sessions must be in the future.` |
+| Invalid value | An invalid or missing date/time produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.` |
 
 #### Location parameter
 
 | Aspect | Rule, message and rationale |
 |---|---|
-| Accepted value | Optional. 1 to 100 printable characters after trimming. Internal spacing and case are preserved. Line breaks are rejected. Supports any meeting place. |
-| Error | Location must contain 1 to 100 printable characters. |
+| Accepted value | `l/` is required and must contain non-blank text. |
+| Invalid value | A missing or blank location produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.` |
 
 ### 6. Output
 
-#### New schedule entry
+#### Add a session
 
-Save the entry; display weekly entries Monday–Sunday and dated entries chronologically.
-
-```text
-Added schedule for Priya Nair: Mon, 18:00-19:00 at Tampines Gym.
-Added schedule for Priya Nair: Wed, 07:30-08:30.
-```
-
-#### Update to an existing slot
-
-Matching client, day/date, and start time identify a slot. Different end time or location replaces it.
+The session is appended to the client's record. The command reports the scheduled date, time, and location.
 
 ```text
-Updated schedule for Priya Nair: Mon, 18:00-19:30 at Tampines Gym Level 2.
+Scheduled session for Priya Nair: 2099-03-15 14:30 at Main gym
 ```
 
-**Missing day or date:** Day/date is required. Use: `schedule INDEX d/DAY_OR_DATE t/START-END [l/LOCATION]`
+#### View saved sessions
 
-**Missing time:** Time is required. Use: `schedule INDEX d/DAY_OR_DATE t/START-END [l/LOCATION]`
+`viewschedule` lists sessions chronologically with one-based numbers. Past sessions remain in the list.
 
-**Repeated parameter:** The `d/`, `t/`, and `l/` prefixes may each be used only once.
+```text
+Training sessions for Priya Nair:
+1. 2099-03-15 14:30 at Main gym
+2. 2099-03-16 09:00 at Studio
+```
 
-**Unknown parameter or extra text:** Invalid command format. Use: `schedule INDEX d/DAY_OR_DATE t/START-END [l/LOCATION]`
-
-A failed command does not add or change a schedule entry.
+If no sessions have been saved, the result is `No training sessions saved for Priya Nair.` The index in either command must refer to a client in the current displayed list.
 
 ### 7. Duplicate handling
 
-Reject entries with identical clients, normalized day/date, start/end times, and normalized location.
-
-```text
-This schedule entry already exists for Priya Nair.
-```
-
-Different start times and cross-client overlaps are accepted. Conflict detection is later scope; acceptance does not imply no conflict.
+The current implementation appends sessions without checking for duplicates or conflicts. Identical sessions and cross-client overlaps can therefore be recorded. Editing or deleting a session is not supported by these commands.
 
 ### 8. Possible errors
 
-**Overnight session:** Overnight schedule entries are not supported. Record a same-day start and end time.
-
-**Data cannot be saved:** The schedule could not be recorded because Fittix could not save the updated data. No changes were made.
+**Invalid index:** The command reports an invalid displayed client index. **Repeated parameter:** Each of `d/`, `tm/`, and `l/` may appear only once. **Invalid date, time, or location:** The command reports the expected formats and non-empty location requirement. **Past date/time:** The command reports that training sessions must be in the future.
 
 ### 9. Relevant UI mockup
 
 ```text
-Clients          | Priya Nair — TRAINING SCHEDULE
-2. Priya Nair [SELECTED] | Mon 18:00–19:00 Tampines Gym
-                 | Wed 07:30–08:30 (no location)
-                 | 03 Oct 2026 09:30–10:30 Client home
-Result: Added schedule for Priya Nair:
-Mon, 18:00-19:00 at Tampines Gym.
+Command: schedule 2 d/2099-03-15 tm/14:30 l/Main gym
+Result: Scheduled session for Priya Nair: 2099-03-15 14:30 at Main gym
+
+Command: viewschedule 2
+Result: Training sessions for Priya Nair:
+1. 2099-03-15 14:30 at Main gym
 ```
 
 ### 10. Priority distinctions
 
 #### Must have
 
-Record/display weekly and dated sessions, same-day time ranges, and optional locations.
+Record multiple dated sessions per client and view them in date/time order. Preserve them in saved data and when editing other client details.
 
 #### Nice to have or later
 
-Conflict detection, daily/calendar views, reminders, other recurrence, edit/delete commands, and alternative date/time formats.
+Conflict detection, daily/calendar views, reminders, recurring sessions, durations, and edit/delete commands.
 
 ## Feature 3: Workout plan management
 
