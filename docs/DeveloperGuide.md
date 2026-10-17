@@ -265,7 +265,7 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
-The client card shows `Membership plan: NAME`, `Sessions remaining: COUNT`, and `Expiry: YYYY-MM-DD` when an expiry exists. It shows none of these fields for an unassigned client. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
+The client card shows a single membership tag reading `PLAN_NAME Member: N sessions left`, with `[expires YYYY-MM-DD]` appended when an expiry exists. It shows no tag for an unassigned client. The plan-list output of `view mem`/`view membership` prefixes each price with `S$`. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
 
 ### \[Proposed\] Undo/redo feature
 
@@ -889,7 +889,7 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
 Use a disposable address book with at least two clients.
 
 1. Run `addmem n/Gold p/150 s/30` and `addmem n/Silver p/80 s/12`, then `view mem` and `view membership`.<br>
-   Expected: Both views list Gold then Silver with two-decimal prices and starting session counts. Adding `n/gold` again is rejected.
+   Expected: Both views list Gold then Silver with `S$`-prefixed two-decimal prices and starting session counts. Adding `n/gold` again is rejected.
 2. Run `amem Gold 1 e/YYYY-MM-DD` with a real date later than today, then `amem Gold 2`.<br>
    Expected: Both clients start with 30 sessions. Only the first card shows an expiry date; another assignment to either client is rejected.
 3. Run `imem 1 3` and `dmem 2 2`.<br>
