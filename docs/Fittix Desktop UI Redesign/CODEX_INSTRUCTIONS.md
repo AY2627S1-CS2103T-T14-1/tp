@@ -11,13 +11,29 @@ Target: the existing JavaFX app (AB3-style: `MainWindow`, `CommandBox`, `ResultD
 - No new features (accounts, sync, drag-and-drop, analytics, etc.).
 
 ## 1. Fonts
-Bundle in `src/main/resources/fonts/`: Manrope (400/500/600/700/800) and JetBrains Mono (500/700), both from Google Fonts (OFL).
-Load at startup before showing the stage:
+Bundle static faces in `src/main/resources/fonts/`: Manrope (400/500/600/700/800) and JetBrains Mono (500/600/700), both from Google Fonts (OFL). JavaFX only applies a requested weight when the matching static face is loaded, so load all eight files at startup before showing the stage:
 ```java
-Font.loadFont(getClass().getResourceAsStream("/fonts/Manrope-Variable.ttf"), 14);
-Font.loadFont(getClass().getResourceAsStream("/fonts/JetBrainsMono-Medium.ttf"), 14);
+String[] fontFiles = {
+    "/fonts/Manrope-Regular.ttf",
+    "/fonts/Manrope-Medium.ttf",
+    "/fonts/Manrope-SemiBold.ttf",
+    "/fonts/Manrope-Bold.ttf",
+    "/fonts/Manrope-ExtraBold.ttf",
+    "/fonts/JetBrainsMono-Medium.ttf",
+    "/fonts/JetBrainsMono-SemiBold.ttf",
+    "/fonts/JetBrainsMono-Bold.ttf"
+};
+for (String fontFile : fontFiles) {
+    Font.loadFont(getClass().getResourceAsStream(fontFile), 14);
+}
 ```
 Use mono for anything a user types back: indexes, commands, phone numbers, sets/reps/weights, dates/times.
+
+JavaFX exposes the non-Regular/non-Bold static faces as separate legacy families. Keep the numeric `-fx-font-weight`, and map 500/600/800 selectors to `Manrope Medium`, `Manrope SemiBold`, or `Manrope ExtraBold`; map mono 500/600 selectors to `JetBrains Mono Medium` or `JetBrains Mono SemiBold`. This ensures the intended face is selected consistently.
+
+Manrope weights: page/section and card titles 700; selected client name 800; client-list names, buttons and pills 600; body copy 400; muted labels 500; log dates and highlighted session titles 700; status badges 800; feedback messages 600.
+
+JetBrains Mono weights: client and section indexes 600; command input, exercise metrics, small tags/times, and empty-state examples 500; command prompt 700.
 
 ## 2. Design tokens
 | Token | Hex | Use |
@@ -37,7 +53,7 @@ Use mono for anything a user types back: indexes, commands, phone numbers, sets/
 
 Radii: 8 chips · 10 badges · 14 tiles · 22–24 cards · 28 window · 999 pills.
 Spacing (4px base): 4, 8, 12, 16 (column gap), 24 (window padding).
-Type: Display 26/700 · Metric 34/700 · Title 17/700 · Body 13.5–14/500 · Label 10.5/800 caps · Mono 15/500 (input) and 12.5/500 (data).
+Type: Display 26/800 · Metric 34/700 · Title 17/700 · Body 13.5–14/400 · Label 10.5/800 caps · Mono 15/500 (input) and 12.5/500 (data).
 No gradients, no drop shadows — elevation is surface steps only.
 
 ## 3. Layout (MainWindow.fxml)
@@ -69,10 +85,10 @@ BorderPane .window                      (min 1280x800, pref 1440x980)
 
 ## 4. Components
 
-**ClientCard (ListCell)** — GridPane: 32x32 index badge | VBox(name 14.5/700, phone mono 12 muted, FlowPane of first 2 tags, meta line 11.5 subtle: "10 exercises · Next Mon 19 Oct" or "No plan · No session booked").
+**ClientCard (ListCell)** — GridPane: 32x32 index badge | VBox(name 14.5/600, phone mono 12 muted, FlowPane of first 2 tags, meta line 11.5 subtle: "10 exercises · Next Mon 19 Oct" or "No plan · No session booked").
 Selected: cell background #26262a, border #34343a, radius 16, **badge turns lime with #141414 text**. Hover: border #3a3a3e.
 
-**ProfileCard** — Row 1: lime index badge (40px, mono 18/700) · name (Display) · tag pills · spacer · mono hint chip "edit N … · delete N".
+**ProfileCard** — Row 1: lime index badge (40px, mono 18/600) · name (Display) · tag pills · spacer · mono hint chip "edit N … · delete N".
 Row 2 (dashed top border): 4 columns separated by 1px line: PHONE (mono) · EMAIL · ADDRESS (wraps) · GOAL (label in lime, value 600).
 
 **WorkoutPlanCard** — Header: "Workout plan" + summary "10 exercises · 4 training days" + mono chips `addex editex delex clearplan`.
@@ -113,10 +129,10 @@ Empty: dashed box + lime mono example.
   canvas:#121213; surface:#1c1c1e; raised:#242427; line:#2a2a2d;
   ink:#f4f4f2; muted:#a3a3a8; subtle:#85858b;
   lime:#d4f25a; violet:#5d4fd8; violet-text:#a99ffb; amber:#f0a54b; coral:#ff6b5e;
-  -fx-font-family:"Manrope"; -fx-font-size:14px; -fx-background-color:canvas;
+  -fx-font-family:"Manrope"; -fx-font-size:14px; -fx-font-weight:400; -fx-background-color:canvas;
 }
 .label { -fx-text-fill:ink; }
-.mono  { -fx-font-family:"JetBrains Mono"; }
+.mono  { -fx-font-family:"JetBrains Mono Medium"; -fx-font-weight:500; }
 .muted { -fx-text-fill:muted; }
 .caps-label { -fx-font-size:10.5px; -fx-font-weight:800; -fx-text-fill:subtle; }
 
@@ -129,7 +145,7 @@ Empty: dashed box + lime mono example.
 .pill, .filter-pill, .date-pill { -fx-background-color:surface; -fx-background-radius:999; -fx-border-color:#26262a; -fx-border-radius:999; -fx-padding:8 16; }
 .tag { -fx-background-color:#26262a; -fx-background-radius:999; -fx-padding:2 8; -fx-font-size:11px; -fx-font-weight:600; }
 
-.index-badge { -fx-font-family:"JetBrains Mono"; -fx-font-weight:bold; -fx-background-color:#2a2a2d; -fx-background-radius:10; -fx-alignment:center; -fx-min-width:32; -fx-min-height:32; }
+.index-badge { -fx-font-family:"JetBrains Mono"; -fx-font-weight:600; -fx-background-color:#2a2a2d; -fx-background-radius:10; -fx-alignment:center; -fx-min-width:32; -fx-min-height:32; }
 .index-badge.selected, .profile-index { -fx-background-color:lime; -fx-text-fill:#141414; }
 
 .list-view { -fx-background-color:transparent; -fx-padding:4 10 12 10; }

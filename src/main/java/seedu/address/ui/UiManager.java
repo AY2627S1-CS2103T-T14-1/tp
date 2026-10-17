@@ -23,8 +23,16 @@ public class UiManager implements Ui {
 
     private static final Logger logger = LogsCenter.getLogger(UiManager.class);
     private static final String ICON_APPLICATION = "/images/address_book_32.png";
-    private static final String FONT_MANROPE = "/fonts/Manrope-Variable.ttf";
-    private static final String FONT_JETBRAINS_MONO = "/fonts/JetBrainsMono-Variable.ttf";
+    private static final String[] FONT_FILES = {
+        "/fonts/Manrope-Regular.ttf",
+        "/fonts/Manrope-Medium.ttf",
+        "/fonts/Manrope-SemiBold.ttf",
+        "/fonts/Manrope-Bold.ttf",
+        "/fonts/Manrope-ExtraBold.ttf",
+        "/fonts/JetBrainsMono-Medium.ttf",
+        "/fonts/JetBrainsMono-SemiBold.ttf",
+        "/fonts/JetBrainsMono-Bold.ttf"
+    };
 
     private Logic logic;
     private Path dataFilePath;
@@ -43,8 +51,9 @@ public class UiManager implements Ui {
     public void start(Stage primaryStage) {
         logger.info("Starting UI...");
 
-        loadFont(FONT_MANROPE);
-        loadFont(FONT_JETBRAINS_MONO);
+        for (String fontFile : FONT_FILES) {
+            loadFont(fontFile);
+        }
 
         //Set the application icon.
         primaryStage.getIcons().add(getImage(ICON_APPLICATION));
