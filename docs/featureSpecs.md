@@ -9,6 +9,7 @@
 4. Workout plan management
 5. Workout session logging
 6. Diet plan management
+7. Advanced scheduling and client monitoring
 
 ## Feature 1A: Add client
 
@@ -837,3 +838,42 @@ Store, replace, and display one required target with optional notes per client.
 #### Nice to have or later
 
 Structured restrictions/macros, version history, meal templates, partial edits, and suitability checks.
+
+## Feature 7: Advanced scheduling and client monitoring (v1.4 Alpha)
+
+### 1. Purpose
+
+Help a trainer find clients who have not trained recently, avoid duplicate appointments, see the full day's agenda, and record ad-hoc meetings with clients.
+
+### 2. Commands and examples
+
+| Command | Format | Example |
+|---|---|---|
+| List inactive clients | `inactive DAYS` | `inactive 14` |
+| View a day's agenda | `dayschedule d/YYYY-MM-DD` | `dayschedule d/2099-03-15` |
+| Record a meeting | `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION` | `meeting 1 d/2099-03-15 tm/14:30 l/Cafe` |
+| Schedule training | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION` | `schedule 1 d/2099-03-15 tm/15:30 l/Gym` |
+
+`INDEX` is the client's position in the currently displayed list. `inactive` and `dayschedule` search the entire client roster, even when the list is filtered.
+
+### 3. Rules
+
+- `inactive DAYS` requires a positive whole number. It lists clients who have no **recorded completed workout** from today back through the previous `DAYS - 1` calendar days. Clients with no recorded workout are included. A scheduled session or meeting does not count as a completed workout. Each result shows the latest workout date or “never recorded”.
+- `dayschedule` accepts a real date in `YYYY-MM-DD` form and lists all training sessions and meetings on that date, ordered by start time and then client name. An empty day produces a clear “no client appointments” message.
+- `meeting` requires a valid future date, 24-hour `HH:mm` time, and nonblank location. Meetings are saved and shown in `viewschedule` and `dayschedule` as meetings; older saved sessions default to training.
+- `schedule` and `meeting` refuse a new appointment when **any client** already has an appointment at the same start time. The conflict message names the existing client and time. No data changes when a conflict occurs.
+- Appointment durations are not stored. Two appointments with different start times can still overlap in practice; the app cannot detect this case until duration support is added.
+
+### 4. Example results
+
+```text
+Clients without a recorded workout in the last 14 days:
+1. Bob Cat — last workout: 2026-09-15
+2. Priya Nair — last workout: never recorded
+
+Client appointments on 2099-03-15:
+1. 14:30 Amy Bee (meeting) at Cafe
+2. 15:30 Bob Cat (training) at Gym
+
+Scheduling conflict: Bob Cat already has an appointment at 2099-03-15 15:30.
+```
