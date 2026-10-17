@@ -901,7 +901,7 @@ view mem[bership]
 clearmem
 ```
 
-`clearmem` deletes every membership plan in the catalog and nothing else. It takes no parameters. It does not delete clients, workout plans, schedules, diet plans, workout logs, or any other data. The general client command `clear` removes clients only and does **not** delete membership plans; use `clearmem` when the catalog must be emptied.
+`clearmem` deletes every membership plan in the catalog and nothing else. It takes no parameters. It does not delete clients, workout plans, schedules, diet plans, workout logs, or any other data. If any membership plan is assigned to a client, no plans are deleted and Fittix shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` Remove every assignment with `rmem` first, or use `delmem` to delete individual unreferenced plans. The general client command `clear` removes clients only and does **not** delete membership plans; use `clearmem` when the catalog must be emptied.
 
 ### 4. Example Commands
 
@@ -971,7 +971,7 @@ PERSON_INDEX follows the shared client index rules: a positive integer identifyi
 
 #### Successful commands
 
-`addmem` saves the plan definition. `view mem` and `view membership` show the available plans with their prices and starting session counts. `amem` stores a copy of the plan name and starting session count on the client, together with a reference to the shared plan and any supplied expiry date. The client's copied count becomes their independent remaining balance. The reference remains attached until `rmem` removes the assignment, including its remaining balance and expiry date. Session adjustments affect only the selected client. `clearmem` removes every plan definition and leaves all other data untouched.
+`addmem` saves the plan definition. `view mem` and `view membership` show the available plans with their prices and starting session counts. `amem` stores a copy of the plan name and starting session count on the client, together with a reference to the shared plan and any supplied expiry date. The client's copied count becomes their independent remaining balance. The reference remains attached until `rmem` removes the assignment, including its remaining balance and expiry date. Session adjustments affect only the selected client. When no plan is assigned, `clearmem` removes every plan definition and leaves all other data untouched. When any plan is still assigned to a client, `clearmem` removes nothing and reports that the plans are in use.
 
 ```text
 Added membership plan: Gold; Price: 150.00; Sessions: 30.
@@ -981,9 +981,10 @@ Increased sessions for Priya Nair by 3; Sessions remaining: 33.
 Decreased sessions for Priya Nair by 2; Sessions remaining: 31.
 Deleted membership plan: Silver.
 Cleared all membership plans.
+Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.
 ```
 
-For an assignment without an expiry date, omit the `Expiry` field in the success message and client card. After `rmem`, the client's card shows no membership plan or session balance. When no plans exist, `view mem` reports `No membership plans available.` After `clearmem`, the catalog is empty and `view mem` reports the same message, while client records and all other data remain unchanged.
+For an assignment without an expiry date, omit the `Expiry` field in the success message and client card. After `rmem`, the client's card shows no membership plan or session balance. When no plans exist, `view mem` reports `No membership plans available.` After a successful `clearmem`, the catalog is empty and `view mem` reports the same message, while client records and all other data remain unchanged. If any plan is still assigned, `clearmem` deletes nothing and shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.`
 
 #### Failed commands
 
@@ -1023,6 +1024,8 @@ Multiple clients may be assigned the same plan. Their session balances are indep
 
 **Plan in use:** A plan referenced by any client assignment cannot be deleted. Remove those clients' assignments with `rmem` first; no client card is changed by a failed deletion.
 
+**Plans in use during clearing:** If any membership plan is assigned to a client, `clearmem` deletes nothing and shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` All plans, assignments, and balances remain unchanged.
+
 **Expired assignment:** An expiry date in the past does not silently remove an assignment or deduct sessions. Display the date so the trainer can act on it.
 
 **Data cannot be saved:** The membership change could not be saved. No plan, assignment, or balance was changed.
@@ -1044,7 +1047,7 @@ Result: Decreased sessions for Priya Nair by 2; Sessions remaining: 31.
 
 #### Must have
 
-Create, view, and delete uniquely named plans with a price and 1 to 1000 starting sessions; clear all plans with `clearmem`; assign at most one plan per client with an optional future, client-specific expiry date; store a copied name and independent balance plus a reference to the plan; block deletion while referenced; remove assignments; show each client's plan and balance on the client card; keep adjustments within 0 to 1000.
+Create, view, and delete uniquely named plans with a price and 1 to 1000 starting sessions; clear all plans with `clearmem` only when no plan is assigned, otherwise report that the plans are in use; assign at most one plan per client with an optional future, client-specific expiry date; store a copied name and independent balance plus a reference to the plan; block deletion while referenced; remove assignments; show each client's plan and balance on the client card; keep adjustments within 0 to 1000.
 
 #### Nice to have or later
 

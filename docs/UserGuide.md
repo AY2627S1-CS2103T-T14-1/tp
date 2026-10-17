@@ -512,7 +512,9 @@ A plan assigned to any client cannot be deleted. Remove all its client assignmen
 
 Format: `clearmem`
 
-Deletes all membership plans and nothing else. Every plan in the catalog is removed. No other data is deleted: client records, workout plans, schedules, diet plans, and workout logs are left unchanged. The command takes no parameters. To delete a single plan instead, use [`delmem`](#deleting-a-plan-delmem).
+Deletes all membership plans and nothing else. Every plan in the catalog is removed. No other data is deleted: client records, workout plans, schedules, diet plans, and workout logs are left unchanged. The command takes no parameters.
+
+A plan that is assigned to any client cannot be cleared. If at least one plan is still in use, `clearmem` deletes nothing and shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` Remove every assignment with [`rmem`](#assigning-and-removing-a-clients-plan-amem-rmem) first, or delete individual unreferenced plans with [`delmem`](#deleting-a-plan-delmem).
 
 Example: `clearmem`
 
@@ -565,7 +567,7 @@ Action | Format, Examples
 **Add exercise** | `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`<br> e.g., `addex 1 n/Stretch` or `addex 1 n/Bench Press s/3 r/10 w/60 d/w`
 **Clear** | `clear` (deletes all clients; membership plans are kept)
 **Clear workout plan** | `clearplan INDEX`<br> e.g., `clearplan 1`
-**Clear membership plans** | `clearmem` (deletes all membership plans and nothing else)
+**Clear membership plans** | `clearmem` (deletes all membership plans and nothing else; rejected while any plan is assigned to a client)
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
 **Assign/change exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`

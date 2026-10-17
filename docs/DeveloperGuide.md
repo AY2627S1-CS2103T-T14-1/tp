@@ -261,7 +261,7 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 `AddressBookParser` routes `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`, `delmem n/NAME`, `amem MEMBERSHIP_NAME PERSON_INDEX [e/YYYY-MM-DD]`, `rmem PERSON_INDEX`, `imem PERSON_INDEX NUMBER_TO_INCREMENT`, `dmem PERSON_INDEX NUMBER_TO_DECREMENT`, `clearmem`, and both `view mem` and `view membership`. Command words and the `view` argument are case-sensitive; prefix letters and plan name matching are case-insensitive. Client indexes refer to the currently displayed client list. For `amem`, the final non-prefixed token before an optional `e/` is the client index, allowing spaces in the plan name.
 
-`ClearmemCommand` (`COMMAND_WORD = clearmem`, `MESSAGE_SUCCESS = Cleared all membership plans.`) takes no parameters and deletes every plan in the catalog while leaving all other data, including client records, workout plans, schedules, diet plans, and workout logs, unchanged. The client `clear` command (`ClearCommand`) is the counterpart for client records: it removes all persons only and must not delete any membership plans. Either command persists its result through the automatic save after the command runs.
+`ClearmemCommand` (`COMMAND_WORD = clearmem`, `MESSAGE_SUCCESS = Cleared all membership plans.`) takes no parameters and deletes every plan in the catalog while leaving all other data, including client records, workout plans, schedules, diet plans, and workout logs, unchanged. Before deleting, it checks whether any plan is referenced by a client assignment. If so, it deletes nothing and returns `MESSAGE_PLANS_IN_USE = Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.`, consistent with `delmem`'s rule that a referenced plan cannot be deleted. The client `clear` command (`ClearCommand`) is the counterpart for client records: it removes all persons only and must not delete any membership plans, so it bypasses the in-use check. Either command persists its result through the automatic save after the command runs.
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
@@ -894,11 +894,13 @@ Use a disposable address book with at least two clients.
    Expected: Both clients start with 30 sessions. Only the first card shows an expiry date; another assignment to either client is rejected.
 3. Run `imem 1 3` and `dmem 2 2`.<br>
    Expected: The clients show 33 and 28 remaining sessions. Decreasing below zero or increasing above 1000 is rejected without changing either balance.
-4. Run `delmem n/Gold`, `rmem 1`, `delmem n/Gold`, `rmem 2`, and `delmem n/Gold` in that order.<br>
+4. Run `clearmem` while Gold is assigned to both clients.<br>
+   Expected: `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` `view mem` still lists Gold and Silver, and both client cards are unchanged.
+5. Run `delmem n/Gold`, `rmem 1`, `delmem n/Gold`, `rmem 2`, and `delmem n/Gold` in that order.<br>
    Expected: Both deletion attempts while Gold is assigned fail. Each removal clears that client's membership fields. The final deletion succeeds.
-5. Restart the app and view the catalog and both clients.<br>
+6. Restart the app and view the catalog and both clients.<br>
    Expected: Silver remains, Gold is absent, and neither client has a membership assignment.
-6. Run `clearmem`.<br>
-   Expected: The status message shows `Cleared all membership plans.` The catalog is now empty (`view mem` shows `No membership plans available.`), while both clients and their other data are unchanged.
-7. Run `addmem n/Platinum p/200 s/40`, then `clear`, then `view mem`.<br>
+7. Run `clearmem`.<br>
+   Expected: With no plan assigned, the status message shows `Cleared all membership plans.` The catalog is now empty (`view mem` shows `No membership plans available.`), while both clients and their other data are unchanged.
+8. Run `addmem n/Platinum p/200 s/40`, then `clear`, then `view mem`.<br>
    Expected: `clear` deletes all clients, but the Platinum plan is still listed, confirming that clearing clients does not delete membership plans.
