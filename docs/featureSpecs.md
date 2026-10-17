@@ -895,6 +895,14 @@ view mem[bership]
 
 `view mem` and `view membership` are aliases. They display the same membership plans in the same order and use the same empty-list message.
 
+#### Clearing all membership plans
+
+```text
+clearmem
+```
+
+`clearmem` deletes every membership plan in the catalog and nothing else. It takes no parameters. It does not delete clients, workout plans, schedules, diet plans, workout logs, or any other data. The general client command `clear` removes clients only and does **not** delete membership plans; use `clearmem` when the catalog must be emptied.
+
 ### 4. Example Commands
 
 ```text
@@ -913,6 +921,8 @@ dmem 2 2
 view mem
 
 view membership
+
+clearmem
 ```
 
 Command words and the `mem` or `membership` argument of `view` are case-sensitive. Plan names and parameter prefixes (`n/`, `p/`, `s/`, `e/`) are case-insensitive; for example, `addmem N/Gold P/150 S/30` is valid.
@@ -961,7 +971,7 @@ PERSON_INDEX follows the shared client index rules: a positive integer identifyi
 
 #### Successful commands
 
-`addmem` saves the plan definition. `view mem` and `view membership` show the available plans with their prices and starting session counts. `amem` stores a copy of the plan name and starting session count on the client, together with a reference to the shared plan and any supplied expiry date. The client's copied count becomes their independent remaining balance. The reference remains attached until `rmem` removes the assignment, including its remaining balance and expiry date. Session adjustments affect only the selected client.
+`addmem` saves the plan definition. `view mem` and `view membership` show the available plans with their prices and starting session counts. `amem` stores a copy of the plan name and starting session count on the client, together with a reference to the shared plan and any supplied expiry date. The client's copied count becomes their independent remaining balance. The reference remains attached until `rmem` removes the assignment, including its remaining balance and expiry date. Session adjustments affect only the selected client. `clearmem` removes every plan definition and leaves all other data untouched.
 
 ```text
 Added membership plan: Gold; Price: 150.00; Sessions: 30.
@@ -970,9 +980,10 @@ Removed Gold plan from Priya Nair; 12 remaining sessions lost.
 Increased sessions for Priya Nair by 3; Sessions remaining: 33.
 Decreased sessions for Priya Nair by 2; Sessions remaining: 31.
 Deleted membership plan: Silver.
+Cleared all membership plans.
 ```
 
-For an assignment without an expiry date, omit the `Expiry` field in the success message and client card. After `rmem`, the client's card shows no membership plan or session balance. When no plans exist, `view mem` reports `No membership plans available.`
+For an assignment without an expiry date, omit the `Expiry` field in the success message and client card. After `rmem`, the client's card shows no membership plan or session balance. When no plans exist, `view mem` reports `No membership plans available.` After `clearmem`, the catalog is empty and `view mem` reports the same message, while client records and all other data remain unchanged.
 
 #### Failed commands
 
@@ -1033,7 +1044,7 @@ Result: Decreased sessions for Priya Nair by 2; Sessions remaining: 31.
 
 #### Must have
 
-Create, view, and delete uniquely named plans with a price and 1 to 1000 starting sessions; assign at most one plan per client with an optional future, client-specific expiry date; store a copied name and independent balance plus a reference to the plan; block deletion while referenced; remove assignments; show each client's plan and balance on the client card; keep adjustments within 0 to 1000.
+Create, view, and delete uniquely named plans with a price and 1 to 1000 starting sessions; clear all plans with `clearmem`; assign at most one plan per client with an optional future, client-specific expiry date; store a copied name and independent balance plus a reference to the plan; block deletion while referenced; remove assignments; show each client's plan and balance on the client card; keep adjustments within 0 to 1000.
 
 #### Nice to have or later
 
