@@ -514,6 +514,8 @@ Format: `clearmem`
 
 Deletes all membership plans and nothing else. Every plan in the catalog is removed. No other data is deleted: client records, workout plans, schedules, diet plans, and workout logs are left unchanged. The command takes no parameters. To delete a single plan instead, use [`delmem`](#deleting-a-plan-delmem).
 
+If any plan is still assigned to a client, `clearmem` is rejected and nothing changes; remove those assignments with [`rmem`](#removing-a-clients-membership-plan-rmem) first.
+
 Example: `clearmem`
 
 Failed membership commands leave every plan, assignment, and balance unchanged. The most common errors are:
@@ -522,6 +524,7 @@ Failed membership commands leave every plan, assignment, and balance unchanged. 
 * `No membership plan named Silver exists.` — `amem` or `delmem` for an unknown plan.
 * `Priya Nair already has an assigned membership plan.` — `amem` for a client who already has one.
 * `Membership plan Gold is in use and cannot be deleted. Remove its assignments with rmem first.` — `delmem` for a referenced plan.
+* `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` — `clearmem` while any plan is assigned.
 * `This client has no membership plan to remove or adjust.` — `rmem`, `imem`, or `dmem` for a client without one.
 * `Cannot decrease sessions below zero. The balance remains unchanged.` and `Cannot increase sessions above 1000. The balance remains unchanged.` — adjustments past the 0 to 1000 limits.
 * `The membership change could not be saved. No plan, assignment, or balance was changed.` — the change could not be written to disk.
