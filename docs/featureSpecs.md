@@ -10,6 +10,7 @@
 4. Workout plan management
 5. Workout session logging
 6. Diet plan management
+7. Membership Plan
 
 ## Feature 1A: Add client
 
@@ -948,18 +949,18 @@ For a plan name containing spaces, `amem` treats the final non-prefixed argument
 
 #### Number of sessions
 
-| Aspect             | Rule, message and rationale                                                                                                      |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| Plan sessions `s/` | A whole number from 1 to 1000. This is the starting balance when the plan is assigned to a client. |
+| Aspect             | Rule, message and rationale                                                                                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plan sessions `s/` | A whole number from 1 to 1000. This is the starting balance when the plan is assigned to a client.                                                                                  |
 | Session adjustment | `NUMBER_TO_INCREMENT` and `NUMBER_TO_DECREMENT` must each be a whole number from 1 to 1000. The resulting balance must be from 0 to 1000. Zero is allowed after using all sessions. |
-| Error | Number of sessions must be a whole number from 1 to 1000. |
+| Error              | Number of sessions must be a whole number from 1 to 1000.                                                                                                                           |
 
 #### Expiry date
 
-| Aspect         | Rule, message and rationale                                                                                       |
-| -------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Aspect         | Rule, message and rationale                                                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Accepted value | Optional valid calendar date in `YYYY-MM-DD` format on `amem`. It must be later than the local date when the command runs. An omitted date means the client's assignment has no specified expiry date. |
-| Error | Expiry date must be a valid future date in YYYY-MM-DD format. |
+| Error          | Expiry date must be a valid future date in YYYY-MM-DD format.                                                                                                                                          |
 
 The expiry date belongs to the client's assignment, so clients on the same plan can have different dates. Check the future-date rule only when `amem` runs; an assignment remains valid to load after its date passes. Expiry does not automatically change the remaining session balance.
 
