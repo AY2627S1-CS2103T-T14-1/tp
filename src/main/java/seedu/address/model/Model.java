@@ -101,6 +101,16 @@ public interface Model {
     boolean isMembershipPlanInUse(MembershipPlan plan);
 
     /**
+     * Returns true if any stored plan is referenced by a client assignment.
+     */
+    boolean isAnyMembershipPlanInUse();
+
+    /**
+     * Removes every membership plan from the catalog, leaving the person list untouched.
+     */
+    void clearMembershipPlans();
+
+    /**
      * Returns the plan with the same normalized name as {@code name}, if present.
      */
     Optional<MembershipPlan> findMembershipPlan(MembershipName name);

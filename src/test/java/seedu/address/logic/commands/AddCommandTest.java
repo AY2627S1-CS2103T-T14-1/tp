@@ -171,6 +171,16 @@ public class AddCommandTest {
         }
 
         @Override
+        public boolean isAnyMembershipPlanInUse() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void clearMembershipPlans() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public Optional<MembershipPlan> findMembershipPlan(MembershipName name) {
             throw new AssertionError("This method should not be called.");
         }

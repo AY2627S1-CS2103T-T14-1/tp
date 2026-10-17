@@ -128,6 +128,16 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public boolean isAnyMembershipPlanInUse() {
+        return addressBook.isAnyMembershipPlanInUse();
+    }
+
+    @Override
+    public void clearMembershipPlans() {
+        addressBook.clearMembershipPlans();
+    }
+
+    @Override
     public Optional<MembershipPlan> findMembershipPlan(MembershipName name) {
         requireNonNull(name);
         return addressBook.findMembershipPlan(name);

@@ -210,6 +210,34 @@ public class MembershipLogicManagerTest {
     }
 
     @Test
+    public void execute_failingClearmemSave_rollbackWithMessage() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("addmem n/Gold p/150 s/30");
+        ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        setFailingStorage();
+        assertThrows(CommandException.class, MembershipCommand.MESSAGE_SAVE_FAILURE, () -> {
+            try {
+                logic.execute("clearmem");
+            } catch (ParseException e) {
+                throw new AssertionError(e);
+            }
+        });
+        assertEquals(expectedModel, model);
+        assertEquals(1, model.getMembershipPlanList().size());
+    }
+
+    @Test
+    public void execute_clearmemHappyPath_wiresEndToEnd() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("addmem n/Gold p/150 s/30");
+        CommandResult result = logic.execute("clearmem");
+        assertEquals("Cleared all membership plans.", result.getFeedbackToUser());
+        assertTrue(model.getMembershipPlanList().isEmpty());
+        assertEquals("No membership plans available.",
+                logic.execute("view mem").getFeedbackToUser());
+    }
+
+    @Test
     public void execute_failingSave_restoresBothCatalogAndAssignments() throws Exception {
         prepareAssignedClient(OptionalExpiry.WITH_EXPIRY);
         AddressBook before = new AddressBook(model.getAddressBook());

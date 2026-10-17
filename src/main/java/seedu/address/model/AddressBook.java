@@ -150,6 +150,25 @@ public class AddressBook implements ReadOnlyAddressBook {
     }
 
     /**
+     * Removes every membership plan from the catalog, leaving the person list untouched.
+     */
+    public void clearMembershipPlans() {
+        membershipPlans.clear();
+    }
+
+    /**
+     * Returns true if any stored plan is referenced by a client assignment.
+     */
+    public boolean isAnyMembershipPlanInUse() {
+        for (MembershipPlan plan : membershipPlans.values()) {
+            if (isMembershipPlanInUse(plan)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Returns true if any client assignment references the same normalized plan name as {@code plan}.
      */
     public boolean isMembershipPlanInUse(MembershipPlan plan) {

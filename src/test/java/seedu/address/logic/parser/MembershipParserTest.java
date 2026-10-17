@@ -18,6 +18,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddMembershipPlanCommand;
 import seedu.address.logic.commands.AdjustMembershipSessionsCommand;
 import seedu.address.logic.commands.AssignMembershipPlanCommand;
+import seedu.address.logic.commands.ClearmemCommand;
 import seedu.address.logic.commands.DeleteMembershipPlanCommand;
 import seedu.address.logic.commands.RemoveMembershipPlanCommand;
 import seedu.address.logic.commands.ViewMembershipPlansCommand;
@@ -258,6 +259,19 @@ public class MembershipParserTest {
                 parser.parseCommand("view mem") instanceof ViewMembershipPlansCommand);
         org.junit.jupiter.api.Assertions.assertTrue(
                 parser.parseCommand("view membership") instanceof ViewMembershipPlansCommand);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                parser.parseCommand("clearmem") instanceof ClearmemCommand);
+    }
+
+    @Test
+    public void parse_clearmemIgnoresExtraneousArguments() throws Exception {
+        AddressBookParser parser = new AddressBookParser();
+        org.junit.jupiter.api.Assertions.assertTrue(
+                parser.parseCommand("clearmem") instanceof ClearmemCommand);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                parser.parseCommand("clearmem   ") instanceof ClearmemCommand);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                parser.parseCommand("clearmem extra text") instanceof ClearmemCommand);
     }
 
     @Test
