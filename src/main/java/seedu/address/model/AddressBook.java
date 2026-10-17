@@ -61,6 +61,13 @@ public class AddressBook implements ReadOnlyAddressBook {
     //// person-level operations
 
     /**
+     * Removes every person from the address book, leaving the membership plan catalog untouched.
+     */
+    public void clearPersons() {
+        persons.setPersons(new ArrayList<>());
+    }
+
+    /**
      * Returns true if a person with the same identity as {@code person} exists in the address book.
      */
     public boolean hasPerson(Person person) {

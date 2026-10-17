@@ -51,6 +51,11 @@ public interface Model {
     void deletePerson(Person target);
 
     /**
+     * Removes every person from the address book, leaving the membership plan catalog untouched.
+     */
+    void clearPersons();
+
+    /**
      * Adds the given person.
      * {@code person} must not already exist in the address book.
      */

@@ -1,6 +1,7 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 
@@ -19,6 +20,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.membership.MembershipName;
@@ -94,6 +96,20 @@ public class MembershipLogicManagerTest {
         logic.execute("rmem 2");
         CommandResult delete = logic.execute("delmem n/Gold");
         assertEquals("Deleted membership plan: Gold.", delete.getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_clear_persistsMembershipPlans() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("addmem n/Gold p/150 s/30");
+        logic.execute("clear");
+        assertTrue(model.getFilteredPersonList().isEmpty());
+        assertEquals(1, model.getMembershipPlanList().size());
+        JsonAddressBookStorage saved =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        ReadOnlyAddressBook reloaded = saved.readAddressBook().orElseThrow();
+        assertTrue(reloaded.getPersonList().isEmpty());
+        assertEquals(1, reloaded.getMembershipPlanList().size());
     }
 
     @Test
