@@ -73,7 +73,7 @@ public class AddViewDeleteMembershipCommandTest {
     public void execute_viewAliasesProduceIdenticalOutput() throws Exception {
         model.addMembershipPlan(plan("Gold", "150", 30));
         model.addMembershipPlan(plan("Silver", "80", 12));
-        String expected = "Membership plans:\n1. Gold — 150.00 — 30 sessions\n2. Silver — 80.00 — 12 sessions";
+        String expected = "Membership plans:\n1. Gold — S$150.00 — 30 sessions\n2. Silver — S$80.00 — 12 sessions";
         assertEquals(expected, new ViewMembershipPlansCommand().execute(model).getFeedbackToUser());
         assertEquals(expected, ViewMembershipPlansCommand.formatPlanList(model.getMembershipPlanList()));
     }
@@ -81,7 +81,7 @@ public class AddViewDeleteMembershipCommandTest {
     @Test
     public void execute_viewSingularSessionAndPriceScale() throws Exception {
         model.addMembershipPlan(plan("Solo", "99.5", 1));
-        assertEquals("Membership plans:\n1. Solo — 99.50 — 1 session",
+        assertEquals("Membership plans:\n1. Solo — S$99.50 — 1 session",
                 new ViewMembershipPlansCommand().execute(model).getFeedbackToUser());
     }
 

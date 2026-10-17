@@ -84,34 +84,30 @@ public class PersonCard extends UiPart<Region> {
     }
 
     /**
-     * Populates the membership section of this card.
-     * Shows the copied plan name, the independent remaining balance, and the expiry date
-     * when the assignment defines one. The whole section is hidden when the client
-     * has no assigned plan.
+     * Populates the membership section of this card as a single tag reading
+     * {@code PLAN_NAME Member: N sessions left}, with {@code [expires YYYY-MM-DD]}
+     * appended when the assignment defines an expiry date.
+     * The whole section is hidden when the client has no assigned plan.
      */
     private void displayMembership() {
         membershipContainer.getChildren().clear();
         person.getMembershipAssignment().ifPresentOrElse(assignment -> {
-            membershipContainer.getChildren().add(membershipLabel(
-                    "Membership plan: " + assignment.getPlanName()));
-            membershipContainer.getChildren().add(membershipLabel(
-                    "Sessions remaining: " + assignment.getRemainingSessions()));
-            assignment.getExpiryDate().ifPresent(date -> membershipContainer.getChildren()
-                    .add(membershipLabel("Expiry: " + date)));
+            StringBuilder text = new StringBuilder(assignment.getPlanName())
+                    .append(" Member: ").append(assignment.getRemainingSessions())
+                    .append(" sessions left");
+            assignment.getExpiryDate().ifPresent(date ->
+                    text.append(" [expires ").append(date).append("]"));
+            Label tag = new Label(text.toString());
+            tag.getStyleClass().add("membership-tag");
+            tag.setWrapText(true);
+            tag.setMaxWidth(350);
+            membershipContainer.getChildren().add(tag);
             membershipContainer.setVisible(true);
             membershipContainer.setManaged(true);
         }, () -> {
             membershipContainer.setVisible(false);
             membershipContainer.setManaged(false);
         });
-    }
-
-    private static Label membershipLabel(String text) {
-        Label label = new Label(text);
-        label.getStyleClass().add("cell_small_label");
-        label.setWrapText(true);
-        label.setMaxWidth(350);
-        return label;
     }
 
     /**

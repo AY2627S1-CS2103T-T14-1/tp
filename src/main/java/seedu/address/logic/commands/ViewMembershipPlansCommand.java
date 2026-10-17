@@ -34,7 +34,7 @@ public class ViewMembershipPlansCommand extends Command {
     /**
      * Formats the catalog as a header line followed by one numbered line per plan
      * in catalog insertion order, e.g.
-     * {@code Membership plans:\n1. Gold — 150.00 — 30 sessions}.
+     * {@code Membership plans:\n1. Gold — S$150.00 — 30 sessions}.
      */
     public static String formatPlanList(List<MembershipPlan> plans) {
         StringBuilder result = new StringBuilder("Membership plans:");
@@ -42,7 +42,7 @@ public class ViewMembershipPlansCommand extends Command {
             MembershipPlan plan = plans.get(i);
             result.append("\n").append(i + 1).append(". ")
                     .append(plan.getName().value)
-                    .append(" — ").append(plan.getPrice().toPlainString())
+                    .append(" — S$").append(plan.getPrice().toPlainString())
                     .append(" — ").append(plan.getStartingSessions())
                     .append(plan.getStartingSessions() == 1 ? " session" : " sessions");
         }
