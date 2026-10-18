@@ -1,4 +1,5 @@
 @startuml
+!pragma layout smetana
 !include style.puml
 skinparam arrowThickness 1.1
 skinparam arrowColor MODEL_COLOR
@@ -19,6 +20,14 @@ Class Email
 Class Name
 Class Phone
 Class Tag
+Class Remark
+Class Goal
+Class DietPlan
+Class WorkoutPlan
+Class Exercise
+Class TrainingSession
+Class WorkoutSession
+Class WorkoutLogEntry
 
 Class I #FFFFFF
 }
@@ -36,19 +45,33 @@ ModelManager -right-> "1" UserPrefs
 UserPrefs .up.|> ReadOnlyUserPrefs
 
 AddressBook *--> "1" UniquePersonList
-UniquePersonList --> "~* all" Person
-Person *--> Name
-Person *--> Phone
-Person *--> Email
-Person *--> Address
-Person *--> "*" Tag
+UniquePersonList -down-> Person : all (0..*)
+Person *-down-> "1" Name
+Person *-down-> "1" Phone
+Person *-down-> "1" Email
+Person *-down-> "1" Address
+Person *-down-> "1" Remark
+Person *-down-> "0..1" Goal
+Person *-down-> "0..1" DietPlan
+Person *-down-> "0..*" Tag
+Person *-right-> "1" WorkoutPlan
+Person *-right-> "0..*" TrainingSession
+Person *-right-> "0..*" WorkoutSession
+WorkoutPlan *--> "0..*" Exercise
+WorkoutSession *--> "1..30" WorkoutLogEntry
 
 Person -[hidden]up--> I
 UniquePersonList -[hidden]right-> I
 
 Name -[hidden]right-> Phone
-Phone -[hidden]right-> Address
-Address -[hidden]right-> Email
+Phone -[hidden]right-> Email
+Email -[hidden]right-> Address
+Address -[hidden]right-> Remark
+Remark -[hidden]right-> Goal
+Goal -[hidden]right-> DietPlan
+DietPlan -[hidden]right-> Tag
+WorkoutPlan -[hidden]down-> TrainingSession
+TrainingSession -[hidden]down-> WorkoutSession
 
-ModelManager --> "~* filtered" Person
+ModelManager -down-> Person : filtered (0..*)
 @enduml
