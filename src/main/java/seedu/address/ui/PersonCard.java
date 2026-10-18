@@ -88,6 +88,8 @@ public class PersonCard extends UiPart<Region> {
      * appended when the assignment defines an expiry date. The tag joins the other
      * tags in the {@code tags} flow pane so they render side by side under the name;
      * nothing is added when the client has no assigned plan.
+     * The tag's width is capped at the flow pane's width so a permitted long plan name
+     * wraps instead of overflowing the card.
      */
     private void displayMembership() {
         person.getMembershipAssignment().ifPresent(assignment -> {
@@ -100,6 +102,9 @@ public class PersonCard extends UiPart<Region> {
             Label tag = new Label(text.toString());
             tag.getStyleClass().add("membership-tag");
             tag.setWrapText(true);
+            tag.setMinWidth(0);
+            tags.setMinWidth(0);
+            tag.maxWidthProperty().bind(tags.widthProperty());
             tags.getChildren().add(tag);
         });
     }

@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
@@ -13,11 +15,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutPlan;
@@ -79,6 +84,31 @@ public class PersonCardTest {
             Label hiddenGoal = (Label) withoutGoal.getRoot().lookup("#goal");
             assertFalse(hiddenGoal.isVisible());
             assertFalse(hiddenGoal.isManaged());
+            return null;
+        });
+        Platform.runLater(assertions);
+        assertions.get(10, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void membershipTag_longName_wrapsWithinCard() throws Exception {
+        FutureTask<Void> assertions = new FutureTask<>(() -> {
+            String longName = "Gold Premium Annual Membership Plan For One Client";
+            Person assigned = new PersonBuilder().build().withMembershipAssignment(
+                    Optional.of(new MembershipAssignment(longName, longName, 30,
+                            Optional.of(LocalDate.of(2026, 12, 30)))));
+            PersonCard card = new PersonCard(assigned, 1);
+            Region root = card.getRoot();
+            new Scene(root, 340, 600);
+            root.applyCss();
+            root.layout();
+
+            Label tag = (Label) root.lookup(".membership-tag");
+            assertNotNull(tag);
+            assertTrue(tag.isWrapText());
+            assertTrue(tag.getWidth() > 0, "membership tag should be laid out");
+            assertTrue(tag.getWidth() <= 340,
+                    "membership tag must not exceed the card width, was " + tag.getWidth());
             return null;
         });
         Platform.runLater(assertions);
