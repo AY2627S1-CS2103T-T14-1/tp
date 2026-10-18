@@ -6,12 +6,16 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
@@ -22,6 +26,9 @@ import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
 public class MembershipStorageTest {
+
+    @TempDir
+    public Path testFolder;
 
     private static MembershipPlan plan(String name, String price, int sessions) {
         return new MembershipPlan(new MembershipName(name), new BigDecimal(price), sessions);
@@ -187,12 +194,14 @@ public class MembershipStorageTest {
     }
 
     @Test
-    public void serializable_nullPlanEntry_throwsIllegalValueException() throws Exception {
+    public void readAddressBook_nullPlanEntry_throwsDataLoadingException() throws Exception {
         String json = "{\"persons\": [], \"membershipPlans\": [null]}";
-        JsonSerializableAddressBook loaded =
-                JsonUtil.fromJsonString(json, JsonSerializableAddressBook.class);
-        assertThrows(IllegalValueException.class,
-                JsonSerializableAddressBook.MESSAGE_NULL_PLAN, loaded::toModelType);
+        Path file = testFolder.resolve("null-plan.json");
+        Files.writeString(file, json);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        assertThrows(DataLoadingException.class,
+                new IllegalValueException(JsonSerializableAddressBook.MESSAGE_NULL_PLAN).toString(),
+                storage::readAddressBook);
     }
 
     @Test
