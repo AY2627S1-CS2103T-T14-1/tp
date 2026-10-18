@@ -3,58 +3,89 @@
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Scene?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.image.Image?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <fx:root type="javafx.stage.Stage" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-         title="Address App" minWidth="450" minHeight="600" onCloseRequest="#handleExit">
+         title="Fittix" minWidth="1280" minHeight="800" onCloseRequest="#handleExit">
   <icons>
     <Image url="@/images/address_book_32.png" />
   </icons>
   <scene>
     <Scene>
       <stylesheets>
-        <URL value="@DarkTheme.css" />
-        <URL value="@Extensions.css" />
+        <URL value="@FittixTheme.css" />
       </stylesheets>
+      <BorderPane styleClass="window">
+        <top>
+          <HBox alignment="CENTER_LEFT" spacing="14" prefHeight="72" minHeight="72" styleClass="app-header">
+            <padding>
+              <Insets top="0" right="24" bottom="0" left="24" />
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="brand">
+              <Label text="F" alignment="CENTER" minWidth="30" minHeight="30" prefWidth="30" prefHeight="30"
+                     styleClass="brand-mark" />
+              <Label text="Fittix" styleClass="brand-name" />
+            </HBox>
+            <MenuBar styleClass="menu-pills">
+              <Menu mnemonicParsing="false" text="File">
+                <MenuItem mnemonicParsing="false" onAction="#handleExit" text="Exit" />
+              </Menu>
+              <Menu mnemonicParsing="false" text="Help">
+                <MenuItem fx:id="helpMenuItem" mnemonicParsing="false" onAction="#handleHelp" text="Help" />
+              </Menu>
+            </MenuBar>
+            <Region HBox.hgrow="ALWAYS" />
+            <HBox fx:id="filterPill" alignment="CENTER_LEFT" spacing="9" styleClass="filter-pill">
+              <Label text="" minWidth="8" minHeight="8" maxWidth="8" maxHeight="8" styleClass="filter-dot" />
+              <Label fx:id="filterStateText" styleClass="filter-state" />
+              <Label fx:id="filterCountText" styleClass="muted" />
+            </HBox>
+            <Label fx:id="currentDate" styleClass="date-pill" />
+          </HBox>
+        </top>
 
-      <VBox>
-        <MenuBar fx:id="menuBar" VBox.vgrow="NEVER">
-          <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" onAction="#handleExit" text="Exit" />
-          </Menu>
-          <Menu mnemonicParsing="false" text="Help">
-            <MenuItem fx:id="helpMenuItem" mnemonicParsing="false" onAction="#handleHelp" text="Help" />
-          </Menu>
-        </MenuBar>
+        <center>
+          <GridPane hgap="16" styleClass="body">
+            <padding>
+              <Insets top="0" right="24" bottom="14" left="24" />
+            </padding>
+            <columnConstraints>
+              <ColumnConstraints minWidth="300" prefWidth="300" maxWidth="300" />
+              <ColumnConstraints hgrow="ALWAYS" minWidth="0" />
+              <ColumnConstraints minWidth="340" prefWidth="340" maxWidth="340" />
+            </columnConstraints>
+            <StackPane fx:id="personListPanelPlaceholder" GridPane.columnIndex="0" />
+            <StackPane fx:id="clientDetailPanelPlaceholder" GridPane.columnIndex="1" />
+            <StackPane fx:id="clientContextPanelPlaceholder" GridPane.columnIndex="2" />
+          </GridPane>
+        </center>
 
-        <StackPane VBox.vgrow="NEVER" fx:id="commandBoxPlaceholder" styleClass="pane-with-border">
-          <padding>
-            <Insets top="5" right="10" bottom="5" left="10" />
-          </padding>
-        </StackPane>
-
-        <StackPane VBox.vgrow="NEVER" fx:id="resultDisplayPlaceholder" styleClass="pane-with-border"
-                   minHeight="100" prefHeight="100" maxHeight="100">
-          <padding>
-            <Insets top="5" right="10" bottom="5" left="10" />
-          </padding>
-        </StackPane>
-
-        <VBox fx:id="personList" styleClass="pane-with-border" minWidth="340" prefWidth="340" VBox.vgrow="ALWAYS">
-          <padding>
-            <Insets top="10" right="10" bottom="10" left="10" />
-          </padding>
-          <StackPane fx:id="personListPanelPlaceholder" VBox.vgrow="ALWAYS"/>
-        </VBox>
-
-        <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />
-      </VBox>
+        <bottom>
+          <VBox spacing="10" styleClass="command-zone">
+            <padding>
+              <Insets top="0" right="24" bottom="0" left="24" />
+            </padding>
+            <StackPane fx:id="resultDisplayPlaceholder" />
+            <StackPane fx:id="commandBoxPlaceholder" />
+            <StackPane fx:id="statusbarPlaceholder">
+              <VBox.margin>
+                <Insets left="-24" right="-24" />
+              </VBox.margin>
+            </StackPane>
+          </VBox>
+        </bottom>
+      </BorderPane>
     </Scene>
   </scene>
 </fx:root>

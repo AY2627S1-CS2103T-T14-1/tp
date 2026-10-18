@@ -26,6 +26,12 @@ AGENTS.md
 CLAUDE.md
 /.claude/
 /.codex/
+/.agents/
+/.specify/
+
 
 # Temp files
 _temp/
+
+# Spec Kit Agent
+/specs

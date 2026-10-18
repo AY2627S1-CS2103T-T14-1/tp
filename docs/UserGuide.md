@@ -35,7 +35,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 
    * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records a diet plan for the 2nd client shown.
 
-   * `clear` : Deletes all contacts.
+   * `clear` : Deletes all contacts, but keeps membership plans.
 
    * `exit` : Exits the app.
 
@@ -61,7 +61,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 * Prefixed parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable. Positional parameters, such as the indices and day in `dayex PERSON_INDEX EXERCISE_INDEX DAY`, must follow the order shown.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, `clear`, and `clearmem`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -265,9 +265,11 @@ Examples:
 
 ### Clearing all entries: `clear`
 
-Clears all entries from the address book.
+Clears all client entries from the address book.
 
 Format: `clear`
+
+* `clear` deletes client records only. It does **not** delete any membership plans; use [`clearmem`](#clearing-all-membership-plans-clearmem) to remove membership plans.
 
 ### Adding an exercise to a client's workout plan: `addex`
 
@@ -480,6 +482,70 @@ The displayed session is the one most recently added using `log`, even if its wo
 
 Earlier sessions remain saved, but browsing the complete history and editing or deleting individual sessions are not currently supported.
 
+### Managing membership plans
+
+Membership plans define a price and starting number of training sessions. Each client can have one assigned plan, and their remaining sessions are tracked independently of other clients on the same plan. Use the positive client index shown in the current list, including search results.
+
+#### Adding and viewing plans: `addmem`, `view`
+
+Format: `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`
+
+Example: `addmem n/Gold Plus p/150.50 s/30`
+
+Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
+
+Format: `view mem` or `view membership`
+
+Both commands show each plan's price and starting sessions. If there are no plans, Fittix shows `No membership plans available.`
+
+#### Assigning and removing a client's plan: `amem`, `rmem`
+
+Format: `amem MEMBERSHIP_NAME PERSON_INDEX [e/YYYY-MM-DD]`
+
+Examples:
+
+* `amem Gold Plus 1 e/2026-12-30`
+* `amem Gold Plus 1`
+
+For a name with spaces, put the client index after the complete name. If supplied, `e/` follows the index. The expiry date must be a valid future calendar date when the plan is assigned. An assignment without `e/` has no specified expiry. The client card shows the plan name, remaining sessions, and expiry date if supplied. A past expiry date remains visible and does not automatically remove the plan or change its balance.
+
+Assigning a plan gives the client its starting sessions. A client who already has a plan must have it removed before another can be assigned; trying to assign another leaves the existing balance unchanged. Different clients can use the same plan with separate balances and expiry dates.
+
+Format: `rmem PERSON_INDEX`
+
+Example: `rmem 1`
+
+Removing a plan discards that client's remaining sessions and expiry date. The client card then shows no membership plan or session balance.
+
+#### Adjusting remaining sessions: `imem`, `dmem`
+
+Formats:
+
+* `imem PERSON_INDEX NUMBER_TO_INCREMENT`
+* `dmem PERSON_INDEX NUMBER_TO_DECREMENT`
+
+Examples: `imem 1 3`, `dmem 1 2`
+
+The client must have an assigned plan. Each adjustment must be a whole number from 1 to 1000. The resulting balance must stay between 0 and 1000; reducing it to zero is allowed. An adjustment outside that range is rejected without changing the balance.
+
+#### Deleting a plan: `delmem`
+
+Format: `delmem n/NAME`
+
+Example: `delmem n/Silver`
+
+A plan assigned to any client cannot be deleted. Remove all its client assignments with `rmem` first. Plan names supplied to `amem` and `delmem` are matched without regard to case or extra whitespace. Command words and the `mem` or `membership` argument of `view` are case-sensitive; parameter prefixes are case-insensitive.
+
+#### Clearing all membership plans: `clearmem`
+
+Format: `clearmem`
+
+Deletes all membership plans and nothing else. Every plan in the catalog is removed. No other data is deleted: client records, workout plans, schedules, diet plans, and workout logs are left unchanged. The command takes no parameters.
+
+A plan that is assigned to any client cannot be cleared. If at least one plan is still in use, `clearmem` deletes nothing and shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` Remove every assignment with [`rmem`](#assigning-and-removing-a-clients-plan-amem-rmem) first, or delete individual unreferenced plans with [`delmem`](#deleting-a-plan-delmem).
+
+Example: `clearmem`
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -527,8 +593,9 @@ Action | Format, Examples
 --------|------------------
 **Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 g/Build strength t/friend t/colleague`
 **Add exercise** | `addex INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]`<br> e.g., `addex 1 n/Stretch` or `addex 1 n/Bench Press s/3 r/10 w/60 d/w`
-**Clear** | `clear`
+**Clear** | `clear` (deletes all clients; membership plans are kept)
 **Clear workout plan** | `clearplan INDEX`<br> e.g., `clearplan 1`
+**Clear membership plans** | `clearmem` (deletes all membership plans and nothing else; rejected while any plan is assigned to a client)
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
 **Assign/change exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`
@@ -536,6 +603,13 @@ Action | Format, Examples
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
 **Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]`<br> e.g., `find n/James g/strength`
 **List** | `list`
+**Add membership plan** | `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`<br> e.g., `addmem n/Gold p/150 s/30`
+**View membership plans** | `view mem` or `view membership`
+**Assign membership plan** | `amem MEMBERSHIP_NAME PERSON_INDEX [e/YYYY-MM-DD]`<br> e.g., `amem Gold 1 e/2026-12-30`
+**Remove membership plan** | `rmem PERSON_INDEX`<br> e.g., `rmem 1`
+**Increase remaining sessions** | `imem PERSON_INDEX NUMBER_TO_INCREMENT`<br> e.g., `imem 1 3`
+**Decrease remaining sessions** | `dmem PERSON_INDEX NUMBER_TO_DECREMENT`<br> e.g., `dmem 1 2`
+**Delete membership plan** | `delmem n/NAME`<br> e.g., `delmem n/Silver`
 **Schedule** | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`
 **Meeting** | `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
 **View schedule** | `viewschedule INDEX`<br> e.g., `viewschedule 1`
