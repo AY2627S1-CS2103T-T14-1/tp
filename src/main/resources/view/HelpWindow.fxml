@@ -16,6 +16,7 @@
   <scene>
     <Scene>
       <stylesheets>
+        <URL value="@FittixTheme.css" />
         <URL value="@HelpWindow.css" />
       </stylesheets>
 

@@ -6,8 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -18,24 +19,22 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutLogEntry;
 import seedu.address.model.person.WorkoutSession;
 import seedu.address.testutil.PersonBuilder;
 
-/**
- * Tests the selected client's workout session display in headless mode.
- */
+/** Tests the redesigned right-hand diet, session, and workout-history context. */
 public class WorkoutSessionDisplayTest {
 
-    private static final LocalDate DATE = LocalDate.of(2020, 1, 15);
     private static final WorkoutLogEntry SQUAT =
             new WorkoutLogEntry("Back squat", new BigDecimal("60"), 3, 10);
     private static final WorkoutLogEntry BENCH =
@@ -47,189 +46,145 @@ public class WorkoutSessionDisplayTest {
         System.setProperty("monocle.platform", "Headless");
         System.setProperty("prism.order", "sw");
         System.setProperty("java.awt.headless", "true");
-
         FutureTask<Void> ready = new FutureTask<>(() -> {
             Platform.setImplicitExit(false);
             return null;
         });
-
         try {
             Platform.startup(ready);
         } catch (IllegalStateException e) {
-            // Other UI tests may already have started the shared toolkit.
             Platform.runLater(ready);
         }
         ready.get(10, TimeUnit.SECONDS);
     }
 
     @Test
-    public void emptyList_hidesWorkoutDetails() throws Exception {
+    public void noSelection_showsContextPlaceholder() throws Exception {
         runOnFxThread(() -> {
-            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList());
+            ClientContextPanel panel = new ClientContextPanel();
 
-            assertFalse(label(panel, "workoutHeading").isManaged());
-            assertFalse(label(panel, "workoutDate").isVisible());
-            assertFalse(label(panel, "workoutTime").isVisible());
-            assertFalse(label(panel, "workoutEntries").isManaged());
-            assertFalse(label(panel, "workoutEmpty").isVisible());
+            assertFalse(region(panel, "selectedContent").isManaged());
+            assertTrue(region(panel, "emptyContent").isVisible());
             return null;
         });
     }
 
     @Test
-    public void selectedClient_showsLastRecordedSessionAndEntryOrder() throws Exception {
+    public void dietPlan_showsTargetAndOptionalNotes() throws Exception {
         runOnFxThread(() -> {
-            WorkoutSession firstRecorded = new WorkoutSession(
-                    DATE, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
-            WorkoutSession lastRecorded = new WorkoutSession(
-                    DATE.minusDays(1), Optional.empty(), List.of(SQUAT, BENCH));
-            Person client = withSessions(new PersonBuilder().withGoal("Build strength").build(),
-                    List.of(firstRecorded, lastRecorded));
-            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(client));
+            ClientContextPanel panel = new ClientContextPanel();
+            Person withNotes = new PersonBuilder()
+                    .withDietPlan(new DietPlan("1800 kcal per day", "Prioritise vegetables")).build();
+            panel.showPerson(withNotes, 2);
 
-            assertTrue(label(panel, "workoutHeading").isVisible());
-            assertEquals("Goal: Build strength", label(panel, "goal").getText());
-            assertTrue(label(panel, "goal").isVisible());
-            assertEquals("Date: 2020-01-14", label(panel, "workoutDate").getText());
-            assertEquals("Time: Not specified", label(panel, "workoutTime").getText());
-            assertEquals("1. Back squat: 60 kg, 3 sets x 10 reps\n"
-                            + "2. Bench press: 40.25 kg, 3 sets x 8 reps",
-                    label(panel, "workoutEntries").getText());
-            assertFalse(label(panel, "workoutEmpty").isManaged());
+            assertEquals("1800 kcal per day", label(panel, "dietTarget").getText());
+            assertEquals("Prioritise vegetables", label(panel, "dietNotes").getText());
+            assertTrue(region(panel, "dietNotesBox").isManaged());
+            assertEquals("diet 2", label(panel, "dietCommandHint").getText());
+
+            panel.showPerson(new PersonBuilder().withDietPlan(new DietPlan("High protein")).build(), 1);
+            assertFalse(region(panel, "dietNotesBox").isManaged());
             return null;
         });
     }
 
     @Test
-    public void selection_clientWithoutSessions_clearsPreviousWorkoutDetails() throws Exception {
+    public void sessions_areChronologicalAndMarkedByStatus() throws Exception {
         runOnFxThread(() -> {
-            WorkoutSession session = new WorkoutSession(
-                    DATE, Optional.of(LocalTime.of(18, 0)), List.of(SQUAT));
-            Person first = withSessions(new PersonBuilder().withName("Alice Lee").build(),
-                    List.of(session));
-            Person second = new PersonBuilder().withName("Priya Nair").build();
-            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
+            Person person = new PersonBuilder().build()
+                    .withTrainingSession(new TrainingSession(
+                            LocalDateTime.of(2099, 3, 15, 14, 30), "Main gym"))
+                    .withTrainingSession(new TrainingSession(
+                            LocalDateTime.of(2020, 1, 15, 18, 0), "Old studio"));
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(person, 1);
+            VBox rows = vbox(panel, "sessionRows");
 
-            assertEquals("Time: 18:00", label(panel, "workoutTime").getText());
-
-            listView(panel).getSelectionModel().select(1);
-
-            assertEquals("Priya Nair", label(panel, "selectedClientName").getText());
-            assertTrue(label(panel, "workoutEmpty").isVisible());
-            assertEquals("No workout sessions recorded.", label(panel, "workoutEmpty").getText());
-            assertFalse(label(panel, "workoutDate").isManaged());
-            assertFalse(label(panel, "workoutTime").isManaged());
-            assertFalse(label(panel, "workoutEntries").isManaged());
-            assertEquals("", label(panel, "workoutEntries").getText());
+            assertEquals(2, rows.getChildren().size());
+            assertEquals(List.of("WED", "15", "JAN", "Old studio", "Past", "18:00"),
+                    labelTexts(rows.getChildren().get(0)));
+            assertEquals(List.of("SUN", "15", "MAR", "Main gym", "Next session", "14:30"),
+                    labelTexts(rows.getChildren().get(1)));
+            assertTrue(rows.getChildren().get(0).getStyleClass().contains("past"));
+            assertTrue(rows.getChildren().get(1).getStyleClass().contains("next"));
             return null;
         });
     }
 
     @Test
-    public void replacementAndDeletion_refreshWorkoutDetails() throws Exception {
+    public void completedWorkouts_areNewestFirstAndKeepAllEntries() throws Exception {
         runOnFxThread(() -> {
-            Person original = new PersonBuilder().build();
-            ObservableList<Person> persons = FXCollections.observableArrayList(original);
-            PersonListPanel panel = new PersonListPanel(persons);
+            WorkoutSession older = new WorkoutSession(LocalDate.of(2020, 1, 14),
+                    Optional.empty(), List.of(SQUAT));
+            WorkoutSession newer = new WorkoutSession(LocalDate.of(2020, 1, 15),
+                    Optional.of(LocalTime.of(18, 0)), List.of(BENCH, SQUAT));
+            Person person = new PersonBuilder().withWorkoutSessions(List.of(older, newer)).build();
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(person, 4);
+            VBox rows = vbox(panel, "historyRows");
 
-            assertTrue(label(panel, "workoutEmpty").isVisible());
-
-            WorkoutSession session = new WorkoutSession(
-                    DATE, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
-            persons.set(0, withSessions(original, List.of(session)));
-
-            assertEquals("Date: 2020-01-15", label(panel, "workoutDate").getText());
-            assertEquals("Time: 18:00", label(panel, "workoutTime").getText());
-            assertEquals("1. Bench press: 40.25 kg, 3 sets x 8 reps",
-                    label(panel, "workoutEntries").getText());
-            assertFalse(label(panel, "workoutEmpty").isManaged());
-
-            persons.remove(0);
-
-            assertFalse(label(panel, "workoutHeading").isVisible());
-            assertFalse(label(panel, "workoutEntries").isManaged());
-            assertFalse(label(panel, "workoutEmpty").isVisible());
+            assertEquals(2, rows.getChildren().size());
+            assertEquals(List.of("✓", "Wed 15 Jan 2020", "18:00",
+                    "Bench press · 3 × 8 · 40.25 kg", "Back squat · 3 × 10 · 60 kg"),
+                    labelTexts(rows.getChildren().get(0)));
+            assertEquals(List.of("✓", "Tue 14 Jan 2020", "Time not specified",
+                    "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(1)));
+            assertEquals("log 4", label(panel, "historyCommandHint").getText());
             return null;
         });
     }
 
     @Test
-    public void thirtyEntries_allRemainAvailableAtNarrowWidth() throws Exception {
+    public void switchingToClientWithoutRecords_clearsPriorRows() throws Exception {
         runOnFxThread(() -> {
-            WorkoutSession session = new WorkoutSession(
-                    DATE, Optional.empty(), Collections.nCopies(30, SQUAT));
-            Person client = withSessions(new PersonBuilder().build(), List.of(session));
-            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(client));
-            Region root = panel.getRoot();
-            new Scene(root, 340, 600);
-            root.applyCss();
-            root.resize(340, 600);
-            root.layout();
+            Person populated = new PersonBuilder().withWorkoutSessions(List.of(
+                    new WorkoutSession(LocalDate.of(2020, 1, 15), Optional.empty(), List.of(SQUAT)))).build();
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(populated, 1);
+            panel.showPerson(new PersonBuilder().build(), 2);
 
-            Label entries = label(panel, "workoutEntries");
-            assertEquals(30L, entries.getText().lines().count());
-            assertTrue(entries.getText().startsWith("1. Back squat: 60 kg, 3 sets x 10 reps\n"));
-            assertTrue(entries.getText().endsWith("30. Back squat: 60 kg, 3 sets x 10 reps"));
-            assertTrue(entries.isWrapText());
-            assertTrue(entries.prefHeight(140) > entries.prefHeight(1000));
+            assertEquals(0, vbox(panel, "sessionRows").getChildren().size());
+            assertEquals(0, vbox(panel, "historyRows").getChildren().size());
+            assertTrue(region(panel, "dietEmpty").isManaged());
+            assertTrue(region(panel, "sessionsEmpty").isManaged());
+            assertTrue(region(panel, "historyEmpty").isManaged());
             return null;
         });
     }
 
-    @Test
-    public void filtering_refreshesGoalAndWorkoutDetails() throws Exception {
-        runOnFxThread(() -> {
-            WorkoutSession session = new WorkoutSession(DATE, Optional.empty(), List.of(SQUAT));
-            Person first = new PersonBuilder().withName("Alice Lee").build();
-            Person second = new PersonBuilder().withName("Priya Nair").withGoal("Build strength")
-                    .withWorkoutSessions(List.of(session)).build();
-            FilteredList<Person> displayed = new FilteredList<>(FXCollections.observableArrayList(first, second));
-            PersonListPanel panel = new PersonListPanel(displayed);
-
-            displayed.setPredicate(person -> person.equals(second));
-
-            assertEquals(second, listView(panel).getSelectionModel().getSelectedItem());
-            assertEquals("Goal: Build strength", label(panel, "goal").getText());
-            assertEquals("Date: 2020-01-15", label(panel, "workoutDate").getText());
-            assertTrue(label(panel, "workoutEntries").isVisible());
-
-            displayed.setPredicate(person -> false);
-
-            assertFalse(label(panel, "goal").isManaged());
-            assertFalse(label(panel, "workoutHeading").isManaged());
-            assertFalse(label(panel, "workoutEntries").isManaged());
-
-            displayed.setPredicate(person -> true);
-
-            assertEquals(first, listView(panel).getSelectionModel().getSelectedItem());
-            assertFalse(label(panel, "goal").isManaged());
-            assertTrue(label(panel, "workoutEmpty").isVisible());
-            return null;
-        });
-    }
-
-    private static Person withSessions(Person base, List<WorkoutSession> sessions) {
-        return new Person(
-                base.getName(), base.getPhone(), base.getEmail(), base.getAddress(),
-                base.getRemark(), base.getTags(), base.getWorkoutPlan(), base.getDietPlan(),
-                base.getGoal().orElse(null), base.getTrainingSessions(), sessions);
-    }
-
-    private static Label label(PersonListPanel panel, String id) {
+    private static Label label(ClientContextPanel panel, String id) {
         prepareForLookup(panel);
         return (Label) panel.getRoot().lookup("#" + id);
     }
 
-    @SuppressWarnings("unchecked")
-    private static ListView<Person> listView(PersonListPanel panel) {
+    private static Region region(ClientContextPanel panel, String id) {
         prepareForLookup(panel);
-        return (ListView<Person>) panel.getRoot().lookup("#personListView");
+        return (Region) panel.getRoot().lookup("#" + id);
     }
 
-    private static void prepareForLookup(PersonListPanel panel) {
+    private static VBox vbox(ClientContextPanel panel, String id) {
+        return (VBox) region(panel, id);
+    }
+
+    private static List<String> labelTexts(Node root) {
+        List<String> result = new ArrayList<>();
+        collectLabelTexts(root, result);
+        return result;
+    }
+
+    private static void collectLabelTexts(Node node, List<String> result) {
+        if (node instanceof Label label) {
+            result.add(label.getText());
+        }
+        if (node instanceof Parent parent) {
+            parent.getChildrenUnmodifiable().forEach(child -> collectLabelTexts(child, result));
+        }
+    }
+
+    private static void prepareForLookup(ClientContextPanel panel) {
         Region root = panel.getRoot();
         if (root.getScene() == null) {
-            new Scene(root, 340, 600);
+            new Scene(root, 340, 900);
             root.applyCss();
         }
     }

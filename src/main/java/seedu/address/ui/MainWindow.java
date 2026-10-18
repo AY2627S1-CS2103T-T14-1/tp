@@ -1,74 +1,104 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import javafx.application.Platform;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
+import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AddExerciseCommand;
+import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.DeleteExerciseCommand;
+import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.FindCommand;
+import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.RemarkCommand;
+import seedu.address.logic.commands.SetExerciseDayCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Person;
 
-/**
- * The Main Window. Provides the basic application layout containing
- * a menu bar and space where other JavaFX elements can be placed.
- */
+/** Main Fittix desktop workspace. */
 public class MainWindow extends UiPart<Stage> {
 
     private static final String FXML = "MainWindow.fxml";
+    private static final double MIN_WIDTH = 1280;
+    private static final double MIN_HEIGHT = 800;
+    private static final PseudoClass FILTERED = PseudoClass.getPseudoClass("filtered");
+    private static final DateTimeFormatter HEADER_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH);
+    private static final Set<String> INDEX_COMMANDS = Set.of(
+            "edit", "delete", "diet", "remark", "schedule", "viewschedule",
+            "addex", "delex", "clearplan", "dayex", "log");
+    private static final Set<String> RESET_FILTER_COMMANDS = Set.of(
+            AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD,
+            ListCommand.COMMAND_WORD, RemarkCommand.COMMAND_WORD, AddExerciseCommand.COMMAND_WORD,
+            DeleteExerciseCommand.COMMAND_WORD, SetExerciseDayCommand.COMMAND_WORD);
 
     private final Logger logger = LogsCenter.getLogger(getClass());
+    private final Stage primaryStage;
+    private final Logic logic;
+    private final Path dataFilePath;
 
-    private Stage primaryStage;
-    private Logic logic;
-    private Path dataFilePath;
-
-    // Independent Ui parts residing in this Ui container
     private PersonListPanel personListPanel;
+    private ClientDetailPanel clientDetailPanel;
+    private ClientContextPanel clientContextPanel;
     private ResultDisplay resultDisplay;
+    private CommandBox commandBox;
     private HelpWindow helpWindow;
-
-    @FXML
-    private StackPane commandBoxPlaceholder;
+    private String filterQuery;
 
     @FXML
     private MenuItem helpMenuItem;
-
     @FXML
     private StackPane personListPanelPlaceholder;
-
+    @FXML
+    private StackPane clientDetailPanelPlaceholder;
+    @FXML
+    private StackPane clientContextPanelPlaceholder;
     @FXML
     private StackPane resultDisplayPlaceholder;
-
+    @FXML
+    private StackPane commandBoxPlaceholder;
     @FXML
     private StackPane statusbarPlaceholder;
+    @FXML
+    private HBox filterPill;
+    @FXML
+    private Label filterStateText;
+    @FXML
+    private Label filterCountText;
+    @FXML
+    private Label currentDate;
 
-    /**
-     * Creates a {@code MainWindow} with the given {@code Stage}, {@code Logic},
-     * and the data file path to show in the status bar.
-     */
+    /** Creates the main window. */
     public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath) {
         super(FXML, primaryStage);
-
-        // Set dependencies
         this.primaryStage = primaryStage;
         this.logic = logic;
         this.dataFilePath = dataFilePath;
-
-        // Configure the UI
         setWindowDefaultSize(logic.getGuiSettings());
-
         setAccelerators();
-
+        currentDate.setText(LocalDate.now().format(HEADER_DATE_FORMAT));
         helpWindow = new HelpWindow();
     }
 
@@ -80,28 +110,8 @@ public class MainWindow extends UiPart<Stage> {
         setAccelerator(helpMenuItem, KeyCombination.valueOf("F1"));
     }
 
-    /**
-     * Sets the accelerator of a MenuItem.
-     * @param keyCombination the KeyCombination value of the accelerator
-     */
     private void setAccelerator(MenuItem menuItem, KeyCombination keyCombination) {
         menuItem.setAccelerator(keyCombination);
-
-        /*
-         * TODO: the code below can be removed once the bug reported here
-         * https://bugs.openjdk.java.net/browse/JDK-8131666
-         * is fixed in a later version of the SDK.
-         *
-         * According to the bug report, TextInputControl (TextField, TextArea) will
-         * consume function-key events. Because CommandBox contains a TextField and
-         * ResultDisplay contains a TextArea, some accelerators (e.g., F1) will
-         * not work when the focus is in them because the key event is consumed by
-         * the TextInputControl(s).
-         *
-         * For now, we add the following event filter to capture such key events and open
-         * the help window purposely so as to support accelerators even when focus is
-         * in CommandBox or ResultDisplay.
-         */
         getRoot().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getTarget() instanceof TextInputControl && keyCombination.match(event)) {
                 menuItem.getOnAction().handle(new ActionEvent());
@@ -110,40 +120,59 @@ public class MainWindow extends UiPart<Stage> {
         });
     }
 
-    /**
-     * Fills up all the placeholders of this window.
-     */
+    /** Fills the FXML placeholders and wires selection between the three columns. */
     void fillInnerParts() {
         personListPanel = new PersonListPanel(logic.getFilteredPersonList());
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
 
+        clientDetailPanel = new ClientDetailPanel();
+        clientDetailPanelPlaceholder.getChildren().add(clientDetailPanel.getRoot());
+        clientContextPanel = new ClientContextPanel();
+        clientContextPanelPlaceholder.getChildren().add(clientContextPanel.getRoot());
+
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
+        commandBox = new CommandBox(this::executeCommand);
+        commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
 
-        StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
+        StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath, personListPanel.totalCountProperty());
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
 
-        CommandBox commandBox = new CommandBox(this::executeCommand);
-        commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+        personListPanel.selectedPersonProperty().addListener((unused, previous, selected) ->
+                refreshSelectedClient());
+        logic.getFilteredPersonList().addListener((javafx.collections.ListChangeListener<Person>) change -> {
+            refreshSelectedClient();
+            refreshHeaderCounts();
+        });
+        personListPanel.totalCountProperty().addListener((unused, previous, current) -> refreshHeaderCounts());
+
+        personListPanel.setFilterQuery(null);
+        refreshSelectedClient();
+        refreshFilterPill();
+        Platform.runLater(commandBox::requestFocus);
     }
 
-    /**
-     * Sets the default size based on {@code guiSettings}.
-     */
     private void setWindowDefaultSize(GuiSettings guiSettings) {
-        primaryStage.setHeight(guiSettings.getWindowHeight());
-        primaryStage.setWidth(guiSettings.getWindowWidth());
+        primaryStage.setMinWidth(MIN_WIDTH);
+        primaryStage.setMinHeight(MIN_HEIGHT);
+        primaryStage.setWidth(Math.max(MIN_WIDTH, guiSettings.getWindowWidth()));
+        primaryStage.setHeight(Math.max(MIN_HEIGHT, guiSettings.getWindowHeight()));
         if (guiSettings.getWindowCoordinates() != null) {
             primaryStage.setX(guiSettings.getWindowCoordinates().getX());
             primaryStage.setY(guiSettings.getWindowCoordinates().getY());
         }
     }
 
-    /**
-     * Opens the help window or focuses on it if it's already opened.
-     */
+    /** Opens the help window from the menu and records the action in result history. */
     @FXML
     public void handleHelp() {
+        if (resultDisplay != null) {
+            resultDisplay.appendInfo("Help menu", "Opened help window.", CommandCatalog.helpDetails());
+        }
+        showHelpWindow();
+    }
+
+    private void showHelpWindow() {
         if (!helpWindow.isShowing()) {
             helpWindow.show();
         } else {
@@ -155,9 +184,7 @@ public class MainWindow extends UiPart<Stage> {
         primaryStage.show();
     }
 
-    /**
-     * Closes the application.
-     */
+    /** Closes Fittix and persists the current window geometry. */
     @FXML
     private void handleExit() {
         GuiSettings guiSettings = new GuiSettings(primaryStage.getWidth(), primaryStage.getHeight(),
@@ -171,30 +198,89 @@ public class MainWindow extends UiPart<Stage> {
         return personListPanel;
     }
 
-    /**
-     * Executes the command and returns the result.
-     *
-     * @see seedu.address.logic.Logic#execute(String)
-     */
     private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
+        String commandWord = commandWord(commandText);
+        Person previousSelection = personListPanel.getSelectedPerson();
+        selectCommandTarget(commandText, commandWord);
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
-            resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
-
+            resultDisplay.appendResult(commandText, commandResult);
+            updateUiAfterSuccessfulCommand(commandText, commandWord, commandResult);
             if (commandResult.isShowHelp()) {
-                handleHelp();
+                showHelpWindow();
             }
-
             if (commandResult.isExit()) {
                 handleExit();
             }
-
             return commandResult;
         } catch (CommandException | ParseException e) {
             logger.info("An error occurred while executing command: " + commandText);
-            resultDisplay.setFeedbackToUser(e.getMessage());
+            resultDisplay.appendError(commandText, e.getMessage());
+            personListPanel.selectPerson(previousSelection);
             throw e;
         }
+    }
+
+    private void selectCommandTarget(String commandText, String commandWord) {
+        if (!INDEX_COMMANDS.contains(commandWord)) {
+            return;
+        }
+        String[] tokens = commandText.trim().split("\\s+");
+        if (tokens.length < 2) {
+            return;
+        }
+        try {
+            int oneBasedIndex = Integer.parseInt(tokens[1]);
+            personListPanel.selectDisplayedIndex(oneBasedIndex - 1);
+        } catch (NumberFormatException ignored) {
+            // The parser will provide the user-facing validation message.
+        }
+    }
+
+    private void updateUiAfterSuccessfulCommand(String commandText, String commandWord, CommandResult result) {
+        if (FindCommand.COMMAND_WORD.equals(commandWord)) {
+            filterQuery = commandText.substring(commandWord.length()).trim();
+        } else if (RESET_FILTER_COMMANDS.contains(commandWord)
+                || ClearPlanCommand.COMMAND_WORD.equals(commandWord)
+                && result.getFeedbackToUser().startsWith("Cleared workout plan")) {
+            filterQuery = null;
+        }
+
+        personListPanel.setFilterQuery(filterQuery);
+        if (AddCommand.COMMAND_WORD.equals(commandWord)) {
+            personListPanel.selectLast();
+        }
+        refreshSelectedClient();
+        refreshFilterPill();
+    }
+
+    private void refreshSelectedClient() {
+        if (clientDetailPanel == null || clientContextPanel == null) {
+            return;
+        }
+        Person selected = personListPanel.getSelectedPerson();
+        int displayedIndex = personListPanel.getSelectedIndex() + 1;
+        clientDetailPanel.showPerson(selected, displayedIndex);
+        clientContextPanel.showPerson(selected, displayedIndex);
+    }
+
+    private void refreshFilterPill() {
+        boolean isFiltered = filterQuery != null;
+        filterStateText.setText(isFiltered ? "find: " + filterQuery : "All clients");
+        filterPill.pseudoClassStateChanged(FILTERED, isFiltered);
+        refreshHeaderCounts();
+    }
+
+    private void refreshHeaderCounts() {
+        if (personListPanel == null) {
+            return;
+        }
+        filterCountText.setText(personListPanel.getDisplayedCount() + " of "
+                + personListPanel.totalCountProperty().get());
+    }
+
+    private static String commandWord(String commandText) {
+        return commandText.trim().split("\\s+", 2)[0].toLowerCase(Locale.ROOT);
     }
 }
