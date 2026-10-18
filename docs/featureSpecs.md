@@ -27,15 +27,15 @@ Creates the name and phone record required before storing a client's schedule, p
 ### 3. Command format
 
 ```text
-add n/NAME p/PHONE [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]...
+add n/NAME p/PHONE e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]...
 ```
 
-Name/phone are required; email/address/goal/tags are optional. Any parameter order is accepted; repeat `t/` for tags. Retaining these AB3 fields supports richer records without slowing basic registration. The goal is a single current fitness objective; tags do not provide fitness-goal filtering.
+Name, phone, email, and address are required; goal and tags are optional. Any parameter order is accepted; repeat `t/` for tags. Retaining these AB3 fields supports richer records without slowing basic registration. The goal is a single current fitness objective; tags do not provide fitness-goal filtering.
 
 ### 4. Example commands
 
 ```text
-add n/Priya Nair p/91234567
+add n/Priya Nair p/91234567 e/priya@example.com a/123 Main Street
 
 add n/Mdm Lim p/+65 9876 5432 e/lim@example.com a/10 Sample Road g/Improve mobility t/morning t/regular
 ```
@@ -78,7 +78,7 @@ Priya Nair   Anne-Marie Tan   D'Angelo Lim   Dr. Ahmad Rahman
 | 8123-4567     | 81234567 Hyphen removed                   |
 | +65 9876 5432 | +6598765432 International prefix retained |
 
-#### Optional contact parameters
+#### Contact and optional profile parameters
 
 | Parameter    | Rule, rationale and error |
 | ------------ | ------------------------- |
@@ -87,13 +87,13 @@ Priya Nair   Anne-Marie Tan   D'Angelo Lim   Dr. Ahmad Rahman
 | Fitness goal `g/` | Trim; 1–100 printable characters with at least one letter or digit. Preserve internal spacing and case. Each client has at most one current goal; `edit INDEX g/GOAL` replaces it and `edit INDEX g/` clears it. `find g/KEYWORDS` searches current goals case-insensitively.<br><br>Error: Goal must contain 1 to 100 characters, including at least one letter or digit. |
 | Tags `t/`    | Trim; 1–30 ASCII letters/digits per tag. Store lowercase; collapse repeated tags after normalization, retaining first-entry order. At most 10 distinct tags. Compact labels avoid spelling/case duplicates.<br><br>Error: Tags must contain 1 to 30 letters or digits; at most 10 distinct tags are allowed. |
 
-Omitted email/address/goal remain absent and omitted tags form an empty set. Any invalid supplied field rejects the entire command; no partial client is saved. Prefix tokens after whitespace are reserved and cannot occur literally inside values.
+An omitted goal remains absent and omitted tags form an empty set. Any invalid supplied field rejects the entire command; no partial client is saved. Prefix tokens after whitespace are reserved and cannot occur literally inside values.
 
 ### 6. Output
 
 #### Successful command
 
-Create, save, display, and select the client. Show normalized name/phone and supplied email, address, goal, and tags; hide omitted fields. The success message remains name and phone only.
+Create, save, display, and select the client. Show normalized name/phone, required email and address, and supplied goal and tags; hide an omitted goal and tags. The success message remains name and phone only.
 
 ```text
 Added client: Priya Nair; Phone: 91234567.
@@ -101,15 +101,15 @@ Added client: Priya Nair; Phone: 91234567.
 
 #### Failed Command
 
-**Missing name:** Name is required. Use: `add n/NAME p/PHONE [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]...`
+**Missing name:** Name is required. Use: `add n/NAME p/PHONE e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]...`
 
-**Missing phone number:** Phone number is required. Use: `add n/NAME p/PHONE [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]...`
+**Missing phone number:** Phone number is required. Use: `add n/NAME p/PHONE e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]...`
 
-**Both values are missing:** Name and phone number are required. Use: `add n/NAME p/PHONE [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]...`
+**Both values are missing:** Name and phone number are required. Use: `add n/NAME p/PHONE e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]...`
 
 **Repeated parameter:** The `n/`, `p/`, `e/`, `a/`, and `g/` prefixes may each be used only once. Repeat `t/` for multiple tags.
 
-**Unknown parameter or extra text:** Invalid command format. Use: `add n/NAME p/PHONE [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]...`
+**Unknown parameter or extra text:** Invalid command format. Use: `add n/NAME p/PHONE e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]...`
 
 A failed command does not create a partial client record.
 
@@ -136,7 +136,7 @@ If the implementation imposes a maximum, the same value must appear in the User 
 ```text
 Clients          | Client details
 1. Daniel Tan    | Priya Nair — 91234567
-2. Mdm Lim       | Optional email/address/goal/tags: hidden when absent
+2. Mdm Lim       | Optional goal/tags: hidden when absent
 3. Priya Nair [NEW] |
 Result: Added client: Priya Nair; Phone: 91234567.
 ```
@@ -145,7 +145,7 @@ Result: Added client: Priya Nair; Phone: 91234567.
 
 #### Must have
 
-Add, validate, normalize, deduplicate, display, and select a client using required name/phone and optional email/address/goal/tags. All six fields are supported in the MVP.
+Add, validate, normalize, deduplicate, display, and select a client using required name/phone/email/address and optional goal/tags. All six fields are supported in the MVP.
 
 #### Nice to have or later
 
