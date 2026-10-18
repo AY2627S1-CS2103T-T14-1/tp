@@ -86,7 +86,7 @@ Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…​`
 A client can have any number of tags, including zero.
 </div>
 
-* `g/GOAL` is optional. A goal must contain 1 to 50 characters after trimming and include at least one letter or digit.
+* `g/GOAL` is optional. A goal must contain 1 to 100 characters after trimming and include at least one letter or digit.
 * A supplied goal is saved with the client and shown on the client card.
 
 Examples:
@@ -156,7 +156,7 @@ Format: `diet INDEX t/TARGET [n/NOTES]`
 * `INDEX` is the positive whole-number index shown in the **current** client list. For example, after `find Priya`, `diet 1 ...` updates the first displayed search result. Leading zeros are accepted; `0`, negative numbers, signs, decimals, and indices outside the displayed list are rejected.
 * `TARGET` is required. After trimming outer whitespace, it must contain 1 to 200 printable characters and at least one letter or digit. Numbers, units, punctuation, internal spaces, and letter case are preserved. Line breaks and control characters are rejected.
 * `NOTES` is optional. If `n/` is supplied, its value must contain 1 to 300 printable characters after trimming. A blank `n/` is invalid; omit `n/` when no notes are needed. Internal spacing and case are preserved, and line breaks and control characters are rejected.
-* `t/` and `n/` may appear in either order, but each may appear only once. They are recognised at the start of an argument or after whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. A separated single-letter prefix such as `r/` is reserved and rejected; structured dietary restrictions are not yet supported.
+* `t/` and `n/` may appear in either order, but each may appear only once. They are recognised at the start of an argument or after whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. Dietary restrictions are managed separately with the `restriction` command.
 * A different plan **replaces the complete current plan**. Omitting `n/` during replacement clears any old notes. Earlier versions are not kept. A plan with the same trimmed target and notes, ignoring case, is rejected without changing the saved plan.
 
 Examples:
@@ -165,7 +165,7 @@ Examples:
 * `diet 2 t/1800 kcal per day, 120 g protein n/Prioritise lean protein and vegetables` adds notes.
 * `diet 2 t/2000 kcal/day n/Include fruit` replaces the full plan; the slash in `kcal/day` is ordinary text.
 * `diet 2 t/2000 kcal/day` replaces the plan again and removes its notes.
-* `diet 3 t/2000 kcal per day n/Halal meals only; avoid shellfish` records an essential restriction as free-text notes. This does not create a structured restriction field.
+* `diet 3 t/2000 kcal per day n/Prioritise lean protein` records coaching notes. Use `restriction` for separate dietary restrictions.
 
 On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan for NAME.`. Common errors include:
 
@@ -184,14 +184,43 @@ On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan 
 
 Invalid commands and failed saves leave the previous plan unchanged. Deleting a client permanently removes that client's diet plan along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
 
+### Recording dietary restrictions: `restriction`
+
+Stores a client's current ordered list of allergies, exclusions, religious requirements, or food preferences separately from their diet plan.
+
+Format: `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`
+
+* Repeating `r/` replaces the complete existing list. A single blank `r/` clears all restrictions.
+* Supply 1 to 10 nonblank restrictions; each must contain 1 to 100 printable characters and at least one letter or digit.
+* Restrictions that match after trimming and ignoring case are rejected as duplicates.
+* Fittix records trainer-entered information only; it does not determine allergy, nutritional, or meal safety.
+
+Examples:
+* `restriction 2 r/Peanut allergy r/Halal meals r/No shellfish`
+* `restriction 2 r/`
+
+### Recording health considerations: `health`
+
+Stores one current trainer-visible note about a client's injuries or physical limitations.
+
+Format: `health INDEX h/NOTE`
+
+* A nonblank note creates or replaces the current profile. `health INDEX h/` clears it.
+* Notes must contain 1 to 500 printable characters and at least one letter or digit.
+* Fittix records information only; it does not diagnose, recommend treatment, or decide whether a workout is medically safe.
+
+Examples:
+* `health 2 h/Recovering from a left ankle sprain; avoid jumping exercises`
+* `health 2 h/`
+
 ### Finding clients: `find`
 
-Finds clients matching one or more name, phone, email, or fitness-goal criteria.
+Finds clients matching one or more name, phone, email, fitness-goal, dietary-restriction, or health-considerations criteria.
 
 Format:
 
 * `find KEYWORD [MORE_KEYWORDS]...`
-* `find [n/NAME_KEYWORDS] [p/PHONE] [e/EMAIL_KEYWORDS] [g/GOAL_KEYWORDS]`
+* `find [n/NAME_KEYWORDS] [p/PHONE] [e/EMAIL_KEYWORDS] [g/GOAL_KEYWORDS] [dr/RESTRICTION_KEYWORDS] [h/HEALTH_KEYWORDS]`
 
 The first form is a name search and behaves exactly like `find n/KEYWORD [MORE_KEYWORDS]...`.
 
@@ -199,24 +228,28 @@ The first form is a name search and behaves exactly like `find n/KEYWORD [MORE_K
 * `p/` searches one phone query. Spaces and hyphens are ignored, and the normalised phone must contain the normalised query. The query must contain at least one digit.
 * `e/` splits its value into keywords. A client's email matches if it contains any keyword as a case-insensitive substring.
 * `g/` splits its value into keywords. A client's fitness goal matches if it contains any keyword as a case-insensitive substring. Clients without a goal do not match a goal search.
+* `dr/` splits its value into keywords. A client matches when any current dietary restriction contains any keyword as a case-insensitive substring.
+* `h/` splits its value into keywords. A client's health considerations match if they contain any keyword as a case-insensitive substring.
 * Criteria are combined with OR. For example, `find n/tan g/fat loss` returns clients whose name contains `tan` or whose goal contains `fat` or `loss`.
-* Each of `n/`, `p/`, `e/`, and `g/` may appear at most once. A bare keyword cannot be combined with a prefix.
+* Each of `n/`, `p/`, `e/`, `g/`, `dr/`, and `h/` may appear at most once. A bare keyword cannot be combined with a prefix.
 
 Examples:
 * `find pri` and `find n/pri` find clients whose names contain `pri`.
 * `find p/9123 4567` and `find p/9123-4567` find a client with phone `91234567`.
 * `find e/example.com` finds clients with an email containing `example.com`.
 * `find g/strength` finds clients with a goal containing `strength`.
+* `find dr/peanut` finds clients with a dietary restriction containing `peanut`.
+* `find h/ankle` finds clients whose health considerations contain `ankle`.
 * `find n/tan g/fat loss` combines name and goal criteria using OR.
 
 Common errors:
 
 | Cause | Message |
 | --- | --- |
-| No search value | `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]` |
-| Bare keyword mixed with a prefix | `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]` |
-| Repeated supported prefix | `The n/, p/, e/ and g/ prefixes may each be used only once.` |
-| Empty `n/` value | `The n/ search value cannot be empty.` The same message uses `p/`, `e/`, or `g/` for those prefixes. |
+| No search value | `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]` |
+| Bare keyword mixed with a prefix | `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]` |
+| Repeated supported prefix | `The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.` |
+| Empty `n/` value | `The n/ search value cannot be empty.` The same message uses `p/`, `e/`, `g/`, `dr/`, or `h/` for those prefixes. |
 | Phone query without a digit | `Phone search must contain at least one digit.` |
 
 Fittix reports `Found N client(s).` when there are matches, or `Found 0 client(s). Use list to show all clients.` when there are none.
@@ -464,7 +497,7 @@ Format: `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`
 
 Example: `addmem n/Gold Plus p/150.50 s/30`
 
-Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
+Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The stored name keeps the case you entered, but the plan list and client card render its first character in upper case, so a plan entered as `gold` is shown as `Gold`. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
 
 Format: `view mem` or `view membership`
 
@@ -517,6 +550,17 @@ Deletes all membership plans and nothing else. Every plan in the catalog is remo
 A plan that is assigned to any client cannot be cleared. If at least one plan is still in use, `clearmem` deletes nothing and shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` Remove every assignment with [`rmem`](#assigning-and-removing-a-clients-plan-amem-rmem) first, or delete individual unreferenced plans with [`delmem`](#deleting-a-plan-delmem).
 
 Example: `clearmem`
+
+Failed membership commands leave every plan, assignment, and balance unchanged. The most common errors are:
+
+* `A membership plan named Gold already exists.` — `addmem` with a duplicate name.
+* `No membership plan named Silver exists.` — `amem` or `delmem` for an unknown plan.
+* `Priya Nair already has an assigned membership plan.` — `amem` for a client who already has one.
+* `Membership plan Gold is in use and cannot be deleted. Remove its assignments with rmem first.` — `delmem` for a referenced plan.
+* `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` — `clearmem` while any plan is assigned.
+* `This client has no membership plan to remove or adjust.` — `rmem`, `imem`, or `dmem` for a client without one.
+* `Cannot decrease sessions below zero. The balance remains unchanged.` and `Cannot increase sessions above 1000. The balance remains unchanged.` — adjustments past the 0 to 1000 limits.
+* `The membership change could not be saved. No plan, assignment, or balance was changed.` — the change could not be written to disk.
 
 ### Body progress tracker [planned for v1.4]
 
@@ -632,6 +676,8 @@ AddressBook automatically saves data after every command. You do not need to sav
 
 Workout exercises, their sets, reps, weight, and assigned weekdays are restored when you reopen the app. Exercises saved without a day, including older entries labelled `day not specified` or `Day not specified`, appear together under the single **Day not specified** heading.
 
+Membership plans and each client's plan name, remaining sessions, and expiry date are restored the same way. An assignment whose expiry date has passed is still shown so you can act on it.
+
 ### Editing the data file
 
 AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
@@ -674,8 +720,10 @@ Action | Format, Examples
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
 **Assign/change exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`
 **Diet plan** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
+**Dietary restrictions** | `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`<br> e.g., `restriction 2 r/Peanut allergy r/Halal meals`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
-**Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]`<br> e.g., `find n/James g/strength`
+**Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`<br> e.g., `find n/James g/strength`
+**Health considerations** | `health INDEX h/NOTE`<br> e.g., `health 2 h/Avoid jumping exercises`
 **List** | `list`
 **Add membership plan** | `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`<br> e.g., `addmem n/Gold p/150 s/30`
 **View membership plans** | `view mem` or `view membership`

@@ -122,11 +122,14 @@ How the parsing works:
 
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
 
-<img src="images/ModelClassDiagram.png" width="450" />
+<img src="images/ModelClassDiagram.png" width="900" />
 
 The `Model` component,
 
 - stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
+  Each `Person` holds contact details, a workout plan, optional diet and fitness goals, scheduled training sessions,
+  and completed workout sessions. A `WorkoutPlan` contains exercises, while each completed `WorkoutSession` contains
+  its logged exercise entries.
 - stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 - stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 - does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
@@ -218,7 +221,7 @@ The workout plan feature lets a trainer keep a per-client list of prescribed exe
 
 ### Diet plan management
 
-Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the plan in the client's JSON record, so deleting the client also removes the plan. A client has at most one current plan; no history or structured restrictions are stored.
+Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the plan in the client's JSON record, so deleting the client also removes the plan. A client has at most one current plan and no plan history.
 
 For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw arguments to `DietCommandParser`. This preserves invalid line breaks for validation. The parser recognises single-letter prefixes only at the beginning of an argument or after horizontal whitespace; it leaves slashes inside values such as `kcal/day` untouched. It validates the displayed-list index, one required target, at most one optional notes value, and rejects unknown or repeated prefixes. `DietCommand` looks up the `Person` in the filtered list, compares the candidate with the current plan after trimming and ignoring case, then uses `Model#setPerson` to replace the client record while retaining the other fields and current list filter. An omitted `n/` creates a plan without notes, even when the previous plan had notes.
 
@@ -227,6 +230,17 @@ For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw argument
 `PersonListPanel` observes the selected client and the filtered client list. Its details pane shows the current target and notes, hides notes when absent, and provides an empty state for clients without a plan. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the plan's nutritional or medical suitability.
 
 `DietCommandParserTest`, `DietCommandTest`, `DietIntegrationTest`, and `PersonListPanelTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, injected commit failure, and selected-client display. The manual scenarios below cover the main user flows.
+
+### Dietary restrictions
+
+Each `Person` owns an immutable `DietaryRestrictions` list, which is empty when no restrictions are recorded. `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` replaces the complete list; one blank sole `r/` clears it. The value object validates 1 to 10 ordered entries, each containing 1 to 100 printable Unicode characters and at least one letter or digit. It rejects duplicates after trimming and case-insensitive comparison while preserving the first supplied display text and ordering.
+
+`DietaryRestrictionsCommandParser` parses a displayed-list index and repeated `r/` values. `DietaryRestrictionsCommand` rejects an unchanged list and replaces the client with `Person#withDietaryRestrictions`, preserving unrelated data. `JsonAdaptedPerson` stores the list as `dietaryRestrictions`; an absent field loads as an empty list for backwards compatibility. `find dr/KEYWORDS` uses `DietaryRestrictionsContainsKeywordsPredicate` and retains the existing OR semantics. The selected-client detail pane only displays the list when nonempty. Restriction text is informational and does not determine allergy or meal safety.
+### Health considerations
+
+Each `Person` has an optional immutable `HealthProfile` with one current trainer-visible note. `health INDEX h/NOTE` replaces the note and `health INDEX h/` clears it. `HealthProfile` trims outer whitespace, accepts 1 to 500 printable Unicode characters with at least one letter or digit, and rejects line breaks and control characters. The profile is serialized as the optional `healthProfile` field in `JsonAdaptedPerson`; older data without that field loads without a profile.
+
+`HealthCommandParser` requires exactly one `h/` prefix and a displayed-list index. `HealthCommand` rejects a no-op update, replaces the client through `Person#withHealthProfile`, and preserves all unrelated client information. `find h/KEYWORDS` uses `HealthProfileContainsKeywordsPredicate` with the existing case-insensitive OR search behavior. The selected-client details panel displays the profile only when present. Health considerations are informational only; the application does not diagnose conditions or evaluate medical suitability.
 
 ### Workout session logging
 
@@ -254,7 +268,7 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 - `AddressBook` owns an insertion-ordered collection of uniquely named `MembershipPlan` definitions. A plan has a normalized display name, a positive `BigDecimal` price stored at two decimal places, and 1 to 1000 starting sessions. Names are compared without regard to case after trimming and collapsing internal whitespace.
 - Each `Person` has at most one optional `MembershipAssignment`. It keeps a reference to the shared plan, a copy of its display name, an independent remaining balance from 0 to 1000, and an optional expiry date. Assigning a plan copies its starting sessions; subsequent adjustments change only that client's balance. A referenced plan cannot be deleted.
-- JSON stores `membershipPlans` at the address-book root and `membershipAssignment` on each person. Missing fields in older files mean an empty catalog or an unassigned client. Loading rejects duplicate plan keys, malformed values, and assignments referring to missing plans. Expired assignments remain loadable; expiry is checked against the local date only when `amem` runs.
+- JSON stores `membershipPlans` at the address-book root and `membershipAssignment` on each person. Missing fields in older files mean an empty catalog or an unassigned client. Loading rejects duplicate plan keys, null plan or person entries, malformed values, assignments referring to missing plans, and assignments whose copied plan name disagrees with the plan their key points to. Expired assignments remain loadable; expiry is checked against the local date only when `amem` runs.
 - Address-book snapshots and person replacement copy membership data. On an `IOException` during save, `LogicManager` restores the complete pre-command state and reports that the membership change could not be saved.
 
 #### Commands and UI
@@ -265,7 +279,7 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
-The client card shows `Membership plan: NAME`, `Sessions remaining: COUNT`, and `Expiry: YYYY-MM-DD` when an expiry exists. It shows none of these fields for an unassigned client. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
+The client card shows a single membership tag reading `NAME Member: COUNT sessions left`, with ` [expires YYYY-MM-DD]` appended when an expiry exists. The tag wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
 
 ### \[Proposed\] Undo/redo feature
 
@@ -651,21 +665,26 @@ The first increment stores an immutable `TrainingSession` (date/time and locatio
 1.  Trainer requests to list clients.
 2.  Fittix shows a list of clients.
 3.  Trainer requests to schedule a session for a specific client in the list, giving the date, time and location.
-4.  Fittix saves the appointment and shows the client's updated schedule.
+4.  Fittix saves the appointment and reports its date, time, and location. The trainer can use `viewschedule` to list the client's saved appointments.
 
     Use case ends.
 
 **Extensions**
 
-- 3a. The date or time is in an invalid format, or is in the past.
+- 3a. The date or time is in an invalid format.
   - 3a1. Fittix shows an error message stating the expected format.
 
     Use case resumes at step 3.
 
-- 3b. The requested time overlaps an existing appointment.
-  - 3b1. Fittix shows a clash warning naming the conflicting client and does not save the appointment.
+- 3b. The date and time are not in the future.
+  - 3b1. Fittix reports that training sessions must be in the future and does not add the appointment.
 
-    Use case ends.
+    Use case resumes at step 3.
+
+- 3c. The location is blank or missing.
+  - 3c1. Fittix shows the expected date, time, and location format and does not add the appointment.
+
+    Use case resumes at step 3.
 
 ### Non-Functional Requirements
 

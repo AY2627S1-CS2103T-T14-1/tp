@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.DietPlan;
+import seedu.address.model.person.DietaryRestrictions;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Goal;
+import seedu.address.model.person.HealthProfile;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -40,7 +43,10 @@ public class PersonBuilder {
     private Optional<DietPlan> dietPlan;
     private List<TrainingSession> trainingSessions;
     private Goal goal;
+    private DietaryRestrictions dietaryRestrictions;
+    private HealthProfile healthProfile;
     private List<WorkoutSession> workoutSessions;
+    private Optional<MembershipAssignment> membershipAssignment;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -56,7 +62,10 @@ public class PersonBuilder {
         dietPlan = Optional.empty();
         trainingSessions = List.of();
         goal = null;
+        dietaryRestrictions = new DietaryRestrictions();
+        healthProfile = null;
         workoutSessions = List.of();
+        membershipAssignment = Optional.empty();
     }
 
     /**
@@ -73,7 +82,10 @@ public class PersonBuilder {
         dietPlan = personToCopy.getDietPlan();
         trainingSessions = personToCopy.getTrainingSessions();
         goal = personToCopy.getGoal().orElse(null);
+        dietaryRestrictions = personToCopy.getDietaryRestrictions();
+        healthProfile = personToCopy.getHealthProfile().orElse(null);
         workoutSessions = personToCopy.getWorkoutSessions();
+        membershipAssignment = personToCopy.getMembershipAssignment();
     }
 
     /**
@@ -146,6 +158,19 @@ public class PersonBuilder {
         return this;
     }
 
+    /** Sets the current dietary restrictions of the person being built. */
+    public PersonBuilder withDietaryRestrictions(String ... restrictions) {
+        this.dietaryRestrictions = restrictions.length == 0
+                ? new DietaryRestrictions() : new DietaryRestrictions(List.of(restrictions));
+        return this;
+    }
+
+    /** Sets the current health considerations of the person being built. */
+    public PersonBuilder withHealthProfile(String healthProfile) {
+        this.healthProfile = new HealthProfile(healthProfile);
+        return this;
+    }
+
     /**
      * Sets the recorded workout sessions of the person being built.
      */
@@ -155,11 +180,20 @@ public class PersonBuilder {
     }
 
     /**
+     * Sets the membership assignment of the {@code Person} that we are building.
+     */
+    public PersonBuilder withMembershipAssignment(Optional<MembershipAssignment> membershipAssignment) {
+        this.membershipAssignment = membershipAssignment;
+        return this;
+    }
+
+    /**
      * Builds a {@code Person} with the details set in this builder.
      */
     public Person build() {
         return new Person(name, phone, email, address, remark, tags,
-                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions);
+                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions,
+                dietaryRestrictions, healthProfile, membershipAssignment);
     }
 
 }

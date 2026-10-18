@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -31,8 +32,11 @@ public class Person {
     private final WorkoutPlan workoutPlan;
     private final Optional<DietPlan> dietPlan;
     private final Goal goal;
+    private final DietaryRestrictions dietaryRestrictions;
+    private final HealthProfile healthProfile;
     private final List<TrainingSession> trainingSessions;
     private final List<WorkoutSession> workoutSessions;
+    private final Optional<MembershipAssignment> membershipAssignment;
 
     /**
      * Every field must be present and not null.
@@ -87,12 +91,63 @@ public class Person {
      * Constructs a person with plans, an optional goal, scheduled training, and recorded workouts.
      * All arguments except the goal, and all session entries, must be non-null.
      * Both session lists are defensively copied, preserving their order.
+     * The client starts with no dietary restrictions, health profile, or membership assignment.
      */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
             List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions,
+                workoutSessions, new DietaryRestrictions(), null, Optional.empty());
+    }
+
+    /** Constructs a person with dietary restrictions and no health profile or membership assignment. */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
+            DietaryRestrictions dietaryRestrictions) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions,
+                workoutSessions, dietaryRestrictions, null, Optional.empty());
+    }
+
+    /** Constructs a person with health considerations and no dietary restrictions or membership assignment. */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
+            HealthProfile healthProfile) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions,
+                workoutSessions, new DietaryRestrictions(), healthProfile, Optional.empty());
+    }
+
+    /** Constructs a person with an optional membership assignment and no dietary restrictions or health profile. */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
+            Optional<MembershipAssignment> membershipAssignment) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions,
+                workoutSessions, new DietaryRestrictions(), null, membershipAssignment);
+    }
+
+    /** Constructs a person with dietary restrictions, a health profile, and no membership assignment. */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
+            DietaryRestrictions dietaryRestrictions, HealthProfile healthProfile) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions,
+                workoutSessions, dietaryRestrictions, healthProfile, Optional.empty());
+    }
+
+    /**
+     * Constructs a person with all supported client information.
+     * All arguments except the goal, health profile, and membership assignment, and all session entries,
+     * must be non-null. Both session lists are defensively copied, preserving their order.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
+            DietaryRestrictions dietaryRestrictions, HealthProfile healthProfile,
+            Optional<MembershipAssignment> membershipAssignment) {
         requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan,
-                trainingSessions, workoutSessions);
+                trainingSessions, workoutSessions, dietaryRestrictions, membershipAssignment);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -102,8 +157,11 @@ public class Person {
         this.workoutPlan = workoutPlan;
         this.dietPlan = dietPlan;
         this.goal = goal;
+        this.dietaryRestrictions = dietaryRestrictions;
+        this.healthProfile = healthProfile;
         this.trainingSessions = List.copyOf(trainingSessions);
         this.workoutSessions = List.copyOf(workoutSessions);
+        this.membershipAssignment = membershipAssignment;
     }
 
     public Name getName() {
@@ -138,6 +196,16 @@ public class Person {
         return Optional.ofNullable(goal);
     }
 
+    /** Returns the client's current dietary restrictions. */
+    public DietaryRestrictions getDietaryRestrictions() {
+        return dietaryRestrictions;
+    }
+
+    /** Returns the client's current health considerations, if recorded. */
+    public Optional<HealthProfile> getHealthProfile() {
+        return Optional.ofNullable(healthProfile);
+    }
+
     /** Returns an unmodifiable list of recorded workout sessions. */
     public List<WorkoutSession> getWorkoutSessions() {
         return workoutSessions;
@@ -147,13 +215,37 @@ public class Person {
         return trainingSessions;
     }
 
+    /** Returns the client's optional membership assignment. */
+    public Optional<MembershipAssignment> getMembershipAssignment() {
+        return membershipAssignment;
+    }
+
+    /** Returns a copy of this person with the membership assignment replaced. */
+    public Person withMembershipAssignment(Optional<MembershipAssignment> membershipAssignment) {
+        Objects.requireNonNull(membershipAssignment);
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
+                trainingSessions, workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment);
+    }
+
     /** Returns a copy with one additional session. */
     public Person withTrainingSession(TrainingSession session) {
         Objects.requireNonNull(session);
         List<TrainingSession> updated = new ArrayList<>(trainingSessions);
         updated.add(session);
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, updated,
-                workoutSessions);
+                workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment);
+    }
+
+    /** Returns a copy with the supplied current dietary restrictions. */
+    public Person withDietaryRestrictions(DietaryRestrictions restrictions) {
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
+                trainingSessions, workoutSessions, restrictions, healthProfile, membershipAssignment);
+    }
+
+    /** Returns a copy with the supplied current health profile, or none when {@code profile} is null. */
+    public Person withHealthProfile(HealthProfile profile) {
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
+                trainingSessions, workoutSessions, dietaryRestrictions, profile, membershipAssignment);
     }
 
     /**
@@ -201,15 +293,18 @@ public class Person {
                 && workoutPlan.equals(otherPerson.workoutPlan)
                 && dietPlan.equals(otherPerson.dietPlan)
                 && Objects.equals(goal, otherPerson.goal)
+                && dietaryRestrictions.equals(otherPerson.dietaryRestrictions)
+                && Objects.equals(healthProfile, otherPerson.healthProfile)
                 && trainingSessions.equals(otherPerson.trainingSessions)
-                && workoutSessions.equals(otherPerson.workoutSessions);
+                && workoutSessions.equals(otherPerson.workoutSessions)
+                && membershipAssignment.equals(otherPerson.membershipAssignment);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
         return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions);
+                dietaryRestrictions, healthProfile, trainingSessions, workoutSessions, membershipAssignment);
     }
 
     @Override
@@ -223,9 +318,12 @@ public class Person {
                 .add("tags", tags)
                 .add("workoutPlan", workoutPlan)
                 .add("dietPlan", dietPlan)
+                .add("dietaryRestrictions", dietaryRestrictions)
                 .add("goal", goal)
+                .add("healthProfile", healthProfile)
                 .add("trainingSessions", trainingSessions)
                 .add("workoutSessions", workoutSessions)
+                .add("membershipAssignment", membershipAssignment)
                 .toString();
     }
 
