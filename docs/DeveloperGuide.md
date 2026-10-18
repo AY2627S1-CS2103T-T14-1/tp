@@ -651,19 +651,29 @@ Each client's `Person` record stores immutable `TrainingSession` appointments wi
 1.  Trainer requests to list clients.
 2.  Fittix shows a list of clients.
 3.  Trainer requests to schedule a session for a specific client in the list, giving the date, time and location.
-4.  Fittix saves the appointment and shows the client's updated schedule.
+4.  Fittix saves the appointment and reports its date, time, and location. The trainer can use `viewschedule` to list the client's saved appointments.
 
     Use case ends.
 
 **Extensions**
 
-- 3a. The date or time is in an invalid format, or is in the past.
+- 3a. The date or time is in an invalid format.
   - 3a1. Fittix shows an error message stating the expected format.
 
     Use case resumes at step 3.
 
-- 3b. The requested start time equals an existing appointment start time.
-  - 3b1. Fittix shows a clash warning naming the conflicting client and does not save the appointment.
+- 3b. The date and time are not in the future.
+  - 3b1. Fittix reports that training sessions must be in the future and does not add the appointment.
+
+    Use case resumes at step 3.
+
+- 3c. The location is blank or missing.
+  - 3c1. Fittix shows the expected date, time, and location format and does not add the appointment.
+
+    Use case resumes at step 3.
+
+- 3d. The requested start time equals an existing appointment start time.
+  - 3d1. Fittix shows a clash warning naming the conflicting client and does not save the appointment.
 
     Use case ends.
 
