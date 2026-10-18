@@ -276,11 +276,11 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
-The client card shows `Membership plan: NAME`, `Sessions remaining: COUNT`, and `Expiry: YYYY-MM-DD` when an expiry exists. It shows none of these fields for an unassigned client. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
+The client card shows `Membership plan: NAME`, `Sessions remaining: COUNT`, and `Expiry: YYYY-MM-DD` when an expiry exists. It shows none of these fields for an unassigned client. Command messages and error behavior follow the [Feature 7 specification](featureSpecs.md#feature-7-membership-plan).
 
 ### [Planned v1.4] Body progress tracker
 
-**Design status:** This is a proposed implementation for the body-progress assignment, not a description of code already merged. The [Feature 9 contract](featureSpecs.md#feature-9-body-progress-tracker) and [planned UG section](UserGuide.md#body-progress-tracker-planned-for-v14) define user-visible behavior. Keep these documents synchronized as implementation increments land. The four required capabilities are baseline measurements, dated weight/notes, complete history and latest-to-baseline comparison. Progress-entry correction/deletion is part of the same feature.
+**Design status:** This is a proposed implementation for the body-progress assignment, not a description of code already merged. The [Feature 10 contract](featureSpecs.md#feature-10-body-progress-tracker) and [planned UG section](UserGuide.md#body-progress-tracker-planned-for-v14) define user-visible behavior. Keep these documents synchronized as implementation increments land. The four required capabilities are baseline measurements, dated weight/notes, complete history and latest-to-baseline comparison. Progress-entry correction/deletion is part of the same feature.
 
 #### Ownership and invariants
 
@@ -770,7 +770,7 @@ The first increment stores an immutable `TrainingSession` (date/time and locatio
 
     Use case ends.
 
-**Use case: UC09 - Record starting body measurements [planned v1.4]**
+**Use case: UC10 - Record starting body measurements [planned v1.4]**
 
 **MSS**
 
@@ -788,7 +788,7 @@ Use case ends.
 * 3b. The baseline is identical: Fittix reports that it is already current. Use case ends.
 * 3c. Saving fails: Fittix reports the body-save error and retains the previous model and file. Use case ends.
 
-**Use case: UC10 - Record or correct dated body progress [planned v1.4]**
+**Use case: UC11 - Record or correct dated body progress [planned v1.4]**
 
 **Precondition:** The client has a body baseline.
 
@@ -810,7 +810,7 @@ Use case ends.
 * 4a. Saving fails: Fittix reports the body-save error and restores the previous model/file. Use case ends.
 * Correction alternative: Trainer deletes a progress entry by client/date; Fittix preserves the baseline and other entries and refreshes the latest comparison after saving. A missing entry or an attempt to delete the baseline is rejected. The same save-failure guarantee applies.
 
-**Use case: UC11 - View complete body-progress history [planned v1.4]**
+**Use case: UC12 - View complete body-progress history [planned v1.4]**
 
 **MSS**
 
@@ -825,7 +825,7 @@ Use case ends.
 * 2a. No baseline exists: Fittix shows the selected client's missing-baseline state. Use case ends.
 * 2b. Only a baseline exists: Fittix shows it and the no-progress state. Use case ends.
 
-**Use case: UC12 - Compare latest body progress with the baseline [planned v1.4]**
+**Use case: UC13 - Compare latest body progress with the baseline [planned v1.4]**
 
 **MSS**
 
