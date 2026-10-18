@@ -81,6 +81,20 @@ public class ClientDetailPanelTest {
     }
 
     @Test
+    public void healthProfile_showsOnlyWhenRecorded() throws Exception {
+        runOnFxThread(() -> {
+            ClientDetailPanel panel = new ClientDetailPanel();
+            panel.showPerson(new PersonBuilder().withHealthProfile("Avoid jumping").build(), 1);
+            assertTrue(region(panel, "healthProfileBox").isManaged());
+            assertEquals("Avoid jumping", label(panel, "healthProfile").getText());
+
+            panel.showPerson(new PersonBuilder().build(), 2);
+            assertFalse(region(panel, "healthProfileBox").isManaged());
+            return null;
+        });
+    }
+
+    @Test
     public void workoutPlan_preservesDisplayIndexesAndUnassignedGroup() throws Exception {
         runOnFxThread(() -> {
             WorkoutPlan plan = new WorkoutPlan(List.of(

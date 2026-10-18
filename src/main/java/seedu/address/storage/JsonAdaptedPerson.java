@@ -17,6 +17,7 @@ import seedu.address.model.person.DietaryRestrictions;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Goal;
+import seedu.address.model.person.HealthProfile;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -43,6 +44,7 @@ class JsonAdaptedPerson {
     private final JsonAdaptedDietPlan dietPlan;
     private final String goal;
     private final List<String> dietaryRestrictions = new ArrayList<>();
+    private final String healthProfile;
     private final List<JsonAdaptedTrainingSession> trainingSessions = new ArrayList<>();
     private final List<JsonAdaptedWorkoutSession> workoutSessions = new ArrayList<>();
 
@@ -51,7 +53,7 @@ class JsonAdaptedPerson {
      */
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags) {
-        this(name, phone, email, address, remark, tags, null, null, null, null, null, null);
+        this(name, phone, email, address, remark, tags, null, null, null, null, null, null, null);
     }
 
     /**
@@ -59,7 +61,7 @@ class JsonAdaptedPerson {
      */
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises) {
-        this(name, phone, email, address, remark, tags, exercises, null, null, null, null, null);
+        this(name, phone, email, address, remark, tags, exercises, null, null, null, null, null, null);
     }
 
     /**
@@ -68,7 +70,7 @@ class JsonAdaptedPerson {
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises,
             JsonAdaptedDietPlan dietPlan) {
-        this(name, phone, email, address, remark, tags, exercises, dietPlan, null, null, null, null);
+        this(name, phone, email, address, remark, tags, exercises, dietPlan, null, null, null, null, null);
     }
 
     /**
@@ -77,23 +79,41 @@ class JsonAdaptedPerson {
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises,
             JsonAdaptedDietPlan dietPlan, String goal) {
-        this(name, phone, email, address, remark, tags, exercises, dietPlan, null, goal, null, null);
+        this(name, phone, email, address, remark, tags, exercises, dietPlan, null, goal, null, null, null);
     }
 
     /** Constructs an adapter with scheduled training and no recorded workouts. */
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises,
             JsonAdaptedDietPlan dietPlan, List<JsonAdaptedTrainingSession> trainingSessions, String goal) {
-        this(name, phone, email, address, remark, tags, exercises, dietPlan, trainingSessions, goal, null, null);
+        this(name, phone, email, address, remark, tags, exercises, dietPlan, trainingSessions, goal, null, null, null);
     }
 
-    /** Constructs an adapter with recorded workouts but no dietary restrictions. */
+    /** Constructs an adapter with recorded workouts but no dietary restrictions or health profile. */
     public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
             List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises,
             JsonAdaptedDietPlan dietPlan, List<JsonAdaptedTrainingSession> trainingSessions, String goal,
             List<JsonAdaptedWorkoutSession> workoutSessions) {
         this(name, phone, email, address, remark, tags, exercises, dietPlan, trainingSessions, goal,
-                workoutSessions, null);
+                workoutSessions, null, null);
+    }
+
+    /** Constructs an adapter with dietary restrictions. */
+    public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
+            List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises,
+            JsonAdaptedDietPlan dietPlan, List<JsonAdaptedTrainingSession> trainingSessions, String goal,
+            List<JsonAdaptedWorkoutSession> workoutSessions, List<String> dietaryRestrictions) {
+        this(name, phone, email, address, remark, tags, exercises, dietPlan, trainingSessions, goal,
+                workoutSessions, dietaryRestrictions, null);
+    }
+
+    /** Constructs an adapter with health considerations. */
+    public JsonAdaptedPerson(String name, String phone, String email, String address, String remark,
+            List<JsonAdaptedTag> tags, List<JsonAdaptedExercise> exercises,
+            JsonAdaptedDietPlan dietPlan, List<JsonAdaptedTrainingSession> trainingSessions, String goal,
+            List<JsonAdaptedWorkoutSession> workoutSessions, String healthProfile) {
+        this(name, phone, email, address, remark, tags, exercises, dietPlan, trainingSessions, goal,
+                workoutSessions, null, healthProfile);
     }
 
     /**
@@ -113,7 +133,8 @@ class JsonAdaptedPerson {
             @JsonProperty("trainingSessions") List<JsonAdaptedTrainingSession> trainingSessions,
             @JsonProperty("goal") String goal,
             @JsonProperty("workoutSessions") List<JsonAdaptedWorkoutSession> workoutSessions,
-            @JsonProperty("dietaryRestrictions") List<String> dietaryRestrictions) {
+            @JsonProperty("dietaryRestrictions") List<String> dietaryRestrictions,
+            @JsonProperty("healthProfile") String healthProfile) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -130,6 +151,7 @@ class JsonAdaptedPerson {
         if (dietaryRestrictions != null) {
             this.dietaryRestrictions.addAll(dietaryRestrictions);
         }
+        this.healthProfile = healthProfile;
         if (trainingSessions != null) {
             this.trainingSessions.addAll(trainingSessions);
         }
@@ -156,6 +178,7 @@ class JsonAdaptedPerson {
         dietPlan = source.getDietPlan().map(JsonAdaptedDietPlan::new).orElse(null);
         goal = source.getGoal().map(value -> value.value).orElse(null);
         dietaryRestrictions.addAll(source.getDietaryRestrictions().getValues());
+        healthProfile = source.getHealthProfile().map(value -> value.value).orElse(null);
         trainingSessions.addAll(source.getTrainingSessions().stream()
                 .map(JsonAdaptedTrainingSession::new)
                 .collect(Collectors.toList()));
@@ -236,6 +259,10 @@ class JsonAdaptedPerson {
         } catch (IllegalArgumentException | NullPointerException exception) {
             throw new IllegalValueException(DietaryRestrictions.MESSAGE_CONSTRAINTS);
         }
+        if (healthProfile != null && !HealthProfile.isValidHealthProfile(healthProfile)) {
+            throw new IllegalValueException(HealthProfile.MESSAGE_CONSTRAINTS);
+        }
+        final HealthProfile modelHealthProfile = healthProfile == null ? null : new HealthProfile(healthProfile);
 
         final List<TrainingSession> modelTrainingSessions = new ArrayList<>();
         for (JsonAdaptedTrainingSession session : trainingSessions) {
@@ -261,6 +288,6 @@ class JsonAdaptedPerson {
 
         return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags,
                 modelWorkoutPlan, modelDietPlan, modelGoal, modelTrainingSessions, modelSessions,
-                modelDietaryRestrictions);
+                modelDietaryRestrictions, modelHealthProfile);
     }
 }

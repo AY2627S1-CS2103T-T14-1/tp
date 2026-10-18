@@ -59,7 +59,7 @@ public class SetExerciseDayCommand extends Command {
                 person.getName(), person.getPhone(), person.getEmail(), person.getAddress(),
                 person.getRemark(), person.getTags(), plan, person.getDietPlan(),
                 person.getGoal().orElse(null), person.getTrainingSessions(), person.getWorkoutSessions(),
-                person.getDietaryRestrictions());
+                person.getDietaryRestrictions(), person.getHealthProfile().orElse(null));
         model.setPerson(person, edited);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
         return new CommandResult(String.format(MESSAGE_SUCCESS, Messages.format(edited)));

@@ -233,6 +233,11 @@ For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw argument
 Each `Person` owns an immutable `DietaryRestrictions` list, which is empty when no restrictions are recorded. `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` replaces the complete list; one blank sole `r/` clears it. The value object validates 1 to 10 ordered entries, each containing 1 to 100 printable Unicode characters and at least one letter or digit. It rejects duplicates after trimming and case-insensitive comparison while preserving the first supplied display text and ordering.
 
 `DietaryRestrictionsCommandParser` parses a displayed-list index and repeated `r/` values. `DietaryRestrictionsCommand` rejects an unchanged list and replaces the client with `Person#withDietaryRestrictions`, preserving unrelated data. `JsonAdaptedPerson` stores the list as `dietaryRestrictions`; an absent field loads as an empty list for backwards compatibility. `find dr/KEYWORDS` uses `DietaryRestrictionsContainsKeywordsPredicate` and retains the existing OR semantics. The selected-client detail pane only displays the list when nonempty. Restriction text is informational and does not determine allergy or meal safety.
+### Health considerations
+
+Each `Person` has an optional immutable `HealthProfile` with one current trainer-visible note. `health INDEX h/NOTE` replaces the note and `health INDEX h/` clears it. `HealthProfile` trims outer whitespace, accepts 1 to 500 printable Unicode characters with at least one letter or digit, and rejects line breaks and control characters. The profile is serialized as the optional `healthProfile` field in `JsonAdaptedPerson`; older data without that field loads without a profile.
+
+`HealthCommandParser` requires exactly one `h/` prefix and a displayed-list index. `HealthCommand` rejects a no-op update, replaces the client through `Person#withHealthProfile`, and preserves all unrelated client information. `find h/KEYWORDS` uses `HealthProfileContainsKeywordsPredicate` with the existing case-insensitive OR search behavior. The selected-client details panel displays the profile only when present. Health considerations are informational only; the application does not diagnose conditions or evaluate medical suitability.
 
 ### Workout session logging
 

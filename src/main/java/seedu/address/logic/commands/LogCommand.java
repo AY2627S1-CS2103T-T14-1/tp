@@ -74,7 +74,7 @@ public class LogCommand extends Command {
                 client.getName(), client.getPhone(), client.getEmail(), client.getAddress(),
                 client.getRemark(), client.getTags(), client.getWorkoutPlan(), client.getDietPlan(),
                 client.getGoal().orElse(null), client.getTrainingSessions(), updatedSessions,
-                client.getDietaryRestrictions());
+                client.getDietaryRestrictions(), client.getHealthProfile().orElse(null));
 
         model.setPerson(client, updatedClient);
 

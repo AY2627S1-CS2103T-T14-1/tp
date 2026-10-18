@@ -10,6 +10,7 @@ import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.DietaryRestrictions;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Goal;
+import seedu.address.model.person.HealthProfile;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -42,6 +43,7 @@ public class PersonBuilder {
     private List<TrainingSession> trainingSessions;
     private Goal goal;
     private DietaryRestrictions dietaryRestrictions;
+    private HealthProfile healthProfile;
     private List<WorkoutSession> workoutSessions;
 
     /**
@@ -59,6 +61,7 @@ public class PersonBuilder {
         trainingSessions = List.of();
         goal = null;
         dietaryRestrictions = new DietaryRestrictions();
+        healthProfile = null;
         workoutSessions = List.of();
     }
 
@@ -77,6 +80,7 @@ public class PersonBuilder {
         trainingSessions = personToCopy.getTrainingSessions();
         goal = personToCopy.getGoal().orElse(null);
         dietaryRestrictions = personToCopy.getDietaryRestrictions();
+        healthProfile = personToCopy.getHealthProfile().orElse(null);
         workoutSessions = personToCopy.getWorkoutSessions();
     }
 
@@ -157,6 +161,12 @@ public class PersonBuilder {
         return this;
     }
 
+    /** Sets the current health considerations of the person being built. */
+    public PersonBuilder withHealthProfile(String healthProfile) {
+        this.healthProfile = new HealthProfile(healthProfile);
+        return this;
+    }
+
     /**
      * Sets the recorded workout sessions of the person being built.
      */
@@ -170,7 +180,7 @@ public class PersonBuilder {
      */
     public Person build() {
         return new Person(name, phone, email, address, remark, tags,
-                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions, dietaryRestrictions);
+                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions, dietaryRestrictions, healthProfile);
     }
 
 }

@@ -199,14 +199,28 @@ Examples:
 * `restriction 2 r/Peanut allergy r/Halal meals r/No shellfish`
 * `restriction 2 r/`
 
+### Recording health considerations: `health`
+
+Stores one current trainer-visible note about a client's injuries or physical limitations.
+
+Format: `health INDEX h/NOTE`
+
+* A nonblank note creates or replaces the current profile. `health INDEX h/` clears it.
+* Notes must contain 1 to 500 printable characters and at least one letter or digit.
+* Fittix records information only; it does not diagnose, recommend treatment, or decide whether a workout is medically safe.
+
+Examples:
+* `health 2 h/Recovering from a left ankle sprain; avoid jumping exercises`
+* `health 2 h/`
+
 ### Finding clients: `find`
 
-Finds clients matching one or more name, phone, email, fitness-goal, or dietary-restriction criteria.
+Finds clients matching one or more name, phone, email, fitness-goal, dietary-restriction, or health-considerations criteria.
 
 Format:
 
 * `find KEYWORD [MORE_KEYWORDS]...`
-* `find [n/NAME_KEYWORDS] [p/PHONE] [e/EMAIL_KEYWORDS] [g/GOAL_KEYWORDS] [dr/RESTRICTION_KEYWORDS]`
+* `find [n/NAME_KEYWORDS] [p/PHONE] [e/EMAIL_KEYWORDS] [g/GOAL_KEYWORDS] [dr/RESTRICTION_KEYWORDS] [h/HEALTH_KEYWORDS]`
 
 The first form is a name search and behaves exactly like `find n/KEYWORD [MORE_KEYWORDS]...`.
 
@@ -215,8 +229,9 @@ The first form is a name search and behaves exactly like `find n/KEYWORD [MORE_K
 * `e/` splits its value into keywords. A client's email matches if it contains any keyword as a case-insensitive substring.
 * `g/` splits its value into keywords. A client's fitness goal matches if it contains any keyword as a case-insensitive substring. Clients without a goal do not match a goal search.
 * `dr/` splits its value into keywords. A client matches when any current dietary restriction contains any keyword as a case-insensitive substring.
+* `h/` splits its value into keywords. A client's health considerations match if they contain any keyword as a case-insensitive substring.
 * Criteria are combined with OR. For example, `find n/tan g/fat loss` returns clients whose name contains `tan` or whose goal contains `fat` or `loss`.
-* Each of `n/`, `p/`, `e/`, `g/`, and `dr/` may appear at most once. A bare keyword cannot be combined with a prefix.
+* Each of `n/`, `p/`, `e/`, `g/`, `dr/`, and `h/` may appear at most once. A bare keyword cannot be combined with a prefix.
 
 Examples:
 * `find pri` and `find n/pri` find clients whose names contain `pri`.
@@ -224,16 +239,17 @@ Examples:
 * `find e/example.com` finds clients with an email containing `example.com`.
 * `find g/strength` finds clients with a goal containing `strength`.
 * `find dr/peanut` finds clients with a dietary restriction containing `peanut`.
+* `find h/ankle` finds clients whose health considerations contain `ankle`.
 * `find n/tan g/fat loss` combines name and goal criteria using OR.
 
 Common errors:
 
 | Cause | Message |
 | --- | --- |
-| No search value | `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION]` |
-| Bare keyword mixed with a prefix | `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION]` |
-| Repeated supported prefix | `The n/, p/, e/, g/ and dr/ prefixes may each be used only once.` |
-| Empty `n/` value | `The n/ search value cannot be empty.` The same message uses `p/`, `e/`, `g/`, or `dr/` for those prefixes. |
+| No search value | `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]` |
+| Bare keyword mixed with a prefix | `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]` |
+| Repeated supported prefix | `The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.` |
+| Empty `n/` value | `The n/ search value cannot be empty.` The same message uses `p/`, `e/`, `g/`, `dr/`, or `h/` for those prefixes. |
 | Phone query without a digit | `Phone search must contain at least one digit.` |
 
 Fittix reports `Found N client(s).` when there are matches, or `Found 0 client(s). Use list to show all clients.` when there are none.
@@ -591,7 +607,8 @@ Action | Format, Examples
 **Diet plan** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
 **Dietary restrictions** | `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`<br> e.g., `restriction 2 r/Peanut allergy r/Halal meals`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
-**Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION]`<br> e.g., `find n/James g/strength`
+**Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`<br> e.g., `find n/James g/strength`
+**Health considerations** | `health INDEX h/NOTE`<br> e.g., `health 2 h/Avoid jumping exercises`
 **List** | `list`
 **Add membership plan** | `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`<br> e.g., `addmem n/Gold p/150 s/30`
 **View membership plans** | `view mem` or `view membership`

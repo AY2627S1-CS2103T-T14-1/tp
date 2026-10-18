@@ -147,6 +147,7 @@ public class PersonTest {
                 + ", dietPlan=" + ALICE.getDietPlan()
                 + ", dietaryRestrictions=" + ALICE.getDietaryRestrictions()
                 + ", goal=" + ALICE.getGoal().orElse(null)
+                + ", healthProfile=" + ALICE.getHealthProfile().orElse(null)
                 + ", trainingSessions=" + ALICE.getTrainingSessions()
                 + ", workoutSessions=" + ALICE.getWorkoutSessions()
                 + "}";
@@ -175,6 +176,19 @@ public class PersonTest {
         assertEquals(List.of(session), copy.getWorkoutSessions());
         assertFalse(goalAlice.equals(loggedAlice));
         assertTrue(goalAlice.isSamePerson(loggedAlice));
+    }
+
+    @Test
+    public void healthAndDietaryRestrictions_surviveIndependentUpdates() {
+        Person person = new PersonBuilder().withDietaryRestrictions("Peanut allergy")
+                .withHealthProfile("Avoid jumping").build();
+        Person clearedHealth = person.withHealthProfile(null);
+        assertEquals(person.getDietaryRestrictions(), clearedHealth.getDietaryRestrictions());
+        assertTrue(clearedHealth.getHealthProfile().isEmpty());
+
+        Person clearedRestrictions = person.withDietaryRestrictions(new DietaryRestrictions());
+        assertEquals(person.getHealthProfile(), clearedRestrictions.getHealthProfile());
+        assertEquals(person, new PersonBuilder(person).build());
     }
 
     @Test

@@ -14,6 +14,7 @@ public class CliSyntax {
     public static final Prefix PREFIX_GOAL = new Prefix("g/");
     public static final Prefix PREFIX_RESTRICTION = new Prefix("r/");
     public static final Prefix PREFIX_DIETARY_RESTRICTION_SEARCH = new Prefix("dr/");
+    public static final Prefix PREFIX_HEALTH = new Prefix("h/");
     public static final Prefix PREFIX_REMARK = new Prefix("r/");
     public static final Prefix PREFIX_DATE = new Prefix("d/");
     public static final Prefix PREFIX_TIME = new Prefix("tm/");
