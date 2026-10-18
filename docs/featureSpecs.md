@@ -4,15 +4,19 @@
 
 ## Features covered
 
-1. Add client
-2. Delete client
-3. Training schedule
-4. Workout plan management
-5. Workout session logging
-6. Diet plan management
-7. Membership Plan
-8. Health considerations
-9. Dietary restrictions
+- Feature 1A: Add client
+- Feature 1B: Delete client
+- Feature 2: Training schedule
+- Feature 3: Workout plan management
+- Feature 4: Workout session logging
+- Feature 5: Diet plan management
+- Feature 7: Membership Plan
+- Feature 8: Health considerations
+- Feature 9: Dietary restrictions
+- Feature 10: Body progress tracker
+- Feature 11: Advanced scheduling and client monitoring ([pending PR #118](https://github.com/AY2627S1-CS2103T-T14-1/tp/pull/118))
+
+Feature identifiers follow the section headings, rather than list positions. Feature 11's specification is currently in PR #118; retain its entry and section when that PR is merged.
 
 ## Feature 1A: Add client
 
@@ -1165,3 +1169,135 @@ Replace, clear, persist, display, and search a current ordered list of dietary r
 #### Nice to have or later
 
 Restriction categories, severity, expiry dates, meal validation, nutritional guidance, and historical changes.
+
+## Feature 10: Body progress tracker
+
+**Status:** Planned for v1.4; this section defines the intended implementation contract. These commands are not available in v1.3. The original feature-specification PDF is not the reference for this feature.
+
+### 1. Feature and scope
+
+Record starting body measurements, record dated progress with weight and optional notes, view the complete history, and compare the latest recorded weight with the baseline. The v1.4 baseline contains **weight in kilograms and height in centimetres**. Later entries contain weight; height is baseline context, not a repeatedly measured value. Corrections and deletion of progress entries are included so input mistakes can be repaired.
+
+### 2. Purpose
+
+A trainer can review recorded changes for one client without searching separate notes. Fittix reports measurements and arithmetic differences; it does not infer health, diagnose conditions, or label weight gain/loss as good or bad.
+
+### 3. Commands
+
+| Capability | Format | Effect |
+| --- | --- | --- |
+| Starting measurements | `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM` | Create or replace the client's baseline. |
+| Dated progress | `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]` | Add an entry, or replace the complete entry on that date. |
+| Complete history | `bodyhistory INDEX` | Show baseline and all progress entries, oldest to newest. |
+| Latest comparison | `bodycompare INDEX` | Show baseline weight, latest progress weight and their signed difference. |
+| Correct a mistaken record | `bodydelete INDEX d/DATE` | Delete one progress entry; never delete the baseline. |
+
+All five command words and prefix letters are case-sensitive. The displayed client index comes first; prefixed parameters may follow in any order. Each accepted prefix appears at most once. Unknown prefixes, missing/empty required fields and extra positional arguments are rejected. Values such as weight cannot contain extra words or units. No-argument commands' handling of extra text does not apply to these commands.
+
+Example workflow (all dates must be today or earlier):
+
+```text
+bodybase 2 d/2020-01-01 w/75.50 h/175
+bodylog 2 d/2020-01-08 w/74.80 n/Measured before breakfast
+bodylog 2 d/2020-01-15 w/74.20
+bodyhistory 2
+bodycompare 2
+bodylog 2 d/2020-01-08 w/74.60 n/Corrected scale reading
+bodydelete 2 d/2020-01-15
+```
+
+### 4. Shared validation and parsing
+
+| Parameter | Rule | Error |
+| --- | --- | --- |
+| `INDEX` | Positive decimal integer in the **currently displayed** client list, including search results. Leading zeros are accepted. Reject zero, signs, fractions, non-digits and values beyond the supported integer range. Never reinterpret an invalid index as a full-list index. | `Client index must be a positive whole number shown in the client list.` Invalid displayed position: `No client exists at index INDEX.` |
+| `d/DATE` | Exactly `yyyy-MM-dd`, with a real Gregorian date and four-digit year 0001–9999. Leading/trailing horizontal whitespace is trimmed. On command execution, date must be today or earlier in the local time zone. | `Measurement date must be a real date in yyyy-MM-dd format and must not be in the future.` |
+| `w/WEIGHT_KG` | Decimal greater than 0 and at most 500 kg, with at most two decimal places. | `Weight must be greater than 0 and at most 500 kg, with at most 2 decimal places.` |
+| `h/HEIGHT_CM` | Decimal greater than 0 and at most 300 cm, with at most two decimal places. Required only for `bodybase`. | `Height must be greater than 0 and at most 300 cm, with at most 2 decimal places.` |
+| `n/NOTES` | Optional for `bodylog`. When supplied, 1–300 Unicode code points after trimming outer horizontal whitespace. Preserve internal spaces, punctuation and case; reject line breaks, control and other nonprintable characters before trimming. Omission means absent notes. An explicitly blank `n/` is invalid. | `Progress notes must contain 1 to 300 printable characters without line breaks.` |
+
+Weight/height accept only ASCII digits with an optional decimal point followed by one or two digits, after trimming outer horizontal whitespace. Examples: `75`, `75.5`, `075.50`; reject `+75`, `-1`, `.5`, `75.`, `75.500`, `1e2`, `NaN`, `Infinity`, `75kg` and `1,000`. Store and calculate with exact decimals, never binary floating point. Display weights and height with two decimal places. The upper bounds are product input limits to catch mistakes, not medical suitability thresholds.
+
+Prefixes are recognized only at argument boundaries: start of the argument or after horizontal whitespace. A separated alphabetic token ending in `/` reserves a prefix (`n/`, `w/`, `ex/`, etc.); unsupported or repeated prefixes are errors, including inside notes. A slash within a word, such as `km/day`, is ordinary text. There is no escape syntax for literal reserved prefix tokens in v1.4. Reject embedded line breaks instead of normalizing them into accepted input. Command parsing must preserve raw values until these checks run.
+
+Format failures report `Invalid command format. Use: FORMAT`, substituting the relevant format from Section 3. Validation priority is: command structure (including required fields and duplicate/unknown prefixes), index syntax, field values, displayed-index range, then the state-dependent rules below. Do not partially apply a command when a later field fails.
+
+### 5. Starting measurements: `bodybase`
+
+Each client has at most one baseline. All three fields (date, weight, height) are required on both creation and replacement. A different baseline replaces the whole baseline and **retains every progress entry**. With existing entries, the replacement baseline's date must be strictly earlier than every progress date; otherwise reject it with:
+
+```text
+Baseline date must be earlier than every recorded progress date. No changes were made.
+```
+
+An identical date, numerical weight and numerical height is rejected with `This is already the current body baseline for NAME.` Differences only in numeric formatting, such as `75.5` and `75.50`, are identical. There is no baseline version history. Replacement immediately changes the reference used by comparison; the trainer must correct the baseline deliberately.
+
+Success:
+
+```text
+Created body baseline for Priya Nair: 2020-01-01; Weight: 75.50 kg; Height: 175.00 cm.
+Replaced body baseline for Priya Nair: 2020-01-01; Weight: 75.00 kg; Height: 175.00 cm.
+```
+
+### 6. Progress entries: `bodylog`
+
+A baseline is required first. An entry's date must be strictly after the baseline date and no later than today. Reject a missing baseline with `No body baseline recorded for NAME. Use bodybase first.` Reject an entry on/before the baseline with `Progress date must be later than the baseline date.`
+
+"Weekly" describes the expected trainer workflow, not a mandatory seven-day interval. Daily, irregular and backdated entries are accepted when these date rules hold. There is at most **one progress entry per client per date**; multiple clients may share dates. Re-entering an existing date replaces its entire entry, including notes, with explicit replacement feedback. Omitting `n/` during replacement clears old notes. To correct an erroneous date, record the entry on the correct date and delete the mistaken one using `bodydelete`.
+
+An entry with the same date, numerical weight and notes is rejected with `This body progress entry already exists for NAME on DATE.` Notes comparison is case-sensitive after outer trimming; internal spaces matter. A case-only notes correction is therefore allowed.
+
+Success:
+
+```text
+Recorded body progress for Priya Nair on 2020-01-08: 74.80 kg.
+Replaced body progress for Priya Nair on 2020-01-08: 74.60 kg.
+```
+
+### 7. History: `bodyhistory`
+
+Show the targeted client's name, baseline date/weight/height, and **every** progress entry with date, weight and optional notes. List entries by measurement date ascending, regardless of input order. The baseline is displayed separately and is not counted as a progress entry. Omitted notes appear as `—`; long valid notes remain readable through wrapping and vertical scrolling. Never truncate the history to a fixed number of recent entries or silently discard older entries.
+
+No baseline: `No body baseline recorded for NAME. Use bodybase first.` A baseline with no entries still displays its measurements and `No body progress entries recorded.` Successful feedback: `Showing body progress history for NAME: N entries.`
+
+For a valid client index, missing-data results from history/comparison are successful empty-state displays: select that client and show the relevant empty state. They are not invalid mutations. An invalid index never changes selection.
+
+### 8. Comparison: `bodycompare`
+
+Choose the entry with the **greatest measurement date**, not the entry most recently entered or edited. Display its date/weight alongside the baseline date/weight/height. Calculate `latest weight - baseline weight`, in kg, exactly, with two decimals: positive `+1.30 kg`, negative `-1.30 kg`, unchanged `0.00 kg`. Do not show a negative sign for zero. Do not compare height, calculate BMI/percentages, or assess whether the change is desirable.
+
+No baseline: use the same missing-baseline message as history. Baseline only: `No body progress entries recorded for NAME. Use bodylog before comparing.` Do not present the baseline as a later measurement. Successful feedback: `Showing body progress comparison for NAME.` Editing/deleting an entry or replacing the baseline refreshes the comparison; deleting the latest entry selects the next greatest date, or restores the no-progress state.
+
+### 9. Corrections: `bodydelete`
+
+Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion is permanent in the v1.4 tracker and has no confirmation step; any later shared undo/redo support must be documented when integrated.
+
+Success: `Deleted body progress for NAME on DATE.` Deleting the last entry retains the baseline and produces empty history/comparison states. There is no command to delete only the baseline; it can be corrected by replacement.
+
+### 10. Display, persistence and failures
+
+The selected client's scrollable details area contains baseline, history and comparison sections. `bodyhistory` and `bodycompare` select the requested client and reveal the relevant section **without changing the current client filter or numbering**. Successful mutations select that client and refresh the body-progress display after saving. Selection changes clear stale fields, notes and comparison values. No body data shows the missing-baseline state. Invalid commands and failed saves must not send a success/display request or leave rejected values visible.
+
+```text
+Priya Nair — BODY PROGRESS
+Baseline: 2020-01-01 | 75.50 kg | 175.00 cm
+Progress history (2):
+2020-01-08 | 74.80 kg | Measured before breakfast
+2020-01-15 | 74.20 kg | —
+Latest comparison: 2020-01-15
+75.50 kg -> 74.20 kg | Change: -1.30 kg
+```
+
+Keep valid maximum-length text readable at the application's minimum supported window size, with wrapping/scrolling rather than automatically resizing the window. A later UI redesign may change placement, but must preserve all specified data, empty states and targeting behavior.
+
+Body data belongs to a client. Contact edits, diet/workout changes, remarks, scheduling, membership changes and workout logging preserve it. Body commands preserve those other fields and never alter membership sessions or payments. Deleting a client removes their body data; `clear` removes body data with its clients and follows the shared catalog-preservation rule. `clearmem` does not alter body data.
+
+Save baseline and entries with the client. Older files with a missing/null body-progress field load as an empty tracker. Persist exact measurement values, optional notes and dates; restore chronological order on load. Reject malformed data (including null list elements, wrong field types, invalid dates/numbers, duplicate entry dates, entries without a baseline, or entries on/before its date) through the normal data-loading error path, not unchecked exceptions or silent omission. Loading also rejects future measurement dates against the local date; tests must control the clock.
+
+Every mutation validates its full candidate before replacing the client. A save failure restores the previous in-memory client and saved file, including all other feature data, and reports `The body progress change could not be saved. No changes were made.` This includes baseline creation/replacement, entry creation/replacement and deletion. History/comparison do not modify measurements or other domain data. No partial write or later successful command may persist a previously rejected mutation.
+
+### 11. v1.4 priorities and acceptance evidence
+
+**Must have:** all four assigned capabilities and the correction/deletion paths above; strict validation; clear empty/duplicate/error states; independent client targeting; persistence/rollback; readable display; current UG and DG. Verify positive/negative/zero comparisons, out-of-order entry dates, replacing/clearing notes, baseline corrections that retain history, last-entry deletion, filtered indices, restart with populated data, legacy files, malformed loads and fault-injected failed saves.
+
+**Later scope:** circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. These are not needed to complete this v1.4 feature.
