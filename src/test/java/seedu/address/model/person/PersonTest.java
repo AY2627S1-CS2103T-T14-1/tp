@@ -146,6 +146,7 @@ public class PersonTest {
                 + ", workoutPlan=" + ALICE.getWorkoutPlan()
                 + ", dietPlan=" + ALICE.getDietPlan()
                 + ", goal=" + ALICE.getGoal().orElse(null)
+                + ", healthProfile=" + ALICE.getHealthProfile().orElse(null)
                 + ", trainingSessions=" + ALICE.getTrainingSessions()
                 + ", workoutSessions=" + ALICE.getWorkoutSessions()
                 + "}";

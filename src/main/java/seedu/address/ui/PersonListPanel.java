@@ -31,6 +31,8 @@ public class PersonListPanel extends UiPart<Region> {
     @FXML
     private Label goal;
     @FXML
+    private Label healthProfile;
+    @FXML
     private Label dietPlanHeading;
     @FXML
     private Label dietTarget;
@@ -63,6 +65,7 @@ public class PersonListPanel extends UiPart<Region> {
 
         configureWrapping(selectedClientName);
         configureWrapping(goal);
+        configureWrapping(healthProfile);
         configureWrapping(dietTarget);
         configureWrapping(dietNotes);
         configureWrapping(workoutHeading);
@@ -102,6 +105,7 @@ public class PersonListPanel extends UiPart<Region> {
 
     private void showClientDetails(Person selected) {
         showDietPlan(selected);
+        showHealthProfile(selected);
         showWorkoutSession(selected);
     }
 
@@ -109,6 +113,7 @@ public class PersonListPanel extends UiPart<Region> {
         if (selected == null) {
             selectedClientName.setText("Select a client to view their current diet plan.");
             setShown(goal, false);
+            setShown(healthProfile, false);
             setShown(dietPlanHeading, false);
             setShown(dietTarget, false);
             setShown(dietNotes, false);
@@ -138,6 +143,16 @@ public class PersonListPanel extends UiPart<Region> {
             setShown(dietNotes, true);
         }, () -> setShown(dietNotes, false));
         setShown(dietEmpty, false);
+    }
+
+    private void showHealthProfile(Person selected) {
+        if (selected == null) {
+            return;
+        }
+        selected.getHealthProfile().ifPresentOrElse(profile -> {
+            healthProfile.setText("Health considerations: " + profile.value);
+            setShown(healthProfile, true);
+        }, () -> setShown(healthProfile, false));
     }
 
     private void showWorkoutSession(Person selected) {

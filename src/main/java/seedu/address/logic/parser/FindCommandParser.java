@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_GOAL;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_HEALTH;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
@@ -14,6 +15,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.ClientMatchesAnyPredicate;
 import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.GoalContainsKeywordsPredicate;
+import seedu.address.model.person.HealthProfileContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PhoneMatchesPredicate;
@@ -23,13 +25,15 @@ import seedu.address.model.person.PhoneMatchesPredicate;
  */
 public class FindCommandParser implements Parser<FindCommand> {
 
-    private static final Prefix[] SUPPORTED_PREFIXES = {PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL, PREFIX_GOAL};
+    private static final Prefix[] SUPPORTED_PREFIXES = {
+        PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL, PREFIX_GOAL, PREFIX_HEALTH
+    };
     private static final String MESSAGE_KEYWORD_REQUIRED = "Search keyword is required. Use: find KEYWORD... or "
-            + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]";
+            + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [h/HEALTH]";
     private static final String MESSAGE_MIXED_PREAMBLE = "Invalid command format. Use: find KEYWORD... or "
-            + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]";
+            + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [h/HEALTH]";
     private static final String MESSAGE_REPEATED_PREFIX =
-            "The n/, p/, e/ and g/ prefixes may each be used only once.";
+            "The n/, p/, e/, g/ and h/ prefixes may each be used only once.";
     private static final String MESSAGE_EMPTY_VALUE = "The %s search value cannot be empty.";
 
     /**
@@ -95,6 +99,8 @@ public class FindCommandParser implements Parser<FindCommand> {
                 predicates.add(new EmailContainsKeywordsPredicate(List.of(value.split("\\s+")))));
         argMultimap.getValue(PREFIX_GOAL).ifPresent(value ->
                 predicates.add(new GoalContainsKeywordsPredicate(List.of(value.split("\\s+")))));
+        argMultimap.getValue(PREFIX_HEALTH).ifPresent(value ->
+                predicates.add(new HealthProfileContainsKeywordsPredicate(List.of(value.split("\\s+")))));
         return new FindCommand(new ClientMatchesAnyPredicate(predicates));
     }
 

@@ -31,6 +31,7 @@ public class Person {
     private final WorkoutPlan workoutPlan;
     private final Optional<DietPlan> dietPlan;
     private final Goal goal;
+    private final HealthProfile healthProfile;
     private final List<TrainingSession> trainingSessions;
     private final List<WorkoutSession> workoutSessions;
 
@@ -91,6 +92,17 @@ public class Person {
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
             List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions,
+                workoutSessions, null);
+    }
+
+    /**
+     * Constructs a person with all supported client information.
+     * The health profile is optional; a {@code null} value means no profile is recorded.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions, HealthProfile healthProfile) {
         requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan,
                 trainingSessions, workoutSessions);
         this.name = name;
@@ -102,6 +114,7 @@ public class Person {
         this.workoutPlan = workoutPlan;
         this.dietPlan = dietPlan;
         this.goal = goal;
+        this.healthProfile = healthProfile;
         this.trainingSessions = List.copyOf(trainingSessions);
         this.workoutSessions = List.copyOf(workoutSessions);
     }
@@ -138,6 +151,11 @@ public class Person {
         return Optional.ofNullable(goal);
     }
 
+    /** Returns the client's current health considerations, if recorded. */
+    public Optional<HealthProfile> getHealthProfile() {
+        return Optional.ofNullable(healthProfile);
+    }
+
     /** Returns an unmodifiable list of recorded workout sessions. */
     public List<WorkoutSession> getWorkoutSessions() {
         return workoutSessions;
@@ -153,7 +171,13 @@ public class Person {
         List<TrainingSession> updated = new ArrayList<>(trainingSessions);
         updated.add(session);
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, updated,
-                workoutSessions);
+                workoutSessions, healthProfile);
+    }
+
+    /** Returns a copy with the supplied current health profile, or none when {@code profile} is null. */
+    public Person withHealthProfile(HealthProfile profile) {
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
+                trainingSessions, workoutSessions, profile);
     }
 
     /**
@@ -201,6 +225,7 @@ public class Person {
                 && workoutPlan.equals(otherPerson.workoutPlan)
                 && dietPlan.equals(otherPerson.dietPlan)
                 && Objects.equals(goal, otherPerson.goal)
+                && Objects.equals(healthProfile, otherPerson.healthProfile)
                 && trainingSessions.equals(otherPerson.trainingSessions)
                 && workoutSessions.equals(otherPerson.workoutSessions);
     }
@@ -209,7 +234,7 @@ public class Person {
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
         return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions);
+                healthProfile, trainingSessions, workoutSessions);
     }
 
     @Override
@@ -224,6 +249,7 @@ public class Person {
                 .add("workoutPlan", workoutPlan)
                 .add("dietPlan", dietPlan)
                 .add("goal", goal)
+                .add("healthProfile", healthProfile)
                 .add("trainingSessions", trainingSessions)
                 .add("workoutSessions", workoutSessions)
                 .toString();

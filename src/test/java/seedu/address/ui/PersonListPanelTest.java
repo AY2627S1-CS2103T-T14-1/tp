@@ -95,6 +95,24 @@ public class PersonListPanelTest {
     }
 
     @Test
+    public void selectionShowsHealthProfileOnlyWhenClientHasOne() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair")
+                    .withHealthProfile("Avoid jumping after ankle sprain").build();
+            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
+            assertFalse(label(panel, "healthProfile").isVisible());
+
+            listView(panel).getSelectionModel().select(1);
+            assertEquals("Health considerations: Avoid jumping after ankle sprain",
+                    label(panel, "healthProfile").getText());
+            assertTrue(label(panel, "healthProfile").isVisible());
+            assertTrue(label(panel, "healthProfile").isManaged());
+            return null;
+        });
+    }
+
+    @Test
     public void replacementAndDeletionRefreshSelectedDetails() throws Exception {
         runOnFxThread(() -> {
             Person original = new PersonBuilder().withName("Priya Nair")
