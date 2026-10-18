@@ -20,7 +20,7 @@ public class GoalTest {
         assertThrows(IllegalArgumentException.class, () -> new Goal("   "));
         assertThrows(IllegalArgumentException.class, () -> new Goal("!!!"));
         assertThrows(IllegalArgumentException.class, () -> new Goal("Fat\nloss"));
-        assertThrows(IllegalArgumentException.class, () -> new Goal("a".repeat(51)));
+        assertThrows(IllegalArgumentException.class, () -> new Goal("a".repeat(101)));
     }
 
     @Test
@@ -29,7 +29,7 @@ public class GoalTest {
         new Goal("5");
         new Goal("Run 5km in < 25 min");
         new Goal("Muscle gain (upper body)");
-        new Goal("a".repeat(50));
+        new Goal("a".repeat(100));
         new Goal("  Fat loss  ");
     }
 

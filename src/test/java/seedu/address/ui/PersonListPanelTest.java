@@ -1,8 +1,7 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
@@ -14,17 +13,15 @@ import org.junit.jupiter.api.Test;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.Region;
-import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
-/**
- * Tests the selected client's diet details with the JavaFX toolkit in headless mode.
- */
+/** Tests client-list counts, filtering, and selection ownership. */
 public class PersonListPanelTest {
 
     @BeforeAll
@@ -40,140 +37,97 @@ public class PersonListPanelTest {
         try {
             Platform.startup(ready);
         } catch (IllegalStateException e) {
-            // Other UI tests may already have started the shared toolkit.
             Platform.runLater(ready);
         }
         ready.get(10, TimeUnit.SECONDS);
     }
 
     @Test
-    public void emptyList_promptsForClientSelection() throws Exception {
+    public void emptyList_showsAddClientState() throws Exception {
         runOnFxThread(() -> {
             PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList());
-            assertEquals("Select a client to view their current diet plan.",
-                    label(panel, "selectedClientName").getText());
-            assertFalse(label(panel, "dietPlanHeading").isManaged());
-            assertFalse(label(panel, "dietEmpty").isVisible());
+
+            assertEquals("0", label(panel, "shownCount").getText());
+            assertEquals("No clients yet", label(panel, "emptyTitle").getText());
+            assertEquals("add n/NAME p/PHONE e/EMAIL a/ADDRESS", label(panel, "emptyCommand").getText());
+            assertNull(panel.getSelectedPerson());
             return null;
         });
     }
 
     @Test
-    public void selectionShowsCurrentPlanAndHidesAbsentNotes() throws Exception {
-        runOnFxThread(() -> {
-            Person first = new PersonBuilder().withName("Alice Lee").build();
-            Person second = new PersonBuilder().withName("Priya Nair")
-                    .withDietPlan(new DietPlan("1800 kcal per day", "Prioritise vegetables")).build();
-            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
-            assertEquals("Alice Lee", label(panel, "selectedClientName").getText());
-            assertTrue(label(panel, "dietEmpty").isVisible());
-
-            listView(panel).getSelectionModel().select(1);
-            assertEquals("Priya Nair", label(panel, "selectedClientName").getText());
-            assertEquals("Target: 1800 kcal per day", label(panel, "dietTarget").getText());
-            assertEquals("Notes: Prioritise vegetables", label(panel, "dietNotes").getText());
-            assertFalse(label(panel, "dietEmpty").isManaged());
-            return null;
-        });
-    }
-
-    @Test
-    public void selectionShowsGoalOnlyWhenClientHasOne() throws Exception {
-        runOnFxThread(() -> {
-            Person first = new PersonBuilder().withName("Alice Lee").build();
-            Person second = new PersonBuilder().withName("Priya Nair").withGoal("Build strength").build();
-            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
-            assertFalse(label(panel, "goal").isVisible());
-            assertFalse(label(panel, "goal").isManaged());
-
-            listView(panel).getSelectionModel().select(1);
-            assertEquals("Goal: Build strength", label(panel, "goal").getText());
-            assertTrue(label(panel, "goal").isVisible());
-            assertTrue(label(panel, "goal").isManaged());
-            return null;
-        });
-    }
-
-    @Test
-    public void replacementAndDeletionRefreshSelectedDetails() throws Exception {
-        runOnFxThread(() -> {
-            Person original = new PersonBuilder().withName("Priya Nair")
-                    .withDietPlan(new DietPlan("1800 kcal", "Old notes")).build();
-            ObservableList<Person> persons = FXCollections.observableArrayList(original);
-            PersonListPanel panel = new PersonListPanel(persons);
-            Person replacement = new PersonBuilder(original).withDietPlan(new DietPlan("2000 kcal/day")).build();
-
-            persons.set(0, replacement);
-            assertEquals("Target: 2000 kcal/day", label(panel, "dietTarget").getText());
-            assertFalse(label(panel, "dietNotes").isVisible());
-            assertFalse(label(panel, "dietNotes").isManaged());
-
-            persons.remove(0);
-            assertEquals("Select a client to view their current diet plan.",
-                    label(panel, "selectedClientName").getText());
-            assertFalse(label(panel, "dietTarget").isVisible());
-            return null;
-        });
-    }
-
-    @Test
-    public void removalOfSelectedClient_selectsFirstRemainingClient() throws Exception {
+    public void populatedList_selectsFirstAndExposesSelection() throws Exception {
         runOnFxThread(() -> {
             Person first = new PersonBuilder().withName("Alice Lee").build();
             Person second = new PersonBuilder().withName("Priya Nair").build();
-            ObservableList<Person> persons = FXCollections.observableArrayList(first, second);
-            PersonListPanel panel = new PersonListPanel(persons);
+            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
 
-            persons.remove(first);
-
-            assertEquals(second, listView(panel).getSelectionModel().getSelectedItem());
-            assertEquals("Priya Nair", label(panel, "selectedClientName").getText());
+            assertEquals(first, panel.getSelectedPerson());
+            panel.selectDisplayedIndex(1);
+            assertEquals(second, panel.selectedPersonProperty().get());
+            assertEquals(1, panel.getSelectedIndex());
             return null;
         });
     }
 
     @Test
-    public void longValuesRemainAvailableAndWrapAtNarrowWidth() throws Exception {
+    public void filteredList_keepsSourceTotalAndReportsVisibleCount() throws Exception {
         runOnFxThread(() -> {
-            String target = "Protein".repeat(28); // 196 characters
-            String notes = "Vegetables".repeat(30); // 300 characters
-            Person client = new PersonBuilder().withDietPlan(new DietPlan(target, notes)).build();
-            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(client));
-            Region root = panel.getRoot();
-            new Scene(root, 340, 600);
-            root.applyCss();
-            root.resize(340, 600);
-            root.layout();
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").build();
+            ObservableList<Person> source = FXCollections.observableArrayList(first, second);
+            FilteredList<Person> displayed = new FilteredList<>(source);
+            PersonListPanel panel = new PersonListPanel(displayed);
 
-            Label targetLabel = label(panel, "dietTarget");
-            Label notesLabel = label(panel, "dietNotes");
-            assertEquals("Target: " + target, targetLabel.getText());
-            assertEquals("Notes: " + notes, notesLabel.getText());
-            assertTrue(targetLabel.isWrapText());
-            assertTrue(notesLabel.isWrapText());
-            assertTrue(targetLabel.prefHeight(280) > targetLabel.prefHeight(1000));
-            assertTrue(notesLabel.prefHeight(280) > notesLabel.prefHeight(1000));
+            displayed.setPredicate(person -> person.equals(second));
+            assertEquals(2, panel.totalCountProperty().get());
+            assertEquals(1, panel.getDisplayedCount());
+            assertEquals("1", label(panel, "shownCount").getText());
+            assertEquals(second, panel.getSelectedPerson());
+
+            panel.setFilterQuery("Nobody");
+            displayed.setPredicate(person -> false);
+            assertEquals("No clients match", label(panel, "emptyTitle").getText());
+            assertEquals("list", label(panel, "emptyCommand").getText());
+            assertNull(panel.getSelectedPerson());
+            return null;
+        });
+    }
+
+    @Test
+    public void removalOfSelectedClient_selectsRemainingClient() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").build();
+            ObservableList<Person> people = FXCollections.observableArrayList(first, second);
+            PersonListPanel panel = new PersonListPanel(people);
+
+            people.remove(first);
+
+            assertEquals(second, panel.getSelectedPerson());
+            assertEquals("1", label(panel, "shownCount").getText());
             return null;
         });
     }
 
     private static Label label(PersonListPanel panel, String id) {
         prepareForLookup(panel);
-        return (Label) panel.getRoot().lookup("#" + id);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ListView<Person> listView(PersonListPanel panel) {
-        prepareForLookup(panel);
-        return (ListView<Person>) panel.getRoot().lookup("#personListView");
+        Label result = (Label) panel.getRoot().lookup("#" + id);
+        if (result == null) {
+            @SuppressWarnings("unchecked")
+            ListView<Person> list = (ListView<Person>) panel.getRoot().lookup("#personListView");
+            result = (Label) list.getPlaceholder().lookup("#" + id);
+        }
+        return result;
     }
 
     private static void prepareForLookup(PersonListPanel panel) {
         Region root = panel.getRoot();
         if (root.getScene() == null) {
-            new Scene(root, 340, 600);
-            root.applyCss();
+            new Scene(root, 300, 600);
         }
+        root.applyCss();
+        root.layout();
     }
 
     private static <T> T runOnFxThread(Callable<T> action) throws Exception {

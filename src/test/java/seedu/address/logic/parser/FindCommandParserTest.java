@@ -10,8 +10,10 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.model.person.ClientMatchesAnyPredicate;
+import seedu.address.model.person.DietaryRestrictionsContainsKeywordsPredicate;
 import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.GoalContainsKeywordsPredicate;
+import seedu.address.model.person.HealthProfileContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PhoneMatchesPredicate;
@@ -23,7 +25,7 @@ public class FindCommandParserTest {
     @Test
     public void parse_emptyArg_throwsParseException() {
         assertParseFailure(parser, "     ", "Search keyword is required. Use: find KEYWORD... or "
-                + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]");
+                + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]");
     }
 
     @Test
@@ -48,8 +50,9 @@ public class FindCommandParserTest {
     @Test
     public void parse_invalidArgs_throwsParseException() {
         assertParseFailure(parser, " alex n/bob", "Invalid command format. Use: find KEYWORD... or "
-                + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]");
-        assertParseFailure(parser, " n/alex n/bob", "The n/, p/, e/ and g/ prefixes may each be used only once.");
+                + "find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]");
+        assertParseFailure(parser, " n/alex n/bob",
+                "The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.");
         assertParseFailure(parser, " n/", "The n/ search value cannot be empty.");
     }
 
@@ -78,13 +81,36 @@ public class FindCommandParserTest {
     }
 
     @Test
+    public void parse_dietaryRestrictionCriteria_returnsFindCommand() {
+        assertParseSuccess(parser, " dr/peanut halal", createFindCommand(
+                new DietaryRestrictionsContainsKeywordsPredicate(List.of("peanut", "halal"))));
+    }
+
+    @Test
+    public void parse_healthCriteria_returnsFindCommand() {
+        assertParseSuccess(parser, " h/avoid jumping", createFindCommand(
+                new HealthProfileContainsKeywordsPredicate(List.of("avoid", "jumping"))));
+    }
+
+    @Test
+    public void parse_dietaryAndHealthCriteria_returnsFindCommand() {
+        assertParseSuccess(parser, " dr/peanut h/ankle", createFindCommand(
+                new DietaryRestrictionsContainsKeywordsPredicate(List.of("peanut")),
+                new HealthProfileContainsKeywordsPredicate(List.of("ankle"))));
+    }
+
+    @Test
     public void parse_invalidPhoneAndEmailCriteria_throwsParseException() {
-        assertParseFailure(parser, " p/1 p/2", "The n/, p/, e/ and g/ prefixes may each be used only once.");
-        assertParseFailure(parser, " e/a e/b", "The n/, p/, e/ and g/ prefixes may each be used only once.");
-        assertParseFailure(parser, " g/a g/b", "The n/, p/, e/ and g/ prefixes may each be used only once.");
+        assertParseFailure(parser, " p/1 p/2", "The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.");
+        assertParseFailure(parser, " e/a e/b", "The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.");
+        assertParseFailure(parser, " g/a g/b", "The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.");
+        assertParseFailure(parser, " dr/a dr/b", "The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.");
+        assertParseFailure(parser, " h/a h/b", "The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.");
         assertParseFailure(parser, " p/", "The p/ search value cannot be empty.");
         assertParseFailure(parser, " e/", "The e/ search value cannot be empty.");
         assertParseFailure(parser, " g/", "The g/ search value cannot be empty.");
+        assertParseFailure(parser, " dr/", "The dr/ search value cannot be empty.");
+        assertParseFailure(parser, " h/", "The h/ search value cannot be empty.");
         assertParseFailure(parser, " p/abc", "Phone search must contain at least one digit.");
     }
 
