@@ -218,7 +218,7 @@ The workout plan feature lets a trainer keep a per-client list of prescribed exe
 
 ### Diet plan management
 
-Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the plan in the client's JSON record, so deleting the client also removes the plan. A client has at most one current plan; no history or structured restrictions are stored.
+Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the plan in the client's JSON record, so deleting the client also removes the plan. A client has at most one current plan and no plan history.
 
 For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw arguments to `DietCommandParser`. This preserves invalid line breaks for validation. The parser recognises single-letter prefixes only at the beginning of an argument or after horizontal whitespace; it leaves slashes inside values such as `kcal/day` untouched. It validates the displayed-list index, one required target, at most one optional notes value, and rejects unknown or repeated prefixes. `DietCommand` looks up the `Person` in the filtered list, compares the candidate with the current plan after trimming and ignoring case, then uses `Model#setPerson` to replace the client record while retaining the other fields and current list filter. An omitted `n/` creates a plan without notes, even when the previous plan had notes.
 
@@ -227,6 +227,17 @@ For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw argument
 `PersonListPanel` observes the selected client and the filtered client list. Its details pane shows the current target and notes, hides notes when absent, and provides an empty state for clients without a plan. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the plan's nutritional or medical suitability.
 
 `DietCommandParserTest`, `DietCommandTest`, `DietIntegrationTest`, and `PersonListPanelTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, injected commit failure, and selected-client display. The manual scenarios below cover the main user flows.
+
+### Dietary restrictions
+
+Each `Person` owns an immutable `DietaryRestrictions` list, which is empty when no restrictions are recorded. `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` replaces the complete list; one blank sole `r/` clears it. The value object validates 1 to 10 ordered entries, each containing 1 to 100 printable Unicode characters and at least one letter or digit. It rejects duplicates after trimming and case-insensitive comparison while preserving the first supplied display text and ordering.
+
+`DietaryRestrictionsCommandParser` parses a displayed-list index and repeated `r/` values. `DietaryRestrictionsCommand` rejects an unchanged list and replaces the client with `Person#withDietaryRestrictions`, preserving unrelated data. `JsonAdaptedPerson` stores the list as `dietaryRestrictions`; an absent field loads as an empty list for backwards compatibility. `find dr/KEYWORDS` uses `DietaryRestrictionsContainsKeywordsPredicate` and retains the existing OR semantics. The selected-client detail pane only displays the list when nonempty. Restriction text is informational and does not determine allergy or meal safety.
+### Health considerations
+
+Each `Person` has an optional immutable `HealthProfile` with one current trainer-visible note. `health INDEX h/NOTE` replaces the note and `health INDEX h/` clears it. `HealthProfile` trims outer whitespace, accepts 1 to 500 printable Unicode characters with at least one letter or digit, and rejects line breaks and control characters. The profile is serialized as the optional `healthProfile` field in `JsonAdaptedPerson`; older data without that field loads without a profile.
+
+`HealthCommandParser` requires exactly one `h/` prefix and a displayed-list index. `HealthCommand` rejects a no-op update, replaces the client through `Person#withHealthProfile`, and preserves all unrelated client information. `find h/KEYWORDS` uses `HealthProfileContainsKeywordsPredicate` with the existing case-insensitive OR search behavior. The selected-client details panel displays the profile only when present. Health considerations are informational only; the application does not diagnose conditions or evaluate medical suitability.
 
 ### Workout session logging
 
