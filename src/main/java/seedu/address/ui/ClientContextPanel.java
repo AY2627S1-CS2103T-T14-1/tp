@@ -50,6 +50,10 @@ public class ClientContextPanel extends UiPart<Region> {
     @FXML
     private Label dietEmptyCommand;
     @FXML
+    private VBox dietaryRestrictionsBox;
+    @FXML
+    private Label dietaryRestrictions;
+    @FXML
     private Label sessionCommandHint;
     @FXML
     private VBox sessionRows;
@@ -85,6 +89,7 @@ public class ClientContextPanel extends UiPart<Region> {
         sessionCommandHint.setText("schedule " + displayedIndex);
         historyCommandHint.setText("log " + displayedIndex);
         showDiet(person, displayedIndex);
+        showDietaryRestrictions(person);
         showSessions(person, displayedIndex);
         showHistory(person, displayedIndex);
     }
@@ -104,6 +109,13 @@ public class ClientContextPanel extends UiPart<Region> {
             dietNotes.setText(notes);
             setShown(dietNotesBox, true);
         }, () -> setShown(dietNotesBox, false));
+    }
+
+    private void showDietaryRestrictions(Person person) {
+        List<String> restrictions = person.getDietaryRestrictions().getValues();
+        boolean hasRestrictions = !restrictions.isEmpty();
+        dietaryRestrictions.setText(hasRestrictions ? String.join("; ", restrictions) : "");
+        setShown(dietaryRestrictionsBox, hasRestrictions);
     }
 
     private void showSessions(Person person, int displayedIndex) {

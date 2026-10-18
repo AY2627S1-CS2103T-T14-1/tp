@@ -98,6 +98,12 @@ public class CommandBoxTest {
             Button hint = (Button) hints.getChildren().get(0);
             hint.fire();
             assertEquals("schedule ", field.getText());
+
+            field.setText("restr");
+            assertEquals(1, hints.getChildren().size());
+            Button restrictionHint = (Button) hints.getChildren().get(0);
+            restrictionHint.fire();
+            assertEquals("restriction ", field.getText());
             return null;
         });
     }

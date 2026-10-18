@@ -10,6 +10,7 @@ import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.DietCommand;
+import seedu.address.logic.commands.DietaryRestrictionsCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
@@ -29,6 +30,7 @@ final class CommandCatalog {
             new Entry(EditCommand.COMMAND_WORD, EditCommand.MESSAGE_USAGE),
             new Entry(DeleteCommand.COMMAND_WORD, DeleteCommand.MESSAGE_USAGE),
             new Entry(DietCommand.COMMAND_WORD, DietCommand.MESSAGE_USAGE),
+            new Entry(DietaryRestrictionsCommand.COMMAND_WORD, DietaryRestrictionsCommand.MESSAGE_USAGE),
             new Entry(ClearCommand.COMMAND_WORD, "clear: Clears every client."),
             new Entry(FindCommand.COMMAND_WORD, FindCommand.MESSAGE_USAGE),
             new Entry(ListCommand.COMMAND_WORD, "list: Lists all clients."),
