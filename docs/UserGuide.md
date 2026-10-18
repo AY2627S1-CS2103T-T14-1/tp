@@ -86,7 +86,7 @@ Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…​`
 A client can have any number of tags, including zero.
 </div>
 
-* `g/GOAL` is optional. A goal must contain 1 to 50 characters after trimming and include at least one letter or digit.
+* `g/GOAL` is optional. A goal must contain 1 to 100 characters after trimming and include at least one letter or digit.
 * A supplied goal is saved with the client and shown on the client card.
 
 Examples:

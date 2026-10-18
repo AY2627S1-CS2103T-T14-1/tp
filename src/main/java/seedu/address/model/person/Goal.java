@@ -10,8 +10,8 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 public class Goal {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Goal must contain 1 to 50 characters, including at least one letter or digit.";
-    public static final int MAX_LENGTH = 50;
+            "Goal must contain 1 to 100 characters, including at least one letter or digit.";
+    public static final int MAX_LENGTH = 100;
 
     public final String value;
 
@@ -31,8 +31,9 @@ public class Goal {
      */
     public static boolean isValidGoal(String test) {
         String strippedTest = test.strip();
-        return strippedTest.length() >= 1
-                && strippedTest.length() <= MAX_LENGTH
+        int length = strippedTest.codePointCount(0, strippedTest.length());
+        return length >= 1
+                && length <= MAX_LENGTH
                 && strippedTest.matches("[^\\p{Cntrl}]+")
                 && strippedTest.matches(".*[\\p{L}\\p{N}].*");
     }
