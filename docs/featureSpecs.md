@@ -894,7 +894,7 @@ rmem 1
 
 imem 1 3
 
-dmem 2 2
+dmem 1 2
 
 view mem
 
@@ -912,7 +912,7 @@ Command words and the `mem` or `membership` argument of `view` are case-sensitiv
 | Aspect              | Rule, message and rationale                                                                                                                                                                                                    |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Accepted value      | 1 to 50 characters after trimming. Letters, digits, spaces, apostrophes, hyphens, and full stops are accepted; at least one letter or digit is required. This keeps plan names readable in the client card.                    |
-| Whitespace and case | Remove leading/trailing spaces and collapse consecutive internal whitespace. Preserve the entered case for display; compare names case-insensitively. The name passed to `amem` and `delmem` follows the same comparison rule. |
+| Whitespace and case | Remove leading/trailing spaces and collapse consecutive internal whitespace. The stored name preserves the entered case; the catalog and client-card views render it with the first character upper-cased, so a plan stored as `gold` reads as `Gold`. Compare names case-insensitively. The name passed to `amem` and `delmem` follows the same comparison rule. |
 | Error               | Membership plan name must contain 1 to 50 characters and may contain only letters, digits, spaces, apostrophes, hyphens, and full stops.                                                                                       |
 
 For a plan name containing spaces, `amem` treats the final non-prefixed argument as PERSON_INDEX and the preceding text as MEMBERSHIP_NAME. If supplied, `e/` must follow PERSON_INDEX. For example: `amem Gold Plus 1 e/2026-12-30`.
@@ -1015,9 +1015,7 @@ Membership plans  | Gold — 150.00 — 30 sessions
                   | Silver — 80.00 — 12 sessions
 
 Clients           | Priya Nair [SELECTED]
-1. Priya Nair     | Membership plan: Gold
-                  | Sessions remaining: 31
-                  | Expiry: 2026-12-30
+1. Priya Nair     | Gold Member: 31 sessions left [expires 2026-12-30]
 Result: Decreased sessions for Priya Nair by 2; Sessions remaining: 31.
 ```
 

@@ -268,7 +268,7 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 - `AddressBook` owns an insertion-ordered collection of uniquely named `MembershipPlan` definitions. A plan has a normalized display name, a positive `BigDecimal` price stored at two decimal places, and 1 to 1000 starting sessions. Names are compared without regard to case after trimming and collapsing internal whitespace.
 - Each `Person` has at most one optional `MembershipAssignment`. It keeps a reference to the shared plan, a copy of its display name, an independent remaining balance from 0 to 1000, and an optional expiry date. Assigning a plan copies its starting sessions; subsequent adjustments change only that client's balance. A referenced plan cannot be deleted.
-- JSON stores `membershipPlans` at the address-book root and `membershipAssignment` on each person. Missing fields in older files mean an empty catalog or an unassigned client. Loading rejects duplicate plan keys, malformed values, and assignments referring to missing plans. Expired assignments remain loadable; expiry is checked against the local date only when `amem` runs.
+- JSON stores `membershipPlans` at the address-book root and `membershipAssignment` on each person. Missing fields in older files mean an empty catalog or an unassigned client. Loading rejects duplicate plan keys, null plan or person entries, malformed values, assignments referring to missing plans, and assignments whose copied plan name disagrees with the plan their key points to. Expired assignments remain loadable; expiry is checked against the local date only when `amem` runs.
 - Address-book snapshots and person replacement copy membership data. On an `IOException` during save, `LogicManager` restores the complete pre-command state and reports that the membership change could not be saved.
 
 #### Commands and UI
@@ -279,7 +279,7 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
-The client card shows `Membership plan: NAME`, `Sessions remaining: COUNT`, and `Expiry: YYYY-MM-DD` when an expiry exists. It shows none of these fields for an unassigned client. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
+The client card shows a single membership tag reading `NAME Member: COUNT sessions left`, with ` [expires YYYY-MM-DD]` appended when an expiry exists. The tag wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
 
 ### \[Proposed\] Undo/redo feature
 

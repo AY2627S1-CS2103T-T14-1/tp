@@ -69,7 +69,7 @@ public class AddExerciseCommand extends Command {
                 updatedPlan, personToEdit.getDietPlan(),
                 personToEdit.getGoal().orElse(null), personToEdit.getTrainingSessions(),
                 personToEdit.getWorkoutSessions(), personToEdit.getDietaryRestrictions(),
-                personToEdit.getHealthProfile().orElse(null));
+                personToEdit.getHealthProfile().orElse(null), personToEdit.getMembershipAssignment());
 
         model.setPerson(personToEdit, editedPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
