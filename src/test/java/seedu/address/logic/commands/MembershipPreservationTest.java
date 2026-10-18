@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
@@ -27,8 +28,10 @@ import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.membership.MembershipName;
 import seedu.address.model.membership.MembershipPlan;
 import seedu.address.model.person.DietPlan;
+import seedu.address.model.person.DietaryRestrictions;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Goal;
+import seedu.address.model.person.HealthProfile;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutLogEntry;
@@ -60,6 +63,8 @@ public class MembershipPreservationTest {
         Person base = new PersonBuilder().withGoal("Build strength")
                 .withWorkoutPlan(workoutPlan)
                 .withDietPlan(new DietPlan("1800 kcal", "Lean protein"))
+                .withDietaryRestrictions("Peanuts")
+                .withHealthProfile("Asthma")
                 .withWorkoutSessions(List.of(session))
                 .build()
                 .withTrainingSession(
@@ -166,6 +171,25 @@ public class MembershipPreservationTest {
         Person reassigned = model.getAddressBook().getPersonList().get(0);
         assertEquals(original.getGoal(), reassigned.getGoal());
         assertEquals(30, reassigned.getMembershipAssignment().orElseThrow().getRemainingSessions());
+    }
+
+    @Test
+    public void execute_membershipCommands_preserveHealthAndDietaryFields() throws Exception {
+        AddressBookParser parser = new AddressBookParser();
+        Person original = model.getAddressBook().getPersonList().get(0);
+        DietaryRestrictions expectedRestrictions = original.getDietaryRestrictions();
+        Optional<HealthProfile> expectedHealth = original.getHealthProfile();
+        assertTrue(expectedHealth.isPresent(), "Fixture must carry health notes");
+        assertFalse(expectedRestrictions.isEmpty(), "Fixture must carry dietary restrictions");
+
+        for (String commandText : List.of("imem 1 3", "dmem 1 3", "rmem 1", "amem Gold 1")) {
+            parser.parseCommand(commandText).execute(model);
+            Person updated = model.getAddressBook().getPersonList().get(0);
+            assertEquals(expectedRestrictions, updated.getDietaryRestrictions(),
+                    "Dietary restrictions erased by: " + commandText);
+            assertEquals(expectedHealth, updated.getHealthProfile(),
+                    "Health notes erased by: " + commandText);
+        }
     }
 
     @Test
