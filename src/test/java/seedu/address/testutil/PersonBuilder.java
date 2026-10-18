@@ -7,6 +7,7 @@ import java.util.Set;
 
 import seedu.address.model.person.Address;
 import seedu.address.model.person.DietPlan;
+import seedu.address.model.person.DietaryRestrictions;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Goal;
 import seedu.address.model.person.Name;
@@ -40,6 +41,7 @@ public class PersonBuilder {
     private Optional<DietPlan> dietPlan;
     private List<TrainingSession> trainingSessions;
     private Goal goal;
+    private DietaryRestrictions dietaryRestrictions;
     private List<WorkoutSession> workoutSessions;
 
     /**
@@ -56,6 +58,7 @@ public class PersonBuilder {
         dietPlan = Optional.empty();
         trainingSessions = List.of();
         goal = null;
+        dietaryRestrictions = new DietaryRestrictions();
         workoutSessions = List.of();
     }
 
@@ -73,6 +76,7 @@ public class PersonBuilder {
         dietPlan = personToCopy.getDietPlan();
         trainingSessions = personToCopy.getTrainingSessions();
         goal = personToCopy.getGoal().orElse(null);
+        dietaryRestrictions = personToCopy.getDietaryRestrictions();
         workoutSessions = personToCopy.getWorkoutSessions();
     }
 
@@ -146,6 +150,13 @@ public class PersonBuilder {
         return this;
     }
 
+    /** Sets the current dietary restrictions of the person being built. */
+    public PersonBuilder withDietaryRestrictions(String ... restrictions) {
+        this.dietaryRestrictions = restrictions.length == 0
+                ? new DietaryRestrictions() : new DietaryRestrictions(List.of(restrictions));
+        return this;
+    }
+
     /**
      * Sets the recorded workout sessions of the person being built.
      */
@@ -159,7 +170,7 @@ public class PersonBuilder {
      */
     public Person build() {
         return new Person(name, phone, email, address, remark, tags,
-                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions);
+                workoutPlan, dietPlan, goal, trainingSessions, workoutSessions, dietaryRestrictions);
     }
 
 }

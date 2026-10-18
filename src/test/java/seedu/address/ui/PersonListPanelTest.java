@@ -95,6 +95,24 @@ public class PersonListPanelTest {
     }
 
     @Test
+    public void selectionShowsDietaryRestrictionsOnlyWhenPresent() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair")
+                    .withDietaryRestrictions("Peanut allergy", "Halal meals").build();
+            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
+            assertFalse(label(panel, "dietaryRestrictions").isVisible());
+
+            listView(panel).getSelectionModel().select(1);
+            assertEquals("Dietary restrictions: Peanut allergy; Halal meals",
+                    label(panel, "dietaryRestrictions").getText());
+            assertTrue(label(panel, "dietaryRestrictions").isVisible());
+            assertTrue(label(panel, "dietaryRestrictions").isManaged());
+            return null;
+        });
+    }
+
+    @Test
     public void replacementAndDeletionRefreshSelectedDetails() throws Exception {
         runOnFxThread(() -> {
             Person original = new PersonBuilder().withName("Priya Nair")

@@ -31,6 +31,7 @@ public class Person {
     private final WorkoutPlan workoutPlan;
     private final Optional<DietPlan> dietPlan;
     private final Goal goal;
+    private final DietaryRestrictions dietaryRestrictions;
     private final List<TrainingSession> trainingSessions;
     private final List<WorkoutSession> workoutSessions;
 
@@ -91,8 +92,17 @@ public class Person {
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
             WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
             List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions,
+                workoutSessions, new DietaryRestrictions());
+    }
+
+    /** Constructs a person with all supported client information. */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
+            DietaryRestrictions dietaryRestrictions) {
         requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan,
-                trainingSessions, workoutSessions);
+                trainingSessions, workoutSessions, dietaryRestrictions);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -102,6 +112,7 @@ public class Person {
         this.workoutPlan = workoutPlan;
         this.dietPlan = dietPlan;
         this.goal = goal;
+        this.dietaryRestrictions = dietaryRestrictions;
         this.trainingSessions = List.copyOf(trainingSessions);
         this.workoutSessions = List.copyOf(workoutSessions);
     }
@@ -138,6 +149,11 @@ public class Person {
         return Optional.ofNullable(goal);
     }
 
+    /** Returns the client's current dietary restrictions. */
+    public DietaryRestrictions getDietaryRestrictions() {
+        return dietaryRestrictions;
+    }
+
     /** Returns an unmodifiable list of recorded workout sessions. */
     public List<WorkoutSession> getWorkoutSessions() {
         return workoutSessions;
@@ -153,7 +169,13 @@ public class Person {
         List<TrainingSession> updated = new ArrayList<>(trainingSessions);
         updated.add(session);
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, updated,
-                workoutSessions);
+                workoutSessions, dietaryRestrictions);
+    }
+
+    /** Returns a copy with the supplied current dietary restrictions. */
+    public Person withDietaryRestrictions(DietaryRestrictions restrictions) {
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
+                trainingSessions, workoutSessions, restrictions);
     }
 
     /**
@@ -201,6 +223,7 @@ public class Person {
                 && workoutPlan.equals(otherPerson.workoutPlan)
                 && dietPlan.equals(otherPerson.dietPlan)
                 && Objects.equals(goal, otherPerson.goal)
+                && dietaryRestrictions.equals(otherPerson.dietaryRestrictions)
                 && trainingSessions.equals(otherPerson.trainingSessions)
                 && workoutSessions.equals(otherPerson.workoutSessions);
     }
@@ -209,7 +232,7 @@ public class Person {
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
         return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions);
+                dietaryRestrictions, trainingSessions, workoutSessions);
     }
 
     @Override
@@ -223,6 +246,7 @@ public class Person {
                 .add("tags", tags)
                 .add("workoutPlan", workoutPlan)
                 .add("dietPlan", dietPlan)
+                .add("dietaryRestrictions", dietaryRestrictions)
                 .add("goal", goal)
                 .add("trainingSessions", trainingSessions)
                 .add("workoutSessions", workoutSessions)
