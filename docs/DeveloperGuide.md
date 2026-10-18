@@ -122,11 +122,14 @@ How the parsing works:
 
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
 
-<img src="images/ModelClassDiagram.png" width="450" />
+<img src="images/ModelClassDiagram.png" width="900" />
 
 The `Model` component,
 
 - stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
+  Each `Person` holds contact details, a workout plan, optional diet and fitness goals, scheduled training sessions,
+  and completed workout sessions. A `WorkoutPlan` contains exercises, while each completed `WorkoutSession` contains
+  its logged exercise entries.
 - stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 - stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 - does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
@@ -662,21 +665,26 @@ The first increment stores an immutable `TrainingSession` (date/time and locatio
 1.  Trainer requests to list clients.
 2.  Fittix shows a list of clients.
 3.  Trainer requests to schedule a session for a specific client in the list, giving the date, time and location.
-4.  Fittix saves the appointment and shows the client's updated schedule.
+4.  Fittix saves the appointment and reports its date, time, and location. The trainer can use `viewschedule` to list the client's saved appointments.
 
     Use case ends.
 
 **Extensions**
 
-- 3a. The date or time is in an invalid format, or is in the past.
+- 3a. The date or time is in an invalid format.
   - 3a1. Fittix shows an error message stating the expected format.
 
     Use case resumes at step 3.
 
-- 3b. The requested time overlaps an existing appointment.
-  - 3b1. Fittix shows a clash warning naming the conflicting client and does not save the appointment.
+- 3b. The date and time are not in the future.
+  - 3b1. Fittix reports that training sessions must be in the future and does not add the appointment.
 
-    Use case ends.
+    Use case resumes at step 3.
+
+- 3c. The location is blank or missing.
+  - 3c1. Fittix shows the expected date, time, and location format and does not add the appointment.
+
+    Use case resumes at step 3.
 
 ### Non-Functional Requirements
 
