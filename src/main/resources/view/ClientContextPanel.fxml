@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="context-scroll">
+    <VBox fx:id="selectedContent" spacing="14">
+      <VBox spacing="14" styleClass="card,context-card">
+        <HBox alignment="CENTER_LEFT" spacing="10">
+          <Label text="" minWidth="10" minHeight="10" maxWidth="10" maxHeight="10" styleClass="diet-marker" />
+          <Label text="DIET" styleClass="caps-label,diet-label" />
+          <Label text="Targets &amp; notes" styleClass="context-title" />
+          <Region HBox.hgrow="ALWAYS" />
+          <Label fx:id="dietCommandHint" styleClass="context-command-hint,mono" />
+        </HBox>
+        <VBox fx:id="dietContent" spacing="12">
+          <Label fx:id="dietTarget" wrapText="true" styleClass="diet-target" />
+          <VBox fx:id="dietNotesBox" spacing="5" styleClass="diet-notes">
+            <Label text="NOTES" styleClass="caps-label" />
+            <Label fx:id="dietNotes" wrapText="true" styleClass="context-body" />
+          </VBox>
+        </VBox>
+        <VBox fx:id="dietEmpty" spacing="8" styleClass="empty-box">
+          <Label text="No diet target recorded." styleClass="muted" />
+          <Label fx:id="dietEmptyCommand" wrapText="true" styleClass="diet-command,mono" />
+        </VBox>
+        <VBox fx:id="dietaryRestrictionsBox" spacing="5" styleClass="diet-notes" visible="false" managed="false">
+          <Label text="DIETARY RESTRICTIONS" styleClass="caps-label" />
+          <Label fx:id="dietaryRestrictions" wrapText="true" styleClass="context-body" />
+        </VBox>
+      </VBox>
+
+      <VBox spacing="12" styleClass="card,context-card">
+        <HBox alignment="CENTER_LEFT" spacing="10">
+          <Label text="" minWidth="10" minHeight="10" maxWidth="10" maxHeight="10" styleClass="session-marker" />
+          <Label text="SCHEDULE" styleClass="caps-label,schedule-label" />
+          <Label text="Sessions" styleClass="context-title" />
+          <Region HBox.hgrow="ALWAYS" />
+          <Label fx:id="sessionCommandHint" styleClass="context-command-hint,mono" />
+        </HBox>
+        <VBox fx:id="sessionRows" spacing="8" />
+        <VBox fx:id="sessionsEmpty" spacing="8" styleClass="empty-box">
+          <Label text="No training sessions booked." styleClass="muted" />
+          <Label fx:id="sessionsEmptyCommand" wrapText="true" styleClass="schedule-command,mono" />
+        </VBox>
+      </VBox>
+
+      <VBox spacing="12" styleClass="card,context-card">
+        <HBox alignment="CENTER_LEFT" spacing="10">
+          <Label text="✓" alignment="CENTER" minWidth="20" minHeight="20" styleClass="history-header-icon" />
+          <Label text="HISTORY" styleClass="caps-label" />
+          <Label text="Completed workouts" styleClass="context-title" />
+          <Region HBox.hgrow="ALWAYS" />
+          <Label fx:id="historyCommandHint" styleClass="context-command-hint,mono" />
+        </HBox>
+        <VBox fx:id="historyRows" />
+        <VBox fx:id="historyEmpty" spacing="8" styleClass="empty-box">
+          <Label text="No completed workouts logged." styleClass="muted" />
+          <Label fx:id="historyEmptyCommand" wrapText="true" styleClass="history-command,mono" />
+        </VBox>
+      </VBox>
+    </VBox>
+  </ScrollPane>
+
+  <VBox fx:id="emptyContent" alignment="CENTER" spacing="10" styleClass="empty-box,context-empty">
+    <Label text="Client context" styleClass="empty-title" />
+    <Label text="Diet, sessions and workout history appear for the selected client."
+           maxWidth="260" textAlignment="CENTER" wrapText="true" styleClass="muted" />
+  </VBox>
+</StackPane>

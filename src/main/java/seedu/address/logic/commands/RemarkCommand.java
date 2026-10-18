@@ -59,7 +59,8 @@ public class RemarkCommand extends Command {
                 personToEdit.getAddress(), remark, personToEdit.getTags(), personToEdit.getWorkoutPlan(),
                 personToEdit.getDietPlan(),
                 personToEdit.getGoal().orElse(null), personToEdit.getTrainingSessions(),
-                personToEdit.getWorkoutSessions(), personToEdit.getHealthProfile().orElse(null));
+                personToEdit.getWorkoutSessions(), personToEdit.getDietaryRestrictions(),
+                personToEdit.getHealthProfile().orElse(null));
 
         model.setPerson(personToEdit, editedPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);

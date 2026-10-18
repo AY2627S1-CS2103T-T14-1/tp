@@ -127,7 +127,7 @@ public class EditCommand extends Command {
         return new Person(updatedName, updatedPhone, updatedEmail, updatedAddress, updatedRemark, updatedTags,
                 updatedWorkoutPlan, personToEdit.getDietPlan(), updatedGoal,
                 personToEdit.getTrainingSessions(), personToEdit.getWorkoutSessions(),
-                personToEdit.getHealthProfile().orElse(null));
+                personToEdit.getDietaryRestrictions(), personToEdit.getHealthProfile().orElse(null));
     }
 
     @Override

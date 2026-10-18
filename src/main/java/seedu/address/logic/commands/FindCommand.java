@@ -17,7 +17,7 @@ public class FindCommand extends Command {
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds clients matching the supplied criteria.\n"
             + "Parameters: KEYWORD [MORE_KEYWORDS]...\n"
-            + "or: [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [h/HEALTH]\n"
+            + "or: [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]\n"
             + "Example: " + COMMAND_WORD + " alice bob";
     public static final String MESSAGE_FOUND = "Found %1$d client(s).";
     public static final String MESSAGE_FOUND_NONE = "Found 0 client(s). Use list to show all clients.";
