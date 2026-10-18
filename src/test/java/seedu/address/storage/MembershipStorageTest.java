@@ -15,6 +15,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.JsonUtil;
@@ -205,25 +207,46 @@ public class MembershipStorageTest {
     }
 
     @Test
-    public void serializable_inconsistentAssignmentName_throwsIllegalValueException() {
+    public void readAddressBook_inconsistentAssignmentName_throwsDataLoadingException() throws Exception {
         AddressBook book = new AddressBook();
         book.addMembershipPlan(plan("Gold", "150", 30));
+        book.addMembershipPlan(plan("Silver", "80", 12));
         Person mismatched = new PersonBuilder(BENSON).build().withMembershipAssignment(
                 Optional.of(new MembershipAssignment("gold", "Silver", 10, Optional.empty())));
         book.addPerson(mismatched);
-        JsonSerializableAddressBook serializable = new JsonSerializableAddressBook(book);
-        assertThrows(IllegalValueException.class,
-                JsonSerializableAddressBook.MESSAGE_INCONSISTENT_PLAN_NAME, serializable::toModelType);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("mismatched-name.json"));
+        storage.saveAddressBook(book);
+        assertThrows(DataLoadingException.class,
+                new IllegalValueException(JsonSerializableAddressBook.MESSAGE_INCONSISTENT_PLAN_NAME).toString(),
+                storage::readAddressBook);
     }
 
     @Test
-    public void serializable_matchingAssignmentName_loadsSuccessfully() throws Exception {
+    public void readAddressBook_matchingAssignmentNameVariants_loadSuccessfully() throws Exception {
         AddressBook book = new AddressBook();
-        book.addMembershipPlan(plan("Gold", "150", 30));
+        MembershipPlan gold = plan("Gold Plus", "150", 30);
+        book.addMembershipPlan(gold);
         Person assigned = new PersonBuilder(BENSON).build().withMembershipAssignment(
-                Optional.of(new MembershipAssignment("gold", "Gold", 10, Optional.empty())));
+                Optional.of(new MembershipAssignment(gold.getKey(), "Gold Plus", 10, Optional.empty())));
         book.addPerson(assigned);
-        assertEquals(book, new JsonSerializableAddressBook(book).toModelType());
+        Path file = testFolder.resolve("matching-name.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(book);
+        ObjectNode json = JsonUtil.fromJsonString(Files.readString(file), ObjectNode.class);
+        ObjectNode assignmentJson = (ObjectNode) json.get("persons").get(0).get("membershipAssignment");
+
+        for (String name : List.of("Gold Plus", "gold plus", "gOlD pLuS", "  GOLD   Plus  ")) {
+            assignmentJson.put("planName", name);
+            Files.writeString(file, JsonUtil.toJsonString(json));
+
+            AddressBook loaded = new AddressBook(storage.readAddressBook().orElseThrow());
+            Person expected = assigned.withMembershipAssignment(Optional.of(
+                    new MembershipAssignment(gold.getKey(), name, 10, Optional.empty())));
+            assertEquals(List.of(gold), loaded.getMembershipPlanList());
+            assertEquals(expected, loaded.getPersonList().get(0));
+            assertEquals(expected.getMembershipAssignment(),
+                    loaded.getPersonList().get(0).getMembershipAssignment());
+        }
     }
 
     @Test
