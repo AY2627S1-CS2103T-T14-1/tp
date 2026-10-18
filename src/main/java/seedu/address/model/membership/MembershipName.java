@@ -9,7 +9,9 @@ import java.util.Locale;
  * Represents a membership plan's name in the address book.
  * Guarantees: immutable; is valid as declared in {@link #isValidMembershipName(String)}.
  * Leading/trailing whitespace is trimmed and internal whitespace is collapsed on construction;
- * display case is preserved. Equality is case-insensitive using locale-independent folding,
+ * the stored value preserves the entered case. The catalog and client-card views render the name
+ * with its first character upper-cased (see {@link #toDisplayName(String)}), so a name stored as
+ * {@code gold} reads as {@code Gold}. Equality is case-insensitive using locale-independent folding,
  * so {@code Gold} and {@code gold} denote the same plan.
  */
 public class MembershipName {
