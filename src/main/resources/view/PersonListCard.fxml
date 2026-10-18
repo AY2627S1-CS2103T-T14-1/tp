@@ -5,41 +5,23 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox id="cardPane" fx:id="cardPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <GridPane HBox.hgrow="ALWAYS">
-    <columnConstraints>
-      <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="150" />
-    </columnConstraints>
-    <VBox alignment="CENTER_LEFT" minHeight="105" GridPane.columnIndex="0">
-      <padding>
-        <Insets top="5" right="5" bottom="5" left="15" />
-      </padding>
-      <HBox spacing="0.5" alignment="CENTER_LEFT">
-        <Label fx:id="id" styleClass="cell_big_label">
-          <minWidth>
-            <!-- Ensures that the label text is never truncated -->
-            <Region fx:constant="USE_PREF_SIZE" />
-          </minWidth>
-        </Label>
-        <Label fx:id="name" text="\$first" styleClass="cell_big_label" />
-      </HBox>
-      <FlowPane fx:id="tags" />
-      <Label fx:id="phone" styleClass="cell_small_label" text="\$phone" />
-      <Label fx:id="address" styleClass="cell_small_label" text="\$address" />
-      <Label fx:id="email" styleClass="cell_small_label" text="\$email" />
-      <Label fx:id="remark" styleClass="cell_small_label" text="\$remark" />
-      <Label fx:id="goal" styleClass="cell_small_label" />
-      <VBox fx:id="workoutPlanContainer" spacing="2">
-        <padding>
-          <Insets top="5" right="0" bottom="0" left="0" />
-        </padding>
-        <Label styleClass="cell_small_label" text="Workout Plan:" />
-        <Label fx:id="workoutPlanPlaceholder" styleClass="cell_small_label" text="No workout plan yet" />
-      </VBox>
-    </VBox>
-  </GridPane>
-</HBox>
+<GridPane styleClass="client-cell" hgap="12" xmlns="http://javafx.com/javafx/17"
+          xmlns:fx="http://javafx.com/fxml/1">
+  <columnConstraints>
+    <ColumnConstraints minWidth="32" prefWidth="32" maxWidth="32" />
+    <ColumnConstraints hgrow="ALWAYS" minWidth="0" />
+  </columnConstraints>
+  <padding>
+    <Insets top="12" right="10" bottom="12" left="10" />
+  </padding>
+  <Label fx:id="id" alignment="CENTER" minWidth="32" minHeight="32" prefWidth="32" prefHeight="32"
+         styleClass="index-badge" GridPane.columnIndex="0" GridPane.valignment="TOP" />
+  <VBox spacing="5" minWidth="0" GridPane.columnIndex="1">
+    <Label fx:id="name" maxWidth="Infinity" styleClass="client-name" />
+    <Label fx:id="phone" styleClass="client-phone,mono" />
+    <FlowPane fx:id="tags" hgap="4" vgap="4" minWidth="0" />
+    <Label fx:id="meta" maxWidth="Infinity" styleClass="client-meta" wrapText="true" />
+  </VBox>
+</GridPane>

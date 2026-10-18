@@ -69,7 +69,8 @@ public class DeleteExerciseCommand extends Command {
                 personToEdit.getAddress(), personToEdit.getRemark(), personToEdit.getTags(),
                 updatedPlan, personToEdit.getDietPlan(),
                 personToEdit.getGoal().orElse(null), personToEdit.getTrainingSessions(),
-                personToEdit.getWorkoutSessions());
+                personToEdit.getWorkoutSessions(), personToEdit.getDietaryRestrictions(),
+                personToEdit.getHealthProfile().orElse(null));
 
         model.setPerson(personToEdit, editedPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);

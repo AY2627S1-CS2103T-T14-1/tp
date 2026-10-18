@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import seedu.address.MainApp;
 import seedu.address.commons.core.LogsCenter;
@@ -22,6 +23,16 @@ public class UiManager implements Ui {
 
     private static final Logger logger = LogsCenter.getLogger(UiManager.class);
     private static final String ICON_APPLICATION = "/images/address_book_32.png";
+    private static final String[] FONT_FILES = {
+        "/fonts/Manrope-Regular.ttf",
+        "/fonts/Manrope-Medium.ttf",
+        "/fonts/Manrope-SemiBold.ttf",
+        "/fonts/Manrope-Bold.ttf",
+        "/fonts/Manrope-ExtraBold.ttf",
+        "/fonts/JetBrainsMono-Medium.ttf",
+        "/fonts/JetBrainsMono-SemiBold.ttf",
+        "/fonts/JetBrainsMono-Bold.ttf"
+    };
 
     private Logic logic;
     private Path dataFilePath;
@@ -39,6 +50,10 @@ public class UiManager implements Ui {
     @Override
     public void start(Stage primaryStage) {
         logger.info("Starting UI...");
+
+        for (String fontFile : FONT_FILES) {
+            loadFont(fontFile);
+        }
 
         //Set the application icon.
         primaryStage.getIcons().add(getImage(ICON_APPLICATION));
@@ -58,6 +73,13 @@ public class UiManager implements Ui {
         return new Image(MainApp.class.getResourceAsStream(imagePath));
     }
 
+    private void loadFont(String fontPath) {
+        Font font = Font.loadFont(MainApp.class.getResourceAsStream(fontPath), 14);
+        if (font == null) {
+            logger.warning("Could not load bundled font: " + fontPath);
+        }
+    }
+
     void showAlertDialogAndWait(Alert.AlertType type, String title, String headerText, String contentText) {
         showAlertDialogAndWait(mainWindow.getPrimaryStage(), type, title, headerText, contentText);
     }
@@ -69,7 +91,7 @@ public class UiManager implements Ui {
     private static void showAlertDialogAndWait(Stage owner, AlertType type, String title, String headerText,
                                                String contentText) {
         final Alert alert = new Alert(type);
-        alert.getDialogPane().getStylesheets().add("view/DarkTheme.css");
+        alert.getDialogPane().getStylesheets().add("view/FittixTheme.css");
         alert.initOwner(owner);
         alert.setTitle(title);
         alert.setHeaderText(headerText);
