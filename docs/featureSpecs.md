@@ -1038,9 +1038,7 @@ Membership plans  | Gold — 150.00 — 30 sessions
                   | Silver — 80.00 — 12 sessions
 
 Clients           | Priya Nair [SELECTED]
-1. Priya Nair     | Membership plan: Gold
-                  | Sessions remaining: 31
-                  | Expiry: 2026-12-30
+1. Priya Nair     | Gold Member: 31 sessions left [expires 2026-12-30]
 Result: Decreased sessions for Priya Nair by 2; Sessions remaining: 31.
 ```
 
