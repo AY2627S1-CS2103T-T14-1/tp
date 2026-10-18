@@ -1,0 +1,35 @@
+@startuml
+!pragma layout smetana
+title Proposed v1.4 body progress model
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam classBackgroundColor #F4F6FA
+hide circle
+class Person {
+  bodyProgress: BodyProgress
+}
+class BodyProgress <<immutable>> {
+  + baseline: Optional<BodyBaseline>
+  + entries: List<BodyProgressEntry>
+}
+class BodyBaseline <<immutable>> {
+  date: LocalDate
+  weightKg: BigDecimal
+  heightCm: BigDecimal
+}
+class BodyProgressEntry <<immutable>> {
+  date: LocalDate
+  weightKg: BigDecimal
+  notes: Optional<String>
+}
+Person "1" *-- "1" BodyProgress
+BodyProgress "1" *-- "0..1" BodyBaseline
+BodyProgress "1" *-- "0..*" BodyProgressEntry
+note bottom of BodyProgress
+  No baseline implies no entries.
+  Entry dates are unique, sorted,
+  and strictly after the baseline.
+  Comparison is derived, not stored.
+end note
+@enduml

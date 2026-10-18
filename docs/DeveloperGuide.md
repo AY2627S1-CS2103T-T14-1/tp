@@ -279,7 +279,99 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
-The client card shows a single membership tag reading `NAME Member: COUNT sessions left`, with ` [expires YYYY-MM-DD]` appended when an expiry exists. The tag wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. Command messages and error behavior follow the [Feature 10 specification](featureSpecs.md#feature-10-membership-plan).
+The client card shows a single membership tag reading `NAME Member: COUNT sessions left`, with ` [expires YYYY-MM-DD]` appended when an expiry exists. The tag wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. Command messages and error behavior follow the [Feature 7 specification](featureSpecs.md#feature-7-membership-plan).
+
+### [Planned v1.4] Body progress tracker
+
+**Design status:** This is a proposed implementation for the body-progress assignment, not a description of code already merged. The [Feature 10 contract](featureSpecs.md#feature-10-body-progress-tracker) and [planned UG section](UserGuide.md#body-progress-tracker-planned-for-v14) define user-visible behavior. Keep these documents synchronized as implementation increments land. The four required capabilities are baseline measurements, dated weight/notes, complete history and latest-to-baseline comparison. Progress-entry correction/deletion is part of the same feature.
+
+#### Ownership and invariants
+
+Proposed model names below are design targets. Each `Person` owns one immutable `BodyProgress` aggregate, initially empty. An optional `BodyBaseline` contains `LocalDate date`, `BigDecimal weightKg` and `BigDecimal heightCm`. Each immutable `BodyProgressEntry` contains a date, exact weight and optional notes. The aggregate defensively copies its entry collection and exposes an unmodifiable list in date order.
+
+<img src="images/BodyProgressClassDiagram.png" alt="Proposed body progress model: a Person owns a BodyProgress aggregate with an optional baseline and dated entries" width="760" />
+
+The proposed model class diagram deliberately omits unrelated `Person` fields. It does not replace the shared Model diagram maintained by other members.
+
+Aggregate invariants:
+
+* No baseline implies no entries. An empty aggregate has neither.
+* A baseline is unique; entry dates are unique per client and strictly later than the baseline date. Ordering uses date, not insertion order.
+* Weight is `(0, 500]` kg and height is `(0, 300]` cm, at most two decimal places. Normalize stored decimal scale to two after validation; do not round invalid input. Numerical equality treats `75.5` and `75.50` as equal.
+* Notes are optional; supplied notes obey the contract's code-point, trimming and printable-text rules. Compare notes exactly after normalization, including case and internal spacing.
+* Baseline replacement retains entries and must validate its candidate date against **all** retained entries. Never silently drop or re-date history.
+* Same-date `bodylog` replaces the complete entry, including clearing notes when omitted. An exact duplicate is rejected before replacement. `bodydelete` cannot remove the baseline.
+
+Prefer `Person.withBodyProgress(updated)` as the body mutation path; it copies every unrelated field. Update all other client reconstruction/copy paths to preserve this aggregate, including test builders and later membership/health/workout-history fields. Include it in full value equality/hashCode, but do not change client identity solely because measurements changed. Deleting/clearing clients removes their owned aggregates; catalog operations preserve them.
+
+#### Commands, parsing and UI requests
+
+Proposed command/parser pairs are `BodyBaselineCommand` / `BodyBaselineCommandParser` (`bodybase`), `BodyLogCommand` / `BodyLogCommandParser` (`bodylog`), `BodyHistoryCommand` / `BodyHistoryCommandParser` (`bodyhistory`), `BodyCompareCommand` / `BodyCompareCommandParser` (`bodycompare`) and `BodyDeleteCommand` / `BodyDeleteCommandParser` (`bodydelete`). `BodyHistoryCommand` and `BodyCompareCommand` are queries and leave domain data unchanged; the three mutation classes create complete candidates before `Model#setPerson`.
+
+Use one reusable body parsing helper for index, strict decimal syntax, dates, notes and prefix validation. Reserve alphabetic `PREFIX/` tokens only at argument boundaries; preserve `km/day` inside notes. Reject duplicate/unknown prefixes and raw nonprintable characters before normalization. Do not lowercase values or collapse notes' internal spacing. Recognize only the command's allowed prefixes. Tests must use the public command router as well as individual parsers so trimming at the router cannot hide a trailing newline.
+
+Date checks use an injectable `Clock` with the local zone, not fixed test dates or a global mutable clock. Validate future-date restrictions against the execution date (including if midnight passes after parsing). Load checks use the same clock policy. The model also validates structural, measurement and cross-date invariants independently of parsers. Exceptions handle bad user/stored input; assertions are only appropriate for internal assumptions after validation.
+
+Resolve indexes against `getFilteredPersonList()` exactly once before mutation. Do not reset the predicate to show all clients. `bodyhistory` and `bodycompare` should select/reveal the requested client even for valid empty-data states; invalid indexes must not change the UI.
+
+Proposed UI handoff: extend `CommandResult` with an optional typed `BodyProgressViewRequest` containing the resolved target `Person` and section (`HISTORY` or `COMPARISON`). Mutations request the updated client; queries request the existing client. Preserve the existing constructors/defaults and include the request in result equality/hashCode/tests. This is a **new integration point to implement**, not an existing API. `MainWindow` consumes the request only after `LogicManager.execute` returns successfully, selects the target in `PersonListPanel`, and reveals the section. Do not pass the numeric index on for later re-resolution against a potentially changed list, and do not mutate domain data to implement selection.
+
+Show baseline, all entries and comparison in the selected client's existing scrollable details area. Observe selection and client replacement so every mutation, including deletion of the latest entry, refreshes the derived display. Clear stale rows, notes and comparison fields on selection changes. Wrap maximum-length notes and constrain controls to available width; use vertical scrolling rather than `sizeToScene()`/automatic window resizing. Coordinate placement with the separate UI-redesign PR without deferring the functional v1.4 view.
+
+#### Deriving history and comparison
+
+Build the view from the aggregate on demand. Baseline is separate from the progress entry count. The comparison uses the maximum entry date and subtracts baseline weight with `BigDecimal.subtract`, formatting at scale two in plain decimal notation. Prefix a positive difference with `+`; negative differences retain `-`; zero is `0.00` with no sign. Do not store a separate cached latest-entry pointer, delta, BMI or health classification: those could become stale after correction or deletion. No entry produces the contract's empty state rather than a baseline-to-itself comparison.
+
+#### Persistence schema and backward compatibility
+
+Proposed `JsonAdaptedBodyProgress`, `JsonAdaptedBodyBaseline` and `JsonAdaptedBodyProgressEntry` adapters add a nested `bodyProgress` field to each JSON person. There is no shared catalog or cross-client reference. A populated example is:
+
+```json
+{
+  "bodyProgress": {
+    "baseline": {
+      "date": "2020-01-01",
+      "weightKg": "75.50",
+      "heightCm": "175.00"
+    },
+    "entries": [
+      {"date": "2020-01-08", "weightKg": "74.80", "notes": "Measured before breakfast"},
+      {"date": "2020-01-15", "weightKg": "74.20"}
+    ]
+  }
+}
+```
+
+This is a fragment of a person, not a complete standalone address book. Measurements are **JSON strings** with strict decimal content, serialized at scale two to preserve exact values. Dates are strings. Notes, when present, are strings. Read raw JSON nodes or equivalent strict adapters so Jackson cannot silently coerce a number/boolean into a string.
+
+Missing/null `bodyProgress` in legacy persons means an empty tracker. Within a present object, missing/null baseline means absent baseline, and missing/null entries means an empty list; entries without a baseline are invalid. Missing/null notes means absent notes; a supplied empty/blank string is invalid. Present baseline/entry measurements and dates are required. Validate object/array types and every list element before conversion. Reject null entries, malformed or future dates, unsupported year ranges, invalid/wrong-type measurements, duplicates, baseline-date conflicts and all other invariant violations through `IllegalValueException`, translated by storage to `DataLoadingException`. Do not leak NPE/number-format exceptions, silently coerce values, remove bad entries or truncate old records. Existing corrupt-file handling remains the shared startup behavior.
+
+Load then sort valid entries by date. On save, emit the canonical date order. Round-trip tests must keep a populated baseline, several adjusted entries and optional notes present across restart. Also verify unrelated person data and shared address-book catalogs survive serialization and restore.
+
+#### Atomic mutation, rollback and integration
+
+For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` A body-mutation marker or equivalent mapping can supply this specific message; read-only queries should not be classified as mutations merely to reuse it. Existing application-wide autosave behavior need not change for this feature, but history/comparison must leave all domain data unchanged.
+
+<img src="images/BodyProgressSaveSequence.png" alt="Proposed body mutation sequence with validation, atomic save and rollback on IOException" width="820" />
+
+The sequence diagram abstracts parsing and the actual filesystem temporary-file/move implementation. Its `commit` arrow represents the existing `Storage.saveAddressBook` boundary. Return a display request only on successful completion; an exception must not reveal or later persist a rejected candidate. Do not fire irreversible UI/history side effects during command execution before saving.
+
+Snapshots, `AddressBook` copy/reset/equality, `Person` builders and any future shared undo/redo history must retain body data together with every other feature. This design adds no independent tracker undo stack; do not claim general undo/redo support until the shared implementation is integrated and tested. Body logging is independent of workout logging and never deducts membership sessions.
+
+#### Implementation increments and validation
+
+Implement and review in increments: (1) immutable model/adapters and legacy/invalid-file tests, (2) baseline/log/delete commands and rollback integration, (3) query/UI handoff and readable display. Keep the feature spec, UG and this DG aligned; remove "planned" labels only after the advertised behavior is actually delivered. These increments together, not just a foundation model, complete the assigned v1.4 scope.
+
+Automated evidence should cover:
+
+* Parser/router boundaries: zero/signed/oversized and filtered indexes; missing/repeated/unknown prefixes; newline preservation; leap/impossible/future dates; decimal syntax/bounds; Unicode code-point note limits and nonprintables.
+* Aggregate transitions: create/replace baseline; invalid correction keeps all entries; create/replace/delete entry; notes clearing; exact duplicates versus case-only note edits; duplicate dates; sorted backdating; independent clients.
+* Derived views: positive, negative and zero differences; latest by date after backdated insertion/edit; fallback after deleting latest; no baseline and baseline-only empty states; no mutation by queries.
+* Real save/reload: populated baseline and multiple entries, target-only notes absence, corrected entries, unrelated fields/catalogs, legacy absence, null/wrong-type fields/elements and invalid cross-date relationships.
+* Fault injection for every mutation form (including both creation and replacement): unchanged model/filter/catalogs and original file bytes, cleaned temporary files, and a later successful command not persisting rejected values.
+* UI selection/refresh, invalid-index stability, maximum-length notes and supported narrow-window layout; confirm target/notes/delta are not stale when switching clients or after failed saves.
+
+The manual scenarios in the appendix complement automated tests; they are planned acceptance checks, not evidence of tests already run.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -421,7 +513,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | gym trainer | record the diet plan for each client                                                 | track the impact of diet on their improvement                          |
 | `* * *`  | gym trainer | delete a former client                                                               | keep my active roster uncluttered                                      |
 | `* * *`  | gym trainer | record when and where to meet each client                                            | remind myself of upcoming client sessions                              |
-| `* *`    | gym trainer | track the body progress of each client                                               | see how effective my plan is                                           |
+| `* * *` | gym trainer | record dated body weights and optional notes | review changes between training sessions |
 | `* *`    | gym trainer | track fee payments                                                                   | check which clients have paid their fees                               |
 | `* *`    | gym trainer | search for clients by name                                                           | find a particular client quickly                                       |
 | `* *`    | gym trainer | filter clients by training goal                                                      | work with clients who have similar objectives                          |
@@ -437,9 +529,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | gym trainer | view a client's latest workout session                                               | quickly know what they did previously before starting the next session |
 | `*`      | gym trainer | view a client's complete workout history                                             | review how their training has changed over time                        |
 | `*`      | gym trainer | edit a previously logged workout session                                             | correct mistakes in weights, sets, repetitions, or exercises           |
-| `*`      | gym trainer | record a client's starting body measurements                                         | have a baseline against which future progress can be compared          |
-| `*`      | gym trainer | view the history of a client's body measurements                                     | see how their body measurements have changed over time                 |
-| `*`      | gym trainer | compare a client's latest progress with their starting measurements                  | clearly show the client how much progress they have made               |
+| `* * *` | gym trainer | record a client's starting body weight and height | have a baseline for later weight comparisons |
+| `* * *` | gym trainer | view a client's complete dated body-progress history | review all recorded changes in order |
+| `* * *` | gym trainer | compare the latest dated weight with the baseline | see the exact recorded weight difference |
 | `*`      | gym trainer | record the number of sessions purchased by a client                                  | keep track of their training package                                   |
 | `*`      | gym trainer | view the number of sessions remaining in a client's package                          | know when a client is close to needing a renewal                       |
 | `*`      | gym trainer | record a completed session against a client's package                                | keep the remaining number of sessions accurate                         |
@@ -686,6 +778,75 @@ The first increment stores an immutable `TrainingSession` (date/time and locatio
 
     Use case resumes at step 3.
 
+**Use case: UC10 - Record starting body measurements [planned v1.4]**
+
+**MSS**
+
+1. Trainer identifies a client in the displayed list.
+2. Trainer supplies the starting date, weight and height.
+3. Fittix validates the complete baseline, saves it and shows the recorded measurements.
+
+Use case ends.
+
+**Extensions**
+
+* 1a. The client index is invalid: Fittix reports the index error; no data changes. Resume at step 1.
+* 2a. A required value is missing/invalid or the date is in the future: Fittix reports the relevant error. Resume at step 2.
+* 3a. A different baseline exists: Fittix replaces it only if its date remains earlier than every retained progress entry; otherwise it reports the conflict and preserves all data. Use case ends.
+* 3b. The baseline is identical: Fittix reports that it is already current. Use case ends.
+* 3c. Saving fails: Fittix reports the body-save error and retains the previous model and file. Use case ends.
+
+**Use case: UC11 - Record or correct dated body progress [planned v1.4]**
+
+**Precondition:** The client has a body baseline.
+
+**MSS**
+
+1. Trainer identifies a client in the displayed list.
+2. Trainer supplies a progress date, weight and optional notes.
+3. Fittix validates the candidate entry against the baseline and existing records.
+4. Fittix saves the entry and shows the refreshed history/comparison.
+
+Use case ends.
+
+**Extensions**
+
+* 1a. The client index is invalid: Fittix reports the index error. Resume at step 1.
+* 2a. Required data is invalid, or the date is on/before the baseline or in the future: Fittix reports the relevant error; all data stays unchanged. Resume at step 2.
+* 3a. The date already exists with different values: Fittix prepares a complete replacement, with absent notes if omitted. Continue at step 4, reporting replacement only after saving succeeds.
+* 3b. The entry is identical: Fittix reports a duplicate and makes no change. Use case ends.
+* 4a. Saving fails: Fittix reports the body-save error and restores the previous model/file. Use case ends.
+* Correction alternative: Trainer deletes a progress entry by client/date; Fittix preserves the baseline and other entries and refreshes the latest comparison after saving. A missing entry or an attempt to delete the baseline is rejected. The same save-failure guarantee applies.
+
+**Use case: UC12 - View complete body-progress history [planned v1.4]**
+
+**MSS**
+
+1. Trainer identifies a client in the displayed list and requests body-progress history.
+2. Fittix selects that client and shows the baseline and every dated entry, oldest first, without changing domain data or the list filter.
+
+Use case ends.
+
+**Extensions**
+
+* 1a. The index is invalid: Fittix reports the index error and keeps selection unchanged. Use case ends.
+* 2a. No baseline exists: Fittix shows the selected client's missing-baseline state. Use case ends.
+* 2b. Only a baseline exists: Fittix shows it and the no-progress state. Use case ends.
+
+**Use case: UC13 - Compare latest body progress with the baseline [planned v1.4]**
+
+**MSS**
+
+1. Trainer identifies a client in the displayed list and requests a comparison.
+2. Fittix selects that client and shows baseline/latest dates and weights, baseline height and the exact signed weight difference, using the greatest progress date.
+
+Use case ends.
+
+**Extensions**
+
+* 1a. The index is invalid: Fittix reports the index error and keeps selection unchanged. Use case ends.
+* 2a. No baseline or no progress entries exist: Fittix shows the relevant empty state, without fabricating a measurement or changing data. Use case ends.
+
 ### Non-Functional Requirements
 
 **Technical and environment**
@@ -923,3 +1084,34 @@ Use a disposable address book with at least two clients.
    Expected: With no plan assigned, the status message shows `Cleared all membership plans.` The catalog is now empty (`view mem` shows `No membership plans available.`), while both clients and their other data are unchanged.
 8. Run `addmem n/Platinum p/200 s/40`, then `clear`, then `view mem`.<br>
    Expected: `clear` deletes all clients, but the Platinum plan is still listed, confirming that clearing clients does not delete membership plans.
+
+### Body progress tracker [planned v1.4 acceptance checks]
+
+Run these once the feature is implemented, using disposable data and a correct local clock. The fixed dates below are historical; on a controlled test clock earlier than them, substitute equivalent past dates. Prepare two uniquely named clients, Priya Nair and Daniel Tan. Run `list` and use their actual displayed indexes in place of `P` and `D`. Preserve Daniel's values for cross-client checks. Start Priya with no tracker; optionally give her diet/workout/schedule/membership data to verify preservation.
+
+1. Run `bodyhistory P` and `bodycompare P`, then `bodylog P d/2020-01-08 w/74.80`.<br>
+   Expected: Queries select Priya and display the missing-baseline state without changing data. Logging fails with `No body baseline recorded for Priya Nair. Use bodybase first.`
+2. Run `bodybase P d/2020-01-01 w/75.50 h/175`, then `bodycompare P`.<br>
+   Expected: Created feedback, baseline 75.50 kg/175.00 cm, no progress entries and no fabricated comparison. Repeating with `w/75.5 h/175.00` is rejected as already current.
+3. Run `bodylog P d/2020-01-15 w/74.20`, then `bodylog P d/2020-01-08 w/74.80 n/Measured before breakfast`, then `bodyhistory P` and `bodycompare P`.<br>
+   Expected: History lists 8 January before 15 January; latest remains 15 January. Weight change is -1.30 kg. Missing notes appear as `—`.
+4. **Restart while the baseline and both entries are still present.** Find/select Priya; run both queries.<br>
+   Expected: Baseline, height, both dates/weights and the first entry's notes survive; the second has no notes. Chronological order, latest date and -1.30 kg remain correct. Daniel and Priya's other feature data are unchanged.
+5. Run `bodylog P d/2020-01-08 w/74.60`, then the same command again.<br>
+   Expected: First command replaces only the 8 January entry and clears its notes; second reports an identical entry. Latest comparison still uses 15 January. Adding notes with different capitalization is a valid correction; an identical normalized note is a duplicate.
+6. Run `bodybase P d/2020-01-10 w/75 h/175`.<br>
+   Expected: Rejected because the retained 8 January entry would be on/before the baseline. Original baseline, both entries and comparison remain unchanged. Run `bodybase P d/2020-01-01 w/75 h/175`; expected: baseline replacement retains both entries and updates the difference to -0.80 kg.
+7. Run `bodylog P d/2020-01-15 w/76`, then compare; replace that weight with `75`, then compare.<br>
+   Expected: Respectively +1.00 kg and 0.00 kg, with no health judgement and no negative zero. No new same-date row is added.
+8. Use `find Priya`, then `bodyhistory 1`, `bodylog 1 d/2020-01-22 w/74 n/Walk 5 km/day`, and `bodycompare 1`.<br>
+   Expected: All target Priya; filter and numbering remain stable. Notes retain `km/day`. Run `list` and confirm Daniel is unchanged; refresh `P`/`D` indexes before continuing.
+9. Try `bodylog P d/2020-01-01 w/74`, an impossible date (`2020-02-30`), tomorrow's date, `w/0`, `w/500.01`, `w/74.001`, `w/NaN`, a blank `n/`, and repeated/unknown prefixes.<br>
+   Expected: Each is rejected with the corresponding contract error. No entry, baseline or other data changes. In automated/router tests, also inject trailing newlines, invalid control characters, 300/301-code-point notes, and invalid/overflow indexes.
+10. Correct a mistaken date by recording `bodylog P d/2020-01-23 w/74 n/Walk 5 km/day`, then `bodydelete P d/2020-01-22`.<br>
+    Expected: Only the requested old date is removed. Delete 23 January, then 15 January: latest falls back to 8 January (74.60 kg; -0.40 kg). Delete 8 January: baseline stays and no-progress states return. Repeating deletion reports no matching entry; deleting the baseline date reports the baseline-protection error.
+11. Record a new valid entry and restart before deleting the client. Switch between Priya and Daniel, including a client with no tracker.<br>
+    Expected: Saved data survives; no stale notes/dates/delta remain when selection changes. At the minimum supported window size, maximum valid notes remain readable through wrapping and scrolling without automatic resizing. An invalid-index query leaves selection unchanged.
+12. With populated body data, execute unrelated contact/remark/diet/workout/schedule/membership updates as available; then delete Priya and restart.<br>
+    Expected: Unrelated updates retain all body data. Client deletion removes Priya and her body data, preserving Daniel and shared plans. In separate disposable scenarios, verify `clear` removes body data with clients while retaining shared membership plans, and `clearmem` leaves body data unchanged when permitted.
+
+Save-failure and malformed-file cases require automated fault injection/fixtures: fail the atomic commit for baseline create/replace, entry create/replace and deletion; verify the specified body-save error, unchanged original JSON bytes and model, no success display request, no leftover temp file, and no later persistence of rejected data. Restart fixtures with legacy missing/null tracker fields, populated records, duplicate dates, null list elements, wrong scalar types, future dates and baseline-order violations. Malformed data must enter the normal loading-error path rather than crash or silently lose individual entries. Do not simulate these failures by corrupting real client data.
