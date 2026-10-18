@@ -150,6 +150,7 @@ public class PersonTest {
                 + ", healthProfile=" + ALICE.getHealthProfile().orElse(null)
                 + ", trainingSessions=" + ALICE.getTrainingSessions()
                 + ", workoutSessions=" + ALICE.getWorkoutSessions()
+                + ", membershipAssignment=" + ALICE.getMembershipAssignment()
                 + "}";
         assertEquals(expected, ALICE.toString());
     }

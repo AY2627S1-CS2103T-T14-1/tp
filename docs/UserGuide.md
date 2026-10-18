@@ -497,7 +497,7 @@ Format: `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`
 
 Example: `addmem n/Gold Plus p/150.50 s/30`
 
-Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
+Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The stored name keeps the case you entered, but the plan list and client card render its first character in upper case, so a plan entered as `gold` is shown as `Gold`. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
 
 Format: `view mem` or `view membership`
 
@@ -551,6 +551,17 @@ A plan that is assigned to any client cannot be cleared. If at least one plan is
 
 Example: `clearmem`
 
+Failed membership commands leave every plan, assignment, and balance unchanged. The most common errors are:
+
+* `A membership plan named Gold already exists.` — `addmem` with a duplicate name.
+* `No membership plan named Silver exists.` — `amem` or `delmem` for an unknown plan.
+* `Priya Nair already has an assigned membership plan.` — `amem` for a client who already has one.
+* `Membership plan Gold is in use and cannot be deleted. Remove its assignments with rmem first.` — `delmem` for a referenced plan.
+* `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` — `clearmem` while any plan is assigned.
+* `This client has no membership plan to remove or adjust.` — `rmem`, `imem`, or `dmem` for a client without one.
+* `Cannot decrease sessions below zero. The balance remains unchanged.` and `Cannot increase sessions above 1000. The balance remains unchanged.` — adjustments past the 0 to 1000 limits.
+* `The membership change could not be saved. No plan, assignment, or balance was changed.` — the change could not be written to disk.
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -562,6 +573,8 @@ Format: `exit`
 AddressBook automatically saves data after every command. You do not need to save manually.
 
 Workout exercises, their sets, reps, weight, and assigned weekdays are restored when you reopen the app. Exercises saved without a day, including older entries labelled `day not specified` or `Day not specified`, appear together under the single **Day not specified** heading.
+
+Membership plans and each client's plan name, remaining sessions, and expiry date are restored the same way. An assignment whose expiry date has passed is still shown so you can act on it.
 
 ### Editing the data file
 

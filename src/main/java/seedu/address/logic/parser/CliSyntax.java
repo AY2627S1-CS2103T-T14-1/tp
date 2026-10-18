@@ -28,5 +28,9 @@ public class CliSyntax {
     public static final Prefix PREFIX_LOG_DATE = new Prefix("d/");
     public static final Prefix PREFIX_LOG_TIME = new Prefix("t/");
     public static final Prefix PREFIX_LOG_EXERCISE = new Prefix("ex/");
+    public static final Prefix PREFIX_MEMBERSHIP_NAME = new Prefix("n/");
+    public static final Prefix PREFIX_MEMBERSHIP_PRICE = new Prefix("p/");
+    public static final Prefix PREFIX_MEMBERSHIP_SESSIONS = new Prefix("s/");
+    public static final Prefix PREFIX_MEMBERSHIP_EXPIRY = new Prefix("e/");
 
 }
