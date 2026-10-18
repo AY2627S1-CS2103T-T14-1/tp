@@ -224,7 +224,7 @@ public class Person {
     public Person withMembershipAssignment(Optional<MembershipAssignment> membershipAssignment) {
         Objects.requireNonNull(membershipAssignment);
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions, membershipAssignment);
+                trainingSessions, workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment);
     }
 
     /** Returns a copy with one additional session. */
