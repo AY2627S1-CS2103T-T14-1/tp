@@ -187,6 +187,37 @@ public class MembershipStorageTest {
     }
 
     @Test
+    public void serializable_nullPlanEntry_throwsIllegalValueException() throws Exception {
+        String json = "{\"persons\": [], \"membershipPlans\": [null]}";
+        JsonSerializableAddressBook loaded =
+                JsonUtil.fromJsonString(json, JsonSerializableAddressBook.class);
+        assertThrows(IllegalValueException.class,
+                JsonSerializableAddressBook.MESSAGE_NULL_PLAN, loaded::toModelType);
+    }
+
+    @Test
+    public void serializable_inconsistentAssignmentName_throwsIllegalValueException() {
+        AddressBook book = new AddressBook();
+        book.addMembershipPlan(plan("Gold", "150", 30));
+        Person mismatched = new PersonBuilder(BENSON).build().withMembershipAssignment(
+                Optional.of(new MembershipAssignment("gold", "Silver", 10, Optional.empty())));
+        book.addPerson(mismatched);
+        JsonSerializableAddressBook serializable = new JsonSerializableAddressBook(book);
+        assertThrows(IllegalValueException.class,
+                JsonSerializableAddressBook.MESSAGE_INCONSISTENT_PLAN_NAME, serializable::toModelType);
+    }
+
+    @Test
+    public void serializable_matchingAssignmentName_loadsSuccessfully() throws Exception {
+        AddressBook book = new AddressBook();
+        book.addMembershipPlan(plan("Gold", "150", 30));
+        Person assigned = new PersonBuilder(BENSON).build().withMembershipAssignment(
+                Optional.of(new MembershipAssignment("gold", "Gold", 10, Optional.empty())));
+        book.addPerson(assigned);
+        assertEquals(book, new JsonSerializableAddressBook(book).toModelType());
+    }
+
+    @Test
     public void serializable_expiredAssignment_loadsSuccessfully() throws Exception {
         AddressBook book = new AddressBook();
         book.addMembershipPlan(plan("Gold", "150", 30));

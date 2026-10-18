@@ -2,6 +2,7 @@ package seedu.address.storage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -11,6 +12,8 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.membership.MembershipAssignment;
+import seedu.address.model.membership.MembershipName;
 import seedu.address.model.membership.MembershipPlan;
 import seedu.address.model.person.Person;
 
@@ -24,6 +27,10 @@ class JsonSerializableAddressBook {
     public static final String MESSAGE_DUPLICATE_PLAN = "Membership plans list contains duplicate plan(s).";
     public static final String MESSAGE_UNKNOWN_PLAN_REFERENCE =
             "Membership assignment references an unknown membership plan.";
+    public static final String MESSAGE_INCONSISTENT_PLAN_NAME =
+            "Membership assignment's plan name does not match the referenced membership plan.";
+    public static final String MESSAGE_NULL_PLAN = "Membership plans list contains a null entry.";
+    public static final String MESSAGE_NULL_PERSON = "Persons list contains a null entry.";
 
     private final List<JsonAdaptedPerson> persons = new ArrayList<>();
     private final List<JsonAdaptedMembershipPlan> membershipPlans = new ArrayList<>();
@@ -60,6 +67,9 @@ class JsonSerializableAddressBook {
     public AddressBook toModelType() throws IllegalValueException {
         AddressBook addressBook = new AddressBook();
         for (JsonAdaptedMembershipPlan jsonAdaptedPlan : membershipPlans) {
+            if (jsonAdaptedPlan == null) {
+                throw new IllegalValueException(MESSAGE_NULL_PLAN);
+            }
             MembershipPlan plan = jsonAdaptedPlan.toModelType();
             if (addressBook.hasMembershipPlan(plan)) {
                 throw new IllegalValueException(MESSAGE_DUPLICATE_PLAN);
@@ -67,18 +77,41 @@ class JsonSerializableAddressBook {
             addressBook.addMembershipPlan(plan);
         }
         for (JsonAdaptedPerson jsonAdaptedPerson : persons) {
+            if (jsonAdaptedPerson == null) {
+                throw new IllegalValueException(MESSAGE_NULL_PERSON);
+            }
             Person person = jsonAdaptedPerson.toModelType();
             if (addressBook.hasPerson(person)) {
                 throw new IllegalValueException(MESSAGE_DUPLICATE_PERSON);
             }
-            if (person.getMembershipAssignment().isPresent()
-                    && addressBook.findMembershipPlanByKey(
-                            person.getMembershipAssignment().get().getPlanKey()).isEmpty()) {
-                throw new IllegalValueException(MESSAGE_UNKNOWN_PLAN_REFERENCE);
-            }
+            validateMembershipAssignment(addressBook, person);
             addressBook.addPerson(person);
         }
         return addressBook;
+    }
+
+    /**
+     * Checks that a client's stored assignment references an existing plan and that its copied
+     * display name is consistent with that plan. Rejecting inconsistent saved data keeps the
+     * displayed plan name and the plan used for deletion protection in agreement.
+     *
+     * @throws IllegalValueException if the assignment references no plan or names a different plan.
+     */
+    private void validateMembershipAssignment(AddressBook addressBook, Person person)
+            throws IllegalValueException {
+        if (person.getMembershipAssignment().isEmpty()) {
+            return;
+        }
+        MembershipAssignment assignment = person.getMembershipAssignment().get();
+        Optional<MembershipPlan> referencedPlan =
+                addressBook.findMembershipPlanByKey(assignment.getPlanKey());
+        if (referencedPlan.isEmpty()) {
+            throw new IllegalValueException(MESSAGE_UNKNOWN_PLAN_REFERENCE);
+        }
+        if (!referencedPlan.get().getName().getKey()
+                .equals(new MembershipName(assignment.getPlanName()).getKey())) {
+            throw new IllegalValueException(MESSAGE_INCONSISTENT_PLAN_NAME);
+        }
     }
 
 }
