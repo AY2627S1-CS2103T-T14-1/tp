@@ -281,17 +281,17 @@ Parsers require each mandatory prefix exactly once, reject repeated or unknown p
 
 The client card shows a single membership tag reading `NAME Member: COUNT sessions left`, with ` [expires YYYY-MM-DD]` appended when an expiry exists. The tag wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. Command messages and error behavior follow the [Feature 7 specification](featureSpecs.md#feature-7-membership-plan).
 
-### [Planned v1.4] Body progress tracker
+### Body progress tracker
 
-**Design status:** This is a proposed implementation for the body-progress assignment, not a description of code already merged. The [Feature 10 contract](featureSpecs.md#feature-10-body-progress-tracker) and [planned UG section](UserGuide.md#body-progress-tracker-planned-for-v14) define user-visible behavior. Keep these documents synchronized as implementation increments land. The four required capabilities are baseline measurements, dated weight/notes, complete history and latest-to-baseline comparison. Progress-entry correction/deletion is part of the same feature.
+Implemented for v1.4. The [feature contract](featureSpecs.md#feature-10-body-progress-tracker) and [User Guide](UserGuide.md#body-progress-tracker) define user-visible behavior. The tracker supports baseline measurements, dated weight/notes, complete history, latest-to-baseline comparison, and correction/deletion. Feature numbering remains unchanged here pending the shared specification consolidation by the document owner.
 
 #### Ownership and invariants
 
-Proposed model names below are design targets. Each `Person` owns one immutable `BodyProgress` aggregate, initially empty. An optional `BodyBaseline` contains `LocalDate date`, `BigDecimal weightKg` and `BigDecimal heightCm`. Each immutable `BodyProgressEntry` contains a date, exact weight and optional notes. The aggregate defensively copies its entry collection and exposes an unmodifiable list in date order.
+Each `Person` owns one immutable `BodyProgress` aggregate, initially empty. An optional `BodyBaseline` contains `LocalDate date`, `BigDecimal weightKg` and `BigDecimal heightCm`. Each immutable `BodyProgressEntry` contains a date, exact weight and optional notes. The aggregate defensively copies its entry collection and exposes an unmodifiable list in date order.
 
-<img src="images/BodyProgressClassDiagram.png" alt="Proposed body progress model: a Person owns a BodyProgress aggregate with an optional baseline and dated entries" width="760" />
+<img src="images/BodyProgressClassDiagram.png" alt="Body progress model: a Person owns a BodyProgress aggregate with an optional baseline and dated entries" width="760" />
 
-The proposed model class diagram deliberately omits unrelated `Person` fields. It does not replace the shared Model diagram maintained by other members.
+The model class diagram deliberately omits unrelated `Person` fields. It does not replace the shared Model diagram maintained by other members.
 
 Aggregate invariants:
 
@@ -302,21 +302,21 @@ Aggregate invariants:
 * Baseline replacement retains entries and must validate its candidate date against **all** retained entries. Never silently drop or re-date history.
 * Same-date `bodylog` replaces the complete entry, including clearing notes when omitted. An exact duplicate is rejected before replacement. `bodydelete` cannot remove the baseline.
 
-Prefer `Person.withBodyProgress(updated)` as the body mutation path; it copies every unrelated field. Update all other client reconstruction/copy paths to preserve this aggregate, including test builders and later membership/health/workout-history fields. Include it in full value equality/hashCode, but do not change client identity solely because measurements changed. Deleting/clearing clients removes their owned aggregates; catalog operations preserve them.
+`Person.withBodyProgress(updated)` copies every unrelated field. Existing client reconstruction paths and `PersonBuilder` retain the tracker. Full person equality/hashCode include it; client identity does not depend on measurements. Deleting/clearing clients removes their owned aggregates; catalog operations preserve them.
 
 #### Commands, parsing and UI requests
 
-Proposed command/parser pairs are `BodyBaselineCommand` / `BodyBaselineCommandParser` (`bodybase`), `BodyLogCommand` / `BodyLogCommandParser` (`bodylog`), `BodyHistoryCommand` / `BodyHistoryCommandParser` (`bodyhistory`), `BodyCompareCommand` / `BodyCompareCommandParser` (`bodycompare`) and `BodyDeleteCommand` / `BodyDeleteCommandParser` (`bodydelete`). `BodyHistoryCommand` and `BodyCompareCommand` are queries and leave domain data unchanged; the three mutation classes create complete candidates before `Model#setPerson`.
+Command/parser pairs are `BodyBaselineCommand` / `BodyBaselineCommandParser` (`bodybase`), `BodyLogCommand` / `BodyLogCommandParser` (`bodylog`), `BodyHistoryCommand` / `BodyHistoryCommandParser` (`bodyhistory`), `BodyCompareCommand` / `BodyCompareCommandParser` (`bodycompare`) and `BodyDeleteCommand` / `BodyDeleteCommandParser` (`bodydelete`). `BodyHistoryCommand` and `BodyCompareCommand` are queries and leave domain data unchanged; the three mutation classes create complete candidates before `Model#setPerson`.
 
-Use one reusable body parsing helper for index, strict decimal syntax, dates, notes and prefix validation. Reserve alphabetic `PREFIX/` tokens only at argument boundaries; preserve `km/day` inside notes. Reject duplicate/unknown prefixes and raw nonprintable characters before normalization. Do not lowercase values or collapse notes' internal spacing. Recognize only the command's allowed prefixes. Tests must use the public command router as well as individual parsers so trimming at the router cannot hide a trailing newline.
+The reusable `BodyParserUtil` and `BodyMeasurements` helpers handle index, strict decimal syntax, dates, notes and prefix validation. Reserve alphabetic `PREFIX/` tokens only at argument boundaries; preserve `km/day` inside notes. Reject duplicate/unknown prefixes and raw nonprintable characters before normalization. Do not lowercase values or collapse notes' internal spacing. Recognize only the command's allowed prefixes. Tests must use the public command router as well as individual parsers so trimming at the router cannot hide a trailing newline.
 
 Date checks use an injectable `Clock` with the local zone, not fixed test dates or a global mutable clock. Validate future-date restrictions against the execution date (including if midnight passes after parsing). Load checks use the same clock policy. The model also validates structural, measurement and cross-date invariants independently of parsers. Exceptions handle bad user/stored input; assertions are only appropriate for internal assumptions after validation.
 
 Resolve indexes against `getFilteredPersonList()` exactly once before mutation. Do not reset the predicate to show all clients. `bodyhistory` and `bodycompare` should select/reveal the requested client even for valid empty-data states; invalid indexes must not change the UI.
 
-Proposed UI handoff: extend `CommandResult` with an optional typed `BodyProgressViewRequest` containing the resolved target `Person` and section (`HISTORY` or `COMPARISON`). Mutations request the updated client; queries request the existing client. Preserve the existing constructors/defaults and include the request in result equality/hashCode/tests. This is a **new integration point to implement**, not an existing API. `MainWindow` consumes the request only after `LogicManager.execute` returns successfully, selects the target in `PersonListPanel`, and reveals the section. Do not pass the numeric index on for later re-resolution against a potentially changed list, and do not mutate domain data to implement selection.
+`CommandResult` carries an optional typed `BodyProgressViewRequest` containing the resolved target `Person` and section (`HISTORY` or `COMPARISON`). Mutations request the updated client; queries request the existing client. Existing constructors retain an empty request by default; result equality and hashCode include the optional request. `MainWindow` consumes the request only after `LogicManager.execute` returns successfully, selects the target in `PersonListPanel`, and reveals the section. Do not pass the numeric index on for later re-resolution against a potentially changed list, and do not mutate domain data to implement selection.
 
-Show baseline, all entries and comparison in the selected client's existing scrollable details area. Observe selection and client replacement so every mutation, including deletion of the latest entry, refreshes the derived display. Clear stale rows, notes and comparison fields on selection changes. Wrap maximum-length notes and constrain controls to available width; use vertical scrolling rather than `sizeToScene()`/automatic window resizing. Coordinate placement with the separate UI-redesign PR without deferring the functional v1.4 view.
+`BodyProgressPanel` renders baseline, all entries and comparison in the centre column's `ClientDetailPanel`. The body card scrolls internally, and the centre details column scrolls when its content exceeds the available height. `MainWindow` observes selection/client replacement and consumes successful typed requests, then `ClientDetailPanel.revealBodyProgress` reveals the card and requested section. Maximum-length notes wrap within the available width. Selection changes rebuild/clear all body fields; the window never resizes automatically. All five commands are registered in `CommandCatalog` for usage hints and help.
 
 #### Deriving history and comparison
 
@@ -324,7 +324,7 @@ Build the view from the aggregate on demand. Baseline is separate from the progr
 
 #### Persistence schema and backward compatibility
 
-Proposed `JsonAdaptedBodyProgress`, `JsonAdaptedBodyBaseline` and `JsonAdaptedBodyProgressEntry` adapters add a nested `bodyProgress` field to each JSON person. There is no shared catalog or cross-client reference. A populated example is:
+`JsonAdaptedBodyProgress`, `JsonAdaptedBodyBaseline` and `JsonAdaptedBodyProgressEntry` adapters add a nested `bodyProgress` field to each JSON person. There is no shared catalog or cross-client reference. A populated example is:
 
 ```json
 {
@@ -350,19 +350,19 @@ Load then sort valid entries by date. On save, emit the canonical date order. Ro
 
 #### Atomic mutation, rollback and integration
 
-For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` A body-mutation marker or equivalent mapping can supply this specific message; read-only queries should not be classified as mutations merely to reuse it. Existing application-wide autosave behavior need not change for this feature, but history/comparison must leave all domain data unchanged.
+For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` `BodyMutationCommand` identifies the three mutations for this message mapping; read-only queries should not be classified as mutations merely to reuse it. Existing application-wide autosave behavior need not change for this feature, but history/comparison must leave all domain data unchanged.
 
-<img src="images/BodyProgressSaveSequence.png" alt="Proposed body mutation sequence with validation, atomic save and rollback on IOException" width="820" />
+<img src="images/BodyProgressSaveSequence.png" alt="Body mutation sequence with validation, atomic save and rollback on IOException" width="820" />
 
-The sequence diagram abstracts parsing and the actual filesystem temporary-file/move implementation. Its `commit` arrow represents the existing `Storage.saveAddressBook` boundary. Return a display request only on successful completion; an exception must not reveal or later persist a rejected candidate. Do not fire irreversible UI/history side effects during command execution before saving.
+The sequence diagram abstracts parsing and the actual filesystem temporary-file/move implementation. Its save arrow represents the existing `Storage.saveAddressBook` boundary. Return a display request only on successful completion; an exception must not reveal or later persist a rejected candidate. Do not fire irreversible UI/history side effects during command execution before saving.
 
 Snapshots, `AddressBook` copy/reset/equality, `Person` builders and any future shared undo/redo history must retain body data together with every other feature. This design adds no independent tracker undo stack; do not claim general undo/redo support until the shared implementation is integrated and tested. Body logging is independent of workout logging and never deducts membership sessions.
 
 #### Implementation increments and validation
 
-Implement and review in increments: (1) immutable model/adapters and legacy/invalid-file tests, (2) baseline/log/delete commands and rollback integration, (3) query/UI handoff and readable display. Keep the feature spec, UG and this DG aligned; remove "planned" labels only after the advertised behavior is actually delivered. These increments together, not just a foundation model, complete the assigned v1.4 scope.
+Implementation commits cover: (1) immutable model/adapters and legacy/invalid-file tests, (2) baseline/log/delete commands and rollback integration, (3) query/UI handoff and readable display. The feature spec, UG and this DG describe the complete runtime companion PR. Merge the runtime PR before this documentation update. These increments together, not just a foundation model, complete the assigned v1.4 scope.
 
-Automated evidence should cover:
+Automated coverage in `BodyProgressTest`, `JsonAdaptedBodyProgressTest`, `BodyProgressIntegrationTest` and `BodyProgressPanelTest` exercises:
 
 * Parser/router boundaries: zero/signed/oversized and filtered indexes; missing/repeated/unknown prefixes; newline preservation; leap/impossible/future dates; decimal syntax/bounds; Unicode code-point note limits and nonprintables.
 * Aggregate transitions: create/replace baseline; invalid correction keeps all entries; create/replace/delete entry; notes clearing; exact duplicates versus case-only note edits; duplicate dates; sorted backdating; independent clients.
@@ -371,7 +371,7 @@ Automated evidence should cover:
 * Fault injection for every mutation form (including both creation and replacement): unchanged model/filter/catalogs and original file bytes, cleaned temporary files, and a later successful command not persisting rejected values.
 * UI selection/refresh, invalid-index stability, maximum-length notes and supported narrow-window layout; confirm target/notes/delta are not stale when switching clients or after failed saves.
 
-The manual scenarios in the appendix complement automated tests; they are planned acceptance checks, not evidence of tests already run.
+The manual scenarios in the appendix complement automated tests. Runtime validation includes the full Gradle test/Checkstyle suite and the packaged application smoke test; the UI tests exercise command entry and produce a minimum-window screenshot for visual inspection.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -791,7 +791,7 @@ Each client's `Person` record stores immutable `TrainingSession` appointments wi
 
 The command parsers reject invalid dates, times, blank locations, and nonpositive day counts before model mutation. Both kinds of appointment use the existing `trainingSessions` storage list with a new `kind` field, so older saved files remain readable.
 
-**Use case: UC10 - Record starting body measurements [planned v1.4]**
+**Use case: UC10 - Record starting body measurements**
 
 **MSS**
 
@@ -809,7 +809,7 @@ Use case ends.
 * 3b. The baseline is identical: Fittix reports that it is already current. Use case ends.
 * 3c. Saving fails: Fittix reports the body-save error and retains the previous model and file. Use case ends.
 
-**Use case: UC11 - Record or correct dated body progress [planned v1.4]**
+**Use case: UC11 - Record or correct dated body progress**
 
 **Precondition:** The client has a body baseline.
 
@@ -831,7 +831,7 @@ Use case ends.
 * 4a. Saving fails: Fittix reports the body-save error and restores the previous model/file. Use case ends.
 * Correction alternative: Trainer deletes a progress entry by client/date; Fittix preserves the baseline and other entries and refreshes the latest comparison after saving. A missing entry or an attempt to delete the baseline is rejected. The same save-failure guarantee applies.
 
-**Use case: UC12 - View complete body-progress history [planned v1.4]**
+**Use case: UC12 - View complete body-progress history**
 
 **MSS**
 
@@ -846,7 +846,7 @@ Use case ends.
 * 2a. No baseline exists: Fittix shows the selected client's missing-baseline state. Use case ends.
 * 2b. Only a baseline exists: Fittix shows it and the no-progress state. Use case ends.
 
-**Use case: UC13 - Compare latest body progress with the baseline [planned v1.4]**
+**Use case: UC13 - Compare latest body progress with the baseline**
 
 **MSS**
 
@@ -1098,9 +1098,9 @@ Use a disposable address book with at least two clients.
 8. Run `addmem n/Platinum p/200 s/40`, then `clear`, then `view mem`.<br>
    Expected: `clear` deletes all clients, but the Platinum plan is still listed, confirming that clearing clients does not delete membership plans.
 
-### Body progress tracker [planned v1.4 acceptance checks]
+### Body progress tracker acceptance checks
 
-Run these once the feature is implemented, using disposable data and a correct local clock. The fixed dates below are historical; on a controlled test clock earlier than them, substitute equivalent past dates. Prepare two uniquely named clients, Priya Nair and Daniel Tan. Run `list` and use their actual displayed indexes in place of `P` and `D`. Preserve Daniel's values for cross-client checks. Start Priya with no tracker; optionally give her diet/workout/schedule/membership data to verify preservation.
+Run these using disposable data and a correct local clock. The fixed dates below are historical; on a controlled test clock earlier than them, substitute equivalent past dates. Prepare two uniquely named clients, Priya Nair and Daniel Tan. Run `list` and use their actual displayed indexes in place of `P` and `D`. Preserve Daniel's values for cross-client checks. Start Priya with no tracker; optionally give her diet/workout/schedule/membership data to verify preservation.
 
 1. Run `bodyhistory P` and `bodycompare P`, then `bodylog P d/2020-01-08 w/74.80`.<br>
    Expected: Queries select Priya and display the missing-baseline state without changing data. Logging fails with `No body baseline recorded for Priya Nair. Use bodybase first.`
