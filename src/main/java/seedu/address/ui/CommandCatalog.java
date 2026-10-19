@@ -18,12 +18,12 @@ import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
-import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.RedoCommand;
+import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.ScheduleCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
-import seedu.address.logic.commands.ViewScheduleCommand;
 import seedu.address.logic.commands.UndoCommand;
+import seedu.address.logic.commands.ViewScheduleCommand;
 
 /** UI-facing catalogue of the existing command words and usage strings. */
 final class CommandCatalog {
