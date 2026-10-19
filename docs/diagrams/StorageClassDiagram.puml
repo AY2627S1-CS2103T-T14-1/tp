@@ -1,36 +1,39 @@
 @startuml
+' Exported with PlantUML 1.2025.10; the shared project style is unchanged.
+!pragma layout smetana
 !include style.puml
 skinparam arrowThickness 1.1
 skinparam arrowColor STORAGE_COLOR
 skinparam classBackgroundColor STORAGE_COLOR
+skinparam nodesep 45
+skinparam ranksep 45
+scale 2
 
-package Storage as StoragePackage {
+' Scope: storage services and the top-level JSON representation.
+' Client-owned adapters are expanded separately in ClientStorageClassDiagram.
+package Storage {
+    class "<<interface>>\nStorage" as StorageApi
+    class StorageManager
 
-Class "<<interface>>\nStorage" as Storage
-Class StorageManager
-
-package "UserPrefs Storage" #F4F6F6{
-Class JsonUserPrefsStorage
+    class JsonUserPrefsStorage
+    class JsonAddressBookStorage
+    class JsonSerializableAddressBook
+    class JsonAdaptedPerson
+    class JsonAdaptedMembershipPlan
 }
 
-package "AddressBook Storage" #F4F6F6{
-Class JsonAddressBookStorage
-Class JsonSerializableAddressBook
-Class JsonAdaptedPerson
-Class JsonAdaptedTag
-}
-
-}
-
-Class HiddenOutside #FFFFFF
-HiddenOutside ..> Storage
-
-StorageManager .up.|> Storage
+StorageManager .up.|> StorageApi
 StorageManager -down-> "1" JsonUserPrefsStorage
 StorageManager -down-> "1" JsonAddressBookStorage
-
 JsonAddressBookStorage ..> JsonSerializableAddressBook
-JsonSerializableAddressBook --> "*" JsonAdaptedPerson
-JsonAdaptedPerson --> "*" JsonAdaptedTag
+JsonSerializableAddressBook -down-> "0..*" JsonAdaptedPerson
+JsonSerializableAddressBook -down-> "0..*" JsonAdaptedMembershipPlan
 
+legend bottom left
+    Solid arrow: association with navigability
+    Dashed arrow: dependency
+    Dashed line with hollow triangle: interface implementation
+    Client adapter details appear in the next diagram.
+    Model classes and common JSON/file utilities are omitted.
+endlegend
 @enduml
