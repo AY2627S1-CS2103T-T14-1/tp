@@ -9,6 +9,7 @@
 - Feature 2: Training schedule
 - Feature 3: Workout plan management
 - Feature 4: Workout session logging
+- Feature 4A: Workout history (v1.4 roadmap item 8)
 - Feature 5: Diet plan management
 - Feature 7: Membership Plan
 - Feature 8: Health considerations
@@ -656,7 +657,7 @@ If one exercise is invalid, Fittix records none of the session.
 
 ### 7. Duplicate handling
 
-Client, date, and optional time form a unique key. A matching key is rejected even with different exercises; history editing is later scope.
+Client, date, and optional time form a unique key. A matching key is rejected even with different exercises; the v1.4 editing extension is specified in [Feature 4A](#feature-4a-workout-history-v14-roadmap-item-8).
 
 ```text
 A workout session already exists for Priya Nair on 16 Sep 2026 at 18:00.
@@ -697,7 +698,49 @@ Log/display dated sessions with optional times and exercise/weight/sets/reps; re
 
 #### Nice to have or later
 
-Log edits/deletion, latest/full history, duration/distance/effort/rest/notes, package deductions, and plan comparisons.
+For the MVP: log edits/deletion and latest/full history. The v1.4 viewing and editing extension is in [Feature 4A](#feature-4a-workout-history-v14-roadmap-item-8). Duration/distance/effort/rest/notes, package deductions, and plan comparisons remain later scope.
+
+## Feature 4A: Workout history (v1.4 roadmap item 8)
+
+The v1.4 roadmap calls this item "Feature 8". This document already uses Feature 8 for health considerations, so the workout-history extension is numbered 4A to keep existing feature links stable. It extends Feature 4 and retains all of its session validation rules.
+
+### 1. Feature and purpose
+
+A trainer can view the latest recorded workout, browse every session for a client, and correct a previously logged session. The selected-client context panel displays all sessions, newest first, with every exercise entry. The `history` command provides the same complete history as text.
+
+### 2. Command formats
+
+```text
+history CLIENT_INDEX
+editlog CLIENT_INDEX SESSION_INDEX d/DATE [t/TIME] ex/EXERCISE|WEIGHT|SETS|REPS [ex/EXERCISE|WEIGHT|SETS|REPS]...
+```
+
+Examples:
+
+```text
+history 1
+editlog 1 2 d/2020-01-15 t/18:00 ex/Back squat|65|3|8
+```
+
+`CLIENT_INDEX` uses the currently displayed client list, including filtered search results. `SESSION_INDEX` is the one-based number printed by `history` and shown beside each session in the selected-client panel. Sessions are sorted by date descending, then specified time descending; an unspecified time sorts before specified times on the same date. Both indexes must be positive whole numbers and within their respective displayed lists.
+
+### 3. Viewing history
+
+For each session, display its date, optional time, and all exercise names, weights, sets, and repetitions in recorded order. `history` does not change saved data. When no sessions exist, report `No workout sessions recorded for NAME.` The selected-client panel shows the same empty state. The latest session means the most recent date and time, not the last `log` command.
+
+### 4. Editing a session
+
+`editlog` replaces the entire selected session, including its date, optional time, and ordered exercise entries. Omission of `t/` makes the replacement time unspecified. The session remains in its original storage-list position, but its displayed history number may change after re-sorting. The trainer must check the current history number before a subsequent edit.
+
+The replacement follows Feature 4's rules: the date must be today or earlier in `yyyy-MM-dd` format, time (if given) must be `HH:mm`, and 1 to 30 validated `EXERCISE|WEIGHT|SETS|REPS` entries are required. Repeated `d/` or `t/` values are rejected. Exercise entries may repeat and retain input order.
+
+Reject a replacement if another session for the same client already has the proposed date and optional time. An unchanged replacement reports `The workout session is unchanged.` and leaves the model intact. An invalid session number reports `The workout session index provided is invalid.` Parsing and validation finish before any model change. On success, report `Edited workout session SESSION_INDEX for NAME.`
+
+Replacing a client preserves their name, contact data, goal, workout plan, diet plan, schedule, dietary restrictions, health profile, and membership assignment. A successful edit is saved through the existing address-book storage path. If saving fails, the pre-command address-book snapshot is restored; no partial change is retained. Editing a workout session does not deduct membership sessions.
+
+### 5. Tests and later scope
+
+Cover empty and multiple-session history, date/time ordering, filtered client indexes, exercise order, missing and invalid indexes, duplicate keys, no-op edits, retained unrelated client data, and persistence after save/reload. History deletion, changing a single exercise without supplying the complete replacement session, and duration/distance records remain later scope.
 
 ## Feature 5: Diet plan management
 
