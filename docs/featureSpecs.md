@@ -1172,7 +1172,7 @@ Restriction categories, severity, expiry dates, meal validation, nutritional gui
 
 ## Feature 10: Body progress tracker
 
-**Status:** Planned for v1.4; this section defines the intended implementation contract. These commands are not available in v1.3. The original feature-specification PDF is not the reference for this feature.
+**Status:** Implemented for v1.4. These commands are not available in v1.3. The Markdown specification is the reference for this feature.
 
 ### 1. Feature and scope
 
@@ -1276,7 +1276,7 @@ Success: `Deleted body progress for NAME on DATE.` Deleting the last entry retai
 
 ### 10. Display, persistence and failures
 
-The selected client's scrollable details area contains baseline, history and comparison sections. `bodyhistory` and `bodycompare` select the requested client and reveal the relevant section **without changing the current client filter or numbering**. Successful mutations select that client and refresh the body-progress display after saving. Selection changes clear stale fields, notes and comparison values. No body data shows the missing-baseline state. Invalid commands and failed saves must not send a success/display request or leave rejected values visible.
+The selected client's centre details column contains a scrollable Body progress card with baseline, history and comparison sections. The centre column itself scrolls when needed so the command area remains visible at the minimum supported window size. `bodyhistory` and `bodycompare` select the requested client and reveal the relevant section **without changing the current client filter or numbering**. Successful mutations select that client and refresh the body-progress display after saving. Selection changes clear stale fields, notes and comparison values. No body data shows the missing-baseline state. Invalid commands and failed saves must not send a success/display request or leave rejected values visible.
 
 ```text
 Priya Nair — BODY PROGRESS
@@ -1288,7 +1288,7 @@ Latest comparison: 2020-01-15
 75.50 kg -> 74.20 kg | Change: -1.30 kg
 ```
 
-Keep valid maximum-length text readable at the application's minimum supported window size, with wrapping/scrolling rather than automatically resizing the window. A later UI redesign may change placement, but must preserve all specified data, empty states and targeting behavior.
+Keep valid maximum-length text readable at the application's minimum supported window size, with wrapping/scrolling rather than automatically resizing the window. The redesigned three-column UI preserves all specified data, empty states and targeting behavior.
 
 Body data belongs to a client. Contact edits, diet/workout changes, remarks, scheduling, membership changes and workout logging preserve it. Body commands preserve those other fields and never alter membership sessions or payments. Deleting a client removes their body data; `clear` removes body data with its clients and follows the shared catalog-preservation rule. `clearmem` does not alter body data.
 

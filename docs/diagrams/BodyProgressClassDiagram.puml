@@ -1,6 +1,6 @@
 @startuml
 !pragma layout smetana
-title Proposed v1.4 body progress model
+title v1.4 body progress model
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
