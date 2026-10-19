@@ -102,8 +102,8 @@ public class WorkoutHistoryCommandTest {
         Model model = modelWith(original);
         WorkoutSession collision = session(17, Optional.empty(), List.of(SQUAT));
 
-        CommandException exception = assertThrows(CommandException.class,
-                () -> new EditLogCommand(FIRST, SECOND, collision).execute(model));
+        EditLogCommand command = new EditLogCommand(FIRST, SECOND, collision);
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
 
         assertEquals(EditLogCommand.MESSAGE_DUPLICATE_SESSION, exception.getMessage());
         assertEquals(List.of(original), model.getAddressBook().getPersonList());
@@ -114,10 +114,10 @@ public class WorkoutHistoryCommandTest {
         WorkoutSession existing = session(15, Optional.empty(), List.of(SQUAT));
         Person original = withSessions(new PersonBuilder().build(), List.of(existing));
         Model model = modelWith(original);
-        CommandException unchanged = assertThrows(CommandException.class,
-                () -> new EditLogCommand(FIRST, FIRST, existing).execute(model));
-        CommandException missing = assertThrows(CommandException.class,
-                () -> new EditLogCommand(FIRST, SECOND, existing).execute(model));
+        EditLogCommand unchangedCommand = new EditLogCommand(FIRST, FIRST, existing);
+        EditLogCommand missingCommand = new EditLogCommand(FIRST, SECOND, existing);
+        CommandException unchanged = assertThrows(CommandException.class, () -> unchangedCommand.execute(model));
+        CommandException missing = assertThrows(CommandException.class, () -> missingCommand.execute(model));
         assertEquals(EditLogCommand.MESSAGE_NO_CHANGE, unchanged.getMessage());
         assertEquals(EditLogCommand.MESSAGE_INVALID_SESSION_INDEX, missing.getMessage());
         assertEquals(List.of(original), model.getAddressBook().getPersonList());
@@ -139,8 +139,8 @@ public class WorkoutHistoryCommandTest {
         assertEquals(List.of(alice, withSessions(bob, List.of(replacement))),
                 model.getAddressBook().getPersonList());
         assertEquals(1, model.getFilteredPersonList().size());
-        CommandException invalidClient = assertThrows(CommandException.class,
-                () -> new HistoryCommand(SECOND).execute(model));
+        HistoryCommand invalidCommand = new HistoryCommand(SECOND);
+        CommandException invalidClient = assertThrows(CommandException.class, () -> invalidCommand.execute(model));
         assertEquals(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, invalidClient.getMessage());
     }
 
