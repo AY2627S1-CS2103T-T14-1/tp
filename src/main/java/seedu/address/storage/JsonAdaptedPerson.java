@@ -1,5 +1,6 @@
 package seedu.address.storage;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.BodyProgress;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.DietaryRestrictions;
 import seedu.address.model.person.Email;
@@ -48,6 +50,7 @@ class JsonAdaptedPerson {
     private final List<JsonAdaptedTrainingSession> trainingSessions = new ArrayList<>();
     private final List<JsonAdaptedWorkoutSession> workoutSessions = new ArrayList<>();
     private final JsonAdaptedMembershipAssignment membershipAssignment;
+    private final JsonAdaptedBodyProgress bodyProgress;
 
     /**
      * Constructs an adapter without plans or workout sessions.
@@ -133,6 +136,26 @@ class JsonAdaptedPerson {
      * Older files may omit exercises, dietPlan, goal, trainingSessions, workoutSessions,
      * and membershipAssignment; a missing assignment means the client has no assigned plan.
      */
+    public JsonAdaptedPerson(
+            String name,
+            String phone,
+            String email,
+            String address,
+            String remark,
+            List<JsonAdaptedTag> tags,
+            List<JsonAdaptedExercise> exercises,
+            JsonAdaptedDietPlan dietPlan,
+            List<JsonAdaptedTrainingSession> trainingSessions,
+            String goal,
+            List<JsonAdaptedWorkoutSession> workoutSessions,
+            List<String> dietaryRestrictions,
+            String healthProfile,
+            JsonAdaptedMembershipAssignment membershipAssignment) {
+        this(name, phone, email, address, remark, tags, exercises, dietPlan, trainingSessions, goal,
+                workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, null);
+    }
+
+    /** Constructs a strict adapter including the optional legacy-compatible body tracker. */
     @JsonCreator
     public JsonAdaptedPerson(
             @JsonProperty("name") String name,
@@ -148,7 +171,8 @@ class JsonAdaptedPerson {
             @JsonProperty("workoutSessions") List<JsonAdaptedWorkoutSession> workoutSessions,
             @JsonProperty("dietaryRestrictions") List<String> dietaryRestrictions,
             @JsonProperty("healthProfile") String healthProfile,
-            @JsonProperty("membershipAssignment") JsonAdaptedMembershipAssignment membershipAssignment) {
+            @JsonProperty("membershipAssignment") JsonAdaptedMembershipAssignment membershipAssignment,
+            @JsonProperty("bodyProgress") JsonAdaptedBodyProgress bodyProgress) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -173,12 +197,14 @@ class JsonAdaptedPerson {
             this.workoutSessions.addAll(workoutSessions);
         }
         this.membershipAssignment = membershipAssignment;
+        this.bodyProgress = bodyProgress;
     }
 
     /**
      * Converts a given {@code Person} into this class for Jackson use.
      */
     public JsonAdaptedPerson(Person source) {
+        bodyProgress = new JsonAdaptedBodyProgress(source.getBodyProgress());
         name = source.getName().fullName;
         phone = source.getPhone().value;
         email = source.getEmail().value;
@@ -210,6 +236,11 @@ class JsonAdaptedPerson {
      * @throws IllegalValueException if stored person data violates a constraint.
      */
     public Person toModelType() throws IllegalValueException {
+        return toModelType(Clock.systemDefaultZone());
+    }
+
+    /** Converts using the clock supplied by storage for measurement-date validation. */
+    public Person toModelType(Clock clock) throws IllegalValueException {
         final List<Tag> personTags = new ArrayList<>();
         for (JsonAdaptedTag tag : tags) {
             personTags.add(tag.toModelType());
@@ -308,6 +339,7 @@ class JsonAdaptedPerson {
                 modelDietaryRestrictions, modelHealthProfile,
                 membershipAssignment == null
                         ? Optional.empty()
-                        : Optional.of(membershipAssignment.toModelType()));
+                        : Optional.of(membershipAssignment.toModelType()),
+                bodyProgress == null ? new BodyProgress() : bodyProgress.toModelType(clock));
     }
 }
