@@ -2,6 +2,8 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -11,6 +13,8 @@ import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DietCommand;
 import seedu.address.logic.commands.MembershipCommand;
+import seedu.address.logic.commands.RedoCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -33,6 +37,8 @@ public class LogicManager implements Logic {
     private final Model model;
     private final Storage storage;
     private final AddressBookParser addressBookParser;
+    private final Deque<AddressBook> undoStates = new ArrayDeque<>();
+    private final Deque<AddressBook> redoStates = new ArrayDeque<>();
 
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
@@ -49,6 +55,11 @@ public class LogicManager implements Logic {
 
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
+        if (command instanceof UndoCommand) {
+            command = new UndoCommand(undoStates.peek());
+        } else if (command instanceof RedoCommand) {
+            command = new RedoCommand(redoStates.peek());
+        }
         // Snapshot the address book before execution so a failed save can restore
         // the previous model state instead of leaving in-memory changes behind.
         AddressBook backup = new AddressBook(model.getAddressBook());
@@ -70,6 +81,16 @@ public class LogicManager implements Logic {
             throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
         }
 
+        if (command instanceof UndoCommand) {
+            undoStates.pop();
+            redoStates.push(backup);
+        } else if (command instanceof RedoCommand) {
+            redoStates.pop();
+            undoStates.push(backup);
+        } else if (!backup.equals(model.getAddressBook())) {
+            undoStates.push(backup);
+            redoStates.clear();
+        }
         return commandResult;
     }
 

@@ -30,11 +30,13 @@ import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
 import seedu.address.logic.commands.RemarkCommand;
+import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemoveMembershipPlanCommand;
 import seedu.address.logic.commands.ScheduleCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
 import seedu.address.logic.commands.ViewMembershipPlansCommand;
 import seedu.address.logic.commands.ViewScheduleCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
@@ -110,6 +112,10 @@ public class AddressBookParser {
             case ClearmemCommand.COMMAND_WORD -> new ClearmemCommand();
             case ExitCommand.COMMAND_WORD -> new ExitCommand();
             case HelpCommand.COMMAND_WORD -> new HelpCommand();
+            case UndoCommand.COMMAND_WORD -> parseNoArguments(arguments, UndoCommand.MESSAGE_USAGE,
+                    new UndoCommand());
+            case RedoCommand.COMMAND_WORD -> parseNoArguments(arguments, RedoCommand.MESSAGE_USAGE,
+                    new RedoCommand());
             default -> {
                 logger.finer("This user input caused a ParseException: " + userInput);
                 throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
@@ -117,4 +123,10 @@ public class AddressBookParser {
         };
     }
 
+    private static Command parseNoArguments(String arguments, String usage, Command command) throws ParseException {
+        if (!arguments.isBlank()) {
+            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, usage));
+        }
+        return command;
+    }
 }

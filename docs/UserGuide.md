@@ -184,7 +184,7 @@ On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan 
 | Same current plan | `This is already the current diet plan for NAME.` |
 | Saving fails | `The diet plan could not be saved. The previous plan remains unchanged.` |
 
-Invalid commands and failed saves leave the previous plan unchanged. Deleting a client permanently removes that client's diet plan along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
+Invalid commands and failed saves leave the previous plan unchanged. Deleting a client removes that client's diet plan along with the client record. You can reverse the deletion with `undo` while the app remains open. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
 
 ### Recording dietary restrictions: `restriction`
 
@@ -633,7 +633,7 @@ Format: `bodydelete INDEX d/DATE`
 
 Example: `bodydelete 1 d/2020-01-15`
 
-Deletes only the progress entry on that date for that client. **Deletion is permanent in the v1.4 tracker, with no confirmation step.** The baseline and all other entries remain. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
+Deletes only the progress entry on that date for that client. **There is no confirmation step. Use `undo` during the current app session to restore a deleted entry.** The baseline and all other entries remain. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
 
 Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest entry makes the next greatest date the latest. Deleting the last entry keeps the baseline and restores the no-progress view. `bodydelete` cannot delete a baseline; use `bodybase` to correct it.
 
@@ -664,7 +664,17 @@ Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest ent
 
 Invalid mutations and failed saves leave all previous data unchanged. Successful changes select the affected client and refresh their details after saving. Baseline, weights and notes survive restarting the app; data files created before this feature load with no body tracker. A wrong local clock can cause date validation/loading failures, so check it before entering or opening dated records.
 
-Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` permanently removes their body records with the client. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
+Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` removes their body records with the client; `undo` can restore the previous data during the current app session. `clearmem` affects membership plans only. Charts, additional measurements and a tracker-specific undo/redo command are outside this feature's v1.4 scope.
+
+### Reversing saved changes: `undo` and `redo`
+
+Use `undo` to reverse the most recent successful change to saved client or membership data. Use `redo` to restore a change that was undone.
+
+Formats: `undo`, `redo`
+
+For example, after `delete 1`, enter `undo` to restore the client. Enter `redo` to delete the client again. Both commands save the restored data. If saving fails, the current data and undo/redo history remain unchanged.
+
+Only successful data changes create undo steps. Viewing or finding clients does not create a step or clear redo history. A new successful data change after `undo` clears redo history. Undo/redo history is kept in memory for the current app session and is cleared when the app restarts. The commands accept no additional parameters.
 
 ### Exiting the program: `exit`
 

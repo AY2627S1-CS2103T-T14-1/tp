@@ -34,7 +34,9 @@ import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.RemarkCommand;
+import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Person;
@@ -55,7 +57,8 @@ public class MainWindow extends UiPart<Stage> {
     private static final Set<String> RESET_FILTER_COMMANDS = Set.of(
             AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD,
             ListCommand.COMMAND_WORD, RemarkCommand.COMMAND_WORD, AddExerciseCommand.COMMAND_WORD,
-            DeleteExerciseCommand.COMMAND_WORD, SetExerciseDayCommand.COMMAND_WORD);
+            DeleteExerciseCommand.COMMAND_WORD, SetExerciseDayCommand.COMMAND_WORD,
+            UndoCommand.COMMAND_WORD, RedoCommand.COMMAND_WORD);
 
     private final Logger logger = LogsCenter.getLogger(getClass());
     private final Stage primaryStage;
