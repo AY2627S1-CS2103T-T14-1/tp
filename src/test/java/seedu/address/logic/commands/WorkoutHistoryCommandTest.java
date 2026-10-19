@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -57,6 +58,21 @@ public class WorkoutHistoryCommandTest {
         assertEquals("No workout sessions recorded for " + client.getName() + ".",
                 new HistoryCommand(FIRST).execute(model).getFeedbackToUser());
         assertEquals(List.of(client), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void history_sameDateUnspecifiedTimeAppearsAfterSpecifiedTime() throws Exception {
+        WorkoutSession noTime = session(15, Optional.empty(), List.of(SQUAT));
+        WorkoutSession morning = session(15, Optional.of(LocalTime.of(9, 0)), List.of(SQUAT));
+        WorkoutSession evening = session(15, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
+        Model model = modelWith(withSessions(new PersonBuilder().build(), List.of(noTime, morning, evening)));
+
+        String feedback = new HistoryCommand(FIRST).execute(model).getFeedbackToUser();
+
+        assertTrue(feedback.indexOf("1. 2020-01-15 at 18:00")
+                < feedback.indexOf("2. 2020-01-15 at 09:00"));
+        assertTrue(feedback.indexOf("2. 2020-01-15 at 09:00")
+                < feedback.indexOf("3. 2020-01-15 (time not specified)"));
     }
 
     @Test
