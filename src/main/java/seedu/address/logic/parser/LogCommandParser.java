@@ -44,15 +44,21 @@ public class LogCommandParser implements Parser<LogCommand> {
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(
                 " " + args, PREFIX_LOG_DATE, PREFIX_LOG_TIME, PREFIX_LOG_EXERCISE);
 
-        if (argMultimap.getPreamble().isEmpty()
-                || argMultimap.getValue(PREFIX_LOG_DATE).isEmpty()) {
+        if (argMultimap.getPreamble().isEmpty()) {
             throw new ParseException(
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, LogCommand.MESSAGE_USAGE));
         }
 
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_LOG_DATE, PREFIX_LOG_TIME);
-
         Index index = ParserUtil.parseIndex(argMultimap.getPreamble());
+        return new LogCommand(index, parseSession(argMultimap, LogCommand.MESSAGE_USAGE));
+    }
+
+    /** Parses a replacement or new session using the same workout validation rules. */
+    static WorkoutSession parseSession(ArgumentMultimap argMultimap, String usage) throws ParseException {
+        if (argMultimap.getValue(PREFIX_LOG_DATE).isEmpty()) {
+            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, usage));
+        }
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_LOG_DATE, PREFIX_LOG_TIME);
         LocalDate date = parseDate(argMultimap.getValue(PREFIX_LOG_DATE).orElseThrow());
 
         Optional<LocalTime> time = Optional.empty();
@@ -75,13 +81,13 @@ public class LogCommandParser implements Parser<LogCommand> {
 
         try {
             WorkoutSession session = new WorkoutSession(date, time, entries);
-            return new LogCommand(index, session);
+            return session;
         } catch (IllegalArgumentException exception) {
             throw new ParseException(exception.getMessage(), exception);
         }
     }
 
-    private LocalDate parseDate(String value) throws ParseException {
+    private static LocalDate parseDate(String value) throws ParseException {
         if (!value.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")) {
             throw new ParseException(MESSAGE_INVALID_DATE);
         }
@@ -93,7 +99,7 @@ public class LogCommandParser implements Parser<LogCommand> {
         }
     }
 
-    private LocalTime parseTime(String value) throws ParseException {
+    private static LocalTime parseTime(String value) throws ParseException {
         if (!value.matches("([01][0-9]|2[0-3]):[0-5][0-9]")) {
             throw new ParseException(WorkoutSession.MESSAGE_INVALID_TIME);
         }
@@ -101,7 +107,7 @@ public class LogCommandParser implements Parser<LogCommand> {
         return LocalTime.parse(value);
     }
 
-    private WorkoutLogEntry parseEntry(String value) throws ParseException {
+    private static WorkoutLogEntry parseEntry(String value) throws ParseException {
         String[] parts = value.split("\\|", -1);
 
         if (parts.length != 4
@@ -121,7 +127,7 @@ public class LogCommandParser implements Parser<LogCommand> {
         }
     }
 
-    private BigDecimal parseWeight(String value) throws ParseException {
+    private static BigDecimal parseWeight(String value) throws ParseException {
         try {
             return new BigDecimal(value);
         } catch (NumberFormatException exception) {
@@ -129,7 +135,7 @@ public class LogCommandParser implements Parser<LogCommand> {
         }
     }
 
-    private int parseInteger(String value, String errorMessage) throws ParseException {
+    private static int parseInteger(String value, String errorMessage) throws ParseException {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException exception) {
