@@ -80,12 +80,12 @@ Priya Nair   Anne-Marie Tan   D'Angelo Lim   Dr. Ahmad Rahman
 
 #### Contact and optional profile parameters
 
-| Parameter    | Rule, rationale and error |
-| ------------ | ------------------------- |
-| Email `e/`   | Trim; maximum 254 ASCII characters; one @; no whitespace. Nonempty local part: letters/digits/.\_+-; no edge or consecutive dots. Domain: 2+ dot-separated labels, each 1–63 letters/digits/hyphens with alphanumeric ends. Preserve local case; lowercase domain. Common addresses supported; delivery unverified.<br><br>Error: Email must be a valid address such as lim@example.com (maximum 254 characters). |
-| Address `a/` | Trim; 1–200 printable characters, no line breaks. Preserve internal spacing and case. Free text supports varied postal addresses; no address verification.<br><br>Error: Address must contain 1 to 200 printable characters without line breaks. |
-| Fitness goal `g/` | Trim; 1–100 printable characters with at least one letter or digit. Preserve internal spacing and case. Each client has at most one current goal; `edit INDEX g/GOAL` replaces it and `edit INDEX g/` clears it. `find g/KEYWORDS` searches current goals case-insensitively.<br><br>Error: Goal must contain 1 to 100 characters, including at least one letter or digit. |
-| Tags `t/`    | Trim; 1–30 ASCII letters/digits per tag. Store lowercase; collapse repeated tags after normalization, retaining first-entry order. At most 10 distinct tags. Compact labels avoid spelling/case duplicates.<br><br>Error: Tags must contain 1 to 30 letters or digits; at most 10 distinct tags are allowed. |
+| Parameter         | Rule, rationale and error                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Email `e/`        | Trim; maximum 254 ASCII characters; one @; no whitespace. Nonempty local part: letters/digits/.\_+-; no edge or consecutive dots. Domain: 2+ dot-separated labels, each 1–63 letters/digits/hyphens with alphanumeric ends. Preserve local case; lowercase domain. Common addresses supported; delivery unverified.<br><br>Error: Email must be a valid address such as lim@example.com (maximum 254 characters). |
+| Address `a/`      | Trim; 1–200 printable characters, no line breaks. Preserve internal spacing and case. Free text supports varied postal addresses; no address verification.<br><br>Error: Address must contain 1 to 200 printable characters without line breaks.                                                                                                                                                                  |
+| Fitness goal `g/` | Trim; 1–100 printable characters with at least one letter or digit. Preserve internal spacing and case. Each client has at most one current goal; `edit INDEX g/GOAL` replaces it and `edit INDEX g/` clears it. `find g/KEYWORDS` searches current goals case-insensitively.<br><br>Error: Goal must contain 1 to 100 characters, including at least one letter or digit.                                        |
+| Tags `t/`         | Trim; 1–30 ASCII letters/digits per tag. Store lowercase; collapse repeated tags after normalization, retaining first-entry order. At most 10 distinct tags. Compact labels avoid spelling/case duplicates.<br><br>Error: Tags must contain 1 to 30 letters or digits; at most 10 distinct tags are allowed.                                                                                                      |
 
 An omitted goal remains absent and omitted tags form an empty set. Any invalid supplied field rejects the entire command; no partial client is saved. Prefix tokens after whitespace are reserved and cannot occur literally inside values.
 
@@ -268,19 +268,19 @@ INDEX follows the shared client index rules.
 
 #### Date and time parameters
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Date | `d/` takes a real calendar date in `YYYY-MM-DD` format. |
-| Time | `tm/` takes one 24-hour time in `HH:mm` format. There is no end time or duration. |
+| Aspect             | Rule, message and rationale                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Date               | `d/` takes a real calendar date in `YYYY-MM-DD` format.                                                                              |
+| Time               | `tm/` takes one 24-hour time in `HH:mm` format. There is no end time or duration.                                                    |
 | Future requirement | The combined date and time must be later than the current local date and time. Otherwise: `Training sessions must be in the future.` |
-| Invalid value | An invalid or missing date/time produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.` |
+| Invalid value      | An invalid or missing date/time produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.`                       |
 
 #### Location parameter
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Accepted value | `l/` is required and must contain non-blank text. |
-| Invalid value | A missing or blank location produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.` |
+| Aspect         | Rule, message and rationale                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| Accepted value | `l/` is required and must contain non-blank text.                                                          |
+| Invalid value  | A missing or blank location produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.` |
 
 ### 6. Output
 
@@ -817,7 +817,7 @@ Store, replace, and display one required target with optional notes per client.
 
 Structured restrictions/macros, version history, meal templates, partial edits, and suitability checks.
 
-## Feature 7: Membership Plan
+## Feature 10: Membership Plan
 
 ### 1. Feature
 
@@ -909,11 +909,11 @@ Command words and the `mem` or `membership` argument of `view` are case-sensitiv
 
 #### Membership plan name
 
-| Aspect              | Rule, message and rationale                                                                                                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Accepted value      | 1 to 50 characters after trimming. Letters, digits, spaces, apostrophes, hyphens, and full stops are accepted; at least one letter or digit is required. This keeps plan names readable in the client card.                    |
+| Aspect              | Rule, message and rationale                                                                                                                                                                                                                                                                                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accepted value      | 1 to 50 characters after trimming. Letters, digits, spaces, apostrophes, hyphens, and full stops are accepted; at least one letter or digit is required. This keeps plan names readable in the client card.                                                                                                                                                       |
 | Whitespace and case | Remove leading/trailing spaces and collapse consecutive internal whitespace. The stored name preserves the entered case; the catalog and client-card views render it with the first character upper-cased, so a plan stored as `gold` reads as `Gold`. Compare names case-insensitively. The name passed to `amem` and `delmem` follows the same comparison rule. |
-| Error               | Membership plan name must contain 1 to 50 characters and may contain only letters, digits, spaces, apostrophes, hyphens, and full stops.                                                                                       |
+| Error               | Membership plan name must contain 1 to 50 characters and may contain only letters, digits, spaces, apostrophes, hyphens, and full stops.                                                                                                                                                                                                                          |
 
 For a plan name containing spaces, `amem` treats the final non-prefixed argument as PERSON_INDEX and the preceding text as MEMBERSHIP_NAME. If supplied, `e/` must follow PERSON_INDEX. For example: `amem Gold Plus 1 e/2026-12-30`.
 
@@ -1057,12 +1057,12 @@ health 2 h/
 
 ### 5. Parameters
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Client index | A positive whole number identifying a client in the displayed list. |
+| Aspect           | Rule, message and rationale                                                                                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Client index     | A positive whole number identifying a client in the displayed list.                                                                                                                      |
 | Health note `h/` | Trimmed printable text from 1 to 500 characters, containing at least one letter or digit. Internal spaces and display case are preserved. New lines and control characters are rejected. |
-| Clear value | An empty `h/` clears the current profile; it does not delete the client or other client information. |
-| Error | Health considerations must contain 1 to 500 printable characters and include at least one letter or digit. |
+| Clear value      | An empty `h/` clears the current profile; it does not delete the client or other client information.                                                                                     |
+| Error            | Health considerations must contain 1 to 500 printable characters and include at least one letter or digit.                                                                               |
 
 ### 6. Output
 
@@ -1126,13 +1126,13 @@ restriction 2 r/
 
 ### 5. Parameters
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Client index | A positive whole number identifying a client in the displayed list. |
+| Aspect           | Rule, message and rationale                                                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Client index     | A positive whole number identifying a client in the displayed list.                                                                                          |
 | Restriction `r/` | Each nonblank value is trimmed printable text from 1 to 100 characters, containing at least one letter or digit. Preserve display case and internal spacing. |
-| Entry count | Supply from 1 to 10 nonblank restrictions. A single empty `r/` is the sole valid clear form. |
-| Duplicate value | Values that match after trimming and ignoring case are duplicates and are rejected. The first-entered spelling and order are retained. |
-| Error | Each dietary restriction must contain 1 to 100 printable characters and include at least one letter or digit. |
+| Entry count      | Supply from 1 to 10 nonblank restrictions. A single empty `r/` is the sole valid clear form.                                                                 |
+| Duplicate value  | Values that match after trimming and ignoring case are duplicates and are rejected. The first-entered spelling and order are retained.                       |
+| Error            | Each dietary restriction must contain 1 to 100 printable characters and include at least one letter or digit.                                                |
 
 ### 6. Output
 
