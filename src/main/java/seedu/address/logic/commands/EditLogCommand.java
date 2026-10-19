@@ -38,6 +38,7 @@ public class EditLogCommand extends Command {
     private final Index sessionIndex;
     private final WorkoutSession replacement;
 
+    /** Creates an edit command for one displayed client's workout session. */
     public EditLogCommand(Index clientIndex, Index sessionIndex, WorkoutSession replacement) {
         this.clientIndex = Objects.requireNonNull(clientIndex);
         this.sessionIndex = Objects.requireNonNull(sessionIndex);
