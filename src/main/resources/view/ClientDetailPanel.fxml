@@ -12,72 +12,77 @@
 <?import javafx.scene.layout.VBox?>
 
 <StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <VBox fx:id="selectedContent" spacing="14">
-    <VBox spacing="16" styleClass="card,profile-card">
-      <HBox alignment="CENTER_LEFT" spacing="14">
-        <Label fx:id="profileIndex" alignment="CENTER" minWidth="40" minHeight="40"
-               styleClass="profile-index,mono" />
-        <Label fx:id="clientName" minWidth="-Infinity" styleClass="profile-name" />
-        <FlowPane fx:id="profileTags" hgap="6" vgap="4" minWidth="0" />
-        <Region HBox.hgrow="ALWAYS" />
-        <Label fx:id="profileCommandHint" minWidth="-Infinity" styleClass="profile-command-hint,mono" />
-      </HBox>
-      <GridPane hgap="0" styleClass="profile-grid">
-        <columnConstraints>
-          <ColumnConstraints percentWidth="18" />
-          <ColumnConstraints percentWidth="27" />
-          <ColumnConstraints percentWidth="32" />
-          <ColumnConstraints percentWidth="23" />
-        </columnConstraints>
-        <VBox spacing="5" styleClass="profile-field">
-          <Label text="PHONE" styleClass="caps-label" />
-          <Label fx:id="phone" wrapText="true" styleClass="profile-value,mono" />
+  <ScrollPane fx:id="detailsScroll" fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER"
+              minHeight="0" minWidth="0" styleClass="workout-scroll">
+    <VBox fx:id="selectedContent" spacing="14" minWidth="0">
+      <VBox spacing="16" styleClass="card,profile-card">
+        <HBox alignment="CENTER_LEFT" spacing="14">
+          <Label fx:id="profileIndex" alignment="CENTER" minWidth="40" minHeight="40"
+                 styleClass="profile-index,mono" />
+          <Label fx:id="clientName" minWidth="-Infinity" styleClass="profile-name" />
+          <FlowPane fx:id="profileTags" hgap="6" vgap="4" minWidth="0" />
+          <Region HBox.hgrow="ALWAYS" />
+          <Label fx:id="profileCommandHint" minWidth="-Infinity" styleClass="profile-command-hint,mono" />
+        </HBox>
+        <GridPane hgap="0" styleClass="profile-grid">
+          <columnConstraints>
+            <ColumnConstraints percentWidth="18" />
+            <ColumnConstraints percentWidth="27" />
+            <ColumnConstraints percentWidth="32" />
+            <ColumnConstraints percentWidth="23" />
+          </columnConstraints>
+          <VBox spacing="5" styleClass="profile-field">
+            <Label text="PHONE" styleClass="caps-label" />
+            <Label fx:id="phone" wrapText="true" styleClass="profile-value,mono" />
+          </VBox>
+          <VBox spacing="5" styleClass="profile-field,profile-field-divided" GridPane.columnIndex="1">
+            <Label text="EMAIL" styleClass="caps-label" />
+            <Label fx:id="email" wrapText="true" styleClass="profile-value" />
+          </VBox>
+          <VBox spacing="5" styleClass="profile-field,profile-field-divided" GridPane.columnIndex="2">
+            <Label text="ADDRESS" styleClass="caps-label" />
+            <Label fx:id="address" wrapText="true" styleClass="profile-value" />
+          </VBox>
+          <VBox spacing="5" styleClass="profile-field,profile-field-divided" GridPane.columnIndex="3">
+            <Label text="GOAL" styleClass="caps-label,goal-label" />
+            <Label fx:id="goal" wrapText="true" styleClass="profile-value,goal-value" />
+          </VBox>
+        </GridPane>
+        <VBox fx:id="healthProfileBox" spacing="5" styleClass="remark-box">
+          <Label text="HEALTH CONSIDERATIONS" styleClass="caps-label" />
+          <Label fx:id="healthProfile" wrapText="true" styleClass="profile-value" />
         </VBox>
-        <VBox spacing="5" styleClass="profile-field,profile-field-divided" GridPane.columnIndex="1">
-          <Label text="EMAIL" styleClass="caps-label" />
-          <Label fx:id="email" wrapText="true" styleClass="profile-value" />
+        <VBox fx:id="remarkBox" spacing="5" styleClass="remark-box">
+          <Label text="REMARK" styleClass="caps-label" />
+          <Label fx:id="remark" wrapText="true" styleClass="profile-value" />
         </VBox>
-        <VBox spacing="5" styleClass="profile-field,profile-field-divided" GridPane.columnIndex="2">
-          <Label text="ADDRESS" styleClass="caps-label" />
-          <Label fx:id="address" wrapText="true" styleClass="profile-value" />
-        </VBox>
-        <VBox spacing="5" styleClass="profile-field,profile-field-divided" GridPane.columnIndex="3">
-          <Label text="GOAL" styleClass="caps-label,goal-label" />
-          <Label fx:id="goal" wrapText="true" styleClass="profile-value,goal-value" />
-        </VBox>
-      </GridPane>
-      <VBox fx:id="healthProfileBox" spacing="5" styleClass="remark-box">
-        <Label text="HEALTH CONSIDERATIONS" styleClass="caps-label" />
-        <Label fx:id="healthProfile" wrapText="true" styleClass="profile-value" />
       </VBox>
-      <VBox fx:id="remarkBox" spacing="5" styleClass="remark-box">
-        <Label text="REMARK" styleClass="caps-label" />
-        <Label fx:id="remark" wrapText="true" styleClass="profile-value" />
-      </VBox>
-    </VBox>
 
-    <VBox spacing="0" styleClass="card,workout-card" VBox.vgrow="ALWAYS">
-      <HBox alignment="CENTER_LEFT" spacing="8" styleClass="workout-header">
-        <Label text="Workout plan" minWidth="-Infinity" styleClass="section-title" />
-        <Label fx:id="planSummary" styleClass="muted" />
-        <Region HBox.hgrow="ALWAYS" />
-        <Label text="addex" minWidth="-Infinity" styleClass="command-chip,mono" />
-        <Label text="dayex" minWidth="-Infinity" styleClass="command-chip,mono" />
-        <Label text="delex" minWidth="-Infinity" styleClass="command-chip,mono" />
-        <Label text="clearplan" minWidth="-Infinity" styleClass="command-chip,mono" />
-      </HBox>
-      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="workout-scroll">
-        <VBox fx:id="workoutRows" />
-      </ScrollPane>
-      <VBox fx:id="workoutEmpty" alignment="CENTER" spacing="10" styleClass="empty-box,workout-empty"
-            VBox.vgrow="ALWAYS">
-        <Label text="No workout plan yet" styleClass="empty-title" />
-        <Label text="Add exercises one at a time. Their displayed numbers remain compatible with dayex and delex."
-               maxWidth="420" textAlignment="CENTER" wrapText="true" styleClass="muted" />
-        <Label fx:id="workoutEmptyCommand" wrapText="true" styleClass="empty-command,mono" />
+      <StackPane fx:id="bodyProgressPlaceholder" />
+
+      <VBox spacing="0" styleClass="card,workout-card" VBox.vgrow="ALWAYS">
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="workout-header">
+          <Label text="Workout plan" minWidth="-Infinity" styleClass="section-title" />
+          <Label fx:id="planSummary" styleClass="muted" />
+          <Region HBox.hgrow="ALWAYS" />
+          <Label text="addex" minWidth="-Infinity" styleClass="command-chip,mono" />
+          <Label text="dayex" minWidth="-Infinity" styleClass="command-chip,mono" />
+          <Label text="delex" minWidth="-Infinity" styleClass="command-chip,mono" />
+          <Label text="clearplan" minWidth="-Infinity" styleClass="command-chip,mono" />
+        </HBox>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="workout-scroll">
+          <VBox fx:id="workoutRows" />
+        </ScrollPane>
+        <VBox fx:id="workoutEmpty" alignment="CENTER" spacing="10" styleClass="empty-box,workout-empty"
+              VBox.vgrow="ALWAYS">
+          <Label text="No workout plan yet" styleClass="empty-title" />
+          <Label text="Add exercises one at a time. Their displayed numbers remain compatible with dayex and delex."
+                 maxWidth="420" textAlignment="CENTER" wrapText="true" styleClass="muted" />
+          <Label fx:id="workoutEmptyCommand" wrapText="true" styleClass="empty-command,mono" />
+        </VBox>
       </VBox>
     </VBox>
-  </VBox>
+  </ScrollPane>
 
   <VBox fx:id="emptyContent" alignment="CENTER" spacing="14" styleClass="card,detail-empty">
     <Label text="No client selected" styleClass="empty-heading" />
