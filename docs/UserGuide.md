@@ -34,6 +34,8 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
    * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records a diet plan for the 2nd client shown.
+  
+   * `log 1 d/2020-01-15 ex/Push-up|0|3|12` : Records a completed workout session for the 1st client shown.
 
    * `clear` : Deletes all contacts, but keeps membership plans.
 
