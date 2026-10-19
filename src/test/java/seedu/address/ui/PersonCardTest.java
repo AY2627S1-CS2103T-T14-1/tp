@@ -1,9 +1,13 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
@@ -12,10 +16,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
+import javafx.scene.text.Text;
+import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
@@ -73,6 +80,47 @@ public class PersonCardTest {
             PersonCard card = new PersonCard(person, 1);
 
             assertEquals("No plan · Next Sun 15 Mar", label(card, "meta").getText());
+            return null;
+        });
+    }
+
+    @Test
+    public void membershipTag_maximumUnbrokenName_showsFullBalanceAndExpiryWithinStyledCard() throws Exception {
+        runOnFxThread(() -> {
+            String longName = "M".repeat(50);
+            Person assigned = new PersonBuilder().build().withMembershipAssignment(
+                    Optional.of(new MembershipAssignment(longName, longName, 30,
+                            Optional.of(LocalDate.of(2027, 12, 30)))));
+            PersonCard card = new PersonCard(assigned, 1);
+            Region root = card.getRoot();
+            Scene scene = new Scene(root, 340, 600);
+            scene.getStylesheets().add(PersonCardTest.class.getResource("/view/FittixTheme.css").toExternalForm());
+            root.applyCss();
+            root.layout();
+
+            Label tag = (Label) root.lookup(".membership-tag");
+            assertNotNull(tag);
+            assertTrue(tag.isWrapText());
+            assertTrue(tag.getWidth() > 0, "membership tag should be laid out");
+            assertTrue(tag.getWidth() <= 340,
+                    "membership tag must not exceed the card width, was " + tag.getWidth());
+            assertEquals(340, root.getWidth(), 0.01, "long names must not widen the card");
+
+            // Inspect the skin's rendered text, since Label.getText() still returns the full value
+            // even when the skin truncates it with an ellipsis.
+            Text renderedText = (Text) tag.lookup(".text");
+            assertNotNull(renderedText);
+            assertEquals(longName + " Member: 30 sessions left [expires 2027-12-30]", renderedText.getText());
+            Text singleLine = new Text("M");
+            singleLine.setFont(renderedText.getFont());
+            assertTrue(renderedText.getLayoutBounds().getHeight() > singleLine.getLayoutBounds().getHeight(),
+                    "the maximum-length name must wrap onto multiple lines");
+
+            Bounds textBounds = renderedText.localToScene(renderedText.getLayoutBounds());
+            Bounds tagBounds = tag.localToScene(tag.getLayoutBounds());
+            Bounds cardBounds = root.localToScene(root.getLayoutBounds());
+            assertTrue(tagBounds.contains(textBounds), "all rendered text must fit inside the tag");
+            assertTrue(cardBounds.contains(tagBounds), "the complete tag must fit inside the narrow card");
             return null;
         });
     }

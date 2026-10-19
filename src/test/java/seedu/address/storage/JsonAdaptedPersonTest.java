@@ -46,6 +46,14 @@ public class JsonAdaptedPersonTest {
             .collect(Collectors.toList());
 
     @Test
+    public void jsonRoundTrip_healthAndDietaryRestrictions_preservesBoth() throws Exception {
+        Person person = new PersonBuilder().withDietaryRestrictions("Peanut allergy")
+                .withHealthProfile("Avoid jumping").build();
+        String json = JsonUtil.toJsonString(new JsonAdaptedPerson(person));
+        assertEquals(person, JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType());
+    }
+
+    @Test
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(BENSON);
         assertEquals(BENSON, person.toModelType());

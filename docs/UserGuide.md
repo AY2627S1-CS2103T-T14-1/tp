@@ -35,6 +35,8 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 
    * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records a diet plan for the 2nd client shown.
 
+   * `log 1 d/2020-01-15 ex/Push-up|0|3|12` : Records a completed workout session for the 1st client shown.
+
    * `clear` : Deletes all contacts, but keeps membership plans.
 
    * `exit` : Exits the app.
@@ -86,7 +88,7 @@ Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…​`
 A client can have any number of tags, including zero.
 </div>
 
-* `g/GOAL` is optional. A goal must contain 1 to 50 characters after trimming and include at least one letter or digit.
+* `g/GOAL` is optional. A goal must contain 1 to 100 characters after trimming and include at least one letter or digit.
 * A supplied goal is saved with the client and shown on the client card.
 
 Examples:
@@ -184,7 +186,7 @@ Format: `diet INDEX t/TARGET [n/NOTES]`
 * `INDEX` is the positive whole-number index shown in the **current** client list. For example, after `find Priya`, `diet 1 ...` updates the first displayed search result. Leading zeros are accepted; `0`, negative numbers, signs, decimals, and indices outside the displayed list are rejected.
 * `TARGET` is required. After trimming outer whitespace, it must contain 1 to 200 printable characters and at least one letter or digit. Numbers, units, punctuation, internal spaces, and letter case are preserved. Line breaks and control characters are rejected.
 * `NOTES` is optional. If `n/` is supplied, its value must contain 1 to 300 printable characters after trimming. A blank `n/` is invalid; omit `n/` when no notes are needed. Internal spacing and case are preserved, and line breaks and control characters are rejected.
-* `t/` and `n/` may appear in either order, but each may appear only once. They are recognised at the start of an argument or after whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. A separated single-letter prefix such as `r/` is reserved and rejected; structured dietary restrictions are not yet supported.
+* `t/` and `n/` may appear in either order, but each may appear only once. They are recognised at the start of an argument or after whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. Dietary restrictions are managed separately with the `restriction` command.
 * A different plan **replaces the complete current plan**. Omitting `n/` during replacement clears any old notes. Earlier versions are not kept. A plan with the same trimmed target and notes, ignoring case, is rejected without changing the saved plan.
 
 Examples:
@@ -193,7 +195,7 @@ Examples:
 * `diet 2 t/1800 kcal per day, 120 g protein n/Prioritise lean protein and vegetables` adds notes.
 * `diet 2 t/2000 kcal/day n/Include fruit` replaces the full plan; the slash in `kcal/day` is ordinary text.
 * `diet 2 t/2000 kcal/day` replaces the plan again and removes its notes.
-* `diet 3 t/2000 kcal per day n/Halal meals only; avoid shellfish` records an essential restriction as free-text notes. This does not create a structured restriction field.
+* `diet 3 t/2000 kcal per day n/Prioritise lean protein` records coaching notes. Use `restriction` for separate dietary restrictions.
 
 On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan for NAME.`. Common errors include:
 
@@ -212,14 +214,43 @@ On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan 
 
 Invalid commands and failed saves leave the previous plan unchanged. Deleting a client permanently removes that client's diet plan along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
 
+### Recording dietary restrictions: `restriction`
+
+Stores a client's current ordered list of allergies, exclusions, religious requirements, or food preferences separately from their diet plan.
+
+Format: `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`
+
+* Repeating `r/` replaces the complete existing list. A single blank `r/` clears all restrictions.
+* Supply 1 to 10 nonblank restrictions; each must contain 1 to 100 printable characters and at least one letter or digit.
+* Restrictions that match after trimming and ignoring case are rejected as duplicates.
+* Fittix records trainer-entered information only; it does not determine allergy, nutritional, or meal safety.
+
+Examples:
+* `restriction 2 r/Peanut allergy r/Halal meals r/No shellfish`
+* `restriction 2 r/`
+
+### Recording health considerations: `health`
+
+Stores one current trainer-visible note about a client's injuries or physical limitations.
+
+Format: `health INDEX h/NOTE`
+
+* A nonblank note creates or replaces the current profile. `health INDEX h/` clears it.
+* Notes must contain 1 to 500 printable characters and at least one letter or digit.
+* Fittix records information only; it does not diagnose, recommend treatment, or decide whether a workout is medically safe.
+
+Examples:
+* `health 2 h/Recovering from a left ankle sprain; avoid jumping exercises`
+* `health 2 h/`
+
 ### Finding clients: `find`
 
-Finds clients matching one or more name, phone, email, or fitness-goal criteria.
+Finds clients matching one or more name, phone, email, fitness-goal, dietary-restriction, or health-considerations criteria.
 
 Format:
 
 * `find KEYWORD [MORE_KEYWORDS]...`
-* `find [n/NAME_KEYWORDS] [p/PHONE] [e/EMAIL_KEYWORDS] [g/GOAL_KEYWORDS]`
+* `find [n/NAME_KEYWORDS] [p/PHONE] [e/EMAIL_KEYWORDS] [g/GOAL_KEYWORDS] [dr/RESTRICTION_KEYWORDS] [h/HEALTH_KEYWORDS]`
 
 The first form is a name search and behaves exactly like `find n/KEYWORD [MORE_KEYWORDS]...`.
 
@@ -227,24 +258,28 @@ The first form is a name search and behaves exactly like `find n/KEYWORD [MORE_K
 * `p/` searches one phone query. Spaces and hyphens are ignored, and the normalised phone must contain the normalised query. The query must contain at least one digit.
 * `e/` splits its value into keywords. A client's email matches if it contains any keyword as a case-insensitive substring.
 * `g/` splits its value into keywords. A client's fitness goal matches if it contains any keyword as a case-insensitive substring. Clients without a goal do not match a goal search.
+* `dr/` splits its value into keywords. A client matches when any current dietary restriction contains any keyword as a case-insensitive substring.
+* `h/` splits its value into keywords. A client's health considerations match if they contain any keyword as a case-insensitive substring.
 * Criteria are combined with OR. For example, `find n/tan g/fat loss` returns clients whose name contains `tan` or whose goal contains `fat` or `loss`.
-* Each of `n/`, `p/`, `e/`, and `g/` may appear at most once. A bare keyword cannot be combined with a prefix.
+* Each of `n/`, `p/`, `e/`, `g/`, `dr/`, and `h/` may appear at most once. A bare keyword cannot be combined with a prefix.
 
 Examples:
 * `find pri` and `find n/pri` find clients whose names contain `pri`.
 * `find p/9123 4567` and `find p/9123-4567` find a client with phone `91234567`.
 * `find e/example.com` finds clients with an email containing `example.com`.
 * `find g/strength` finds clients with a goal containing `strength`.
+* `find dr/peanut` finds clients with a dietary restriction containing `peanut`.
+* `find h/ankle` finds clients whose health considerations contain `ankle`.
 * `find n/tan g/fat loss` combines name and goal criteria using OR.
 
 Common errors:
 
 | Cause | Message |
 | --- | --- |
-| No search value | `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]` |
-| Bare keyword mixed with a prefix | `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]` |
-| Repeated supported prefix | `The n/, p/, e/ and g/ prefixes may each be used only once.` |
-| Empty `n/` value | `The n/ search value cannot be empty.` The same message uses `p/`, `e/`, or `g/` for those prefixes. |
+| No search value | `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]` |
+| Bare keyword mixed with a prefix | `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]` |
+| Repeated supported prefix | `The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.` |
+| Empty `n/` value | `The n/ search value cannot be empty.` The same message uses `p/`, `e/`, `g/`, `dr/`, or `h/` for those prefixes. |
 | Phone query without a digit | `Phone search must contain at least one digit.` |
 
 Fittix reports `Found N client(s).` when there are matches, or `Found 0 client(s). Use list to show all clients.` when there are none.
@@ -492,7 +527,7 @@ Format: `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`
 
 Example: `addmem n/Gold Plus p/150.50 s/30`
 
-Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
+Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The stored name keeps the case you entered, but the plan list and client card render its first character in upper case, so a plan entered as `gold` is shown as `Gold`. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
 
 Format: `view mem` or `view membership`
 
@@ -546,6 +581,119 @@ A plan that is assigned to any client cannot be cleared. If at least one plan is
 
 Example: `clearmem`
 
+Failed membership commands leave every plan, assignment, and balance unchanged. The most common errors are:
+
+* `A membership plan named Gold already exists.` — `addmem` with a duplicate name.
+* `No membership plan named Silver exists.` — `amem` or `delmem` for an unknown plan.
+* `Priya Nair already has an assigned membership plan.` — `amem` for a client who already has one.
+* `Membership plan Gold is in use and cannot be deleted. Remove its assignments with rmem first.` — `delmem` for a referenced plan.
+* `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` — `clearmem` while any plan is assigned.
+* `This client has no membership plan to remove or adjust.` — `rmem`, `imem`, or `dmem` for a client without one.
+* `Cannot decrease sessions below zero. The balance remains unchanged.` and `Cannot increase sessions above 1000. The balance remains unchanged.` — adjustments past the 0 to 1000 limits.
+* `The membership change could not be saved. No plan, assignment, or balance was changed.` — the change could not be written to disk.
+
+### Body progress tracker [planned for v1.4]
+
+**Availability:** The commands in this section are planned for v1.4 and do not work in v1.3. They let you record starting measurements, maintain dated weight records, view history, and compare the latest weight with the starting weight. The values are trainer-entered records, not a health assessment.
+
+Use the client's positive index from the **current** list, including search results. For example, after `find Priya`, index `1` means the first displayed match. Body commands preserve that filter and numbering. Command words and prefixes are lowercase and case-sensitive; each prefix can appear only once. Prefixed fields may follow the index in any order.
+
+#### Recording or correcting starting measurements: `bodybase`
+
+Format: `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM`
+
+Example: `bodybase 1 d/2020-01-01 w/75.50 h/175`
+
+The baseline records a date, weight in kilograms, and height in centimetres. All three are required, including when correcting a baseline. A client has one baseline. A different `bodybase` replaces it, retains every progress entry, and changes the reference used by comparison. The replacement date must be **earlier than every progress entry**; otherwise nothing changes. Re-entering the same date and numerical measurements is rejected as already current.
+
+Fittix reports `Created body baseline for NAME: DATE; Weight: WEIGHT kg; Height: HEIGHT cm.` or `Replaced body baseline for NAME: DATE; Weight: WEIGHT kg; Height: HEIGHT cm.` Height is baseline information; later records measure weight only.
+
+#### Recording or correcting progress: `bodylog`
+
+Format: `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]`
+
+Examples:
+
+* `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`
+* `bodylog 1 d/2020-01-15 w/74.20`
+
+Record the baseline first. Each progress date must be later than its baseline and no later than today. You can enter weekly, daily, irregular or older measurements; there is no enforced seven-day interval.
+
+There is one progress entry per date per client. Reusing a date **replaces the entire entry**, including notes. For example, `bodylog 1 d/2020-01-08 w/74.60` corrects that weight and removes its old notes. Omit `n/` for no notes; a blank `n/` is invalid. Re-entering identical date, weight and notes is rejected. Notes are case-sensitive, so a capitalization correction is allowed.
+
+Fittix reports `Recorded body progress for NAME on DATE: WEIGHT kg.` or `Replaced body progress for NAME on DATE: WEIGHT kg.` A backdated entry does not become the latest measurement merely because you entered it last.
+
+#### Viewing the complete history: `bodyhistory`
+
+Format: `bodyhistory INDEX`
+
+Example: `bodyhistory 1`
+
+Selects that client and reveals their body-progress history in the scrollable details area. It shows the baseline separately, then **all** progress entries in date order, oldest first, with weight and notes. The baseline is not counted as an entry. Missing notes appear as `—`. Long notes wrap; scroll vertically to read older or longer records.
+
+Successful feedback is `Showing body progress history for NAME: N entries.` With only a baseline, it displays the baseline and `No body progress entries recorded.` With no baseline, it selects the requested client and shows `No body baseline recorded for NAME. Use bodybase first.` These empty views do not change data.
+
+#### Comparing the latest weight with the baseline: `bodycompare`
+
+Format: `bodycompare INDEX`
+
+Example: `bodycompare 1`
+
+Selects that client and reveals the comparison section. "Latest" means the greatest measurement date, regardless of recording/edit order. Fittix shows both dates and weights, the baseline height for context, and `latest weight - baseline weight`:
+
+```text
+Priya Nair — BODY PROGRESS
+Baseline: 2020-01-01 | 75.50 kg | 175.00 cm
+Progress history (2):
+2020-01-08 | 74.80 kg | Measured before breakfast
+2020-01-15 | 74.20 kg | —
+Latest comparison: 2020-01-15
+75.50 kg -> 74.20 kg | Change: -1.30 kg
+```
+
+A gain uses `+`, a loss uses `-`, and no change is `0.00 kg`. Fittix does not decide whether a change is healthy or desirable. It does not compare height or calculate BMI or percentage change.
+
+Feedback is `Showing body progress comparison for NAME.` Without progress entries, it selects the requested client and shows `No body progress entries recorded for NAME. Use bodylog before comparing.` Without a baseline, it uses the missing-baseline message above. Replacing/deleting entries or correcting the baseline refreshes the comparison.
+
+#### Deleting a mistaken progress entry: `bodydelete`
+
+Format: `bodydelete INDEX d/DATE`
+
+Example: `bodydelete 1 d/2020-01-15`
+
+Deletes only the progress entry on that date for that client. **Deletion is permanent in the v1.4 tracker, with no confirmation step.** The baseline and all other entries remain. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
+
+Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest entry makes the next greatest date the latest. Deleting the last entry keeps the baseline and restores the no-progress view. `bodydelete` cannot delete a baseline; use `bodybase` to correct it.
+
+#### Values, errors and saving
+
+* Dates must be real dates in `yyyy-MM-dd`, years 0001–9999, and today or earlier in the computer's local time zone. `bodylog` additionally requires a date strictly after the baseline.
+* Weight must be greater than 0 and at most **500 kg**. Height must be greater than 0 and at most **300 cm**. Both allow up to two decimal places. These are input limits, not medical thresholds.
+* Enter measurements without units, signs, commas or exponent notation: `75`, `75.5`, `75.50` are accepted; `+75`, `.5`, `75.`, `75.500`, `75kg`, `1e2`, `NaN` and `Infinity` are rejected. Measurements display with two decimal places.
+* Supplied notes must contain 1–300 printable characters after outer horizontal whitespace is removed. Internal spacing and case are preserved. Line breaks and nonprintable characters are rejected.
+* A separated prefix token such as `w/`, `n/` or `ex/` is reserved, including inside notes. Repeated/unsupported prefixes are rejected. Slashes inside words, such as `km/day`, are ordinary text.
+
+| Situation | Message |
+| --- | --- |
+| Missing field, unknown/repeated prefix or extra positional argument | `Invalid command format. Use: FORMAT` (the relevant command format above) |
+| Invalid index syntax | `Client index must be a positive whole number shown in the client list.` |
+| Index outside current list | `No client exists at index INDEX.` |
+| Invalid/future date | `Measurement date must be a real date in yyyy-MM-dd format and must not be in the future.` |
+| Invalid weight | `Weight must be greater than 0 and at most 500 kg, with at most 2 decimal places.` |
+| Invalid height | `Height must be greater than 0 and at most 300 cm, with at most 2 decimal places.` |
+| Invalid notes | `Progress notes must contain 1 to 300 printable characters without line breaks.` |
+| Progress date on/before baseline | `Progress date must be later than the baseline date.` |
+| Baseline correction conflicts with existing entries | `Baseline date must be earlier than every recorded progress date. No changes were made.` |
+| Identical baseline | `This is already the current body baseline for NAME.` |
+| Identical progress entry | `This body progress entry already exists for NAME on DATE.` |
+| No entry to delete | `No body progress entry exists for NAME on DATE.` |
+| Trying to delete the baseline | `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` |
+| Saving fails | `The body progress change could not be saved. No changes were made.` |
+
+Invalid mutations and failed saves leave all previous data unchanged. Successful changes select the affected client and refresh their details after saving. Baseline, weights and notes survive restarting the app; data files created before this feature load with no body tracker. A wrong local clock can cause date validation/loading failures, so check it before entering or opening dated records.
+
+Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` permanently removes their body records with the client. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -557,6 +705,8 @@ Format: `exit`
 AddressBook automatically saves data after every command. You do not need to save manually.
 
 Workout exercises, their sets, reps, weight, and assigned weekdays are restored when you reopen the app. Exercises saved without a day, including older entries labelled `day not specified` or `Day not specified`, appear together under the single **Day not specified** heading.
+
+Membership plans and each client's plan name, remaining sessions, and expiry date are restored the same way. An assignment whose expiry date has passed is still shown so you can act on it.
 
 ### Editing the data file
 
@@ -600,8 +750,10 @@ Action | Format, Examples
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
 **Assign/change exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`
 **Diet plan** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
+**Dietary restrictions** | `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`<br> e.g., `restriction 2 r/Peanut allergy r/Halal meals`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
-**Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL]`<br> e.g., `find n/James g/strength`
+**Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`<br> e.g., `find n/James g/strength`
+**Health considerations** | `health INDEX h/NOTE`<br> e.g., `health 2 h/Avoid jumping exercises`
 **List** | `list`
 **Add membership plan** | `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`<br> e.g., `addmem n/Gold p/150 s/30`
 **View membership plans** | `view mem` or `view membership`
@@ -610,6 +762,11 @@ Action | Format, Examples
 **Increase remaining sessions** | `imem PERSON_INDEX NUMBER_TO_INCREMENT`<br> e.g., `imem 1 3`
 **Decrease remaining sessions** | `dmem PERSON_INDEX NUMBER_TO_DECREMENT`<br> e.g., `dmem 1 2`
 **Delete membership plan** | `delmem n/NAME`<br> e.g., `delmem n/Silver`
+**Body baseline (planned v1.4)** | `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM`<br> e.g., `bodybase 1 d/2020-01-01 w/75.50 h/175`
+**Body progress record/correction (planned v1.4)** | `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]`<br> e.g., `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`
+**Body progress history (planned v1.4)** | `bodyhistory INDEX`
+**Body progress comparison (planned v1.4)** | `bodycompare INDEX`
+**Delete body progress entry (planned v1.4)** | `bodydelete INDEX d/DATE`<br> e.g., `bodydelete 1 d/2020-01-08`
 **Schedule** | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`
 **Meeting** | `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
 **View schedule** | `viewschedule INDEX`<br> e.g., `viewschedule 1`

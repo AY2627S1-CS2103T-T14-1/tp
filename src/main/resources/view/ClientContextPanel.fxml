@@ -29,6 +29,10 @@
           <Label text="No diet target recorded." styleClass="muted" />
           <Label fx:id="dietEmptyCommand" wrapText="true" styleClass="diet-command,mono" />
         </VBox>
+        <VBox fx:id="dietaryRestrictionsBox" spacing="5" styleClass="diet-notes" visible="false" managed="false">
+          <Label text="DIETARY RESTRICTIONS" styleClass="caps-label" />
+          <Label fx:id="dietaryRestrictions" wrapText="true" styleClass="context-body" />
+        </VBox>
       </VBox>
 
       <VBox spacing="12" styleClass="card,context-card">

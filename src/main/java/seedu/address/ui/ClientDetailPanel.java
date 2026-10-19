@@ -48,6 +48,10 @@ public class ClientDetailPanel extends UiPart<Region> {
     @FXML
     private Label goal;
     @FXML
+    private VBox healthProfileBox;
+    @FXML
+    private Label healthProfile;
+    @FXML
     private VBox remarkBox;
     @FXML
     private Label remark;
@@ -89,6 +93,10 @@ public class ClientDetailPanel extends UiPart<Region> {
             label.getStyleClass().add("tag");
             profileTags.getChildren().add(label);
         });
+
+        String healthText = person.getHealthProfile().map(value -> value.value).orElse("");
+        healthProfile.setText(healthText);
+        setShown(healthProfileBox, !healthText.isBlank());
 
         String remarkText = person.getRemark().value;
         remark.setText(remarkText);

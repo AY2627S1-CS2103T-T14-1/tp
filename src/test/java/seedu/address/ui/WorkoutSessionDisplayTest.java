@@ -89,6 +89,25 @@ public class WorkoutSessionDisplayTest {
     }
 
     @Test
+    public void dietaryRestrictions_showWithoutDietAndClearWhenSwitchingClients() throws Exception {
+        runOnFxThread(() -> {
+            ClientContextPanel panel = new ClientContextPanel();
+            Person restricted = new PersonBuilder()
+                    .withDietaryRestrictions("Peanut allergy", "Halal meals").build();
+            panel.showPerson(restricted, 2);
+
+            assertTrue(region(panel, "dietEmpty").isManaged());
+            assertTrue(region(panel, "dietaryRestrictionsBox").isManaged());
+            assertEquals("Peanut allergy; Halal meals", label(panel, "dietaryRestrictions").getText());
+
+            panel.showPerson(new PersonBuilder().build(), 1);
+            assertFalse(region(panel, "dietaryRestrictionsBox").isManaged());
+            assertEquals("", label(panel, "dietaryRestrictions").getText());
+            return null;
+        });
+    }
+
+    @Test
     public void sessions_areChronologicalAndMarkedByStatus() throws Exception {
         runOnFxThread(() -> {
             Person person = new PersonBuilder().build()

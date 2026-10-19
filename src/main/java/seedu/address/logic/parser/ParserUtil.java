@@ -2,6 +2,10 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,6 +13,9 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.membership.MembershipAssignment;
+import seedu.address.model.membership.MembershipName;
+import seedu.address.model.membership.MembershipPlan;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Exercise;
@@ -203,6 +210,94 @@ public class ParserUtil {
             return value;
         } catch (NumberFormatException e) {
             throw new ParseException(Exercise.MESSAGE_CONSTRAINTS_WEIGHT);
+        }
+    }
+
+    /**
+     * Parses a {@code String name} into a {@code MembershipName}.
+     * Leading and trailing whitespaces are trimmed and internal whitespace is collapsed.
+     *
+     * @throws ParseException if the given {@code name} is invalid.
+     */
+    public static MembershipName parseMembershipName(String name) throws ParseException {
+        requireNonNull(name);
+        String trimmedName = name.trim();
+        if (!MembershipName.isValidMembershipName(trimmedName)) {
+            throw new ParseException(MembershipName.MESSAGE_CONSTRAINTS);
+        }
+        return new MembershipName(trimmedName);
+    }
+
+    /**
+     * Parses a {@code String price} into a validated membership plan price.
+     * The price must be a positive amount with at most two decimal places,
+     * written without a currency symbol or thousands separators.
+     *
+     * @throws ParseException if the given {@code price} is invalid.
+     */
+    public static BigDecimal parseMembershipPrice(String price) throws ParseException {
+        requireNonNull(price);
+        String trimmedPrice = price.trim();
+        if (!trimmedPrice.matches("\\d+(\\.\\d{1,2})?")) {
+            throw new ParseException(MembershipPlan.MESSAGE_PRICE_CONSTRAINTS);
+        }
+        BigDecimal value = new BigDecimal(trimmedPrice);
+        if (!MembershipPlan.isValidPrice(value)) {
+            throw new ParseException(MembershipPlan.MESSAGE_PRICE_CONSTRAINTS);
+        }
+        return value;
+    }
+
+    /**
+     * Parses a {@code String sessions} into a validated membership plan starting session count.
+     *
+     * @throws ParseException if the given {@code sessions} is not a whole number from 1 to 1000.
+     */
+    public static int parseMembershipSessions(String sessions) throws ParseException {
+        requireNonNull(sessions);
+        String trimmedSessions = sessions.trim();
+        try {
+            int value = Integer.parseInt(trimmedSessions);
+            if (!MembershipPlan.isValidStartingSessions(value)) {
+                throw new ParseException(MembershipPlan.MESSAGE_SESSIONS_CONSTRAINTS);
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new ParseException(MembershipPlan.MESSAGE_SESSIONS_CONSTRAINTS);
+        }
+    }
+
+    /**
+     * Parses a {@code String expiry} into a validated membership assignment expiry date.
+     * The date must use the {@code YYYY-MM-DD} format and lie after the current local date.
+     *
+     * @throws ParseException if the given {@code expiry} is not a valid future date.
+     */
+    public static LocalDate parseMembershipExpiry(String expiry) throws ParseException {
+        return parseMembershipExpiry(expiry, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Parses a {@code String expiry} into a validated membership assignment expiry date,
+     * comparing against the local date of the given {@code clock}.
+     *
+     * @throws ParseException if the given {@code expiry} is not a valid future date.
+     */
+    public static LocalDate parseMembershipExpiry(String expiry, Clock clock) throws ParseException {
+        requireNonNull(expiry);
+        requireNonNull(clock);
+        String trimmedExpiry = expiry.trim();
+        if (!trimmedExpiry.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new ParseException(MembershipAssignment.MESSAGE_EXPIRY_CONSTRAINTS);
+        }
+        try {
+            LocalDate date = LocalDate.parse(trimmedExpiry);
+            if (!date.isAfter(LocalDate.now(clock))) {
+                throw new ParseException(MembershipAssignment.MESSAGE_EXPIRY_CONSTRAINTS);
+            }
+            return date;
+        } catch (DateTimeParseException e) {
+            throw new ParseException(MembershipAssignment.MESSAGE_EXPIRY_CONSTRAINTS);
         }
     }
 }

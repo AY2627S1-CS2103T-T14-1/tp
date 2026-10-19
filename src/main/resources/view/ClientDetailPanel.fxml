@@ -46,6 +46,10 @@
           <Label fx:id="goal" wrapText="true" styleClass="profile-value,goal-value" />
         </VBox>
       </GridPane>
+      <VBox fx:id="healthProfileBox" spacing="5" styleClass="remark-box">
+        <Label text="HEALTH CONSIDERATIONS" styleClass="caps-label" />
+        <Label fx:id="healthProfile" wrapText="true" styleClass="profile-value" />
+      </VBox>
       <VBox fx:id="remarkBox" spacing="5" styleClass="remark-box">
         <Label text="REMARK" styleClass="caps-label" />
         <Label fx:id="remark" wrapText="true" styleClass="profile-value" />

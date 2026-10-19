@@ -10,24 +10,33 @@ import java.util.regex.Pattern;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddExerciseCommand;
+import seedu.address.logic.commands.AddMembershipPlanCommand;
+import seedu.address.logic.commands.AdjustMembershipSessionsCommand;
+import seedu.address.logic.commands.AssignMembershipPlanCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.ClearPlanCommand;
+import seedu.address.logic.commands.ClearmemCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.DayScheduleCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteExerciseCommand;
+import seedu.address.logic.commands.DeleteMembershipPlanCommand;
 import seedu.address.logic.commands.DietCommand;
+import seedu.address.logic.commands.DietaryRestrictionsCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
+import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.InactiveCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
 import seedu.address.logic.commands.MeetingCommand;
 import seedu.address.logic.commands.RemarkCommand;
+import seedu.address.logic.commands.RemoveMembershipPlanCommand;
 import seedu.address.logic.commands.ScheduleCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
+import seedu.address.logic.commands.ViewMembershipPlansCommand;
 import seedu.address.logic.commands.ViewScheduleCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -75,6 +84,8 @@ public class AddressBookParser {
             case EditCommand.COMMAND_WORD -> new EditCommandParser().parse(arguments);
             case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
             case DietCommand.COMMAND_WORD -> new DietCommandParser().parse(arguments);
+            case DietaryRestrictionsCommand.COMMAND_WORD -> new DietaryRestrictionsCommandParser().parse(arguments);
+            case HealthCommand.COMMAND_WORD -> new HealthCommandParser().parse(arguments);
             case ClearCommand.COMMAND_WORD -> new ClearCommand();
             case FindCommand.COMMAND_WORD -> new FindCommandParser().parse(arguments);
             case ListCommand.COMMAND_WORD -> new ListCommand();
@@ -89,6 +100,20 @@ public class AddressBookParser {
             case DeleteExerciseCommand.COMMAND_WORD -> new DeleteExerciseCommandParser().parse(arguments);
             case ClearPlanCommand.COMMAND_WORD -> new ClearPlanCommandParser().parse(arguments);
             case SetExerciseDayCommand.COMMAND_WORD -> new SetExerciseDayCommandParser().parse(arguments);
+            case AddMembershipPlanCommand.COMMAND_WORD -> new AddMembershipPlanCommandParser().parse(arguments);
+            case AssignMembershipPlanCommand.COMMAND_WORD ->
+                new AssignMembershipPlanCommandParser().parse(arguments);
+            case AdjustMembershipSessionsCommand.COMMAND_WORD_INCREASE ->
+                new AdjustMembershipSessionsCommandParser(true).parse(arguments);
+            case AdjustMembershipSessionsCommand.COMMAND_WORD_DECREASE ->
+                new AdjustMembershipSessionsCommandParser(false).parse(arguments);
+            case RemoveMembershipPlanCommand.COMMAND_WORD ->
+                new RemoveMembershipPlanCommandParser().parse(arguments);
+            case DeleteMembershipPlanCommand.COMMAND_WORD ->
+                new DeleteMembershipPlanCommandParser().parse(arguments);
+            case ViewMembershipPlansCommand.COMMAND_WORD ->
+                new ViewMembershipPlansCommandParser().parse(arguments);
+            case ClearmemCommand.COMMAND_WORD -> new ClearmemCommand();
             case ExitCommand.COMMAND_WORD -> new ExitCommand();
             case HelpCommand.COMMAND_WORD -> new HelpCommand();
             default -> {
