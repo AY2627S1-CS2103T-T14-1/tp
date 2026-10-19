@@ -143,12 +143,12 @@ public class WorkoutSessionDisplayTest {
             VBox rows = vbox(panel, "historyRows");
 
             assertEquals(2, rows.getChildren().size());
-            assertEquals(List.of("✓", "Wed 15 Jan 2020", "18:00",
+            assertEquals(List.of("✓", "1. Wed 15 Jan 2020", "18:00",
                     "Bench press · 3 × 8 · 40.25 kg", "Back squat · 3 × 10 · 60 kg"),
                     labelTexts(rows.getChildren().get(0)));
-            assertEquals(List.of("✓", "Tue 14 Jan 2020", "Time not specified",
+            assertEquals(List.of("✓", "2. Tue 14 Jan 2020", "Time not specified",
                     "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(1)));
-            assertEquals("log 4", label(panel, "historyCommandHint").getText());
+            assertEquals("history 4", label(panel, "historyCommandHint").getText());
             return null;
         });
     }
