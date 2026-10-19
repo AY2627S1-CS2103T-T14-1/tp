@@ -5,6 +5,11 @@ import java.util.Locale;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddExerciseCommand;
+import seedu.address.logic.commands.BodyBaselineCommand;
+import seedu.address.logic.commands.BodyCompareCommand;
+import seedu.address.logic.commands.BodyDeleteCommand;
+import seedu.address.logic.commands.BodyHistoryCommand;
+import seedu.address.logic.commands.BodyLogCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -33,6 +38,11 @@ final class CommandCatalog {
             new Entry(DietCommand.COMMAND_WORD, DietCommand.MESSAGE_USAGE),
             new Entry(DietaryRestrictionsCommand.COMMAND_WORD, DietaryRestrictionsCommand.MESSAGE_USAGE),
             new Entry(HealthCommand.COMMAND_WORD, HealthCommand.MESSAGE_USAGE),
+            new Entry(BodyBaselineCommand.COMMAND_WORD, BodyBaselineCommand.MESSAGE_USAGE),
+            new Entry(BodyCompareCommand.COMMAND_WORD, BodyCompareCommand.MESSAGE_USAGE),
+            new Entry(BodyDeleteCommand.COMMAND_WORD, BodyDeleteCommand.MESSAGE_USAGE),
+            new Entry(BodyHistoryCommand.COMMAND_WORD, BodyHistoryCommand.MESSAGE_USAGE),
+            new Entry(BodyLogCommand.COMMAND_WORD, BodyLogCommand.MESSAGE_USAGE),
             new Entry(ClearCommand.COMMAND_WORD, "clear: Clears every client."),
             new Entry(FindCommand.COMMAND_WORD, FindCommand.MESSAGE_USAGE),
             new Entry(ListCommand.COMMAND_WORD, "list: Lists all clients."),
