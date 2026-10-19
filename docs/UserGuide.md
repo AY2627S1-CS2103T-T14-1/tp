@@ -562,9 +562,9 @@ Failed membership commands leave every plan, assignment, and balance unchanged. 
 * `Cannot decrease sessions below zero. The balance remains unchanged.` and `Cannot increase sessions above 1000. The balance remains unchanged.` — adjustments past the 0 to 1000 limits.
 * `The membership change could not be saved. No plan, assignment, or balance was changed.` — the change could not be written to disk.
 
-### Body progress tracker [planned for v1.4]
+### Body progress tracker
 
-**Availability:** The commands in this section are planned for v1.4 and do not work in v1.3. They let you record starting measurements, maintain dated weight records, view history, and compare the latest weight with the starting weight. The values are trainer-entered records, not a health assessment.
+**Availability:** Available in v1.4; these commands do not work in v1.3. They let you record starting measurements, maintain dated weight records, view history, and compare the latest weight with the starting weight. The values are trainer-entered records, not a health assessment.
 
 Use the client's positive index from the **current** list, including search results. For example, after `find Priya`, index `1` means the first displayed match. Body commands preserve that filter and numbering. Command words and prefixes are lowercase and case-sensitive; each prefix can appear only once. Prefixed fields may follow the index in any order.
 
@@ -599,7 +599,7 @@ Format: `bodyhistory INDEX`
 
 Example: `bodyhistory 1`
 
-Selects that client and reveals their body-progress history in the scrollable details area. It shows the baseline separately, then **all** progress entries in date order, oldest first, with weight and notes. The baseline is not counted as an entry. Missing notes appear as `—`. Long notes wrap; scroll vertically to read older or longer records.
+Selects that client and reveals their body-progress history in the **Body progress** card in the centre details column. Scroll inside the card to read the complete history or comparison; the centre column also scrolls when needed. It shows the baseline separately, then **all** progress entries in date order, oldest first, with weight and notes. The baseline is not counted as an entry. Missing notes appear as `—`. Long notes wrap; scroll vertically to read older or longer records.
 
 Successful feedback is `Showing body progress history for NAME: N entries.` With only a baseline, it displays the baseline and `No body progress entries recorded.` With no baseline, it selects the requested client and shows `No body baseline recorded for NAME. Use bodybase first.` These empty views do not change data.
 
@@ -732,11 +732,11 @@ Action | Format, Examples
 **Increase remaining sessions** | `imem PERSON_INDEX NUMBER_TO_INCREMENT`<br> e.g., `imem 1 3`
 **Decrease remaining sessions** | `dmem PERSON_INDEX NUMBER_TO_DECREMENT`<br> e.g., `dmem 1 2`
 **Delete membership plan** | `delmem n/NAME`<br> e.g., `delmem n/Silver`
-**Body baseline (planned v1.4)** | `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM`<br> e.g., `bodybase 1 d/2020-01-01 w/75.50 h/175`
-**Body progress record/correction (planned v1.4)** | `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]`<br> e.g., `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`
-**Body progress history (planned v1.4)** | `bodyhistory INDEX`
-**Body progress comparison (planned v1.4)** | `bodycompare INDEX`
-**Delete body progress entry (planned v1.4)** | `bodydelete INDEX d/DATE`<br> e.g., `bodydelete 1 d/2020-01-08`
+**Body baseline (v1.4)** | `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM`<br> e.g., `bodybase 1 d/2020-01-01 w/75.50 h/175`
+**Body progress record/correction (v1.4)** | `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]`<br> e.g., `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`
+**Body progress history (v1.4)** | `bodyhistory INDEX`
+**Body progress comparison (v1.4)** | `bodycompare INDEX`
+**Delete body progress entry (v1.4)** | `bodydelete INDEX d/DATE`<br> e.g., `bodydelete 1 d/2020-01-08`
 **Schedule** | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`
 **View schedule** | `viewschedule INDEX`<br> e.g., `viewschedule 1`
 **Help** | `help`

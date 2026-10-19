@@ -1,5 +1,5 @@
 @startuml
-title Proposed body mutation: commit before display
+title Body mutation: commit before display
 skinparam shadowing false
 skinparam defaultFontName Arial
 hide footbox
