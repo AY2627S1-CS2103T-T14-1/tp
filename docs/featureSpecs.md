@@ -10,7 +10,7 @@
 4. Workout plan management
 5. Workout session logging
 6. Diet plan management
-7. Membership Plan
+10. Membership Plan
 8. Health considerations
 9. Dietary restrictions
 
