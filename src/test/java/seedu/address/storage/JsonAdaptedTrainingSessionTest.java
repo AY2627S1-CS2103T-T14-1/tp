@@ -29,4 +29,10 @@ public class JsonAdaptedTrainingSessionTest {
         assertThrows(IllegalValueException.class, () ->
                 new JsonAdaptedTrainingSession("bad date", "Gym").toModelType());
     }
+
+    @Test
+    public void toModelType_missingKind_defaultsToTraining() throws Exception {
+        TrainingSession loaded = new JsonAdaptedTrainingSession("2099-03-15T14:30", "Gym").toModelType();
+        assertEquals(TrainingSession.Kind.TRAINING, loaded.getKind());
+    }
 }

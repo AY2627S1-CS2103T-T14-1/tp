@@ -14,9 +14,9 @@
 - Feature 8: Health considerations
 - Feature 9: Dietary restrictions
 - Feature 10: Body progress tracker
-- Feature 11: Advanced scheduling and client monitoring ([pending PR #118](https://github.com/AY2627S1-CS2103T-T14-1/tp/pull/118))
+- Feature 11: Advanced scheduling and client monitoring
 
-Feature identifiers follow the section headings, rather than list positions. Feature 11's specification is currently in PR #118; retain its entry and section when that PR is merged.
+Feature identifiers follow the section headings, rather than list positions. Feature 11's specification is included below.
 
 ## Feature 1A: Add client
 
@@ -308,9 +308,9 @@ Training sessions for Priya Nair:
 
 If no sessions have been saved, the result is `No training sessions saved for Priya Nair.` The index in either command must refer to a client in the current displayed list.
 
-### 7. Duplicate handling
+### 7. Duplicate and conflict handling
 
-The current implementation appends sessions without checking for duplicates or conflicts. Identical sessions and cross-client overlaps can therefore be recorded. Editing or deleting a session is not supported by these commands.
+`schedule` rejects a new appointment if any client already has a training session or meeting at the same date and start time, including an identical session for the same client. The message names the client holding that time slot, and no data changes. Appointments have no stored duration, so different start times are allowed even if the appointments might overlap in practice. Editing or deleting an appointment is not supported by these commands.
 
 ### 8. Possible errors
 
@@ -335,7 +335,7 @@ Record multiple dated sessions per client and view them in date/time order. Pres
 
 #### Nice to have or later
 
-Conflict detection, daily/calendar views, reminders, recurring sessions, durations, and edit/delete commands.
+Duration-based conflict detection, calendar views, reminders, recurring sessions, and edit/delete commands. The daily appointment view is provided by `dayschedule` (Feature 11).
 
 ## Feature 3: Workout plan management
 
@@ -1301,3 +1301,89 @@ Every mutation validates its full candidate before replacing the client. A save 
 **Must have:** all four assigned capabilities and the correction/deletion paths above; strict validation; clear empty/duplicate/error states; independent client targeting; persistence/rollback; readable display; current UG and DG. Verify positive/negative/zero comparisons, out-of-order entry dates, replacing/clearing notes, baseline corrections that retain history, last-entry deletion, filtered indices, restart with populated data, legacy files, malformed loads and fault-injected failed saves.
 
 **Later scope:** circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. These are not needed to complete this v1.4 feature.
+
+## Feature 11: Advanced scheduling and client monitoring (v1.4 Alpha)
+
+### 1. Feature
+
+Find clients without a recently recorded workout, view all client appointments on a date, record ad-hoc meetings, and prevent two appointments from starting at the same time.
+
+### 2. Purpose
+
+Give a trainer one daily agenda and a way to identify clients who may need follow-up. Keep meetings distinct from training sessions while preserving existing schedule records.
+
+### 3. Command format
+
+```text
+inactive DAYS
+dayschedule d/YYYY-MM-DD
+meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION
+schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION
+```
+
+`schedule` is the existing training appointment command (Feature 2); Feature 11 adds the shared start-time conflict rule. `viewschedule INDEX` continues to show one client's appointments, including meetings.
+
+### 4. Example commands
+
+```text
+inactive 14
+dayschedule d/2099-03-15
+meeting 1 d/2099-03-15 tm/14:30 l/Cafe
+schedule 2 d/2099-03-15 tm/15:30 l/Gym
+```
+
+### 5. Parameters
+
+| Parameter | Rule |
+|---|---|
+| `DAYS` | Positive whole number within the supported integer range. The look-back window includes today and the previous `DAYS - 1` calendar days. |
+| `INDEX` | Positive index in the currently displayed client list, including filtered results. |
+| `d/YYYY-MM-DD` | Real calendar date. `dayschedule` may inspect a past, current, or future date; a new `meeting` or `schedule` appointment must be later than the current local date and time. |
+| `tm/HH:mm` | Valid 24-hour local time for a new appointment. |
+| `l/LOCATION` | Nonblank meeting or training location. |
+
+`inactive` and `dayschedule` inspect the full client roster even when the current client list is filtered. They do not change the current filter or stored data.
+
+### 6. Output
+
+`inactive` lists clients with no completed workout logged within the window, sorted by client name. Each row shows the latest logged workout date, or `never recorded` if none exists. Scheduled training and meetings do not count as completed workouts. If every client has a recent workout, show `All clients have a recorded workout in the last DAYS days.`
+
+`dayschedule` lists all training sessions and meetings on the chosen date, ordered by start time and then client name. Each row identifies its appointment type and location. An empty day shows `No client appointments on DATE.` A successful `meeting` reports the client, date, time, and location, and the appointment also appears in `viewschedule` and `dayschedule`.
+
+```text
+Clients without a recorded workout in the last 14 days:
+1. Bob Cat — last workout: 2026-09-15
+2. Priya Nair — last workout: never recorded
+
+Client appointments on 2099-03-15:
+1. 14:30 Amy Bee (meeting) at Cafe
+2. 15:30 Bob Cat (training) at Gym
+
+Recorded meeting for Amy Bee: 2099-03-15 14:30 at Cafe
+```
+
+### 7. Duplicate and conflict handling
+
+Before saving a `meeting` or `schedule`, search every client's training sessions and meetings for the same date **and start time**, including the selected client's records. Reject a clash without changing data: `Scheduling conflict: NAME already has an appointment at YYYY-MM-DD HH:mm.` Older saved sessions with no appointment type load as training. Appointment durations are not stored, so different start times can still overlap in practice.
+
+### 8. Possible errors
+
+**Invalid day count:** Reject zero, negative, fractional, nonnumeric, or oversized `DAYS` values.
+
+**Invalid appointment input:** Reject an invalid displayed index, malformed date or time, blank location, or a new appointment that is not in the future. Do not partially save an appointment.
+
+**Same start time:** Report the existing client's name and start time using the conflict message above; preserve all appointments.
+
+### 9. Search and persistence
+
+`inactive` searches completed workout logs, not scheduled appointments. `dayschedule` searches all clients' appointments. Meetings use the existing `trainingSessions` storage list with a type field; records saved before this feature remain readable as training sessions. Successful changes persist through the app's normal save path.
+
+### 10. Priority distinctions
+
+#### Must have
+
+The four commands and behaviors above: full-roster inactivity and day views, dated meetings, exact start-time conflict checks for both appointment types, persistence, and compatibility with older training sessions.
+
+#### Nice to have or later
+
+Appointment durations and overlap detection, recurring meetings, reminders, calendar layout, and edit/delete appointment commands.

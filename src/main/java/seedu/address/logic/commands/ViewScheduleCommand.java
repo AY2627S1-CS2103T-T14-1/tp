@@ -41,6 +41,9 @@ public class ViewScheduleCommand extends Command {
             result.append("\n").append(i + 1).append(". ")
                     .append(session.getDateTime().format(DISPLAY_FORMAT))
                     .append(" at ").append(session.getLocation());
+            if (session.getKind() == TrainingSession.Kind.MEETING) {
+                result.append(" (meeting)");
+            }
         }
         return new CommandResult(result.toString());
     }

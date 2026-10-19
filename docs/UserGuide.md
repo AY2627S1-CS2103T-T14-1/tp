@@ -34,7 +34,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
    * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records a diet plan for the 2nd client shown.
-  
+
    * `log 1 d/2020-01-15 ex/Push-up|0|3|12` : Records a completed workout session for the 1st client shown.
 
    * `clear` : Deletes all contacts, but keeps membership plans.
@@ -107,15 +107,43 @@ Adds a future training session to the client at the displayed index. Sessions ar
 
 Format: `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
 
-The date and 24-hour time must be valid, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client.
+The date and 24-hour time must be valid and in the future, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client. Fittix rejects an appointment when another client already has a training session or meeting at the same start time.
 
 ### Viewing a client's training sessions: `viewschedule`
 
-Shows all saved sessions for the client at the displayed index, ordered by date and time. Past sessions remain visible for reference.
+Shows all saved training sessions and meetings for the client at the displayed index, ordered by date and time. Meetings are marked `(meeting)`. Past appointments remain visible for reference.
 
 Format: `viewschedule INDEX`
 
 Example: `viewschedule 1`
+
+### Recording a client meeting: `meeting`
+
+Records a future ad-hoc meeting for the client at the displayed index. Give the date, 24-hour time, and meeting location.
+
+Format: `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
+
+Example: `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
+
+The meeting appears in `viewschedule` and `dayschedule`. A meeting cannot use a start time already occupied by any client's training session or meeting.
+
+### Viewing all appointments on a day: `dayschedule`
+
+Lists all clients with a training session or meeting on the specified date, ordered by time. This checks the full client roster, even if the displayed list is filtered.
+
+Format: `dayschedule d/YYYY-MM-DD`
+
+Example: `dayschedule d/2099-03-15`
+
+### Finding clients who have not trained recently: `inactive`
+
+Lists clients without a **recorded completed workout** in the last `DAYS` calendar days, including today. Clients with no recorded workout are included. Scheduled appointments alone do not count as completed workouts. The command checks the full client roster.
+
+Format: `inactive DAYS` (a positive whole number)
+
+Example: `inactive 14`
+
+Fittix stores appointment start times, not durations. Conflict detection checks equal start times; it cannot identify appointments that start at different times but overlap.
 
 ### Editing a client: `edit`
 
@@ -740,6 +768,9 @@ Action | Format, Examples
 **Body progress comparison (v1.4)** | `bodycompare INDEX`
 **Delete body progress entry (v1.4)** | `bodydelete INDEX d/DATE`<br> e.g., `bodydelete 1 d/2020-01-08`
 **Schedule** | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`
+**Meeting** | `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
 **View schedule** | `viewschedule INDEX`<br> e.g., `viewschedule 1`
+**Day schedule** | `dayschedule d/YYYY-MM-DD`<br> e.g., `dayschedule d/2099-03-15`
+**Inactive clients** | `inactive DAYS`<br> e.g., `inactive 14`
 **Help** | `help`
 **Log workout session** | `log INDEX d/DATE [t/TIME] ex/EXERCISE\|WEIGHT\|SETS\|REPS [ex/EXERCISE\|WEIGHT\|SETS\|REPS]...`<br> e.g., `log 1 d/2020-01-15 t/18:00 ex/Back squat\|60\|3\|10`
