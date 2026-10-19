@@ -479,15 +479,29 @@ A duplicate is rejected with `This client already has a workout session with the
 
 If any exercise entry or other required value is invalid, the entire command is rejected. No part of that session is added.
 
-#### Viewing the recorded session
+#### Viewing recorded sessions
 
-Select a client in the list to view **LAST RECORDED WORKOUT SESSION** below their diet plan.
+Select a client in the list to see **WORKOUT HISTORY** in the context panel. Each row shows the session's date, time, and all exercise entries. When time was omitted, it appears as `Time not specified`. Text wraps, and the details pane can be scrolled.
 
-The panel shows the date, time, and all exercise entries. An omitted time appears as `Time: Not specified`. Text wraps, and the details pane can be scrolled.
+Sessions appear newest first by date and time, with every exercise entry shown. On the same date, a session without a time appears after sessions with a time. The number beside each session is its current `SESSION_INDEX`. A client without sessions shows an empty history state.
 
-The displayed session is the one most recently added using `log`, even if its workout date is earlier than another recorded session. A client without sessions shows `No workout sessions recorded.`
+#### Viewing a client's workout history: `history`
 
-Earlier sessions remain saved, but browsing the complete history and editing or deleting individual sessions are not currently supported.
+Format: `history CLIENT_INDEX`
+
+Example: `history 1`
+
+The command lists every recorded session for the client at the displayed index, including exercise details. It uses the same session numbers and order as the selected-client panel. After `find`, use the client index shown in the filtered list. If no sessions have been logged, Fittix reports `No workout sessions recorded for NAME.`
+
+#### Correcting a recorded session: `editlog`
+
+Format: `editlog CLIENT_INDEX SESSION_INDEX d/DATE [t/TIME] ex/EXERCISE|WEIGHT|SETS|REPS [ex/EXERCISE|WEIGHT|SETS|REPS]...`
+
+Example: `editlog 1 2 d/2020-01-15 t/18:00 ex/Back squat|65|3|8`
+
+Use `history CLIENT_INDEX` or the panel to find the session number. Provide the complete corrected session, including all exercises you want to keep. Omitting `t/` removes its specified time. Dates, times, exercises, and the 1-to-30 entry limit follow the `log` rules above. A new date/time combination that duplicates another session for the same client is rejected. An unchanged session is rejected without changing stored data. Once corrected, the session may move to a different displayed position; run `history` again before another edit. The client's other details and membership balance remain unchanged.
+
+Deleting individual workout sessions is not currently supported.
 
 ### Managing membership plans
 
