@@ -258,7 +258,9 @@ On success, the command appends the session to a copy of the existing session li
 
 `LogicManager` saves the updated address book through the storage component. If saving throws an `IOException`, it restores the address-book snapshot taken before command execution and reports the save error.
 
-`PersonListPanel` observes the selected client and changes to the client list. It displays the last session in the selected client's session list, including every exercise entry. It shows an empty state when the client has no sessions and hides the workout details when no client is selected. Labels wrap, and the details pane supports scrolling.
+`MainWindow` observes the selected client and changes to the client list. `ClientContextPanel` displays every recorded session newest first by date and optional time, numbering rows consistently with `history`. It shows an empty state when the client has no sessions and hides workout details when no client is selected. Labels wrap, and the details pane supports scrolling.
+
+`HistoryCommand` reads the filtered client list and formats all sessions without modifying data. `EditLogCommandParser` reuses `LogCommandParser` validation to construct a complete replacement session. `EditLogCommand` resolves the displayed client and history indexes, rejects unchanged and duplicate-key replacements, replaces the selected session in the client's stored list, and preserves every unrelated client field. `MainWindow` selects the targeted client before command execution. The usual `LogicManager` save and snapshot restoration protect edits from failed writes.
 
 Automated coverage includes model validation and immutability, JSON round trips and legacy records, parser validation, duplicate rejection, filtered-list targeting, preservation of sessions by other client-update commands, and selected-client display.
 
