@@ -3,6 +3,8 @@ package seedu.address.logic.parser;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 
+import java.time.Clock;
+import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,7 +50,21 @@ public class AddressBookParser {
     private static final Pattern BASIC_COMMAND_FORMAT = Pattern.compile("(?<commandWord>\\S+)(?<arguments>.*)");
     private static final Pattern DIET_COMMAND_FORMAT = Pattern.compile(
             DietCommand.COMMAND_WORD + "(?=\\s|$)(?<arguments>.*)", Pattern.DOTALL);
+    private static final Pattern BODY_COMMAND_FORMAT = Pattern.compile(
+            "(?<commandWord>bodybase|bodylog|bodydelete|bodyhistory|bodycompare)(?=\\s|$)(?<arguments>.*)",
+            Pattern.DOTALL);
     private static final Logger logger = LogsCenter.getLogger(AddressBookParser.class);
+    private final Clock clock;
+
+    public AddressBookParser() {
+        this(Clock.systemDefaultZone());
+    }
+
+    /** Creates the router with the clock used for body command parsing and execution. */
+    public AddressBookParser(Clock clock) {
+        this.clock = Objects.requireNonNull(clock);
+    }
+
 
     /**
      * Parses user input into command for execution.
@@ -58,6 +74,18 @@ public class AddressBookParser {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public Command parseCommand(String userInput) throws ParseException {
+        Matcher bodyMatcher = BODY_COMMAND_FORMAT.matcher(userInput.stripLeading());
+        if (bodyMatcher.matches()) {
+            String arguments = bodyMatcher.group("arguments");
+            return switch (bodyMatcher.group("commandWord")) {
+                case "bodybase" -> new BodyBaselineCommandParser(clock).parse(arguments);
+                case "bodylog" -> new BodyLogCommandParser(clock).parse(arguments);
+                case "bodydelete" -> new BodyDeleteCommandParser(clock).parse(arguments);
+                case "bodyhistory" -> new BodyHistoryCommandParser(clock).parse(arguments);
+                case "bodycompare" -> new BodyCompareCommandParser(clock).parse(arguments);
+                default -> throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
+            };
+        }
         // Validate raw diet arguments before trimming can hide an invalid trailing line break.
         Matcher dietMatcher = DIET_COMMAND_FORMAT.matcher(userInput.stripLeading());
         if (dietMatcher.matches()) {

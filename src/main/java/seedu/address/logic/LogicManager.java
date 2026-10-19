@@ -2,11 +2,13 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.time.Clock;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.logic.commands.BodyMutationCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DietCommand;
@@ -38,9 +40,14 @@ public class LogicManager implements Logic {
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
      */
     public LogicManager(Model model, Storage storage) {
+        this(model, storage, Clock.systemDefaultZone());
+    }
+
+    /** Creates logic with an injectable clock for body measurement execution checks. */
+    public LogicManager(Model model, Storage storage, Clock clock) {
         this.model = model;
         this.storage = storage;
-        addressBookParser = new AddressBookParser();
+        addressBookParser = new AddressBookParser(clock);
     }
 
     @Override
@@ -58,6 +65,9 @@ public class LogicManager implements Logic {
             storage.saveAddressBook(model.getAddressBook());
         } catch (IOException ioe) {
             model.setAddressBook(backup);
+            if (command instanceof BodyMutationCommand) {
+                throw new CommandException(BodyMutationCommand.MESSAGE_SAVE_FAILURE, ioe);
+            }
             if (command instanceof DietCommand) {
                 throw new CommandException(DietCommand.MESSAGE_SAVE_FAILURE, ioe);
             }
