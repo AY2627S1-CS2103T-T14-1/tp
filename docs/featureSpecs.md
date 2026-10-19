@@ -1563,7 +1563,7 @@ Restriction categories, severity, expiry dates, meal validation, nutritional gui
 
 ### 1. Feature
 
-**Status:** Planned for v1.4; these commands are not available in v1.3. This section is the intended implementation contract; the original feature-specification PDF is not its reference.
+**Status:** Implemented and merged for v1.4; these commands are not available in v1.3. This section describes the implemented feature; the original feature-specification PDF is not its reference.
 
 Record starting body measurements, record dated progress with weight and optional notes, view the complete history, and compare the latest recorded weight with the baseline. The v1.4 baseline contains **weight in kilograms and height in centimetres**. Later entries contain weight; height is baseline context, not a repeatedly measured value. Corrections and deletion of progress entries are included so input mistakes can be repaired.
 
@@ -1661,7 +1661,7 @@ No baseline: use the same missing-baseline message as history. Baseline only: `N
 
 #### Corrections: `bodydelete`
 
-Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion has no confirmation step. In this combined v1.4 scope it participates in shared session-scoped undo/redo (Feature 16); after restart, that history is unavailable.
+Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion has no confirmation step. Once Feature 16 is integrated, deletion will participate in shared session-scoped undo/redo; after restart, that history will be unavailable. Until that integration is merged, deletion cannot be undone through an application command.
 
 Success: `Deleted body progress for NAME on DATE.` Deleting the last entry retains the baseline and produces empty history/comparison states. There is no command to delete only the baseline; it can be corrected by replacement.
 
@@ -1709,7 +1709,7 @@ all four assigned capabilities and the correction/deletion paths above; strict v
 
 #### Nice to have or later
 
-circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. Shared application-wide undo/redo is already included in Feature 16. These are not needed to complete this v1.4 feature.
+circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. Shared application-wide undo/redo is specified under Feature 16 and depends on that feature's integration. These are not needed to complete this v1.4 feature.
 
 ## Feature 14: Membership plan
 
