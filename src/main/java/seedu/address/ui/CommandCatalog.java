@@ -12,10 +12,12 @@ import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.DietCommand;
 import seedu.address.logic.commands.DietaryRestrictionsCommand;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.EditLogCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.HistoryCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
 import seedu.address.logic.commands.RemarkCommand;
@@ -37,6 +39,8 @@ final class CommandCatalog {
             new Entry(FindCommand.COMMAND_WORD, FindCommand.MESSAGE_USAGE),
             new Entry(ListCommand.COMMAND_WORD, "list: Lists all clients."),
             new Entry(LogCommand.COMMAND_WORD, LogCommand.MESSAGE_USAGE),
+            new Entry(EditLogCommand.COMMAND_WORD, EditLogCommand.MESSAGE_USAGE),
+            new Entry(HistoryCommand.COMMAND_WORD, HistoryCommand.MESSAGE_USAGE),
             new Entry(RemarkCommand.COMMAND_WORD, RemarkCommand.MESSAGE_USAGE),
             new Entry(ScheduleCommand.COMMAND_WORD, ScheduleCommand.MESSAGE_USAGE),
             new Entry(ViewScheduleCommand.COMMAND_WORD, ViewScheduleCommand.MESSAGE_USAGE),
