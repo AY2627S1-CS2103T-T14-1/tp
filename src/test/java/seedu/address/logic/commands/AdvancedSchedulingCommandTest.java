@@ -74,6 +74,33 @@ public class AdvancedSchedulingCommandTest {
     }
 
     @Test
+    public void inactive_noClientsHaveWorkout_listsNeverRecorded() {
+        assertEquals("Clients without a recorded workout in the last 7 days:\n"
+                        + "1. Amy Bee — last workout: never recorded\n"
+                        + "2. Bob Cat — last workout: never recorded",
+                new InactiveCommand(7).execute(modelWithClients()).getFeedbackToUser());
+    }
+
+    @Test
+    public void inactive_allClientsHaveRecentWorkout_reportsNoInactiveClients() {
+        Model model = modelWithClients();
+        for (Person client : List.copyOf(model.getFilteredPersonList())) {
+            model.setPerson(client, new PersonBuilder(client)
+                    .withWorkoutSessions(List.of(workout(LocalDate.now()))).build());
+        }
+
+        assertEquals("All clients have a recorded workout in the last 7 days.",
+                new InactiveCommand(7).execute(model).getFeedbackToUser());
+    }
+
+    @Test
+    public void commandConstructors_rejectInvalidAppointmentKindAndDayCount() {
+        assertThrows(IllegalArgumentException.class, () -> new InactiveCommand(0));
+        assertThrows(IllegalArgumentException.class, () ->
+                new MeetingCommand(Index.fromOneBased(1), new TrainingSession(APPOINTMENT_TIME, "Gym")));
+    }
+
+    @Test
     public void daySchedule_emptyDay_reportsNoAppointments() {
         assertEquals("No client appointments on 2099-03-15.",
                 new DayScheduleCommand(APPOINTMENT_TIME.toLocalDate())
