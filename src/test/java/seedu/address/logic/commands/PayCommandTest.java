@@ -113,6 +113,18 @@ public class PayCommandTest {
         assertFalse(standardCommand.equals(new PayCommand(INDEX_FIRST_PERSON, secondPayment)));
     }
 
+    @Test
+    public void toStringMethod() {
+        PaymentRecord record = payment("150", "2026-10-20", null);
+        PayCommand command = new PayCommand(INDEX_FIRST_PERSON, record);
+        String expected = PayCommand.class.getCanonicalName()
+                + "{targetIndex=" + INDEX_FIRST_PERSON
+                + ", paymentRecord=" + record
+                + "}";
+
+        assertEquals(expected, command.toString());
+    }
+
     private static PaymentRecord payment(String amount, String date, String remarks) {
         return PaymentRecord.fromText(amount, date,
                 remarks == null ? Optional.empty() : Optional.of(remarks));
