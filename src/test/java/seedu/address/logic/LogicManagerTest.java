@@ -365,6 +365,60 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_invalidPayInput_doesNotChangeModelSavedDataOrHistory() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        Path addressBookPath = temporaryFolder.resolve("addressBook.json");
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(addressBookPath);
+        JsonUserPrefsStorage userPrefsStorage =
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
+        logic = new LogicManager(model, new StorageManager(addressBookStorage, userPrefsStorage));
+        logic.execute(ListCommand.COMMAND_WORD);
+        AddressBook snapshot = new AddressBook(model.getAddressBook());
+        String saved = Files.readString(addressBookPath);
+
+        assertParseException("pay 1 a/0 d/2026-10-20", PaymentRecord.MESSAGE_AMOUNT_CONSTRAINTS);
+        assertParseException("pay 1 a/150 d/2026-02-30", PaymentRecord.MESSAGE_DATE_CONSTRAINTS);
+        assertParseException("pay 1 a/150 d/2026-10-20 r/a\tb",
+                PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS);
+        assertParseException("pay 1 a/150", String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
+                PayCommand.MESSAGE_USAGE));
+        assertParseException("pay 1 a/150 d/2026-10-20 extra",
+                String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, PayCommand.MESSAGE_USAGE));
+
+        assertEquals(snapshot, model.getAddressBook());
+        assertEquals(saved, Files.readString(addressBookPath));
+        assertEquals(UndoCommand.MESSAGE_FAILURE,
+                logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_validPayOnFilteredList_persistsOnlyDisplayedClientRecord() throws Exception {
+        Person amy = new PersonBuilder(AMY).build();
+        Person bob = new PersonBuilder().withName("Bob Choo").build();
+        model.addPerson(amy);
+        model.addPerson(bob);
+        Path addressBookPath = temporaryFolder.resolve("addressBook.json");
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(addressBookPath);
+        JsonUserPrefsStorage userPrefsStorage =
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
+        logic = new LogicManager(model, new StorageManager(addressBookStorage, userPrefsStorage));
+
+        logic.execute("find AMY");
+        assertEquals(1, model.getFilteredPersonList().size());
+        logic.execute("pay 1 a/150 d/2026-10-20");
+
+        PaymentRecord expected = PaymentRecord.fromText("150", "2026-10-20", Optional.empty());
+        assertEquals(List.of(expected), model.getFilteredPersonList().get(0).getPaymentRecords());
+        ReadOnlyAddressBook saved = addressBookStorage.readAddressBook().orElseThrow();
+        Person savedAmy = saved.getPersonList().stream()
+                .filter(person -> person.getName().equals(amy.getName())).findFirst().orElseThrow();
+        Person savedBob = saved.getPersonList().stream()
+                .filter(person -> person.getName().equals(bob.getName())).findFirst().orElseThrow();
+        assertEquals(List.of(expected), savedAmy.getPaymentRecords());
+        assertTrue(savedBob.getPaymentRecords().isEmpty());
+    }
+
+    @Test
     public void execute_undoRedoWithoutHistory_reportsEmptyAndKeepsData() throws Exception {
         model.addPerson(new PersonBuilder(AMY).build());
 
