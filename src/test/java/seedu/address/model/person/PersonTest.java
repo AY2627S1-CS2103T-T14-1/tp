@@ -2,6 +2,7 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
@@ -208,6 +209,40 @@ public class PersonTest {
 
         assertEquals(List.of(session), person.getWorkoutSessions());
         assertThrows(UnsupportedOperationException.class, () -> person.getWorkoutSessions().clear());
+    }
+
+    @Test
+    public void paymentRecords_areImmutableAndAppendWithoutMutatingSource() {
+        Person person = new PersonBuilder().build();
+        PaymentRecord payment = PaymentRecord.fromText("150", "2026-01-15", Optional.of("Initial fee"));
+
+        assertThrows(UnsupportedOperationException.class, () ->
+                person.getPaymentRecords().clear());
+
+        Person oncePaid = person.withAddedPayment(payment);
+        Person twicePaid = oncePaid.withAddedPayment(payment);
+
+        assertTrue(person.getPaymentRecords().isEmpty());
+        assertEquals(List.of(payment), oncePaid.getPaymentRecords());
+        assertEquals(List.of(payment, payment), twicePaid.getPaymentRecords());
+        assertEquals(new PersonBuilder(person).build(), person);
+    }
+
+    @Test
+    public void paymentRecords_affectValueEqualityButNotIdentity() {
+        PaymentRecord first = PaymentRecord.fromText("150", "2026-01-15", Optional.of("Initial fee"));
+        PaymentRecord second = PaymentRecord.fromText("75", "2026-02-01", Optional.empty());
+        Person firstPaid = new PersonBuilder(ALICE).withPaymentRecords(List.of(first)).build();
+        Person secondPaid = new PersonBuilder(ALICE).withPaymentRecords(List.of(second)).build();
+        Person duplicatePaid = new PersonBuilder(ALICE)
+                .withPaymentRecords(List.of(first, first)).build();
+
+        assertNotEquals(firstPaid, secondPaid);
+        assertNotEquals(firstPaid.hashCode(), secondPaid.hashCode());
+        assertNotEquals(firstPaid, duplicatePaid);
+        assertTrue(firstPaid.isSamePerson(secondPaid));
+        assertTrue(ALICE.isSamePerson(firstPaid));
+        assertTrue(firstPaid.toString().contains("paymentRecords=" + List.of(first)));
     }
 
     @Test
