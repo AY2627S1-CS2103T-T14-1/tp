@@ -1,60 +1,119 @@
 @startuml
+' Render with PlantUML 1.2025.2 or newer (ELK is bundled):
+' java -jar /path/to/plantuml.jar -tpng -o ../images docs/diagrams/UiClassDiagram.puml
+!pragma layout elk
 !include style.puml
+title Fittix UI component
 skinparam arrowThickness 1.1
 skinparam arrowColor UI_COLOR_T4
 skinparam classBackgroundColor UI_COLOR
-
-package UI <<Rectangle>>{
-Class "<<interface>>\nUi" as Ui
-Class "{abstract}\nUiPart" as UiPart
-Class UiManager
-Class MainWindow
-Class HelpWindow
-Class ResultDisplay
-Class PersonListPanel
-Class PersonCard
-Class StatusBarFooter
-Class CommandBox
+skinparam ArrowFontSize 11
+skinparam nodesep 45
+skinparam ranksep 75
+skinparam Note {
+    BackgroundColor #F3FAF1
+    BorderColor UI_COLOR_T3
+    FontColor #222222
+    FontSize 12
 }
 
-package Model <<Rectangle>> {
-Class HiddenModel #FFFFFF
+package UI <<Rectangle>> {
+    interface Ui
+    class UiManager
+    abstract class "UiPart<T>" as UiPart
+    class MainWindow
+
+    together {
+        class PersonListPanel
+        class ClientDetailPanel
+        class ClientContextPanel
+    }
+
+    class PersonCard
+    class BodyProgressPanel
+    class HelpWindow
+    class StatusBarFooter
+    class CommandBox
+    class ResultDisplay
+    interface "CommandBox.CommandExecutor" as CommandExecutor <<functional>>
+    class CommandCatalog <<utility>>
+    class CommandFeedback <<record>>
 }
 
 package Logic <<Rectangle>> {
-Class HiddenLogic #FFFFFF
+    interface "Logic" as LogicApi LOGIC_COLOR
+    class CommandResult LOGIC_COLOR
+    class BodyProgressViewRequest <<record>> LOGIC_COLOR
 }
 
-Class HiddenOutside #FFFFFF
-HiddenOutside ..> Ui
+package Model <<Rectangle>> {
+    class Person MODEL_COLOR
+}
 
-UiManager .left.|> Ui
+UiManager .up.|> Ui
 UiManager -down-> "1" MainWindow
-MainWindow *-down->  "1" CommandBox
-MainWindow *-down-> "1" ResultDisplay
+UiManager --> "1" LogicApi
+MainWindow --> "1" LogicApi
+
+' Owned UI controllers after successful startup.
 MainWindow *-down-> "1" PersonListPanel
-MainWindow *-down-> "1" StatusBarFooter
-MainWindow --> "0..1" HelpWindow
+MainWindow *-down-> "1" ClientDetailPanel
+MainWindow *-down-> "1" ClientContextPanel
+MainWindow *-down-> "1" CommandBox
+MainWindow *-down-> "1" ResultDisplay
+MainWindow *--> "1" HelpWindow
+ClientDetailPanel *-down-> "1" BodyProgressPanel
 
-PersonListPanel -down-> "*" PersonCard
+' Locally created controllers are not retained as fields.
+MainWindow ..> StatusBarFooter : creates
+PersonListPanel ..> PersonCard : creates via list cells
 
-MainWindow -left-|> UiPart
+' Every visible controller loads FXML through UiPart<T>.
+MainWindow -up-|> UiPart
+PersonListPanel -up-|> UiPart
+ClientDetailPanel -up-|> UiPart
+ClientContextPanel -up-|> UiPart
+BodyProgressPanel -up-|> UiPart
+PersonCard -up-|> UiPart
+HelpWindow -up-|> UiPart
+StatusBarFooter -up-|> UiPart
+CommandBox -up-|> UiPart
+ResultDisplay -up-|> UiPart
 
-ResultDisplay --|> UiPart
-CommandBox --|> UiPart
-PersonListPanel --|> UiPart
-PersonCard --|> UiPart
-StatusBarFooter --|> UiPart
-HelpWindow --|> UiPart
+' A method reference supplies the callback; MainWindow does not implement it.
+CommandBox --> "1" CommandExecutor
+MainWindow ..> CommandExecutor : supplies this::executeCommand
+CommandExecutor ..> CommandResult : returns
+ResultDisplay ..> CommandResult : presents
 
-PersonCard ..> Model
-UiManager -right-> Logic
-MainWindow -left-> Logic
+CommandBox ..> CommandCatalog : hints
+ResultDisplay ..> CommandCatalog : help details
+ResultDisplay *--> "0..50" CommandFeedback : history
 
-PersonListPanel -[hidden]left- HelpWindow
-HelpWindow -[hidden]left- CommandBox
-CommandBox -[hidden]left- ResultDisplay
-ResultDisplay -[hidden]left- StatusBarFooter
+PersonCard --> "1" Person
+CommandResult --> "0..1" BodyProgressViewRequest
+BodyProgressPanel ..> BodyProgressViewRequest : reveals section
 
-MainWindow -[hidden]-|> UiPart
+note bottom of MainWindow
+  Observes list selection and data changes.
+  Refreshes both selected-client panels.
+  Handles CommandResult and optional
+  BodyProgressViewRequest after success.
+  Panels render the selected Person.
+end note
+
+note bottom of StatusBarFooter
+  Receives the save path and binds to
+  PersonListPanel.totalCountProperty().
+end note
+
+legend bottom left
+  Hollow triangle: inheritance / interface realization
+  Filled diamond: composition
+  Solid arrow: retained reference
+  Dashed arrow: dependency / creation
+  Multiplicities describe successful startup.
+  Selected relationships are shown; JavaFX controls,
+  private helpers and secondary dependencies are omitted.
+endlegend
 @enduml
