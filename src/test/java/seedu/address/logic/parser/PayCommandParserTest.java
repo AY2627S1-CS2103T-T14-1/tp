@@ -146,6 +146,34 @@ public class PayCommandParserTest {
     }
 
     @Test
+    public void parse_emptyOrBlankArguments_failure() {
+        assertParseFailure(parser, "", formatError);
+        assertParseFailure(parser, "   ", formatError);
+        assertParseFailure(parser, "\t", formatError);
+    }
+
+    @Test
+    public void parse_indexOnly_failure() {
+        assertParseFailure(parser, "1", formatError);
+        assertParseFailure(parser, "  1  ", formatError);
+    }
+
+    @Test
+    public void parse_missingIndexArgumentSeparator_failure() {
+        assertParseFailure(parser, "1a/150 d/2026-10-20", formatError);
+        assertParseFailure(parser, "1d/2026-10-20 a/150", formatError);
+    }
+
+    @Test
+    public void parse_repeatedInterPrefixWhitespace_success() {
+        assertParseSuccess(parser, "1   a/150    d/2026-10-20     r/October membership payment",
+                new PayCommand(INDEX_FIRST_PERSON,
+                        payment("150", "2026-10-20", "October membership payment")));
+        assertParseSuccess(parser, "1\ta/150\t\td/2026-10-20",
+                new PayCommand(INDEX_FIRST_PERSON, payment("150", "2026-10-20", null)));
+    }
+
+    @Test
     public void parse_lineBreaks_failure() {
         assertParseFailure(parser, "1 a/1 d/2026-10-20\n", formatError);
         assertParseFailure(parser, "1 a/1 d/2026-10-20 r/line1\nline2", formatError);
