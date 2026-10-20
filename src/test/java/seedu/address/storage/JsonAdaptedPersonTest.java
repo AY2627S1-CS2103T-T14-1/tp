@@ -1,6 +1,7 @@
 package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.storage.JsonAdaptedPerson.MISSING_FIELD_MESSAGE_FORMAT;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.BENSON;
@@ -283,6 +284,57 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_nullPaymentRecords_returnsEmptyHistory() throws Exception {
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(
+                jsonWithPayments("null"), JsonAdaptedPerson.class);
+        assertEquals(List.of(), person.toModelType().getPaymentRecords());
+    }
+
+    @Test
+    public void jsonRoundTrip_emptyPaymentRecords_returnsEmptyHistory() throws Exception {
+        Person restored = JsonUtil.fromJsonString(
+                jsonWithPayments("[]"), JsonAdaptedPerson.class).toModelType();
+        assertEquals(List.of(), restored.getPaymentRecords());
+    }
+
+    @Test
+    public void jsonRoundTrip_leapDayLargeAmounts_retainsOrderDuplicatesAndScale() throws Exception {
+        String amount = "123456789012345678901234567890.12";
+        String payments = String.format("[{\"amount\":\"%s\",\"date\":\"2024-02-29\","
+                + "\"remarks\":\"Leap fee\"},"
+                + "{\"amount\":\"%s\",\"date\":\"2024-02-29\",\"remarks\":\"Leap fee\"}]",
+                amount, amount);
+
+        Person restored = JsonUtil.fromJsonString(
+                jsonWithPayments(payments), JsonAdaptedPerson.class).toModelType();
+        PaymentRecord expected = PaymentRecord.fromText(amount, "2024-02-29", Optional.of("Leap fee"));
+
+        assertEquals(List.of(expected, expected), restored.getPaymentRecords());
+        String saved = JsonUtil.toJsonString(new JsonAdaptedPerson(restored));
+        assertTrue(saved.contains("\"" + amount + "\""), saved);
+        assertTrue(saved.contains("\"2024-02-29\""), saved);
+    }
+
+    @Test
+    public void toModelType_whitespaceOnlyPaymentRemarks_throwsIllegalValueException() throws Exception {
+        String payments = "[{\"amount\":\"20.00\",\"date\":\"2026-01-01\",\"remarks\":\"   \"}]";
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(
+                jsonWithPayments(payments), JsonAdaptedPerson.class);
+        assertThrows(IllegalValueException.class, PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS,
+                person::toModelType);
+    }
+
+    @Test
+    public void toModelType_controlCharacterPaymentRemarks_throwsIllegalValueException() throws Exception {
+        String payments = "[{\"amount\":\"20.00\",\"date\":\"2026-01-01\","
+                + "\"remarks\":\"fee\\u0000\"}]";
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(
+                jsonWithPayments(payments), JsonAdaptedPerson.class);
+        assertThrows(IllegalValueException.class, PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS,
+                person::toModelType);
+    }
+
+    @Test
     public void toModelType_paymentRecordsNotArray_throwsIoException() throws Exception {
         String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
                 + "\"remark\":\"%s\",\"tags\":[],\"paymentRecords\":{}}",
@@ -290,4 +342,10 @@ public class JsonAdaptedPersonTest {
         assertThrows(java.io.IOException.class, () -> JsonUtil.fromJsonString(json, JsonAdaptedPerson.class));
     }
 
+
+    private static String jsonWithPayments(String paymentRecordsJson) {
+        return String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[],\"paymentRecords\":%s}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK, paymentRecordsJson);
+    }
 }

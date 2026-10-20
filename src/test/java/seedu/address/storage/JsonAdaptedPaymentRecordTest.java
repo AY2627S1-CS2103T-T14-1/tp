@@ -91,6 +91,44 @@ public class JsonAdaptedPaymentRecordTest {
     }
 
     @Test
+    public void jsonRoundTrip_leapDayAndLargeAmount_preservesTwoDecimalText() throws Exception {
+        PaymentRecord source = PaymentRecord.fromText(
+                "123456789012345678901234567890.12", "2024-02-29", Optional.empty());
+
+        String json = JsonUtil.toJsonString(new JsonAdaptedPaymentRecord(source));
+
+        assertTrue(json.contains("\"123456789012345678901234567890.12\""), json);
+        assertTrue(json.contains("\"2024-02-29\""), json);
+        assertEquals(source, JsonUtil.fromJsonString(json, JsonAdaptedPaymentRecord.class).toModelType());
+    }
+
+    @Test
+    public void jsonRoundTrip_absentRemarksField_loadsEmptyRemarks() throws Exception {
+        String json = "{\"amount\":\"20.00\",\"date\":\"2024-02-29\"}";
+
+        PaymentRecord restored = JsonUtil.fromJsonString(json, JsonAdaptedPaymentRecord.class).toModelType();
+
+        assertEquals(Optional.empty(), restored.getRemarks());
+        assertEquals(LocalDate.of(2024, 2, 29), restored.getDate());
+    }
+
+    @Test
+    public void toModelType_whitespaceOnlyRemarks_throwsIllegalValueException() {
+        JsonAdaptedPaymentRecord adapted = new JsonAdaptedPaymentRecord(VALID_AMOUNT, VALID_DATE, "   ");
+        assertThrows(IllegalValueException.class, PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS,
+                adapted::toModelType);
+    }
+
+    @Test
+    public void toModelType_controlCharacterRemarks_throwsIllegalValueException() {
+        for (String remarks : new String[] {"fee\u0000", "fee\u2028", "fee\u2029"}) {
+            JsonAdaptedPaymentRecord adapted = new JsonAdaptedPaymentRecord(VALID_AMOUNT, VALID_DATE, remarks);
+            assertThrows(IllegalValueException.class, PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS,
+                    adapted::toModelType);
+        }
+    }
+
+    @Test
     public void toModelType_validDate_keepsIsoDate() throws Exception {
         JsonAdaptedPaymentRecord adapted = new JsonAdaptedPaymentRecord(VALID_AMOUNT, VALID_DATE, null);
         assertEquals(LocalDate.of(2026, 1, 15), adapted.toModelType().getDate());
