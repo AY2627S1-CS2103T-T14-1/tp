@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -89,6 +90,59 @@ public class MainWindowTest {
             assertEquals("1 record", ((Label) scene.lookup("#paymentSummary")).getText());
             return null;
         });
+    }
+
+    @Test
+    public void undoAndRedo_restorePaidClientSelectionAndPaymentRowsAndResetFindFilter() throws Exception {
+        runOnFxThread(() -> {
+            Model model = new ModelManager();
+            Person alice = new PersonBuilder().withName("Alice Lee").build();
+            Person priya = new PersonBuilder().withName("Priya Nair").build();
+            model.addPerson(alice);
+            model.addPerson(priya);
+            JsonAddressBookStorage addressBookStorage =
+                    new JsonAddressBookStorage(temporaryFolder.resolve("undoAddressBook.json"));
+            Logic logic = new LogicManager(model, new StorageManager(addressBookStorage,
+                    new JsonUserPrefsStorage(temporaryFolder.resolve("undoUserPrefs.json"))));
+            Stage stage = new Stage();
+            MainWindow window = new MainWindow(stage, logic, addressBookStorage.getAddressBookFilePath());
+            window.fillInnerParts();
+            Scene scene = stage.getScene();
+
+            execute(scene, "find Alice");
+            assertEquals(1, window.getPersonListPanel().getDisplayedCount());
+            assertEquals("find: Alice", ((Label) scene.lookup("#filterStateText")).getText());
+
+            PaymentRecord payment = PaymentRecord.fromText("150", "2026-10-20", Optional.empty());
+            execute(scene, "pay 1 a/150 d/2026-10-20");
+            scene.getRoot().applyCss();
+            scene.getRoot().layout();
+            assertEquals("1 record", ((Label) scene.lookup("#paymentSummary")).getText());
+
+            execute(scene, "undo");
+            assertEquals(2, window.getPersonListPanel().getDisplayedCount());
+            assertEquals("All clients", ((Label) scene.lookup("#filterStateText")).getText());
+            assertEquals(alice, window.getPersonListPanel().getSelectedPerson());
+            assertEquals(0, ((VBox) scene.lookup("#paymentRows")).getChildren().size());
+            assertEquals("None", ((Label) scene.lookup("#paymentSummary")).getText());
+
+            execute(scene, "redo");
+            assertEquals(alice.withAddedPayment(payment),
+                    window.getPersonListPanel().getSelectedPerson());
+            scene.getRoot().applyCss();
+            scene.getRoot().layout();
+            assertEquals(1, ((VBox) scene.lookup("#paymentRows")).getChildren().size());
+            assertEquals("1 record", ((Label) scene.lookup("#paymentSummary")).getText());
+            assertTrue(((Label) scene.lookup("#filterStateText")).getText().equals("All clients"));
+            return null;
+        });
+    }
+
+    private static void execute(Scene scene, String commandText) {
+        scene.getRoot().applyCss();
+        TextField commandField = (TextField) scene.lookup("#commandTextField");
+        commandField.setText(commandText);
+        commandField.fireEvent(new ActionEvent());
     }
 
     private static <T> T runOnFxThread(Callable<T> action) throws Exception {
