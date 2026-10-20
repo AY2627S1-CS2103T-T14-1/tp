@@ -419,6 +419,56 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_undoAfterDeletingPaidClient_restoresPaymentsWithRemarksAndOrder() throws Exception {
+        PaymentRecord first = PaymentRecord.fromText("50", "2026-01-10", Optional.of("Initial fee"));
+        PaymentRecord second = PaymentRecord.fromText("25.50", "2026-01-05", Optional.of("Late fee"));
+        Person paidClient = new PersonBuilder(AMY)
+                .withPaymentRecords(List.of(first, second)).build();
+        model.addPerson(paidClient);
+
+        logic.execute("delete 1");
+        assertTrue(model.getAddressBook().getPersonList().isEmpty());
+
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+        Person restored = model.getFilteredPersonList().get(0);
+        assertEquals(paidClient, restored);
+        assertEquals(List.of(first, second), restored.getPaymentRecords());
+    }
+
+    @Test
+    public void execute_invalidPayParse_preservesRedoStack() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("pay 1 a/150 d/2026-10-20");
+        logic.execute(UndoCommand.COMMAND_WORD);
+        assertTrue(paymentsOfFirstPerson().isEmpty());
+
+        assertParseException("pay 1 a/0 d/2026-10-20", PaymentRecord.MESSAGE_AMOUNT_CONSTRAINTS);
+
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(1, paymentsOfFirstPerson().size());
+    }
+
+    @Test
+    public void execute_undoRedoPayment_restoresSameRecordsWithRemarksAndOrder() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        PaymentRecord first = PaymentRecord.fromText("150", "2026-10-20", Optional.of("October fee"));
+        PaymentRecord second = PaymentRecord.fromText("75.5", "2026-10-19", Optional.of("Late fee"));
+
+        logic.execute("pay 1 a/150 d/2026-10-20 r/October fee");
+        logic.execute("pay 1 a/75.5 d/2026-10-19 r/Late fee");
+        assertEquals(List.of(first, second), paymentsOfFirstPerson());
+
+        logic.execute(UndoCommand.COMMAND_WORD);
+        assertEquals(List.of(first), paymentsOfFirstPerson());
+        logic.execute(UndoCommand.COMMAND_WORD);
+        assertTrue(paymentsOfFirstPerson().isEmpty());
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(List.of(first), paymentsOfFirstPerson());
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(List.of(first, second), paymentsOfFirstPerson());
+    }
+
+    @Test
     public void execute_undoRedoWithoutHistory_reportsEmptyAndKeepsData() throws Exception {
         model.addPerson(new PersonBuilder(AMY).build());
 
