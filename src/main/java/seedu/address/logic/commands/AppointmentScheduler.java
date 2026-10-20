@@ -14,9 +14,9 @@ import seedu.address.model.person.TrainingSession.Kind;
 
 /** Shared scheduling rules for training sessions and client meetings. */
 final class AppointmentScheduler {
-    private static final Logger logger = LogsCenter.getLogger(AppointmentScheduler.class);
     static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     static final String MESSAGE_CONFLICT = "Scheduling conflict: %s already has an appointment at %s.";
+    private static final Logger logger = LogsCenter.getLogger(AppointmentScheduler.class);
 
     private AppointmentScheduler() {
     }
