@@ -1,5 +1,6 @@
 package seedu.address.storage;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -65,6 +66,11 @@ class JsonSerializableAddressBook {
      * @throws IllegalValueException if there were any data constraints violated.
      */
     public AddressBook toModelType() throws IllegalValueException {
+        return toModelType(Clock.systemDefaultZone());
+    }
+
+    /** Loads all client body trackers against a single injectable local clock. */
+    public AddressBook toModelType(Clock clock) throws IllegalValueException {
         AddressBook addressBook = new AddressBook();
         for (JsonAdaptedMembershipPlan jsonAdaptedPlan : membershipPlans) {
             if (jsonAdaptedPlan == null) {
@@ -80,7 +86,7 @@ class JsonSerializableAddressBook {
             if (jsonAdaptedPerson == null) {
                 throw new IllegalValueException(MESSAGE_NULL_PERSON);
             }
-            Person person = jsonAdaptedPerson.toModelType();
+            Person person = jsonAdaptedPerson.toModelType(clock);
             if (addressBook.hasPerson(person)) {
                 throw new IllegalValueException(MESSAGE_DUPLICATE_PERSON);
             }

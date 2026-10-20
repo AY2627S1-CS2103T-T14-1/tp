@@ -35,6 +35,8 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 
    * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records a diet plan for the 2nd client shown.
 
+   * `log 1 d/2020-01-15 ex/Push-up|0|3|12` : Records a completed workout session for the 1st client shown.
+
    * `clear` : Deletes all contacts, but keeps membership plans.
 
    * `exit` : Exits the app.
@@ -105,15 +107,43 @@ Adds a future training session to the client at the displayed index. Sessions ar
 
 Format: `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
 
-The date and 24-hour time must be valid, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client.
+The date and 24-hour time must be valid and in the future, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client. Fittix rejects an appointment when another client already has a training session or meeting at the same start time.
 
 ### Viewing a client's training sessions: `viewschedule`
 
-Shows all saved sessions for the client at the displayed index, ordered by date and time. Past sessions remain visible for reference.
+Shows all saved training sessions and meetings for the client at the displayed index, ordered by date and time. Meetings are marked `(meeting)`. Past appointments remain visible for reference.
 
 Format: `viewschedule INDEX`
 
 Example: `viewschedule 1`
+
+### Recording a client meeting: `meeting`
+
+Records a future ad-hoc meeting for the client at the displayed index. Give the date, 24-hour time, and meeting location.
+
+Format: `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
+
+Example: `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
+
+The meeting appears in `viewschedule` and `dayschedule`. A meeting cannot use a start time already occupied by any client's training session or meeting.
+
+### Viewing all appointments on a day: `dayschedule`
+
+Lists all clients with a training session or meeting on the specified date, ordered by time. This checks the full client roster, even if the displayed list is filtered.
+
+Format: `dayschedule d/YYYY-MM-DD`
+
+Example: `dayschedule d/2099-03-15`
+
+### Finding clients who have not trained recently: `inactive`
+
+Lists clients without a **recorded completed workout** in the last `DAYS` calendar days, including today. Clients with no recorded workout are included. Scheduled appointments alone do not count as completed workouts. The command checks the full client roster.
+
+Format: `inactive DAYS` (a positive whole number)
+
+Example: `inactive 14`
+
+Fittix stores appointment start times, not durations. Conflict detection checks equal start times; it cannot identify appointments that start at different times but overlap.
 
 ### Editing a client: `edit`
 
@@ -562,6 +592,108 @@ Failed membership commands leave every plan, assignment, and balance unchanged. 
 * `Cannot decrease sessions below zero. The balance remains unchanged.` and `Cannot increase sessions above 1000. The balance remains unchanged.` — adjustments past the 0 to 1000 limits.
 * `The membership change could not be saved. No plan, assignment, or balance was changed.` — the change could not be written to disk.
 
+### Body progress tracker
+
+**Availability:** Available in v1.4; these commands do not work in v1.3. They let you record starting measurements, maintain dated weight records, view history, and compare the latest weight with the starting weight. The values are trainer-entered records, not a health assessment.
+
+Use the client's positive index from the **current** list, including search results. For example, after `find Priya`, index `1` means the first displayed match. Body commands preserve that filter and numbering. Command words and prefixes are lowercase and case-sensitive; each prefix can appear only once. Prefixed fields may follow the index in any order.
+
+#### Recording or correcting starting measurements: `bodybase`
+
+Format: `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM`
+
+Example: `bodybase 1 d/2020-01-01 w/75.50 h/175`
+
+The baseline records a date, weight in kilograms, and height in centimetres. All three are required, including when correcting a baseline. A client has one baseline. A different `bodybase` replaces it, retains every progress entry, and changes the reference used by comparison. The replacement date must be **earlier than every progress entry**; otherwise nothing changes. Re-entering the same date and numerical measurements is rejected as already current.
+
+Fittix reports `Created body baseline for NAME: DATE; Weight: WEIGHT kg; Height: HEIGHT cm.` or `Replaced body baseline for NAME: DATE; Weight: WEIGHT kg; Height: HEIGHT cm.` Height is baseline information; later records measure weight only.
+
+#### Recording or correcting progress: `bodylog`
+
+Format: `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]`
+
+Examples:
+
+* `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`
+* `bodylog 1 d/2020-01-15 w/74.20`
+
+Record the baseline first. Each progress date must be later than its baseline and no later than today. You can enter weekly, daily, irregular or older measurements; there is no enforced seven-day interval.
+
+There is one progress entry per date per client. Reusing a date **replaces the entire entry**, including notes. For example, `bodylog 1 d/2020-01-08 w/74.60` corrects that weight and removes its old notes. Omit `n/` for no notes; a blank `n/` is invalid. Re-entering identical date, weight and notes is rejected. Notes are case-sensitive, so a capitalization correction is allowed.
+
+Fittix reports `Recorded body progress for NAME on DATE: WEIGHT kg.` or `Replaced body progress for NAME on DATE: WEIGHT kg.` A backdated entry does not become the latest measurement merely because you entered it last.
+
+#### Viewing the complete history: `bodyhistory`
+
+Format: `bodyhistory INDEX`
+
+Example: `bodyhistory 1`
+
+Selects that client and reveals their body-progress history in the **Body progress** card in the centre details column. Scroll inside the card to read the complete history or comparison; the centre column also scrolls when needed. It shows the baseline separately, then **all** progress entries in date order, oldest first, with weight and notes. The baseline is not counted as an entry. Missing notes appear as `—`. Long notes wrap; scroll vertically to read older or longer records.
+
+Successful feedback is `Showing body progress history for NAME: N entries.` With only a baseline, it displays the baseline and `No body progress entries recorded.` With no baseline, it selects the requested client and shows `No body baseline recorded for NAME. Use bodybase first.` These empty views do not change data.
+
+#### Comparing the latest weight with the baseline: `bodycompare`
+
+Format: `bodycompare INDEX`
+
+Example: `bodycompare 1`
+
+Selects that client and reveals the comparison section. "Latest" means the greatest measurement date, regardless of recording/edit order. Fittix shows both dates and weights, the baseline height for context, and `latest weight - baseline weight`:
+
+```text
+Priya Nair — BODY PROGRESS
+Baseline: 2020-01-01 | 75.50 kg | 175.00 cm
+Progress history (2):
+2020-01-08 | 74.80 kg | Measured before breakfast
+2020-01-15 | 74.20 kg | —
+Latest comparison: 2020-01-15
+75.50 kg -> 74.20 kg | Change: -1.30 kg
+```
+
+A gain uses `+`, a loss uses `-`, and no change is `0.00 kg`. Fittix does not decide whether a change is healthy or desirable. It does not compare height or calculate BMI or percentage change.
+
+Feedback is `Showing body progress comparison for NAME.` Without progress entries, it selects the requested client and shows `No body progress entries recorded for NAME. Use bodylog before comparing.` Without a baseline, it uses the missing-baseline message above. Replacing/deleting entries or correcting the baseline refreshes the comparison.
+
+#### Deleting a mistaken progress entry: `bodydelete`
+
+Format: `bodydelete INDEX d/DATE`
+
+Example: `bodydelete 1 d/2020-01-15`
+
+Deletes only the progress entry on that date for that client. **Deletion is permanent in the v1.4 tracker, with no confirmation step.** The baseline and all other entries remain. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
+
+Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest entry makes the next greatest date the latest. Deleting the last entry keeps the baseline and restores the no-progress view. `bodydelete` cannot delete a baseline; use `bodybase` to correct it.
+
+#### Values, errors and saving
+
+* Dates must be real dates in `yyyy-MM-dd`, years 0001–9999, and today or earlier in the computer's local time zone. `bodylog` additionally requires a date strictly after the baseline.
+* Weight must be greater than 0 and at most **500 kg**. Height must be greater than 0 and at most **300 cm**. Both allow up to two decimal places. These are input limits, not medical thresholds.
+* Enter measurements without units, signs, commas or exponent notation: `75`, `75.5`, `75.50` are accepted; `+75`, `.5`, `75.`, `75.500`, `75kg`, `1e2`, `NaN` and `Infinity` are rejected. Measurements display with two decimal places.
+* Supplied notes must contain 1–300 printable characters after outer horizontal whitespace is removed. Internal spacing and case are preserved. Line breaks and nonprintable characters are rejected.
+* A separated prefix token such as `w/`, `n/` or `ex/` is reserved, including inside notes. Repeated/unsupported prefixes are rejected. Slashes inside words, such as `km/day`, are ordinary text.
+
+| Situation | Message |
+| --- | --- |
+| Missing field, unknown/repeated prefix or extra positional argument | `Invalid command format. Use: FORMAT` (the relevant command format above) |
+| Invalid index syntax | `Client index must be a positive whole number shown in the client list.` |
+| Index outside current list | `No client exists at index INDEX.` |
+| Invalid/future date | `Measurement date must be a real date in yyyy-MM-dd format and must not be in the future.` |
+| Invalid weight | `Weight must be greater than 0 and at most 500 kg, with at most 2 decimal places.` |
+| Invalid height | `Height must be greater than 0 and at most 300 cm, with at most 2 decimal places.` |
+| Invalid notes | `Progress notes must contain 1 to 300 printable characters without line breaks.` |
+| Progress date on/before baseline | `Progress date must be later than the baseline date.` |
+| Baseline correction conflicts with existing entries | `Baseline date must be earlier than every recorded progress date. No changes were made.` |
+| Identical baseline | `This is already the current body baseline for NAME.` |
+| Identical progress entry | `This body progress entry already exists for NAME on DATE.` |
+| No entry to delete | `No body progress entry exists for NAME on DATE.` |
+| Trying to delete the baseline | `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` |
+| Saving fails | `The body progress change could not be saved. No changes were made.` |
+
+Invalid mutations and failed saves leave all previous data unchanged. Successful changes select the affected client and refresh their details after saving. Baseline, weights and notes survive restarting the app; data files created before this feature load with no body tracker. A wrong local clock can cause date validation/loading failures, so check it before entering or opening dated records.
+
+Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` permanently removes their body records with the client. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -630,7 +762,15 @@ Action | Format, Examples
 **Increase remaining sessions** | `imem PERSON_INDEX NUMBER_TO_INCREMENT`<br> e.g., `imem 1 3`
 **Decrease remaining sessions** | `dmem PERSON_INDEX NUMBER_TO_DECREMENT`<br> e.g., `dmem 1 2`
 **Delete membership plan** | `delmem n/NAME`<br> e.g., `delmem n/Silver`
+**Body baseline (v1.4)** | `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM`<br> e.g., `bodybase 1 d/2020-01-01 w/75.50 h/175`
+**Body progress record/correction (v1.4)** | `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]`<br> e.g., `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`
+**Body progress history (v1.4)** | `bodyhistory INDEX`
+**Body progress comparison (v1.4)** | `bodycompare INDEX`
+**Delete body progress entry (v1.4)** | `bodydelete INDEX d/DATE`<br> e.g., `bodydelete 1 d/2020-01-08`
 **Schedule** | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`
+**Meeting** | `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
 **View schedule** | `viewschedule INDEX`<br> e.g., `viewschedule 1`
+**Day schedule** | `dayschedule d/YYYY-MM-DD`<br> e.g., `dayschedule d/2099-03-15`
+**Inactive clients** | `inactive DAYS`<br> e.g., `inactive 14`
 **Help** | `help`
 **Log workout session** | `log INDEX d/DATE [t/TIME] ex/EXERCISE\|WEIGHT\|SETS\|REPS [ex/EXERCISE\|WEIGHT\|SETS\|REPS]...`<br> e.g., `log 1 d/2020-01-15 t/18:00 ex/Back squat\|60\|3\|10`

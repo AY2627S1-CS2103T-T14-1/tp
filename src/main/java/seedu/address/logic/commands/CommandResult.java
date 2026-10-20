@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import seedu.address.commons.util.ToStringBuilder;
 
@@ -18,14 +19,21 @@ public class CommandResult {
 
     /** The application should exit. */
     private final boolean exit;
+    private final Optional<BodyProgressViewRequest> bodyProgressViewRequest;
 
     /**
      * Constructs a {@code CommandResult} with the specified fields.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit) {
+        this(feedbackToUser, showHelp, exit, Optional.empty());
+    }
+
+    private CommandResult(String feedbackToUser, boolean showHelp, boolean exit,
+            Optional<BodyProgressViewRequest> bodyProgressViewRequest) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;
+        this.bodyProgressViewRequest = requireNonNull(bodyProgressViewRequest);
     }
 
     /**
@@ -34,6 +42,15 @@ public class CommandResult {
      */
     public CommandResult(String feedbackToUser) {
         this(feedbackToUser, false, false);
+    }
+
+    /** Creates a result whose resolved client is selected only after successful saving. */
+    public CommandResult(String feedbackToUser, BodyProgressViewRequest request) {
+        this(feedbackToUser, false, false, Optional.of(requireNonNull(request)));
+    }
+
+    public Optional<BodyProgressViewRequest> getBodyProgressViewRequest() {
+        return bodyProgressViewRequest;
     }
 
     public String getFeedbackToUser() {
@@ -61,12 +78,13 @@ public class CommandResult {
 
         return feedbackToUser.equals(otherCommandResult.feedbackToUser)
                 && showHelp == otherCommandResult.showHelp
-                && exit == otherCommandResult.exit;
+                && exit == otherCommandResult.exit
+                && bodyProgressViewRequest.equals(otherCommandResult.bodyProgressViewRequest);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit);
+        return Objects.hash(feedbackToUser, showHelp, exit, bodyProgressViewRequest);
     }
 
     @Override

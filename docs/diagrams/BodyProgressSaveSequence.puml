@@ -1,0 +1,38 @@
+@startuml
+title Body mutation: commit before display
+skinparam shadowing false
+skinparam defaultFontName Arial
+hide footbox
+participant ":MainWindow" as UI
+participant ":LogicManager" as Logic
+participant ":BodyLogCommand" as Cmd
+participant ":Model" as Model
+participant ":Storage" as Storage
+UI -> Logic: execute(commandText)
+Logic -> Model: getAddressBook()
+Model --> Logic: current address-book state
+Logic -> Logic: snapshot = new AddressBook(state)
+note over Logic, Cmd: Parsing validates raw fields; omitted here.
+Logic -> Cmd: execute(model)
+Cmd -> Model: getFilteredPersonList()
+Model --> Cmd: currently displayed clients
+Cmd -> Cmd: resolve target; validate complete candidate
+alt invalid state / duplicate
+  Cmd --> Logic: CommandException
+  Logic --> UI: error; no display request
+else valid candidate
+  Cmd -> Model: setPerson(target, updated)
+  Cmd --> Logic: result with updated-target view request
+  Logic -> Storage: saveAddressBook(updated state)
+  alt save succeeds
+    Storage --> Logic: committed
+    Logic --> UI: CommandResult
+    UI -> UI: select target; refresh body sections
+  else IOException
+    Storage --> Logic: IOException
+    Logic -> Model: setAddressBook(snapshot)
+    Logic --> UI: body-save CommandException
+    note right of UI: Do not display rejected candidate.
+  end
+end
+@enduml

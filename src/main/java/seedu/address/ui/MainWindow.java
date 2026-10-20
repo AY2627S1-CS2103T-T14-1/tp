@@ -254,7 +254,9 @@ public class MainWindow extends UiPart<Stage> {
         if (AddCommand.COMMAND_WORD.equals(commandWord)) {
             personListPanel.selectLast();
         }
+        result.getBodyProgressViewRequest().ifPresent(request -> personListPanel.selectPerson(request.person()));
         refreshSelectedClient();
+        result.getBodyProgressViewRequest().ifPresent(clientDetailPanel::revealBodyProgress);
         refreshFilterPill();
     }
 
