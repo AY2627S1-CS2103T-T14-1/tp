@@ -233,7 +233,7 @@ For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw argument
 
 `ClientContextPanel` shows the selected client's diet goals in the right-hand **DIET** section. It shows the current target and notes, hides notes when absent, and displays `No diet target recorded.` for clients without diet goals. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the diet goals' nutritional or medical suitability.
 
-`DietCommandParserTest`, `DietCommandTest`, `DietIntegrationTest`, and `PersonListPanelTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, injected commit failure, and selected-client display. The manual scenarios below cover the main user flows.
+`DietCommandParserTest`, `DietCommandTest`, and `DietIntegrationTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, and injected commit failure. `WorkoutSessionDisplayTest#dietPlan_showsTargetAndOptionalNotes` checks the `ClientContextPanel` target text, optional-note visibility, and displayed client index in the command hint. `WorkoutSessionDisplayTest#switchingToClientWithoutRecords_clearsPriorRows` checks that switching to a client without records shows the empty diet state. The manual scenarios below cover the main user flows.
 
 ### Dietary restrictions
 
@@ -263,7 +263,7 @@ On success, the command appends the session to a copy of the existing session li
 
 `LogicManager` saves the updated address book through the storage component. If saving throws an `IOException`, it restores the address-book snapshot taken before command execution and reports the save error.
 
-`PersonListPanel` observes the selected client and changes to the client list. It displays the last session in the selected client's session list, including every exercise entry. It shows an empty state when the client has no sessions and hides the workout details when no client is selected. Labels wrap, and the details pane supports scrolling.
+`ClientContextPanel#showHistory` displays every completed session for the selected client under **HISTORY** / **Completed workouts**. It sorts a copy of the session list by workout date and optional time, newest first; the stored recording order is unchanged. Unspecified times use `LocalTime.MIN` for sorting and display as `Time not specified`. Each row includes the workout date, time, and every exercise entry in its recorded order. A client without sessions sees `No completed workouts logged.`; no selection shows the context placeholder. Exercise labels wrap, and the context panel supports scrolling.
 
 Automated coverage includes model validation and immutability, JSON round trips and legacy records, parser validation, duplicate rejection, filtered-list targeting, preservation of sessions by other client-update commands, and selected-client display.
 
@@ -1058,16 +1058,16 @@ An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it
 Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, providing the required contact fields, then run `find WorkoutLogManualTest`. The following commands assume that client is displayed at index 1.
 
 1. Run `log 1 d/2020-01-15 t/18:00 ex/Back squat|60|3|10 ex/Bench press|40.25|3|8`.
-   Expected: The success message names the client and session date and time. Selecting the client shows both exercises in the entered order under LAST RECORDED WORKOUT SESSION.
+   Expected: The success message names the client and session date and time. Selecting the client shows both exercises in the entered order in the right-hand **HISTORY** / **Completed workouts** section.
 
 2. Repeat the same command.
    Expected: `This client already has a workout session with the same date and time.` The existing session remains unchanged.
 
 3. Run `log 1 d/2020-01-16 ex/Push-up|0|3|12`.
-   Expected: The session is recorded. The panel shows `Date: 2020-01-16`, `Time: Not specified`, and the Push-up entry.
+   Expected: The session is recorded. A new history row shows `Thu 16 Jan 2020`, `Time not specified`, and the Push-up entry above the session dated 2020-01-15.
 
 4. Run `log 1 d/2020-01-16 t/19:00 ex/Push-up|0|3|12`.
-   Expected: The session is accepted because a specified time differs from an unspecified time.
+   Expected: The session is accepted because a specified time differs from an unspecified time. Its `19:00` row appears above the unspecified-time row on the same date.
 
 5. Run `log 1 d/2020-01-17 ex/Back squat|60|3|10 ex/Bench press|-1|3|8`.
    Expected: A weight validation error appears. Neither exercise is saved as a new session.
@@ -1076,13 +1076,13 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
    Expected: The corrected command succeeds, confirming that the rejected command did not reserve the session's date and time.
 
 7. Run `log 1 d/2020-01-14 ex/Stretch|0|1|1`.
-   Expected: The panel displays this newly recorded session despite its earlier workout date.
+   Expected: The history includes this newly recorded session below the newer dated sessions. Adding an older workout does not move it to the top of the history.
 
 8. Close and restart the app, then find and select the same client.
-   Expected: The panel still displays the session dated 2020-01-14. Repeating the command from step 1 is rejected as a duplicate, confirming that earlier sessions were also retained.
+   Expected: All recorded sessions remain visible in newest-first workout-date/time order, including the session dated 2020-01-14. Repeating the command from step 1 is rejected as a duplicate, confirming that the earlier entry was retained.
 
 9. Select another client with no recorded sessions.
-   Expected: `No workout sessions recorded.` appears, and the previous client's workout details disappear.
+   Expected: `No completed workouts logged.` appears, and the previous client's workout details disappear.
 
 ### Membership plan management
 

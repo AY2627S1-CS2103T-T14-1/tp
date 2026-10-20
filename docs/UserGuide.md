@@ -511,15 +511,17 @@ A duplicate is rejected with `This client already has a workout session with the
 
 If any exercise entry or other required value is invalid, the entire command is rejected. No part of that session is added.
 
-#### Viewing the recorded session
+<a id="viewing-the-recorded-session"></a>
 
-Select a client in the list to view **LAST RECORDED WORKOUT SESSION** below their diet goals.
+#### Viewing completed workouts
 
-The panel shows the date, time, and all exercise entries. An omitted time appears as `Time: Not specified`. Text wraps, and the details pane can be scrolled.
+Select a client in the list to view **HISTORY** / **Completed workouts** in the right-hand context panel, below their diet goals and schedule.
 
-The displayed session is the one most recently added using `log`, even if its workout date is earlier than another recorded session. A client without sessions shows `No workout sessions recorded.`
+The section shows all of the client's recorded sessions, ordered by workout date and time with the newest first. Recording an older workout adds it at its chronological position rather than at the top. On the same date, a session without a time sorts as `00:00`; its displayed time is `Time not specified`.
 
-Earlier sessions remain saved, but browsing the complete history and editing or deleting individual sessions are not currently supported.
+Each session shows its date, time, and all exercise entries in the order entered. Text wraps, and the context panel can be scrolled to read the complete history. A client without sessions shows `No completed workouts logged.`
+
+Editing or deleting individual recorded sessions is not currently supported by the `log` command.
 
 ### Managing membership plans
 
