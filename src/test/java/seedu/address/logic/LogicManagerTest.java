@@ -319,32 +319,49 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_failingPaySave_rollsBackAndAllowsLaterSuccessfulPayment() throws Exception {
+    public void execute_failingPaySave_rollsBackWithoutHistoryAndAllowsLaterSuccessfulPayment() throws Exception {
         model.addPerson(new PersonBuilder(AMY).build());
         Path addressBookPath = temporaryFolder.resolve("addressBook.json");
-        JsonAddressBookStorage workingStorage = new JsonAddressBookStorage(addressBookPath);
+        ToggleableAddressBookStorage addressBookStorage = new ToggleableAddressBookStorage(addressBookPath);
         JsonUserPrefsStorage userPrefsStorage =
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
-        logic = new LogicManager(model, new StorageManager(workingStorage, userPrefsStorage));
+        logic = new LogicManager(model, new StorageManager(addressBookStorage, userPrefsStorage));
 
-        logic.execute(ListCommand.COMMAND_WORD);
+        PaymentRecord firstPayment = PaymentRecord.fromText("100", "2026-01-14", Optional.empty());
+        logic.execute("pay 1 a/100 d/2026-01-14");
+        assertEquals(List.of(firstPayment), paymentsOfFirstPerson());
+
+        // Undo the first payment so a redo entry exists when the next save fails.
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertTrue(paymentsOfFirstPerson().isEmpty());
+        AddressBook emptySnapshot = new AddressBook(model.getAddressBook());
         String savedBefore = Files.readString(addressBookPath);
-        AddressBook snapshot = new AddressBook(model.getAddressBook());
 
-        setFailingStorage(DUMMY_IO_EXCEPTION);
+        addressBookStorage.setFailing(true);
         assertThrows(CommandException.class, PayCommand.MESSAGE_SAVE_FAILURE, () ->
                 logic.execute("pay 1 a/150 d/2026-01-15"));
-        assertEquals(snapshot, model.getAddressBook());
+        assertEquals(emptySnapshot, model.getAddressBook());
         assertEquals(savedBefore, Files.readString(addressBookPath));
 
-        Logic retryLogic = new LogicManager(model, new StorageManager(workingStorage, userPrefsStorage));
-        CommandResult result = retryLogic.execute("pay 1 a/150 d/2026-01-15");
+        // A failed save must not create an undo step or discard the existing redo entry.
+        assertEquals(UndoCommand.MESSAGE_FAILURE, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+        addressBookStorage.setFailing(false);
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(List.of(firstPayment), paymentsOfFirstPerson());
+
+        // The later successful payment contributes exactly one undo step.
+        CommandResult result = logic.execute("pay 1 a/150 d/2026-01-15");
         assertEquals(String.format(PayCommand.MESSAGE_SUCCESS, AMY.getName(), "150.00",
                 LocalDate.of(2026, 1, 15)), result.getFeedbackToUser());
-
         PaymentRecord expected = PaymentRecord.fromText("150", "2026-01-15", Optional.empty());
-        ReadOnlyAddressBook saved = workingStorage.readAddressBook().orElseThrow();
-        assertEquals(List.of(expected), saved.getPersonList().get(0).getPaymentRecords());
+        ReadOnlyAddressBook saved = addressBookStorage.readAddressBook().orElseThrow();
+        assertEquals(List.of(firstPayment, expected), saved.getPersonList().get(0).getPaymentRecords());
+
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(List.of(firstPayment), paymentsOfFirstPerson());
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertTrue(paymentsOfFirstPerson().isEmpty());
+        assertEquals(UndoCommand.MESSAGE_FAILURE, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
     }
 
     @Test
