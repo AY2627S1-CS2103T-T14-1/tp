@@ -352,6 +352,45 @@
     -fx-padding: 10 12;
 }
 
+.payments-card {
+    -fx-padding: 0;
+}
+
+.payments-header {
+    -fx-padding: 18 22 12 22;
+}
+
+.payments-list {
+    -fx-padding: 0 22 18 22;
+}
+
+.payment-row {
+    -fx-border-color: #2c2c30 transparent transparent transparent;
+    -fx-border-style: segments(4, 4) none none none;
+    -fx-padding: 10 0;
+}
+
+.payment-date {
+    -fx-font-size: 12.5px;
+    -fx-text-fill: #d6d6d9;
+}
+
+.payment-amount {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #d4f25a;
+}
+
+.payment-remarks {
+    -fx-font-size: 12.5px;
+    -fx-text-fill: #a3a3a8;
+}
+
+.payment-empty {
+    -fx-padding: 0 22 20 22;
+    -fx-font-size: 13px;
+}
+
 .workout-card {
     -fx-padding: 0;
 }

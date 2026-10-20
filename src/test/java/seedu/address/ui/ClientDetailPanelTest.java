@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +22,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.model.person.Exercise;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutPlan;
 import seedu.address.testutil.PersonBuilder;
@@ -131,6 +133,73 @@ public class ClientDetailPanelTest {
         });
     }
 
+    @Test
+    public void payments_sortedByDateWithStableSameDateOrderAndDuplicates() throws Exception {
+        runOnFxThread(() -> {
+            PaymentRecord latest = PaymentRecord.fromText("150", "2026-10-20", Optional.empty());
+            PaymentRecord firstOnDate = PaymentRecord.fromText("75.50", "2026-10-19", Optional.of("First"));
+            PaymentRecord duplicate = PaymentRecord.fromText("75.50", "2026-10-19", Optional.of("First"));
+            PaymentRecord secondOnDate = PaymentRecord.fromText("75.50", "2026-10-19", Optional.of("Second"));
+            Person person = new PersonBuilder()
+                    .withPaymentRecords(List.of(latest, firstOnDate, duplicate, secondOnDate))
+                    .build();
+            ClientDetailPanel panel = new ClientDetailPanel();
+            panel.showPerson(person, 1);
+
+            List<String> text = labelTexts(vbox(panel, "paymentRows"));
+            assertEquals(List.of(
+                    "2026-10-19", "75.50", "First",
+                    "2026-10-19", "75.50", "First",
+                    "2026-10-19", "75.50", "Second",
+                    "2026-10-20", "150.00"), text);
+            assertEquals("4 records", label(panel, "paymentSummary").getText());
+            assertTrue(region(panel, "paymentRows").isManaged());
+            assertFalse(region(panel, "paymentEmpty").isManaged());
+            return null;
+        });
+    }
+
+    @Test
+    public void payments_emptyStateClearsPreviousRows() throws Exception {
+        runOnFxThread(() -> {
+            PaymentRecord payment = PaymentRecord.fromText("50", "2026-01-01", Optional.empty());
+            ClientDetailPanel panel = new ClientDetailPanel();
+            panel.showPerson(new PersonBuilder().withPaymentRecords(List.of(payment)).build(), 1);
+            assertEquals(1, vbox(panel, "paymentRows").getChildren().size());
+            assertFalse(region(panel, "paymentEmpty").isManaged());
+
+            panel.showPerson(new PersonBuilder().withName("No Payments").build(), 2);
+
+            assertEquals(0, vbox(panel, "paymentRows").getChildren().size());
+            assertFalse(region(panel, "paymentRows").isManaged());
+            assertTrue(region(panel, "paymentEmpty").isManaged());
+            assertEquals("No payments recorded.", label(panel, "paymentEmpty").getText());
+            assertEquals("None", label(panel, "paymentSummary").getText());
+            return null;
+        });
+    }
+
+    @Test
+    public void payments_optionalRemarksAndMaximumLengthRemarksWrap() throws Exception {
+        runOnFxThread(() -> {
+            String longRemarks = "x".repeat(PaymentRecord.MAX_REMARKS_LENGTH);
+            PaymentRecord plain = PaymentRecord.fromText("20", "2026-01-01", Optional.empty());
+            PaymentRecord noted = PaymentRecord.fromText("30", "2026-01-02", Optional.of(longRemarks));
+            ClientDetailPanel panel = new ClientDetailPanel();
+            panel.showPerson(new PersonBuilder().withPaymentRecords(List.of(plain, noted)).build(), 1);
+            VBox rows = vbox(panel, "paymentRows");
+
+            assertEquals(List.of("2026-01-01", "20.00", "2026-01-02", "30.00", longRemarks),
+                    labelTexts(rows));
+            Label remarks = labels(rows).stream()
+                    .filter(node -> node.getText().equals(longRemarks))
+                    .findFirst().orElseThrow();
+            assertTrue(remarks.isWrapText());
+            assertTrue(remarks.getMaxWidth() > 0);
+            return null;
+        });
+    }
+
     private static Label label(ClientDetailPanel panel, String id) {
         prepareForLookup(panel);
         return (Label) panel.getRoot().lookup("#" + id);
@@ -146,17 +215,21 @@ public class ClientDetailPanelTest {
     }
 
     private static List<String> labelTexts(Node root) {
-        List<String> result = new ArrayList<>();
-        collectLabelTexts(root, result);
+        return labels(root).stream().map(Label::getText).toList();
+    }
+
+    private static List<Label> labels(Node root) {
+        List<Label> result = new ArrayList<>();
+        collectLabels(root, result);
         return result;
     }
 
-    private static void collectLabelTexts(Node node, List<String> result) {
+    private static void collectLabels(Node node, List<Label> result) {
         if (node instanceof Label label) {
-            result.add(label.getText());
+            result.add(label);
         }
         if (node instanceof Parent parent) {
-            parent.getChildrenUnmodifiable().forEach(child -> collectLabelTexts(child, result));
+            parent.getChildrenUnmodifiable().forEach(child -> collectLabels(child, result));
         }
     }
 

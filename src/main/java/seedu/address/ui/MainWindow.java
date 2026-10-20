@@ -33,6 +33,7 @@ import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.PayCommand;
 import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -50,7 +51,7 @@ public class MainWindow extends UiPart<Stage> {
             DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH);
     private static final Set<String> INDEX_COMMANDS = Set.of(
             "edit", "delete", "diet", "remark", "schedule", "viewschedule",
-            "addex", "delex", "clearplan", "dayex", "log",
+            "addex", "delex", "clearplan", "dayex", "log", PayCommand.COMMAND_WORD,
             DietaryRestrictionsCommand.COMMAND_WORD, HealthCommand.COMMAND_WORD);
     private static final Set<String> RESET_FILTER_COMMANDS = Set.of(
             AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD,
