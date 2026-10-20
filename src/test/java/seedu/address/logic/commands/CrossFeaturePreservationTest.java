@@ -92,6 +92,11 @@ public class CrossFeaturePreservationTest {
     }
 
     @Test
+    public void execute_meeting_preservesEveryOtherFeature() throws Exception {
+        assertFeaturePreserved("meeting 1 d/2099-04-20 tm/10:00 l/Cafe", "trainingSessions");
+    }
+
+    @Test
     public void execute_health_preservesEveryOtherFeature() throws Exception {
         assertFeaturePreserved("health 1 h/Avoid running", "healthProfile");
     }
