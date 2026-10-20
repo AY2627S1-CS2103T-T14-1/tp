@@ -178,6 +178,32 @@ public class MembershipPreservationTest {
     }
 
     @Test
+    public void execute_pay_preservesMembershipAndAddsPaymentOnlyToTarget() throws Exception {
+        Person targetBefore = model.getAddressBook().getPersonList().get(0);
+        MembershipAssignment assignmentBefore = targetBefore.getMembershipAssignment().orElseThrow();
+        MembershipPlan planBefore = model.findMembershipPlan(new MembershipName("Gold")).orElseThrow();
+        Person otherClient = new PersonBuilder().withName("Other Client").build();
+        model.addPerson(otherClient);
+
+        PaymentRecord recorded = PaymentRecord.fromText("150", "2026-10-20", Optional.empty());
+        new AddressBookParser().parseCommand("pay 1 a/150 d/2026-10-20").execute(model);
+
+        Person targetAfter = model.getAddressBook().getPersonList().get(0);
+        Person otherAfter = model.getAddressBook().getPersonList().get(1);
+        MembershipPlan planAfter = model.findMembershipPlan(new MembershipName("Gold")).orElseThrow();
+
+        assertEquals(assignmentBefore, targetAfter.getMembershipAssignment().orElseThrow());
+        assertEquals(assignmentBefore.getRemainingSessions(),
+                targetAfter.getMembershipAssignment().orElseThrow().getRemainingSessions());
+        assertEquals(planBefore, planAfter);
+        assertEquals(new BigDecimal("150.00"), planAfter.getPrice());
+        assertEquals(30, planAfter.getStartingSessions());
+        assertEquals(List.of(planBefore), List.copyOf(model.getMembershipPlanList()));
+        assertEquals(List.of(PAYMENT, recorded), targetAfter.getPaymentRecords());
+        assertTrue(otherAfter.getPaymentRecords().isEmpty());
+    }
+
+    @Test
     public void execute_membershipCommands_preservePayments() throws Exception {
         AddressBookParser parser = new AddressBookParser();
         Person original = model.getAddressBook().getPersonList().get(0);
