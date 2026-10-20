@@ -22,6 +22,7 @@
 - [Feature 14: Membership plan](#feature-14-membership-plan)
 - [Feature 15: Advanced scheduling and client monitoring](#feature-15-advanced-scheduling-and-client-monitoring)
 - [Feature 16: Undo and redo](#feature-16-undo-and-redo)
+- [Feature 17: Payment records](#feature-17-payment-records)
 
 ## Feature 1A: Add client
 
@@ -1921,7 +1922,7 @@ Create, view, and delete uniquely named plans with a price and 1 to 1000 startin
 
 #### Nice to have or later
 
-Edit plan definitions, replace an assignment without first removing it, preserve unused sessions on renewal, automatic deductions from workout logs, renewal history, expiry enforcement and alerts, and payment tracking.
+Edit plan definitions, replace an assignment without first removing it, preserve unused sessions on renewal, automatic deductions from workout logs, renewal history, and expiry enforcement and alerts. Payment records are covered by Feature 17.
 
 ## Feature 15: Advanced scheduling and client monitoring
 
@@ -2119,3 +2120,87 @@ Complete saved-address-book snapshots; single-step and repeated undo/redo; norma
 #### Nice to have or later
 
 Cross-session undo/redo history is outside the current session-only contract. No other later capabilities are specified in the source.
+
+## Feature 17: Payment records
+
+### 1. Feature
+
+Record a payment for a client and show that client's payment records on their information card.
+
+### 2. Purpose
+
+Give trainers a persistent record of payments received from each client, including the amount, date, and optional remarks.
+
+### 3. Command format
+
+```text
+pay PERSON_INDEX a/AMOUNT d/YYYY-MM-DD [r/REMARKS]
+```
+
+`PERSON_INDEX`, `a/AMOUNT`, and `d/YYYY-MM-DD` are required. `r/REMARKS` is optional. The prefixed parameters may appear in any order after `PERSON_INDEX`; each prefix may appear at most once. The command word and prefix letters are case-sensitive.
+
+### 4. Example commands
+
+```text
+pay 1 a/150 d/2026-10-20
+pay 2 d/2026-10-19 a/75.50 r/October membership payment
+```
+
+### 5. Parameters
+
+| Parameter | Rule |
+| --------- | ---- |
+| `PERSON_INDEX` | A positive integer identifying a client in the currently displayed client list. An index outside that list is invalid. |
+| `a/AMOUNT` | A positive amount with at most two decimal places, without a currency symbol or thousands separators. For example, `150`, `150.5`, and `150.50` are valid; `0`, `-5`, `1.234`, and `S$150` are invalid. Store and display the amount to two decimal places without floating-point rounding. |
+| `d/YYYY-MM-DD` | A real Gregorian calendar date in exactly `YYYY-MM-DD` format, with a four-digit year from 0001 to 9999. Past, current, and future dates are accepted. |
+| `r/REMARKS` | Optional nonblank text of 1–300 printable characters after trimming leading and trailing whitespace. Preserve internal spacing, punctuation, and case. Reject line breaks and control characters. An omitted `r/` means no remarks; an empty `r/` is invalid. |
+
+Reject missing, repeated, unknown, or empty prefixed parameters and extra unprefixed text. A failed command creates no payment record.
+
+### 6. Output
+
+On success, save one payment record belonging to the specified client, select that client, and refresh the payment section of their information card. Show every saved payment with its date, amount to two decimal places, and remarks when present. Show a clear empty state when the client has no payments. Display records by date, oldest first; for payments on the same date, preserve entry order. Long remarks wrap or scroll rather than being truncated.
+
+```text
+Recorded payment for Priya Nair: 150.00 on 2026-10-20.
+```
+
+The client card does not imply that a payment has changed a membership assignment, plan price, or remaining session balance. Other client commands preserve payment records. Deleting a client removes their payments with that client.
+
+### 7. Duplicate handling
+
+Each successful `pay` command adds a separate record. Multiple payments for the same client may have the same date, amount, and remarks; they remain distinct records and appear in entry order for that date.
+
+### 8. Possible errors
+
+**Invalid client index:** The index must identify a client in the currently displayed list.
+
+**Invalid amount:** Amount must be greater than zero and have at most two decimal places.
+
+**Invalid date:** Payment date must be a valid date in YYYY-MM-DD format.
+
+**Invalid remarks:** Remarks must contain 1 to 300 printable characters without line breaks when `r/` is supplied.
+
+**Invalid command format:** Required values are missing, a prefix repeats, an unknown prefix is supplied, or extra unprefixed text is present. Show the command format from Section 3.
+
+**Data cannot be saved:** No payment is added to saved or in-memory client data. A failed command does not create an undo step.
+
+### 9. Relevant UI mockup
+
+```text
+Clients           | Priya Nair [SELECTED]
+1. Priya Nair     | Payments
+                   | 2026-10-19  75.50  October membership payment
+                   | 2026-10-20  150.00
+Result: Recorded payment for Priya Nair: 150.00 on 2026-10-20.
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Add, validate, persist, and display all payment records for a client, including optional remarks. Load older client data with no payment field as an empty payment history. A successful `pay` is one data change for Feature 16's undo and redo.
+
+#### Nice to have or later
+
+Editing or deleting individual payments, payment-method tracking, refunds, receipts, totals, and automatic reconciliation with membership plans.
