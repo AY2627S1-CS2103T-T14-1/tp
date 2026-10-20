@@ -4,19 +4,25 @@
 
 ## Features covered
 
-- Feature 1A: Add client
-- Feature 1B: Delete client
-- Feature 2: Training schedule
-- Feature 3: Workout plan management
-- Feature 4: Workout session logging
-- Feature 5: Diet plan management
-- Feature 7: Membership Plan
-- Feature 8: Health considerations
-- Feature 9: Dietary restrictions
-- Feature 10: Body progress tracker
-- Feature 11: Advanced scheduling and client monitoring
-
-Feature identifiers follow the section headings, rather than list positions. Feature 11's specification is included below.
+- [Feature 1A: Add client](#feature-1a-add-client)
+- [Feature 1B: Delete client](#feature-1b-delete-client)
+- [Feature 1C: Edit client personal details](#feature-1c-edit-client-personal-details)
+- [Feature 2: Training schedule](#feature-2-training-schedule)
+- [Feature 3: Workout plan management](#feature-3-workout-plan-management)
+- [Feature 4: Workout session logging](#feature-4-workout-session-logging)
+- [Feature 5: Workout history](#feature-5-workout-history)
+- [Feature 6: Diet plan management](#feature-6-diet-plan-management)
+- [Feature 7: Search clients by name](#feature-7-search-clients-by-name)
+- [Feature 8: Search clients by phone number or email](#feature-8-search-clients-by-phone-number-or-email)
+- [Feature 9: Record each client's fitness goal](#feature-9-record-each-clients-fitness-goal)
+- [Feature 10: Filter clients by fitness goal](#feature-10-filter-clients-by-fitness-goal)
+- [Feature 11: Health considerations (injuries and physical limitations)](#feature-11-health-considerations-injuries-and-physical-limitations)
+- [Feature 12: Dietary restrictions](#feature-12-dietary-restrictions)
+- [Feature 13: Body progress tracker](#feature-13-body-progress-tracker)
+- [Feature 14: Membership plan](#feature-14-membership-plan)
+- [Feature 15: Advanced scheduling and client monitoring](#feature-15-advanced-scheduling-and-client-monitoring)
+- [Feature 16: Undo and redo](#feature-16-undo-and-redo)
+- [Feature 17: Payment records](#feature-17-payment-records)
 
 ## Feature 1A: Add client
 
@@ -84,12 +90,12 @@ Priya Nair   Anne-Marie Tan   D'Angelo Lim   Dr. Ahmad Rahman
 
 #### Contact and optional profile parameters
 
-| Parameter    | Rule, rationale and error |
-| ------------ | ------------------------- |
-| Email `e/`   | Trim; maximum 254 ASCII characters; one @; no whitespace. Nonempty local part: letters/digits/.\_+-; no edge or consecutive dots. Domain: 2+ dot-separated labels, each 1–63 letters/digits/hyphens with alphanumeric ends. Preserve local case; lowercase domain. Common addresses supported; delivery unverified.<br><br>Error: Email must be a valid address such as lim@example.com (maximum 254 characters). |
-| Address `a/` | Trim; 1–200 printable characters, no line breaks. Preserve internal spacing and case. Free text supports varied postal addresses; no address verification.<br><br>Error: Address must contain 1 to 200 printable characters without line breaks. |
-| Fitness goal `g/` | Trim; 1–100 printable characters with at least one letter or digit. Preserve internal spacing and case. Each client has at most one current goal; `edit INDEX g/GOAL` replaces it and `edit INDEX g/` clears it. `find g/KEYWORDS` searches current goals case-insensitively.<br><br>Error: Goal must contain 1 to 100 characters, including at least one letter or digit. |
-| Tags `t/`    | Trim; 1–30 ASCII letters/digits per tag. Store lowercase; collapse repeated tags after normalization, retaining first-entry order. At most 10 distinct tags. Compact labels avoid spelling/case duplicates.<br><br>Error: Tags must contain 1 to 30 letters or digits; at most 10 distinct tags are allowed. |
+| Parameter         | Rule, rationale and error                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Email `e/`        | Trim; maximum 254 ASCII characters; one @; no whitespace. Nonempty local part: letters/digits/.\_+-; no edge or consecutive dots. Domain: 2+ dot-separated labels, each 1–63 letters/digits/hyphens with alphanumeric ends. Preserve local case; lowercase domain. Common addresses supported; delivery unverified.<br><br>Error: Email must be a valid address such as lim@example.com (maximum 254 characters). |
+| Address `a/`      | Trim; 1–200 printable characters, no line breaks. Preserve internal spacing and case. Free text supports varied postal addresses; no address verification.<br><br>Error: Address must contain 1 to 200 printable characters without line breaks.                                                                                                                                                                  |
+| Fitness goal `g/` | Trim; 1–100 printable characters with at least one letter or digit. Preserve internal spacing and case. Each client has at most one current goal; `edit INDEX g/GOAL` replaces it and `edit INDEX g/` clears it. `find g/KEYWORDS` searches current goals case-insensitively.<br><br>Error: Goal must contain 1 to 100 characters, including at least one letter or digit.                                        |
+| Tags `t/`         | Trim; 1–30 ASCII letters/digits per tag. Store lowercase; collapse repeated tags after normalization, retaining first-entry order. At most 10 distinct tags. Compact labels avoid spelling/case duplicates.<br><br>Error: Tags must contain 1 to 30 letters or digits; at most 10 distinct tags are allowed.                                                                                                      |
 
 An omitted goal remains absent and omitted tags form an empty set. Any invalid supplied field rejects the entire command; no partial client is saved. Prefix tokens after whitespace are reserved and cannot occur literally inside values.
 
@@ -153,7 +159,7 @@ Add, validate, normalize, deduplicate, display, and select a client using requir
 
 #### Nice to have or later
 
-Bulk import, health considerations, custom identifiers, and tag-based filtering.
+Bulk import, custom identifiers, and tag-based filtering. Health considerations are covered by Feature 11.
 
 ## Feature 1B: Delete client
 
@@ -215,7 +221,7 @@ The index identifies one record, even when names or phones match. The result sho
 
 #### Accidental deletion
 
-Undo and confirmation are outside the MVP. The User Guide must state that deletion is permanent.
+Deletion has no confirmation step. In the combined v1.4 scope, shared `undo` can restore a deleted client and all owned data during the current application session (Feature 16). After restart, earlier changes cannot be undone. The User Guide must explain this limit.
 
 ### 9. Relevant UI mockup
 
@@ -235,7 +241,105 @@ Delete by valid displayed index, remove owned data, and identify the deleted cli
 
 #### Nice to have or later
 
-Confirmation, undo, archiving, and bulk deletion.
+Confirmation, archiving, and bulk deletion. Shared session-scoped undo is included in Feature 16.
+
+## Feature 1C: Edit client personal details
+
+### 1. Feature
+
+Edit an existing client's personal and profile details.
+
+### 2. Purpose
+
+Keeps a client's contact information, address, tags, and current fitness goal up to date without replacing the client record.
+
+### 3. Command format
+
+```text
+edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]...
+```
+
+At least one field must be supplied. Any omitted field retains its current value.
+
+### 4. Example commands
+
+```text
+edit 2 p/98765432 e/alex.tan@example.com
+
+edit 2 a/18 Clementi Road t/evening t/regular
+
+edit 2 g/
+```
+
+### 5. Parameters
+
+| Parameter         | Rule and current behaviour                                                                                              |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Client index      | A positive whole number identifying a client in the displayed list.                                                     |
+| Name `n/`         | Must contain only alphanumeric characters and spaces and must not be blank.                                             |
+| Phone `p/`        | Must contain only digits and be at least 3 digits long.                                                                 |
+| Email `e/`        | Must follow the application's local-part and domain email format.                                                       |
+| Address `a/`      | May contain any value but must not be blank.                                                                            |
+| Goal `g/`         | A nonblank value replaces the goal. An empty `g/` clears it. Nonblank goals follow the fitness-goal rules in Feature 9. |
+| Tags `t/`         | Each tag must be alphanumeric. Supplied tags replace the complete tag set; a single empty `t/` clears all tags.         |
+| Repeated prefixes | `n/`, `p/`, `e/`, `a/`, and `g/` may each appear once. Repeat `t/` to supply multiple tags.                             |
+
+**Source validation distinction:** This source describes implemented edit validation (alphanumeric names and phones of at least 3 digits), whereas Feature 1A specifies broader name characters and normalized 7–15-digit phones. These different contracts are retained explicitly; the sources do not establish a common add/edit validator.
+
+### 6. Output
+
+On success, the displayed list returns to all clients and the result identifies the edited client.
+
+```text
+Edited client: Alex Tan; Phone: 98765432.
+```
+
+If all supplied values are equal to the client's current values:
+
+```text
+No changes made: the new values are the same as the current details.
+```
+
+### 7. Duplicate handling
+
+The edit is rejected if the resulting client would duplicate another client under the application's existing client identity check. Editing a client to values already held by that same client is reported as no change.
+
+### 8. Possible errors
+
+**Missing index:** `Client index is required. Use: edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]...`
+
+**Invalid index:** `The client index must be a positive whole number shown in the client list.`
+
+**Index outside the displayed list:** `No client exists at index INDEX.`
+
+**No editable field:** `At least one field to edit must be provided.`
+
+**Repeated single-value prefix:** `The n/, p/, e/, a/ and g/ prefixes may each be used only once. Repeat t/ for multiple tags.`
+
+**Duplicate client:** `This person already exists in the address book.`
+
+Invalid field values are rejected using the corresponding field validation message, and the client remains unchanged.
+
+### 9. Relevant UI mockup
+
+```text
+Before: Alex Tan — 91234567
+Command: edit 2 p/98765432 e/alex.tan@example.com
+After:  Alex Tan — 98765432
+Result: Edited client: Alex Tan; Phone: 98765432.
+```
+
+The selected client's profile and contact fields refresh to show the edited values.
+
+### 10. Priority distinctions
+
+#### Must have
+
+Replace only the supplied editable fields while preserving the client's remark, workout plan, workout sessions, training schedule, diet plan, dietary restrictions, health considerations, membership assignment, and body-progress records.
+
+#### Nice to have or later
+
+No additional later scope is specified for this feature in the source.
 
 ## Feature 2: Training schedule
 
@@ -268,23 +372,23 @@ viewschedule 2
 
 #### Client index
 
-INDEX follows the shared client index rules.
+INDEX is a positive whole number identifying a client in the currently displayed list; leading zeros are accepted.
 
 #### Date and time parameters
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Date | `d/` takes a real calendar date in `YYYY-MM-DD` format. |
-| Time | `tm/` takes one 24-hour time in `HH:mm` format. There is no end time or duration. |
+| Aspect             | Rule, message and rationale                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Date               | `d/` takes a real calendar date in `YYYY-MM-DD` format.                                                                              |
+| Time               | `tm/` takes one 24-hour time in `HH:mm` format. There is no end time or duration.                                                    |
 | Future requirement | The combined date and time must be later than the current local date and time. Otherwise: `Training sessions must be in the future.` |
-| Invalid value | An invalid or missing date/time produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.` |
+| Invalid value      | An invalid or missing date/time produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.`                       |
 
 #### Location parameter
 
-| Aspect | Rule, message and rationale |
-|---|---|
-| Accepted value | `l/` is required and must contain non-blank text. |
-| Invalid value | A missing or blank location produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.` |
+| Aspect         | Rule, message and rationale                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| Accepted value | `l/` is required and must contain non-blank text.                                                          |
+| Invalid value  | A missing or blank location produces `Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.` |
 
 ### 6. Output
 
@@ -308,13 +412,17 @@ Training sessions for Priya Nair:
 
 If no sessions have been saved, the result is `No training sessions saved for Priya Nair.` The index in either command must refer to a client in the current displayed list.
 
-### 7. Duplicate and conflict handling
+In the combined v1.4 scope, `viewschedule` also includes meetings and identifies appointment types (Feature 15). Legacy appointments without a type load as training.
 
-`schedule` rejects a new appointment if any client already has a training session or meeting at the same date and start time, including an identical session for the same client. The message names the client holding that time slot, and no data changes. Appointments have no stored duration, so different start times are allowed even if the appointments might overlap in practice. Editing or deleting an appointment is not supported by these commands.
+### 7. Duplicate handling
+
+In the combined v1.4 scope, reject an appointment if any client already has a training session or meeting at the same date and start time, including the selected client. Report `Scheduling conflict: NAME already has an appointment at YYYY-MM-DD HH:mm.` and change nothing. Different start times remain allowed because durations are not stored. Feature 15 defines the shared check. Appointment editing and deletion remain later scope.
 
 ### 8. Possible errors
 
 **Invalid index:** The command reports an invalid displayed client index. **Repeated parameter:** Each of `d/`, `tm/`, and `l/` may appear only once. **Invalid date, time, or location:** The command reports the expected formats and non-empty location requirement. **Past date/time:** The command reports that training sessions must be in the future.
+
+**Start-time conflict:** Use the conflict message and rejection rule in Section 7; search the full roster even when the displayed client list is filtered.
 
 ### 9. Relevant UI mockup
 
@@ -335,7 +443,7 @@ Record multiple dated sessions per client and view them in date/time order. Pres
 
 #### Nice to have or later
 
-Duration-based conflict detection, calendar views, reminders, recurring sessions, and edit/delete commands. The daily appointment view is provided by `dayschedule` (Feature 11).
+Calendar layout, reminders, recurring sessions, durations and interval-overlap detection, and edit/delete commands. Exact start-time conflict detection and the daily agenda are included in Feature 15.
 
 ## Feature 3: Workout plan management
 
@@ -347,7 +455,7 @@ Add, remove, re-assign day, and clear exercises in a client's workout plan (`add
 
 Stores a per-client list of structured exercises with sets, reps, weight, and an optional weekday tag, so trainers can build, adjust, and clear plans incrementally.
 
-### 3. Command formats
+### 3. Command format
 
 ```text
 addex PERSON_INDEX n/NAME [s/SETS] [r/REPS] [w/WEIGHT_KG] [d/DAY]
@@ -379,7 +487,7 @@ clearplan 1                        # clears 1st person's plan
 
 #### Client index
 
-PERSON_INDEX follows the shared client index rules: a positive integer identifying a client in the displayed list.
+PERSON_INDEX is a positive integer identifying a client in the displayed list.
 
 #### Exercise name (`addex n/`)
 
@@ -573,7 +681,7 @@ Log a completed workout session with exercises, weights, sets, and repetitions.
 
 ### 2. Purpose
 
-Records completed exercises for reliable recall and later history and progression features.
+Records completed exercises for reliable recall and the history feature (Feature 5) and later progression features.
 
 ### 3. Command format
 
@@ -597,7 +705,7 @@ log 3 d/2026-09-16 ex/Push-up|0|3|15
 
 #### Client index
 
-INDEX follows the shared client index rules.
+INDEX is a positive whole number identifying a client in the currently displayed list; leading zeros are accepted.
 
 #### Session date
 
@@ -656,7 +764,7 @@ If one exercise is invalid, Fittix records none of the session.
 
 ### 7. Duplicate handling
 
-Client, date, and optional time form a unique key. A matching key is rejected even with different exercises; history editing is later scope.
+Client, date, and optional time form a unique key. A matching key is rejected even with different exercises; use `editlog` (Feature 5) to replace a recorded session.
 
 ```text
 A workout session already exists for Priya Nair on 16 Sep 2026 at 18:00.
@@ -697,9 +805,83 @@ Log/display dated sessions with optional times and exercise/weight/sets/reps; re
 
 #### Nice to have or later
 
-Log edits/deletion, latest/full history, duration/distance/effort/rest/notes, package deductions, and plan comparisons.
+Log deletion, duration/distance/effort/rest/notes, package deductions, and plan comparisons. Session editing and latest/full history are included in Feature 5.
 
-## Feature 5: Diet plan management
+## Feature 5: Workout history
+
+### 1. Feature
+
+View a client's latest workout, browse all recorded sessions, and replace an existing session with a corrected complete session. Extends Feature 4.
+
+### 2. Purpose
+
+A trainer can view the latest recorded workout, browse every session for a client, and correct a previously logged session. The selected-client context panel displays all sessions, newest first, with every exercise entry. The `history` command provides the same complete history as text.
+
+### 3. Command format
+
+```text
+history CLIENT_INDEX
+editlog CLIENT_INDEX SESSION_INDEX d/DATE [t/TIME] ex/EXERCISE|WEIGHT|SETS|REPS [ex/EXERCISE|WEIGHT|SETS|REPS]...
+```
+
+### 4. Example commands
+
+```text
+history 1
+editlog 1 2 d/2020-01-15 t/18:00 ex/Back squat|65|3|8
+```
+
+### 5. Parameters
+
+`CLIENT_INDEX` uses the currently displayed client list, including filtered search results. `SESSION_INDEX` is the one-based number printed by `history` and shown beside each session in the selected-client panel. Sessions are sorted by date descending, then specified time descending; an unspecified time sorts before specified times on the same date. Both indexes must be positive whole numbers and within their respective displayed lists.
+
+The replacement requires a date, optional time, and 1–30 complete exercise entries. Apply all Feature 4 date/time and exercise validators; repeated `d/` or `t/` is invalid. Omission of `t/` removes the old time.
+
+### 6. Output
+
+#### Viewing history
+
+For each session, display its date, optional time, and all exercise names, weights, sets, and repetitions in recorded order. `history` does not change saved data. When no sessions exist, report `No workout sessions recorded for NAME.` The selected-client panel shows the same empty state. The latest session means the most recent date and time, not the last `log` command.
+
+#### Replacing a session
+
+`editlog` replaces the entire selected session, including its date, optional time, and ordered exercise entries. Omission of `t/` makes the replacement time unspecified. The session remains in its original storage-list position, but its displayed history number may change after re-sorting. The trainer must check the current history number before a subsequent edit.
+
+The replacement follows Feature 4's rules: the date must be today or earlier in `yyyy-MM-dd` format, time (if given) must be `HH:mm`, and 1 to 30 validated `EXERCISE|WEIGHT|SETS|REPS` entries are required. Repeated `d/` or `t/` values are rejected. Exercise entries may repeat and retain input order.
+
+Reject a replacement if another session for the same client already has the proposed date and optional time. An unchanged replacement reports `The workout session is unchanged.` and leaves the model intact. An invalid session number reports `The workout session index provided is invalid.` Parsing and validation finish before any model change. On success, report `Edited workout session SESSION_INDEX for NAME.`
+
+Replacing a client preserves their name, contact data, goal, workout plan, diet plan, schedule, dietary restrictions, health profile, and membership assignment. A successful edit is saved through the existing address-book storage path. If saving fails, the pre-command address-book snapshot is restored; no partial change is retained. Editing a workout session does not deduct membership sessions.
+
+### 7. Duplicate handling
+
+Reject a replacement whose client/date/optional-time key matches another session for that client. Repeated exercise entries remain allowed in input order. An identical replacement reports `The workout session is unchanged.` and changes nothing.
+
+### 8. Possible errors
+
+**Invalid session index:** `The workout session index provided is invalid.`
+
+**Other validation failures:** Apply Feature 4 validators and require a positive whole-number index within the currently displayed client list. Complete parsing and validation before mutation.
+
+**Save failure:** Restore the pre-command address-book snapshot and retain no partial edit. Editing does not deduct membership sessions.
+
+### 9. Relevant UI mockup
+
+The selected-client panel shows every session, newest first, with its current one-based history number, date, optional time, and every exercise in recorded order. It uses the same empty state as `history`. No separate visual mockup was supplied.
+
+### 10. Priority distinctions
+
+#### Must have
+
+Complete text and panel history; correct latest-session ordering; full-session replacement; duplicate/no-op handling; preservation of unrelated client data; save/reload and rollback.
+
+**Acceptance evidence:** Cover empty and multiple-session history, date/time ordering, filtered client indexes, exercise order, missing and invalid indexes, duplicate keys, no-op edits, retained unrelated client data, and persistence after save/reload.
+
+#### Nice to have or later
+
+History deletion, changing one exercise without supplying the complete replacement session, and duration/distance records.
+
+## Feature 6: Diet plan management
 
 ### 1. Feature
 
@@ -707,7 +889,7 @@ Create or replace a client's current diet plan.
 
 ### 2. Purpose
 
-Stores one current nutrition target and optional notes per client. Structured dietary restrictions remain later scope.
+Stores one current nutrition target and optional notes per client. Dietary restrictions are stored independently under Feature 12.
 
 ### 3. Command format
 
@@ -725,7 +907,7 @@ diet 2 t/1800 kcal per day, 120 g protein n/Prioritise lean protein and vegetabl
 diet 3 t/2000 kcal per day n/Halal meals only; avoid shellfish
 ```
 
-The final example is an MVP workaround. It does not replace the later structured dietary restriction field.
+The final example remains valid free-text coaching content. Record searchable restrictions separately using Feature 12; diet notes do not populate that restriction list.
 
 **Parsing rule:** Parameter prefixes such as `t/` and `n/` are recognized only at the beginning of an argument or after whitespace. A slash within a value, such as `kcal/day`, is treated as ordinary text.
 
@@ -733,7 +915,7 @@ The final example is an MVP workaround. It does not replace the later structured
 
 #### Client index
 
-INDEX follows the shared client index rules.
+INDEX is a positive whole number identifying a client in the currently displayed list; leading zeros are accepted.
 
 #### Diet target
 
@@ -793,7 +975,7 @@ A different plan replaces the current version.
 
 **Unsupported restrictions prefix:** Invalid command format. Use: `diet INDEX t/TARGET [n/NOTES]`
 
-A trainer may temporarily place an essential restriction in notes. Structured restriction storage remains later scope.
+The `diet` command does not accept a restrictions prefix. Use `restriction` (Feature 12) to manage the separate restriction list.
 
 #### Medical suitability
 
@@ -819,9 +1001,718 @@ Store, replace, and display one required target with optional notes per client.
 
 #### Nice to have or later
 
-Structured restrictions/macros, version history, meal templates, partial edits, and suitability checks.
+Structured macros, version history, meal templates, partial edits, and suitability checks. The independent restriction list is included in Feature 12.
 
-## Feature 7: Membership Plan
+## Feature 7: Search clients by name
+
+### 1. Feature
+
+Search for clients using all or part of their names.
+
+### 2. Purpose
+
+Lets trainers locate one or more client records without manually scanning the full client list.
+
+### 3. Command format
+
+```text
+find KEYWORD [MORE_KEYWORDS]...
+
+find n/NAME_KEYWORDS
+```
+
+Both forms search names only. At least one nonblank keyword is required. The `n/` form can also be combined with other prefixed search criteria.
+
+### 4. Example commands
+
+```text
+find priya
+
+find priya daniel
+
+find n/priya daniel
+```
+
+### 5. Parameters
+
+| Aspect            | Rule and current behaviour                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Name keyword      | Each whitespace-separated value is treated as a name keyword.                                                                    |
+| Matching          | A client matches when the client's name contains at least one keyword. Matching ignores letter case and uses substring matching. |
+| Multiple keywords | Keywords are combined using OR. `find priya daniel` matches a name containing `priya` or `daniel`.                               |
+| Prefixed form     | `n/` may appear once and allows the name criterion to be combined with other prefixed criteria using OR.                         |
+| Required value    | At least one nonblank keyword must follow `find`.                                                                                |
+
+### 6. Output
+
+A successful search replaces the displayed client list with the matching clients.
+
+```text
+Found 2 client(s).
+```
+
+When no client matches:
+
+```text
+Found 0 client(s). Use list to show all clients.
+```
+
+### 7. Duplicate handling
+
+Each matching client appears once even if the name matches more than one supplied keyword. The search does not modify any client data.
+
+### 8. Possible errors
+
+**Missing keyword:** `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`
+
+### 9. Relevant UI mockup
+
+```text
+Command: find priya daniel
+
+Clients
+1. Daniel Tan
+2. Priya Nair
+
+Result: Found 2 client(s).
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Search names using one or more case-insensitive substring keywords, display each matching client once, and report the result count.
+
+#### Nice to have or later
+
+No additional later scope is specified for this feature in the source.
+
+## Feature 8: Search clients by phone number or email
+
+### 1. Feature
+
+Search for clients using all or part of their phone numbers or email addresses.
+
+### 2. Purpose
+
+Lets trainers retrieve a client when contact information is known but the client's name is not.
+
+### 3. Command format
+
+```text
+find p/PHONE
+
+find e/EMAIL_KEYWORDS
+
+find p/PHONE e/EMAIL_KEYWORDS
+```
+
+The `p/` and `e/` prefixes may each appear at most once. When both are supplied, a client matches either criterion.
+
+### 4. Example commands
+
+```text
+find p/9123-4567
+
+find e/example.com
+
+find p/91234567 e/priya
+```
+
+### 5. Parameters
+
+| Parameter         | Rule and current behaviour                                                                                                             |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Phone `p/`        | Must contain at least one digit. Spaces and hyphens are removed from both the query and stored phone number before substring matching. |
+| Email `e/`        | Accepts one or more whitespace-separated keywords. A client matches when the email contains any keyword, ignoring letter case.         |
+| Empty value       | A supplied `p/` or `e/` value cannot be empty.                                                                                         |
+| Repeated prefix   | Each supported search prefix may appear only once.                                                                                     |
+| Combined criteria | Phone and email criteria are combined using OR. Matching either criterion includes the client.                                         |
+
+### 6. Output
+
+A successful search replaces the displayed client list and reports the number of matches.
+
+```text
+Found 1 client(s).
+```
+
+When no client matches:
+
+```text
+Found 0 client(s). Use list to show all clients.
+```
+
+### 7. Duplicate handling
+
+Phone matching uses the complete supplied `p/` value as one normalized substring query. Email matching treats whitespace-separated values as alternative keywords. A client matching both criteria is displayed only once.
+
+### 8. Possible errors
+
+**Empty search value:** `The p/ search value cannot be empty.` or `The e/ search value cannot be empty.`
+
+**Phone query without a digit:** `Phone search must contain at least one digit.`
+
+**Repeated search prefix:** `The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.`
+
+**Unprefixed text mixed with prefixes:** `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`
+
+### 9. Relevant UI mockup
+
+```text
+Command: find p/9123-4567
+
+Clients
+1. Priya Nair — 91234567
+
+Result: Found 1 client(s).
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Search normalized phone substrings and case-insensitive email substrings, combine supplied criteria using OR, and report the result count.
+
+#### Nice to have or later
+
+No additional later scope is specified for this feature in the source.
+
+## Feature 9: Record each client's fitness goal
+
+### 1. Feature
+
+Record one optional current fitness goal for each client.
+
+### 2. Purpose
+
+Keeps the client's main fitness objective visible in the selected client profile and available for goal-based filtering.
+
+### 3. Command format
+
+```text
+add n/NAME p/PHONE e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]...
+
+edit INDEX g/GOAL
+
+edit INDEX g/
+```
+
+The goal may be supplied when adding a client, replaced using `edit`, or cleared using an empty `g/` value with `edit`.
+
+### 4. Example commands
+
+```text
+add n/Priya Nair p/91234567 e/priya@example.com a/123 Main Street g/Build strength
+
+edit 1 g/Complete a 10 km run
+
+edit 1 g/
+```
+
+### 5. Parameters
+
+| Aspect             | Rule and current behaviour                                                                                                 |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Accepted value     | From 1 to 100 Unicode code points after trimming, including at least one Unicode letter or digit.                          |
+| Whitespace         | Leading and trailing whitespace is removed. Internal spacing is retained.                                                  |
+| Character handling | Control characters are rejected. Letter case and display spelling are retained.                                            |
+| Number of goals    | Each client has at most one current goal. A new value replaces the complete existing goal.                                 |
+| Optional value     | Omitting `g/` when adding a client stores no goal. An empty `g/` is supported only by `edit` and clears the existing goal. |
+| Error              | `Goal must contain 1 to 100 characters, including at least one letter or digit.`                                           |
+
+### 6. Output
+
+Adding a client uses the normal add-client success output. Editing or clearing a goal uses the normal edit-client success output.
+
+```text
+Edited client: Priya Nair; Phone: 91234567.
+```
+
+Submitting the existing goal again reports:
+
+```text
+No changes made: the new values are the same as the current details.
+```
+
+### 7. Duplicate handling
+
+There is one current goal per client. Recording a new goal replaces the old goal. The goal does not change how duplicate clients are identified.
+
+### 8. Possible errors
+
+**Invalid goal:** `Goal must contain 1 to 100 characters, including at least one letter or digit.`
+
+**Repeated goal prefix:** The `g/` prefix may appear only once in an `add` or `edit` command.
+
+**Empty goal during add:** An empty `g/` value is invalid because an omitted `g/` already represents no goal for a new client.
+
+Any rejected command leaves the existing client data unchanged.
+
+### 9. Relevant UI mockup
+
+```text
+Client details
+Priya Nair
+Phone: 91234567
+Goal: Build strength
+```
+
+The selected client's details display the goal. When no goal is recorded, the goal field displays an em dash (`—`).
+
+### 10. Priority distinctions
+
+#### Must have
+
+Create, replace, clear, validate, persist, display, and search one optional current fitness goal per client. Other client updates preserve the recorded goal.
+
+#### Nice to have or later
+
+No additional later scope is specified for this feature in the source.
+
+## Feature 10: Filter clients by fitness goal
+
+### 1. Feature
+
+Filter the client list using the clients' recorded fitness goals.
+
+### 2. Purpose
+
+Lets trainers find clients who share a goal keyword, such as strength, mobility, or endurance.
+
+### 3. Command format
+
+```text
+find g/GOAL_KEYWORDS
+```
+
+The `g/` prefix may appear at most once. Goal search can be combined with the other supported prefixed search criteria.
+
+### 4. Example commands
+
+```text
+find g/strength
+
+find g/build strength
+
+find n/priya g/mobility
+```
+
+### 5. Parameters
+
+| Aspect            | Rule and current behaviour                                                                                                                                        |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Goal keyword      | The `g/` value is split into whitespace-separated keywords.                                                                                                       |
+| Matching          | A client matches when the current goal contains at least one supplied keyword, ignoring letter case.                                                              |
+| Missing goal      | A client without a recorded goal does not match a goal criterion.                                                                                                 |
+| Combined criteria | Goal and other prefixed criteria are combined using OR. `find n/priya g/mobility` matches a client whose name contains `priya` or whose goal contains `mobility`. |
+| Required value    | A supplied `g/` value cannot be empty.                                                                                                                            |
+
+### 6. Output
+
+The displayed client list is replaced with matching clients.
+
+```text
+Found 3 client(s).
+```
+
+When no client matches:
+
+```text
+Found 0 client(s). Use list to show all clients.
+```
+
+### 7. Duplicate handling
+
+Multiple goal keywords are alternatives. Each matching client appears once even when its goal contains more than one keyword or it also matches another supplied search criterion.
+
+### 8. Possible errors
+
+**Empty goal search:** `The g/ search value cannot be empty.`
+
+**Repeated goal prefix:** `The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.`
+
+**Mixed unprefixed and prefixed search:** `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`
+
+### 9. Relevant UI mockup
+
+```text
+Command: find g/strength
+
+Clients
+1. Priya Nair — Goal: Build strength
+2. Alex Tan — Goal: Improve strength and mobility
+
+Result: Found 2 client(s).
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Filter clients by case-insensitive goal substrings, support multiple alternative keywords, and combine goal criteria with other prefixed criteria using OR.
+
+#### Nice to have or later
+
+No additional later scope is specified for this feature in the source.
+
+## Feature 11: Health considerations (injuries and physical limitations)
+
+### 1. Feature
+
+Record a client's current injuries and physical limitations as one trainer-visible health-considerations note.
+
+### 2. Purpose
+
+Keeps the client's current physical considerations available in the selected client profile when the trainer plans or conducts a session.
+
+Fittix records trainer-supplied text only; it does not diagnose, assess medical suitability, or recommend treatment.
+
+### 3. Command format
+
+```text
+health INDEX h/NOTE
+```
+
+`INDEX` identifies a client in the current displayed list. A nonblank `h/NOTE` creates or replaces the note. `health INDEX h/` clears it. Exactly one `h/` prefix is required.
+
+### 4. Example commands
+
+```text
+health 2 h/Recovering from a left ankle sprain; avoid jumping exercises
+
+health 2 h/
+
+find h/ankle sprain
+```
+
+### 5. Parameters
+
+| Aspect              | Rule and current behaviour                                                                                                                          |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Client index        | A positive whole number identifying a client in the displayed list.                                                                                 |
+| Health note `h/`    | Trimmed printable text from 1 to 500 Unicode code points, containing at least one letter or digit. Internal spacing and display case are preserved. |
+| Rejected characters | ISO control, format, line-separator, paragraph-separator, surrogate, private-use, and unassigned characters are rejected.                           |
+| Clear value         | An empty `h/` clears the current note without changing other client information.                                                                    |
+| Number of notes     | Each client has at most one current health-considerations note. A new nonblank value replaces the complete existing note.                           |
+| Error               | `Health considerations must contain 1 to 500 printable characters and include at least one letter or digit.`                                        |
+
+### 6. Output
+
+On creation or replacement:
+
+```text
+Recorded health considerations for Priya Nair.
+```
+
+On clearing:
+
+```text
+Cleared health considerations for Priya Nair.
+```
+
+When the submitted value is already current:
+
+```text
+No changes made: health considerations are already current.
+```
+
+### 7. Duplicate handling
+
+Supplying a new nonblank note replaces the existing note. Supplying the identical trimmed note, or clearing a client that already has no note, is rejected as no change.
+
+### 8. Possible errors
+
+**Missing, repeated, or malformed prefix:** The command is rejected using the `health INDEX h/NOTE` usage message unless exactly one `h/` value is supplied.
+
+**Invalid client index or format:** The command is rejected using the `health INDEX h/NOTE` usage message when the index cannot be parsed.
+
+**Index outside the displayed list:** `The person index provided is invalid.`
+
+**Invalid note:** `Health considerations must contain 1 to 500 printable characters and include at least one letter or digit.`
+
+**Medical scope:** The record is informational only. Fittix must not claim that a workout, diet, or appointment is medically safe.
+
+### 9. Relevant UI mockup
+
+```text
+Client details
+Priya Nair
+
+Health considerations
+Recovering from a left ankle sprain; avoid jumping exercises
+```
+
+The health-considerations section is shown only when the selected client has a note. `find h/KEYWORDS` matches any case-insensitive substring keyword in the current note and combines with other prefixed criteria using OR.
+
+### 10. Priority distinctions
+
+#### Must have
+
+Create, replace, clear, validate, persist, display, and search one current health-considerations note per client. Saved data without this optional field loads with no note, and other client updates preserve it.
+
+This feature is described as implemented in the client-profile source.
+
+#### Nice to have or later
+
+Dated medical history, structured injury categories, severity, clinician details, attachments, treatment recommendations, and automated exercise warnings.
+
+## Feature 12: Dietary restrictions
+
+### 1. Feature
+
+Record a client's current dietary restrictions separately from the client's diet-plan target and coaching notes.
+
+### 2. Purpose
+
+Keeps allergies, exclusions, religious requirements, and food preferences visible without mixing them into nutrition targets.
+
+Fittix records trainer-entered text only and does not determine nutritional or medical suitability.
+
+### 3. Command format
+
+```text
+restriction INDEX r/RESTRICTION [r/RESTRICTION]...
+```
+
+One or more nonblank `r/` values replace the client's complete restriction list. A command containing exactly one empty `r/` clears the list.
+
+### 4. Example commands
+
+```text
+restriction 2 r/Peanut allergy r/Halal meals r/No shellfish
+
+restriction 2 r/
+
+find dr/peanut halal
+```
+
+### 5. Parameters
+
+| Aspect              | Rule and current behaviour                                                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Client index        | A positive whole number identifying a client in the displayed list.                                                                                                             |
+| Restriction `r/`    | Each nonblank value is trimmed printable text from 1 to 100 Unicode code points and must contain at least one letter or digit. Internal spacing and display case are preserved. |
+| Rejected characters | ISO control, format, line-separator, paragraph-separator, surrogate, private-use, and unassigned characters are rejected.                                                       |
+| Entry count         | Supply from 1 to 10 nonblank restrictions.                                                                                                                                      |
+| Clear value         | Exactly one empty `r/` clears the complete list. An empty value cannot be combined with another `r/` value.                                                                     |
+| Duplicate value     | Values that match after trimming and case-insensitive comparison are rejected as duplicates.                                                                                    |
+| Ordering            | Entry order and original display spelling are retained.                                                                                                                         |
+| Error               | `Each dietary restriction must contain 1 to 100 printable characters and include at least one letter or digit. At most 10 restrictions are allowed, without duplicates.`        |
+
+### 6. Output
+
+On replacement:
+
+```text
+Recorded dietary restrictions for Priya Nair.
+```
+
+On clearing:
+
+```text
+Cleared dietary restrictions for Priya Nair.
+```
+
+When the submitted ordered list is already current:
+
+```text
+No changes made: dietary restrictions are already current.
+```
+
+### 7. Duplicate handling
+
+The command replaces the complete current list rather than appending to it. Duplicate values within one command are rejected after trimming and case-insensitive comparison. Submitting the same ordered list, or clearing an already empty list, is rejected as no change.
+
+### 8. Possible errors
+
+**Missing restriction prefix:** The command is rejected using the `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` usage message.
+
+**Invalid clear form:** An empty `r/` cannot be repeated or combined with a nonblank restriction.
+
+**Invalid client index or format:** The command is rejected using the restriction command usage message when the index cannot be parsed.
+
+**Index outside the displayed list:** `The person index provided is invalid.`
+
+**Invalid restriction list:** `Each dietary restriction must contain 1 to 100 printable characters and include at least one letter or digit. At most 10 restrictions are allowed, without duplicates.`
+
+**Medical scope:** The record does not assess allergies, nutritional completeness, or meal safety.
+
+### 9. Relevant UI mockup
+
+```text
+Client context
+Dietary restrictions
+Peanut allergy; Halal meals; No shellfish
+```
+
+The dietary-restrictions section is shown only when the selected client has at least one restriction. `find dr/KEYWORDS` matches when any current restriction contains any supplied keyword, ignoring case, and combines with other prefixed criteria using OR.
+
+### 10. Priority distinctions
+
+#### Must have
+
+Replace, clear, validate, persist, display, and search one current ordered list of dietary restrictions per client. Saved data without this optional list loads with an empty list, and other client updates preserve it independently of the diet plan.
+
+This feature is described as implemented in the client-profile source.
+
+#### Nice to have or later
+
+Restriction categories, severity, expiry dates, meal validation, nutritional guidance, and historical changes.
+
+## Feature 13: Body progress tracker
+
+### 1. Feature
+
+**Status:** Implemented and merged for v1.4; these commands are not available in v1.3. This section describes the implemented feature; the original feature-specification PDF is not its reference.
+
+Record starting body measurements, record dated progress with weight and optional notes, view the complete history, and compare the latest recorded weight with the baseline. The v1.4 baseline contains **weight in kilograms and height in centimetres**. Later entries contain weight; height is baseline context, not a repeatedly measured value. Corrections and deletion of progress entries are included so input mistakes can be repaired.
+
+### 2. Purpose
+
+A trainer can review recorded changes for one client without searching separate notes. Fittix reports measurements and arithmetic differences; it does not infer health, diagnose conditions, or label weight gain/loss as good or bad.
+
+### 3. Command format
+
+| Capability                | Format                                          | Effect                                                                    |
+| ------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| Starting measurements     | `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM` | Create or replace the client's baseline.                                  |
+| Dated progress            | `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]`    | Add an entry, or replace the complete entry on that date.                 |
+| Complete history          | `bodyhistory INDEX`                             | Show baseline and all progress entries, oldest to newest.                 |
+| Latest comparison         | `bodycompare INDEX`                             | Show baseline weight, latest progress weight and their signed difference. |
+| Correct a mistaken record | `bodydelete INDEX d/DATE`                       | Delete one progress entry; never delete the baseline.                     |
+
+### 4. Example commands
+
+```text
+bodybase 2 d/2020-01-01 w/75.50 h/175
+bodylog 2 d/2020-01-08 w/74.80 n/Measured before breakfast
+bodylog 2 d/2020-01-15 w/74.20
+bodyhistory 2
+bodycompare 2
+bodylog 2 d/2020-01-08 w/74.60 n/Corrected scale reading
+bodydelete 2 d/2020-01-15
+```
+
+### 5. Parameters
+
+All five command words and prefix letters are case-sensitive. The displayed client index comes first; prefixed parameters may follow in any order. Each accepted prefix appears at most once. Unknown prefixes, missing/empty required fields and extra positional arguments are rejected. Values such as weight cannot contain extra words or units. No-argument commands' handling of extra text does not apply to these commands.
+
+| Parameter     | Rule                                                                                                                                                                                                                                                                                                          | Error                                                                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `INDEX`       | Positive decimal integer in the **currently displayed** client list, including search results. Leading zeros are accepted. Reject zero, signs, fractions, non-digits and values beyond the supported integer range. Never reinterpret an invalid index as a full-list index.                                  | `Client index must be a positive whole number shown in the client list.` Invalid displayed position: `No client exists at index INDEX.` |
+| `d/DATE`      | Exactly `yyyy-MM-dd`, with a real Gregorian date and four-digit year 0001–9999. Leading/trailing horizontal whitespace is trimmed. On command execution, date must be today or earlier in the local time zone.                                                                                                | `Measurement date must be a real date in yyyy-MM-dd format and must not be in the future.`                                              |
+| `w/WEIGHT_KG` | Decimal greater than 0 and at most 500 kg, with at most two decimal places.                                                                                                                                                                                                                                   | `Weight must be greater than 0 and at most 500 kg, with at most 2 decimal places.`                                                      |
+| `h/HEIGHT_CM` | Decimal greater than 0 and at most 300 cm, with at most two decimal places. Required only for `bodybase`.                                                                                                                                                                                                     | `Height must be greater than 0 and at most 300 cm, with at most 2 decimal places.`                                                      |
+| `n/NOTES`     | Optional for `bodylog`. When supplied, 1–300 Unicode code points after trimming outer horizontal whitespace. Preserve internal spaces, punctuation and case; reject line breaks, control and other nonprintable characters before trimming. Omission means absent notes. An explicitly blank `n/` is invalid. | `Progress notes must contain 1 to 300 printable characters without line breaks.`                                                        |
+
+Weight/height accept only ASCII digits with an optional decimal point followed by one or two digits, after trimming outer horizontal whitespace. Examples: `75`, `75.5`, `075.50`; reject `+75`, `-1`, `.5`, `75.`, `75.500`, `1e2`, `NaN`, `Infinity`, `75kg` and `1,000`. Store and calculate with exact decimals, never binary floating point. Display weights and height with two decimal places. The upper bounds are product input limits to catch mistakes, not medical suitability thresholds.
+
+Prefixes are recognized only at argument boundaries: start of the argument or after horizontal whitespace. A separated alphabetic token ending in `/` reserves a prefix (`n/`, `w/`, `ex/`, etc.); unsupported or repeated prefixes are errors, including inside notes. A slash within a word, such as `km/day`, is ordinary text. There is no escape syntax for literal reserved prefix tokens in v1.4. Reject embedded line breaks instead of normalizing them into accepted input. Command parsing must preserve raw values until these checks run.
+
+Format failures report `Invalid command format. Use: FORMAT`, substituting the relevant format from Section 3. Validation priority is: command structure (including required fields and duplicate/unknown prefixes), index syntax, field values, displayed-index range, then the state-dependent rules in Section 6. Do not partially apply a command when a later field fails.
+
+### 6. Output
+
+#### Starting measurements: `bodybase`
+
+Each client has at most one baseline. All three fields (date, weight, height) are required on both creation and replacement. A different baseline replaces the whole baseline and **retains every progress entry**. With existing entries, the replacement baseline's date must be strictly earlier than every progress date; otherwise reject it with:
+
+```text
+Baseline date must be earlier than every recorded progress date. No changes were made.
+```
+
+An identical date, numerical weight and numerical height is rejected with `This is already the current body baseline for NAME.` Differences only in numeric formatting, such as `75.5` and `75.50`, are identical. There is no baseline version history. Replacement immediately changes the reference used by comparison; the trainer must correct the baseline deliberately.
+
+Success:
+
+```text
+Created body baseline for Priya Nair: 2020-01-01; Weight: 75.50 kg; Height: 175.00 cm.
+Replaced body baseline for Priya Nair: 2020-01-01; Weight: 75.00 kg; Height: 175.00 cm.
+```
+
+#### Progress entries: `bodylog`
+
+A baseline is required first. An entry's date must be strictly after the baseline date and no later than today. Reject a missing baseline with `No body baseline recorded for NAME. Use bodybase first.` Reject an entry on/before the baseline with `Progress date must be later than the baseline date.`
+
+"Weekly" describes the expected trainer workflow, not a mandatory seven-day interval. Daily, irregular and backdated entries are accepted when these date rules hold. There is at most **one progress entry per client per date**; multiple clients may share dates. Re-entering an existing date replaces its entire entry, including notes, with explicit replacement feedback. Omitting `n/` during replacement clears old notes. To correct an erroneous date, record the entry on the correct date and delete the mistaken one using `bodydelete`.
+
+An entry with the same date, numerical weight and notes is rejected with `This body progress entry already exists for NAME on DATE.` Notes comparison is case-sensitive after outer trimming; internal spaces matter. A case-only notes correction is therefore allowed.
+
+Success:
+
+```text
+Recorded body progress for Priya Nair on 2020-01-08: 74.80 kg.
+Replaced body progress for Priya Nair on 2020-01-08: 74.60 kg.
+```
+
+#### Complete history: `bodyhistory`
+
+Show the targeted client's name, baseline date/weight/height, and **every** progress entry with date, weight and optional notes. List entries by measurement date ascending, regardless of input order. The baseline is displayed separately and is not counted as a progress entry. Omitted notes appear as `—`; long valid notes remain readable through wrapping and vertical scrolling. Never truncate the history to a fixed number of recent entries or silently discard older entries.
+
+No baseline: `No body baseline recorded for NAME. Use bodybase first.` A baseline with no entries still displays its measurements and `No body progress entries recorded.` Successful feedback: `Showing body progress history for NAME: N entries.`
+
+For a valid client index, missing-data results from history/comparison are successful empty-state displays: select that client and show the relevant empty state. They are not invalid mutations. An invalid index never changes selection.
+
+#### Latest comparison: `bodycompare`
+
+Choose the entry with the **greatest measurement date**, not the entry most recently entered or edited. Display its date/weight alongside the baseline date/weight/height. Calculate `latest weight - baseline weight`, in kg, exactly, with two decimals: positive `+1.30 kg`, negative `-1.30 kg`, unchanged `0.00 kg`. Do not show a negative sign for zero. Do not compare height, calculate BMI/percentages, or assess whether the change is desirable.
+
+No baseline: use the same missing-baseline message as history. Baseline only: `No body progress entries recorded for NAME. Use bodylog before comparing.` Do not present the baseline as a later measurement. Successful feedback: `Showing body progress comparison for NAME.` Editing/deleting an entry or replacing the baseline refreshes the comparison; deleting the latest entry selects the next greatest date, or restores the no-progress state.
+
+#### Corrections: `bodydelete`
+
+Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion has no confirmation step. Once Feature 16 is integrated, deletion will participate in shared session-scoped undo/redo; after restart, that history will be unavailable. Until that integration is merged, deletion cannot be undone through an application command.
+
+Success: `Deleted body progress for NAME on DATE.` Deleting the last entry retains the baseline and produces empty history/comparison states. There is no command to delete only the baseline; it can be corrected by replacement.
+
+#### Persistence and atomic changes
+
+Body data belongs to a client. Contact edits, diet/workout changes, remarks, scheduling, membership changes and workout logging preserve it. Body commands preserve those other fields and never alter membership sessions or payments. Deleting a client removes their body data; `clear` removes body data with its clients and follows the shared catalog-preservation rule. `clearmem` does not alter body data.
+
+Save baseline and entries with the client. Older files with a missing/null body-progress field load as an empty tracker. Persist exact measurement values, optional notes and dates; restore chronological order on load. Reject malformed data (including null list elements, wrong field types, invalid dates/numbers, duplicate entry dates, entries without a baseline, or entries on/before its date) through the normal data-loading error path, not unchecked exceptions or silent omission. Loading also rejects future measurement dates against the local date; tests must control the clock.
+
+Every mutation validates its full candidate before replacing the client. A save failure restores the previous in-memory client and saved file, including all other feature data, and reports `The body progress change could not be saved. No changes were made.` This includes baseline creation/replacement, entry creation/replacement and deletion. History/comparison do not modify measurements or other domain data. No partial write or later successful command may persist a previously rejected mutation.
+
+### 7. Duplicate handling
+
+Each client has one baseline and at most one progress entry per date. A different baseline replaces the whole baseline while retaining all entries and must predate every entry. Re-entering a progress date replaces the complete entry, including notes; omitting notes clears them. Numerically equal weight/height values compare equal regardless of formatting. An unchanged baseline or entry is rejected with the exact messages in Section 6. Notes compare case-sensitively after outer trimming; different clients may use the same dates.
+
+### 8. Possible errors
+
+Use the exact structure/index/field messages and validation order in Section 5, and the state-dependent errors in Section 6. Reject missing baselines, entries on/before the baseline, baseline replacements that would invalidate existing entries, deletion of the baseline, and deletion of a nonexistent entry.
+
+A failed mutation or save leaves both saved and in-memory data unchanged. Save failure: `The body progress change could not be saved. No changes were made.` Missing-data results from valid `bodyhistory`/`bodycompare` commands are successful empty displays, not invalid mutations.
+
+Malformed persisted values follow the normal data-loading error path; see Section 6.
+
+### 9. Relevant UI mockup
+
+The selected client's scrollable details area contains baseline, history and comparison sections. `bodyhistory` and `bodycompare` select the requested client and reveal the relevant section **without changing the current client filter or numbering**. Successful mutations select that client and refresh the body-progress display after saving. Selection changes clear stale fields, notes and comparison values. No body data shows the missing-baseline state. Invalid commands and failed saves must not send a success/display request or leave rejected values visible.
+
+```text
+Priya Nair — BODY PROGRESS
+Baseline: 2020-01-01 | 75.50 kg | 175.00 cm
+Progress history (2):
+2020-01-08 | 74.80 kg | Measured before breakfast
+2020-01-15 | 74.20 kg | —
+Latest comparison: 2020-01-15
+75.50 kg -> 74.20 kg | Change: -1.30 kg
+```
+
+Keep valid maximum-length text readable at the application's minimum supported window size, with wrapping/scrolling rather than automatically resizing the window. A later UI redesign may change placement, but must preserve all specified data, empty states and targeting behavior.
+
+### 10. Priority distinctions
+
+#### Must have
+
+all four assigned capabilities and the correction/deletion paths above; strict validation; clear empty/duplicate/error states; independent client targeting; persistence/rollback; readable display; current UG and DG. Verify positive/negative/zero comparisons, out-of-order entry dates, replacing/clearing notes, baseline corrections that retain history, last-entry deletion, filtered indices, restart with populated data, legacy files, malformed loads and fault-injected failed saves.
+
+#### Nice to have or later
+
+circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. Shared application-wide undo/redo is specified under Feature 16 and depends on that feature's integration. These are not needed to complete this v1.4 feature.
+
+## Feature 14: Membership plan
 
 ### 1. Feature
 
@@ -831,7 +1722,7 @@ Users can create and view membership plans with a unique name, number of trainin
 
 Trainers can offer several plans and track each client's remaining sessions independently.
 
-### 3. Command Format
+### 3. Command format
 
 #### Adding a new membership plan
 
@@ -885,7 +1776,7 @@ clearmem
 
 `clearmem` deletes every membership plan in the catalog and nothing else. It takes no parameters. It does not delete clients, workout plans, schedules, diet plans, workout logs, or any other data. If any membership plan is assigned to a client, no plans are deleted and Fittix shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` Remove every assignment with `rmem` first, or use `delmem` to delete individual unreferenced plans. The general client command `clear` removes clients only and does **not** delete membership plans; use `clearmem` when the catalog must be emptied.
 
-### 4. Example Commands
+### 4. Example commands
 
 ```text
 addmem n/Gold p/150 s/30
@@ -913,11 +1804,11 @@ Command words and the `mem` or `membership` argument of `view` are case-sensitiv
 
 #### Membership plan name
 
-| Aspect              | Rule, message and rationale                                                                                                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Accepted value      | 1 to 50 characters after trimming. Letters, digits, spaces, apostrophes, hyphens, and full stops are accepted; at least one letter or digit is required. This keeps plan names readable in the client card.                    |
+| Aspect              | Rule, message and rationale                                                                                                                                                                                                                                                                                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accepted value      | 1 to 50 characters after trimming. Letters, digits, spaces, apostrophes, hyphens, and full stops are accepted; at least one letter or digit is required. This keeps plan names readable in the client card.                                                                                                                                                       |
 | Whitespace and case | Remove leading/trailing spaces and collapse consecutive internal whitespace. The stored name preserves the entered case; the catalog and client-card views render it with the first character upper-cased, so a plan stored as `gold` reads as `Gold`. Compare names case-insensitively. The name passed to `amem` and `delmem` follows the same comparison rule. |
-| Error               | Membership plan name must contain 1 to 50 characters and may contain only letters, digits, spaces, apostrophes, hyphens, and full stops.                                                                                       |
+| Error               | Membership plan name must contain 1 to 50 characters and may contain only letters, digits, spaces, apostrophes, hyphens, and full stops.                                                                                                                                                                                                                          |
 
 For a plan name containing spaces, `amem` treats the final non-prefixed argument as PERSON_INDEX and the preceding text as MEMBERSHIP_NAME. If supplied, `e/` must follow PERSON_INDEX. For example: `amem Gold Plus 1 e/2026-12-30`.
 
@@ -947,7 +1838,7 @@ The expiry date belongs to the client's assignment, so clients on the same plan 
 
 #### Client index
 
-PERSON_INDEX follows the shared client index rules: a positive integer identifying a client in the displayed list. An index outside the displayed list is rejected. `rmem`, `imem`, and `dmem` require that client to have an assigned plan.
+PERSON_INDEX is a positive integer identifying a client in the displayed list. An index outside the displayed list is rejected. `rmem`, `imem`, and `dmem` require that client to have an assigned plan.
 
 ### 6. Output
 
@@ -1031,280 +1922,13 @@ Create, view, and delete uniquely named plans with a price and 1 to 1000 startin
 
 #### Nice to have or later
 
-Edit plan definitions, replace an assignment without first removing it, preserve unused sessions on renewal, automatic deductions from workout logs, renewal history, expiry enforcement and alerts, and payment tracking.
+Edit plan definitions, replace an assignment without first removing it, preserve unused sessions on renewal, automatic deductions from workout logs, renewal history, and expiry enforcement and alerts. Payment records are covered by Feature 17.
 
-## Feature 8: Health considerations
-
-### 1. Feature
-
-Record a client's current injuries and physical limitations as one trainer-visible health profile.
-
-### 2. Purpose
-
-Lets trainers see practical safety considerations before planning or conducting a session. Fittix records the trainer's supplied text only; it does not diagnose, assess medical suitability, or recommend treatment.
-
-### 3. Command format
-
-```text
-health INDEX h/NOTE
-```
-
-`INDEX` identifies a client in the current displayed list. A nonblank `h/NOTE` creates or replaces the profile. `health INDEX h/` clears it. The `h/` prefix is required in both cases.
-
-### 4. Example commands
-
-```text
-health 2 h/Recovering from a left ankle sprain; avoid jumping exercises
-
-health 2 h/
-```
-
-### 5. Parameters
-
-| Aspect | Rule, message and rationale |
-|---|---|
-| Client index | A positive whole number identifying a client in the displayed list. |
-| Health note `h/` | Trimmed printable text from 1 to 500 characters, containing at least one letter or digit. Internal spaces and display case are preserved. New lines and control characters are rejected. |
-| Clear value | An empty `h/` clears the current profile; it does not delete the client or other client information. |
-| Error | Health considerations must contain 1 to 500 printable characters and include at least one letter or digit. |
-
-### 6. Output
-
-On creation or replacement, show `Recorded health considerations for NAME.` On clearing, show `Cleared health considerations for NAME.` The selected client's details show the current profile when present and hide it when absent.
-
-```text
-Recorded health considerations for Priya Nair.
-```
-
-### 7. Duplicate handling
-
-There is one current profile per client. Supplying a new nonblank note replaces the entire existing note. Supplying the identical trimmed note is rejected as no change.
-
-### 8. Possible errors
-
-**Missing or repeated prefix:** The command requires exactly one `h/` prefix.
-
-**Invalid client index:** The client index must identify a client in the displayed list.
-
-**Medical scope:** The record is informational only. Fittix must not claim that a workout, diet, or appointment is medically safe.
-
-### 9. Search
-
-`find h/KEYWORDS` finds clients whose current health profile contains any supplied keyword, case-insensitively. It combines with other find criteria using the existing OR behavior.
-
-### 10. Priority distinctions
-
-#### Must have
-
-Create, replace, clear, persist, display, and search one current health profile per client.
-
-#### Nice to have or later
-
-Dated medical history, structured injury categories, severity, clinician details, attachments, treatment recommendations, and automated exercise warnings.
-
-## Feature 9: Dietary restrictions
+## Feature 15: Advanced scheduling and client monitoring
 
 ### 1. Feature
 
-Record a client's current dietary restrictions separately from their diet target and coaching notes.
-
-### 2. Purpose
-
-Lets trainers record allergies, exclusions, religious requirements, and food preferences without mixing them into nutrition targets. Fittix records trainer-entered text only and does not determine nutritional or medical suitability.
-
-### 3. Command format
-
-```text
-restriction INDEX r/RESTRICTION [r/RESTRICTION]...
-```
-
-Repeated `r/` values replace the client's complete current restriction list. A command containing exactly one empty `r/` clears the list.
-
-### 4. Example commands
-
-```text
-restriction 2 r/Peanut allergy r/Halal meals r/No shellfish
-
-restriction 2 r/
-```
-
-### 5. Parameters
-
-| Aspect | Rule, message and rationale |
-|---|---|
-| Client index | A positive whole number identifying a client in the displayed list. |
-| Restriction `r/` | Each nonblank value is trimmed printable text from 1 to 100 characters, containing at least one letter or digit. Preserve display case and internal spacing. |
-| Entry count | Supply from 1 to 10 nonblank restrictions. A single empty `r/` is the sole valid clear form. |
-| Duplicate value | Values that match after trimming and ignoring case are duplicates and are rejected. The first-entered spelling and order are retained. |
-| Error | Each dietary restriction must contain 1 to 100 printable characters and include at least one letter or digit. |
-
-### 6. Output
-
-On replacement, show `Recorded dietary restrictions for NAME.` On clearing, show `Cleared dietary restrictions for NAME.` The selected client's details show the current ordered list when nonempty and hide it when empty.
-
-### 7. Duplicate handling
-
-The command replaces the whole current list rather than appending to it. Repeating the same restriction in one command, or submitting an unchanged ordered list, is rejected without changing stored data.
-
-### 8. Possible errors
-
-**Missing prefix:** At least one `r/` prefix is required.
-
-**Invalid clear form:** An empty `r/` cannot be combined with nonempty entries or repeated.
-
-**Invalid client index:** The client index must identify a client in the displayed list.
-
-**Medical scope:** The record does not assess allergies, nutritional completeness, or meal safety.
-
-### 9. Search
-
-`find dr/KEYWORDS` finds clients when any current restriction contains any supplied keyword, case-insensitively. It combines with other find criteria using the existing OR behavior.
-
-### 10. Priority distinctions
-
-#### Must have
-
-Replace, clear, persist, display, and search a current ordered list of dietary restrictions independently of the diet plan.
-
-#### Nice to have or later
-
-Restriction categories, severity, expiry dates, meal validation, nutritional guidance, and historical changes.
-
-## Feature 10: Body progress tracker
-
-**Status:** Implemented for v1.4. These commands are not available in v1.3. The Markdown specification is the reference for this feature.
-
-### 1. Feature and scope
-
-Record starting body measurements, record dated progress with weight and optional notes, view the complete history, and compare the latest recorded weight with the baseline. The v1.4 baseline contains **weight in kilograms and height in centimetres**. Later entries contain weight; height is baseline context, not a repeatedly measured value. Corrections and deletion of progress entries are included so input mistakes can be repaired.
-
-### 2. Purpose
-
-A trainer can review recorded changes for one client without searching separate notes. Fittix reports measurements and arithmetic differences; it does not infer health, diagnose conditions, or label weight gain/loss as good or bad.
-
-### 3. Commands
-
-| Capability | Format | Effect |
-| --- | --- | --- |
-| Starting measurements | `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM` | Create or replace the client's baseline. |
-| Dated progress | `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]` | Add an entry, or replace the complete entry on that date. |
-| Complete history | `bodyhistory INDEX` | Show baseline and all progress entries, oldest to newest. |
-| Latest comparison | `bodycompare INDEX` | Show baseline weight, latest progress weight and their signed difference. |
-| Correct a mistaken record | `bodydelete INDEX d/DATE` | Delete one progress entry; never delete the baseline. |
-
-All five command words and prefix letters are case-sensitive. The displayed client index comes first; prefixed parameters may follow in any order. Each accepted prefix appears at most once. Unknown prefixes, missing/empty required fields and extra positional arguments are rejected. Values such as weight cannot contain extra words or units. No-argument commands' handling of extra text does not apply to these commands.
-
-Example workflow (all dates must be today or earlier):
-
-```text
-bodybase 2 d/2020-01-01 w/75.50 h/175
-bodylog 2 d/2020-01-08 w/74.80 n/Measured before breakfast
-bodylog 2 d/2020-01-15 w/74.20
-bodyhistory 2
-bodycompare 2
-bodylog 2 d/2020-01-08 w/74.60 n/Corrected scale reading
-bodydelete 2 d/2020-01-15
-```
-
-### 4. Shared validation and parsing
-
-| Parameter | Rule | Error |
-| --- | --- | --- |
-| `INDEX` | Positive decimal integer in the **currently displayed** client list, including search results. Leading zeros are accepted. Reject zero, signs, fractions, non-digits and values beyond the supported integer range. Never reinterpret an invalid index as a full-list index. | `Client index must be a positive whole number shown in the client list.` Invalid displayed position: `No client exists at index INDEX.` |
-| `d/DATE` | Exactly `yyyy-MM-dd`, with a real Gregorian date and four-digit year 0001–9999. Leading/trailing horizontal whitespace is trimmed. On command execution, date must be today or earlier in the local time zone. | `Measurement date must be a real date in yyyy-MM-dd format and must not be in the future.` |
-| `w/WEIGHT_KG` | Decimal greater than 0 and at most 500 kg, with at most two decimal places. | `Weight must be greater than 0 and at most 500 kg, with at most 2 decimal places.` |
-| `h/HEIGHT_CM` | Decimal greater than 0 and at most 300 cm, with at most two decimal places. Required only for `bodybase`. | `Height must be greater than 0 and at most 300 cm, with at most 2 decimal places.` |
-| `n/NOTES` | Optional for `bodylog`. When supplied, 1–300 Unicode code points after trimming outer horizontal whitespace. Preserve internal spaces, punctuation and case; reject line breaks, control and other nonprintable characters before trimming. Omission means absent notes. An explicitly blank `n/` is invalid. | `Progress notes must contain 1 to 300 printable characters without line breaks.` |
-
-Weight/height accept only ASCII digits with an optional decimal point followed by one or two digits, after trimming outer horizontal whitespace. Examples: `75`, `75.5`, `075.50`; reject `+75`, `-1`, `.5`, `75.`, `75.500`, `1e2`, `NaN`, `Infinity`, `75kg` and `1,000`. Store and calculate with exact decimals, never binary floating point. Display weights and height with two decimal places. The upper bounds are product input limits to catch mistakes, not medical suitability thresholds.
-
-Prefixes are recognized only at argument boundaries: start of the argument or after horizontal whitespace. A separated alphabetic token ending in `/` reserves a prefix (`n/`, `w/`, `ex/`, etc.); unsupported or repeated prefixes are errors, including inside notes. A slash within a word, such as `km/day`, is ordinary text. There is no escape syntax for literal reserved prefix tokens in v1.4. Reject embedded line breaks instead of normalizing them into accepted input. Command parsing must preserve raw values until these checks run.
-
-Format failures report `Invalid command format. Use: FORMAT`, substituting the relevant format from Section 3. Validation priority is: command structure (including required fields and duplicate/unknown prefixes), index syntax, field values, displayed-index range, then the state-dependent rules below. Do not partially apply a command when a later field fails.
-
-### 5. Starting measurements: `bodybase`
-
-Each client has at most one baseline. All three fields (date, weight, height) are required on both creation and replacement. A different baseline replaces the whole baseline and **retains every progress entry**. With existing entries, the replacement baseline's date must be strictly earlier than every progress date; otherwise reject it with:
-
-```text
-Baseline date must be earlier than every recorded progress date. No changes were made.
-```
-
-An identical date, numerical weight and numerical height is rejected with `This is already the current body baseline for NAME.` Differences only in numeric formatting, such as `75.5` and `75.50`, are identical. There is no baseline version history. Replacement immediately changes the reference used by comparison; the trainer must correct the baseline deliberately.
-
-Success:
-
-```text
-Created body baseline for Priya Nair: 2020-01-01; Weight: 75.50 kg; Height: 175.00 cm.
-Replaced body baseline for Priya Nair: 2020-01-01; Weight: 75.00 kg; Height: 175.00 cm.
-```
-
-### 6. Progress entries: `bodylog`
-
-A baseline is required first. An entry's date must be strictly after the baseline date and no later than today. Reject a missing baseline with `No body baseline recorded for NAME. Use bodybase first.` Reject an entry on/before the baseline with `Progress date must be later than the baseline date.`
-
-"Weekly" describes the expected trainer workflow, not a mandatory seven-day interval. Daily, irregular and backdated entries are accepted when these date rules hold. There is at most **one progress entry per client per date**; multiple clients may share dates. Re-entering an existing date replaces its entire entry, including notes, with explicit replacement feedback. Omitting `n/` during replacement clears old notes. To correct an erroneous date, record the entry on the correct date and delete the mistaken one using `bodydelete`.
-
-An entry with the same date, numerical weight and notes is rejected with `This body progress entry already exists for NAME on DATE.` Notes comparison is case-sensitive after outer trimming; internal spaces matter. A case-only notes correction is therefore allowed.
-
-Success:
-
-```text
-Recorded body progress for Priya Nair on 2020-01-08: 74.80 kg.
-Replaced body progress for Priya Nair on 2020-01-08: 74.60 kg.
-```
-
-### 7. History: `bodyhistory`
-
-Show the targeted client's name, baseline date/weight/height, and **every** progress entry with date, weight and optional notes. List entries by measurement date ascending, regardless of input order. The baseline is displayed separately and is not counted as a progress entry. Omitted notes appear as `—`; long valid notes remain readable through wrapping and vertical scrolling. Never truncate the history to a fixed number of recent entries or silently discard older entries.
-
-No baseline: `No body baseline recorded for NAME. Use bodybase first.` A baseline with no entries still displays its measurements and `No body progress entries recorded.` Successful feedback: `Showing body progress history for NAME: N entries.`
-
-For a valid client index, missing-data results from history/comparison are successful empty-state displays: select that client and show the relevant empty state. They are not invalid mutations. An invalid index never changes selection.
-
-### 8. Comparison: `bodycompare`
-
-Choose the entry with the **greatest measurement date**, not the entry most recently entered or edited. Display its date/weight alongside the baseline date/weight/height. Calculate `latest weight - baseline weight`, in kg, exactly, with two decimals: positive `+1.30 kg`, negative `-1.30 kg`, unchanged `0.00 kg`. Do not show a negative sign for zero. Do not compare height, calculate BMI/percentages, or assess whether the change is desirable.
-
-No baseline: use the same missing-baseline message as history. Baseline only: `No body progress entries recorded for NAME. Use bodylog before comparing.` Do not present the baseline as a later measurement. Successful feedback: `Showing body progress comparison for NAME.` Editing/deleting an entry or replacing the baseline refreshes the comparison; deleting the latest entry selects the next greatest date, or restores the no-progress state.
-
-### 9. Corrections: `bodydelete`
-
-Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion is permanent in the v1.4 tracker and has no confirmation step; any later shared undo/redo support must be documented when integrated.
-
-Success: `Deleted body progress for NAME on DATE.` Deleting the last entry retains the baseline and produces empty history/comparison states. There is no command to delete only the baseline; it can be corrected by replacement.
-
-### 10. Display, persistence and failures
-
-The selected client's centre details column contains a scrollable Body progress card with baseline, history and comparison sections. The centre column itself scrolls when needed so the command area remains visible at the minimum supported window size. `bodyhistory` and `bodycompare` select the requested client and reveal the relevant section **without changing the current client filter or numbering**. Successful mutations select that client and refresh the body-progress display after saving. Selection changes clear stale fields, notes and comparison values. No body data shows the missing-baseline state. Invalid commands and failed saves must not send a success/display request or leave rejected values visible.
-
-```text
-Priya Nair — BODY PROGRESS
-Baseline: 2020-01-01 | 75.50 kg | 175.00 cm
-Progress history (2):
-2020-01-08 | 74.80 kg | Measured before breakfast
-2020-01-15 | 74.20 kg | —
-Latest comparison: 2020-01-15
-75.50 kg -> 74.20 kg | Change: -1.30 kg
-```
-
-Keep valid maximum-length text readable at the application's minimum supported window size, with wrapping/scrolling rather than automatically resizing the window. The redesigned three-column UI preserves all specified data, empty states and targeting behavior.
-
-Body data belongs to a client. Contact edits, diet/workout changes, remarks, scheduling, membership changes and workout logging preserve it. Body commands preserve those other fields and never alter membership sessions or payments. Deleting a client removes their body data; `clear` removes body data with its clients and follows the shared catalog-preservation rule. `clearmem` does not alter body data.
-
-Save baseline and entries with the client. Older files with a missing/null body-progress field load as an empty tracker. Persist exact measurement values, optional notes and dates; restore chronological order on load. Reject malformed data (including null list elements, wrong field types, invalid dates/numbers, duplicate entry dates, entries without a baseline, or entries on/before its date) through the normal data-loading error path, not unchecked exceptions or silent omission. Loading also rejects future measurement dates against the local date; tests must control the clock.
-
-Every mutation validates its full candidate before replacing the client. A save failure restores the previous in-memory client and saved file, including all other feature data, and reports `The body progress change could not be saved. No changes were made.` This includes baseline creation/replacement, entry creation/replacement and deletion. History/comparison do not modify measurements or other domain data. No partial write or later successful command may persist a previously rejected mutation.
-
-### 11. v1.4 priorities and acceptance evidence
-
-**Must have:** all four assigned capabilities and the correction/deletion paths above; strict validation; clear empty/duplicate/error states; independent client targeting; persistence/rollback; readable display; current UG and DG. Verify positive/negative/zero comparisons, out-of-order entry dates, replacing/clearing notes, baseline corrections that retain history, last-entry deletion, filtered indices, restart with populated data, legacy files, malformed loads and fault-injected failed saves.
-
-**Later scope:** circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. These are not needed to complete this v1.4 feature.
-
-## Feature 11: Advanced scheduling and client monitoring (v1.4 Alpha)
-
-### 1. Feature
+**Iteration:** v1.4 Alpha. **Author:** Pham Doan Gia Hien.
 
 Find clients without a recently recorded workout, view all client appointments on a date, record ad-hoc meetings, and prevent two appointments from starting at the same time.
 
@@ -1321,7 +1945,7 @@ meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION
 schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION
 ```
 
-`schedule` is the existing training appointment command (Feature 2); Feature 11 adds the shared start-time conflict rule. `viewschedule INDEX` continues to show one client's appointments, including meetings.
+`schedule` is the existing training appointment command (Feature 2); Feature 15 adds the shared start-time conflict rule. `viewschedule INDEX` continues to show one client's appointments, including meetings.
 
 ### 4. Example commands
 
@@ -1334,13 +1958,13 @@ schedule 2 d/2099-03-15 tm/15:30 l/Gym
 
 ### 5. Parameters
 
-| Parameter | Rule |
-|---|---|
-| `DAYS` | Positive whole number within the supported integer range. The look-back window includes today and the previous `DAYS - 1` calendar days. |
-| `INDEX` | Positive index in the currently displayed client list, including filtered results. |
+| Parameter      | Rule                                                                                                                                                                         |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DAYS`         | Positive whole number within the supported integer range. The look-back window includes today and the previous `DAYS - 1` calendar days.                                     |
+| `INDEX`        | Positive index in the currently displayed client list, including filtered results.                                                                                           |
 | `d/YYYY-MM-DD` | Real calendar date. `dayschedule` may inspect a past, current, or future date; a new `meeting` or `schedule` appointment must be later than the current local date and time. |
-| `tm/HH:mm` | Valid 24-hour local time for a new appointment. |
-| `l/LOCATION` | Nonblank meeting or training location. |
+| `tm/HH:mm`     | Valid 24-hour local time for a new appointment.                                                                                                                              |
+| `l/LOCATION`   | Nonblank meeting or training location.                                                                                                                                       |
 
 `inactive` and `dayschedule` inspect the full client roster even when the current client list is filtered. They do not change the current filter or stored data.
 
@@ -1362,7 +1986,11 @@ Client appointments on 2099-03-15:
 Recorded meeting for Amy Bee: 2099-03-15 14:30 at Cafe
 ```
 
-### 7. Duplicate and conflict handling
+#### Search and persistence
+
+`inactive` searches completed workout logs, not scheduled appointments. `dayschedule` searches all clients' appointments. Meetings use the existing `trainingSessions` storage list with a type field; records saved before this feature remain readable as training sessions. Successful changes persist through the app's normal save path.
+
+### 7. Duplicate handling
 
 Before saving a `meeting` or `schedule`, search every client's training sessions and meetings for the same date **and start time**, including the selected client's records. Reject a clash without changing data: `Scheduling conflict: NAME already has an appointment at YYYY-MM-DD HH:mm.` Older saved sessions with no appointment type load as training. Appointment durations are not stored, so different start times can still overlap in practice.
 
@@ -1374,9 +2002,15 @@ Before saving a `meeting` or `schedule`, search every client's training sessions
 
 **Same start time:** Report the existing client's name and start time using the conflict message above; preserve all appointments.
 
-### 9. Search and persistence
+### 9. Relevant UI mockup
 
-`inactive` searches completed workout logs, not scheduled appointments. `dayschedule` searches all clients' appointments. Meetings use the existing `trainingSessions` storage list with a type field; records saved before this feature remain readable as training sessions. Successful changes persist through the app's normal save path.
+The command-result area displays the full-roster inactivity list or date agenda. Meeting records also appear in the selected client's `viewschedule` output. A dedicated calendar layout is later scope.
+
+```text
+Client appointments on 2099-03-15:
+1. 14:30 Amy Bee (meeting) at Cafe
+2. 15:30 Bob Cat (training) at Gym
+```
 
 ### 10. Priority distinctions
 
@@ -1387,3 +2021,186 @@ The four commands and behaviors above: full-roster inactivity and day views, dat
 #### Nice to have or later
 
 Appointment durations and overlap detection, recurring meetings, reminders, calendar layout, and edit/delete appointment commands.
+
+## Feature 16: Undo and redo
+
+### 1. Feature
+
+Reverse a saved data change with `undo` and restore an undone change with `redo`. **Version:** v1.4.
+
+### 2. Purpose
+
+A trainer can reverse an accidental change to saved data and restore a change that was undone. Undo and redo operate on the complete address book, including clients, workout records, plans, and membership data.
+
+### 3. Command format
+
+```text
+undo
+redo
+```
+
+Neither command accepts parameters.
+
+### 4. Example commands
+
+```text
+delete 1
+undo
+redo
+```
+
+After `delete 1`, `undo` restores the client. `redo` deletes the client again.
+
+### 5. Parameters
+
+Neither command accepts parameters. Reject extra text; the general legacy behaviour of ignoring extra arguments for some no-argument commands does not apply to `undo` or `redo`.
+
+### 6. Output
+
+#### Undo behaviour
+
+Each successful command that changes saved address-book data creates one undo step. `undo` restores the state immediately before the most recent such change, then saves the restored state.
+
+Commands that only read, display, or filter data do not create undo steps. Commands that fail, or succeed without changing saved data, do not create undo steps. If no step is available, report `No changes to undo.` without changing data.
+
+On success, report `Undid the last change.`
+
+#### Redo behaviour
+
+After an undo, `redo` restores the state that the undo replaced, then saves it. Multiple consecutive undo and redo commands move backward and forward through successful changes one step at a time.
+
+A new successful data-changing command after an undo clears redo history. Read-only commands and failed commands leave redo history available. If no step is available, report `No changes to redo.` without changing data.
+
+On success, report `Redid the last change.`
+
+#### Persistence and scope
+
+Undo and redo restore the complete saved address-book snapshot. They do not reverse the search filter or window settings. The client list is shown without a search filter after a successful undo or redo so restored clients are visible.
+
+The restored address book is saved using the usual storage path. If saving fails, the in-memory address book is returned to its pre-command state, and the undo/redo history remains unchanged.
+
+Undo/redo history exists only during the current application session. Restarting Fittix loads the saved data but starts with empty undo and redo histories. The commands cannot undo changes made in an earlier application session.
+
+### 7. Duplicate handling
+
+A successful command that leaves saved data unchanged creates no undo step. Failed commands and read-only commands create no step and do not clear redo. A new successful data-changing command after undo clears redo history. Each effective command contributes exactly one complete-address-book step.
+
+### 8. Possible errors
+
+**Empty undo history:** `No changes to undo.`
+
+**Empty redo history:** `No changes to redo.`
+
+**Extra parameters:** Reject the command because neither command accepts arguments. The source does not specify the exact error text.
+
+**Save failure:** Return the in-memory address book to its pre-command state and keep undo/redo history unchanged.
+
+**Restart:** History is session-local; saved changes from earlier application sessions cannot be undone.
+
+### 9. Relevant UI mockup
+
+After a successful undo/redo, display the full unfiltered client list so restored clients are visible. Window settings are not reversed.
+
+```text
+Command: undo
+Result: Undid the last change.
+
+Command: redo
+Result: Redid the last change.
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Complete saved-address-book snapshots; single-step and repeated undo/redo; normal saving with rollback; correct handling of no-ops, read-only and failed commands; clearing redo only after a new effective change; unfiltered client display after success; session-local history.
+
+**Acceptance evidence:** Cover an empty history; multiple changes followed by multiple undo and redo commands; persistence of restored data; read-only commands between history operations; rejection of extra parameters; clearing redo after a new successful change; retention of redo after a failed change; and rollback when saving an undo fails.
+
+#### Nice to have or later
+
+Cross-session undo/redo history is outside the current session-only contract. No other later capabilities are specified in the source.
+
+## Feature 17: Payment records
+
+### 1. Feature
+
+Record a payment for a client and show that client's payment records on their information card.
+
+### 2. Purpose
+
+Give trainers a persistent record of payments received from each client, including the amount, date, and optional remarks.
+
+### 3. Command format
+
+```text
+pay PERSON_INDEX a/AMOUNT d/YYYY-MM-DD [r/REMARKS]
+```
+
+`PERSON_INDEX`, `a/AMOUNT`, and `d/YYYY-MM-DD` are required. `r/REMARKS` is optional. The prefixed parameters may appear in any order after `PERSON_INDEX`; each prefix may appear at most once. The command word and prefix letters are case-sensitive.
+
+### 4. Example commands
+
+```text
+pay 1 a/150 d/2026-10-20
+pay 2 d/2026-10-19 a/75.50 r/October membership payment
+```
+
+### 5. Parameters
+
+| Parameter | Rule |
+| --------- | ---- |
+| `PERSON_INDEX` | A positive integer identifying a client in the currently displayed client list. An index outside that list is invalid. |
+| `a/AMOUNT` | A positive amount with at most two decimal places, without a currency symbol or thousands separators. For example, `150`, `150.5`, and `150.50` are valid; `0`, `-5`, `1.234`, and `S$150` are invalid. Store and display the amount to two decimal places without floating-point rounding. |
+| `d/YYYY-MM-DD` | A real Gregorian calendar date in exactly `YYYY-MM-DD` format, with a four-digit year from 0001 to 9999. Past, current, and future dates are accepted. |
+| `r/REMARKS` | Optional nonblank text of 1–300 printable characters after trimming leading and trailing whitespace. Preserve internal spacing, punctuation, and case. Reject line breaks and control characters. An omitted `r/` means no remarks; an empty `r/` is invalid. |
+
+Reject missing, repeated, unknown, or empty prefixed parameters and extra unprefixed text. A failed command creates no payment record.
+
+### 6. Output
+
+On success, save one payment record belonging to the specified client, select that client, and refresh the payment section of their information card. Show every saved payment with its date, amount to two decimal places, and remarks when present. Show a clear empty state when the client has no payments. Display records by date, oldest first; for payments on the same date, preserve entry order. Long remarks wrap or scroll rather than being truncated.
+
+```text
+Recorded payment for Priya Nair: 150.00 on 2026-10-20.
+```
+
+The client card does not imply that a payment has changed a membership assignment, plan price, or remaining session balance. Other client commands preserve payment records. Deleting a client removes their payments with that client.
+
+### 7. Duplicate handling
+
+Each successful `pay` command adds a separate record. Multiple payments for the same client may have the same date, amount, and remarks; they remain distinct records and appear in entry order for that date.
+
+### 8. Possible errors
+
+**Invalid client index:** The index must identify a client in the currently displayed list.
+
+**Invalid amount:** Amount must be greater than zero and have at most two decimal places.
+
+**Invalid date:** Payment date must be a valid date in YYYY-MM-DD format.
+
+**Invalid remarks:** Remarks must contain 1 to 300 printable characters without line breaks when `r/` is supplied.
+
+**Invalid command format:** Required values are missing, a prefix repeats, an unknown prefix is supplied, or extra unprefixed text is present. Show the command format from Section 3.
+
+**Data cannot be saved:** No payment is added to saved or in-memory client data. A failed command does not create an undo step.
+
+### 9. Relevant UI mockup
+
+```text
+Clients           | Priya Nair [SELECTED]
+1. Priya Nair     | Payments
+                   | 2026-10-19  75.50  October membership payment
+                   | 2026-10-20  150.00
+Result: Recorded payment for Priya Nair: 150.00 on 2026-10-20.
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Add, validate, persist, and display all payment records for a client, including optional remarks. Load older client data with no payment field as an empty payment history. A successful `pay` is one data change for Feature 16's undo and redo.
+
+#### Nice to have or later
+
+Editing or deleting individual payments, payment-method tracking, refunds, receipts, totals, and automatic reconciliation with membership plans.

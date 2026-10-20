@@ -236,6 +236,7 @@ For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw argument
 Each `Person` owns an immutable `DietaryRestrictions` list, which is empty when no restrictions are recorded. `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` replaces the complete list; one blank sole `r/` clears it. The value object validates 1 to 10 ordered entries, each containing 1 to 100 printable Unicode characters and at least one letter or digit. It rejects duplicates after trimming and case-insensitive comparison while preserving the first supplied display text and ordering.
 
 `DietaryRestrictionsCommandParser` parses a displayed-list index and repeated `r/` values. `DietaryRestrictionsCommand` rejects an unchanged list and replaces the client with `Person#withDietaryRestrictions`, preserving unrelated data. `JsonAdaptedPerson` stores the list as `dietaryRestrictions`; an absent field loads as an empty list for backwards compatibility. `find dr/KEYWORDS` uses `DietaryRestrictionsContainsKeywordsPredicate` and retains the existing OR semantics. The selected-client detail pane only displays the list when nonempty. Restriction text is informational and does not determine allergy or meal safety.
+
 ### Health considerations
 
 Each `Person` has an optional immutable `HealthProfile` with one current trainer-visible note. `health INDEX h/NOTE` replaces the note and `health INDEX h/` clears it. `HealthProfile` trims outer whitespace, accepts 1 to 500 printable Unicode characters with at least one letter or digit, and rejects line breaks and control characters. The profile is serialized as the optional `healthProfile` field in `JsonAdaptedPerson`; older data without that field loads without a profile.
@@ -279,11 +280,11 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
-The client card shows a single membership tag reading `NAME Member: COUNT sessions left`, with ` [expires YYYY-MM-DD]` appended when an expiry exists. The tag wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. Command messages and error behavior follow the [Feature 7 specification](featureSpecs.md#feature-7-membership-plan).
+The client card shows a single membership tag reading `Plan_name Member: N sessions left`, with `[expires YYYY-MM-DD]` appended when an expiry exists and the plan name's first letter upper-cased. The tag joins the client's other tags in the card's tag area, directly under the name, and wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. The plan-list output of `view mem`/`view membership` prefixes each price with `S$` and upper-cases the first letter of each plan name. Command messages and error behavior follow the [Feature 14 specification](featureSpecs.md#feature-14-membership-plan).
 
 ### Body progress tracker
 
-Implemented for v1.4. The [feature contract](featureSpecs.md#feature-10-body-progress-tracker) and [User Guide](UserGuide.md#body-progress-tracker) define user-visible behavior. The tracker supports baseline measurements, dated weight/notes, complete history, latest-to-baseline comparison, and correction/deletion. Feature numbering remains unchanged here pending the shared specification consolidation by the document owner.
+Implemented for v1.4. The [feature contract](featureSpecs.md#feature-13-body-progress-tracker) and [User Guide](UserGuide.md#body-progress-tracker) define user-visible behavior. The tracker supports baseline measurements, dated weight/notes, complete history, latest-to-baseline comparison, and correction/deletion.
 
 #### Ownership and invariants
 
@@ -1082,7 +1083,7 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
 Use a disposable address book with at least two clients.
 
 1. Run `addmem n/Gold p/150 s/30` and `addmem n/Silver p/80 s/12`, then `view mem` and `view membership`.<br>
-   Expected: Both views list Gold then Silver with two-decimal prices and starting session counts. Adding `n/gold` again is rejected.
+   Expected: Both views list Gold then Silver with `S$`-prefixed two-decimal prices and starting session counts. Adding `n/gold` again is rejected.
 2. Run `amem Gold 1 e/YYYY-MM-DD` with a real date later than today, then `amem Gold 2`.<br>
    Expected: Both clients start with 30 sessions. Only the first card shows an expiry date; another assignment to either client is rejected.
 3. Run `imem 1 3` and `dmem 2 2`.<br>
