@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -180,6 +181,54 @@ public class ClientDetailPanelTest {
     }
 
     @Test
+    public void payments_singularSummaryAndVariedAmountsShowExactDateAndTwoDecimals() throws Exception {
+        runOnFxThread(() -> {
+            PaymentRecord single = PaymentRecord.fromText("7.5", "2024-02-29", Optional.empty());
+            ClientDetailPanel panel = new ClientDetailPanel();
+            panel.showPerson(new PersonBuilder().withPaymentRecords(List.of(single)).build(), 1);
+
+            assertEquals("1 record", label(panel, "paymentSummary").getText());
+            assertEquals(List.of("2024-02-29", "7.50"), labelTexts(vbox(panel, "paymentRows")));
+
+            PaymentRecord whole = PaymentRecord.fromText("50", "2026-01-01", Optional.empty());
+            panel.showPerson(new PersonBuilder().withPaymentRecords(List.of(whole, single)).build(), 1);
+
+            assertEquals("2 records", label(panel, "paymentSummary").getText());
+            assertEquals(List.of("2024-02-29", "7.50", "2026-01-01", "50.00"),
+                    labelTexts(vbox(panel, "paymentRows")));
+            return null;
+        });
+    }
+
+    @Test
+    public void payments_sectionStaysIndependentOfWorkoutAndEmptyStates() throws Exception {
+        runOnFxThread(() -> {
+            PaymentRecord payment = PaymentRecord.fromText("50", "2026-01-01", Optional.empty());
+            ClientDetailPanel panel = new ClientDetailPanel();
+            panel.showPerson(new PersonBuilder().withPaymentRecords(List.of(payment)).build(), 1);
+
+            VBox paymentRows = vbox(panel, "paymentRows");
+            VBox workoutRows = vbox(panel, "workoutRows");
+            assertTrue(paymentRows.getParent().getStyleClass().contains("payments-card"));
+            assertFalse(paymentRows.getParent().getStyleClass().contains("workout-card"));
+            assertNotSame(paymentRows.getParent(), workoutRows.getParent());
+            assertTrue(region(panel, "paymentRows").isManaged());
+            assertTrue(region(panel, "workoutEmpty").isManaged());
+            assertFalse(region(panel, "paymentEmpty").isManaged());
+
+            panel.showPerson(new PersonBuilder()
+                    .withWorkoutPlan(new WorkoutPlan(List.of(new Exercise("Squat", 3, 8, 60))))
+                    .build(), 2);
+
+            assertEquals(0, vbox(panel, "paymentRows").getChildren().size());
+            assertTrue(region(panel, "paymentEmpty").isManaged());
+            assertTrue(region(panel, "workoutRows").isManaged());
+            assertFalse(region(panel, "workoutEmpty").isManaged());
+            return null;
+        });
+    }
+
+    @Test
     public void payments_optionalRemarksAndMaximumLengthRemarksWrap() throws Exception {
         runOnFxThread(() -> {
             String longRemarks = "x".repeat(PaymentRecord.MAX_REMARKS_LENGTH);
@@ -196,6 +245,7 @@ public class ClientDetailPanelTest {
                     .findFirst().orElseThrow();
             assertTrue(remarks.isWrapText());
             assertTrue(remarks.getMaxWidth() > 0);
+            assertEquals(PaymentRecord.MAX_REMARKS_LENGTH, remarks.getText().length());
             return null;
         });
     }
