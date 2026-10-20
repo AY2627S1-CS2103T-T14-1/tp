@@ -8,6 +8,7 @@ import static seedu.address.testutil.TypicalPersons.BENSON;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import seedu.address.model.person.Email;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Goal;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
@@ -217,6 +219,75 @@ public class JsonAdaptedPersonTest {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
                 VALID_REMARK, VALID_TAGS, VALID_EXERCISES, null, null, null);
         assertEquals(new PersonBuilder(BENSON).build(), person.toModelType());
+    }
+
+    @Test
+    public void jsonRoundTrip_paymentRecords_preservesOrderAndDuplicates() throws Exception {
+        PaymentRecord first = PaymentRecord.fromText("50", "2026-01-10", Optional.empty());
+        PaymentRecord duplicate = PaymentRecord.fromText("50", "2026-01-10", Optional.empty());
+        PaymentRecord second = PaymentRecord.fromText("25.50", "2026-01-05", Optional.of("Late fee"));
+        Person person = new PersonBuilder(BENSON)
+                .withPaymentRecords(List.of(first, duplicate, second))
+                .build();
+
+        String json = JsonUtil.toJsonString(new JsonAdaptedPerson(person));
+        Person restored = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType();
+
+        assertEquals(person, restored);
+        assertEquals(List.of(first, duplicate, second), restored.getPaymentRecords());
+    }
+
+    @Test
+    public void legacyPerson_addDuplicatePayments_roundTripPreservesBothInOrder() throws Exception {
+        String legacyJson = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[]}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        Person legacy = JsonUtil.fromJsonString(legacyJson, JsonAdaptedPerson.class).toModelType();
+        assertEquals(List.of(), legacy.getPaymentRecords());
+
+        PaymentRecord payment = PaymentRecord.fromText("40", "2026-04-01", Optional.empty());
+        Person updated = legacy.withAddedPayment(payment).withAddedPayment(payment);
+        String saved = JsonUtil.toJsonString(new JsonAdaptedPerson(updated));
+        Person restored = JsonUtil.fromJsonString(saved, JsonAdaptedPerson.class).toModelType();
+
+        assertEquals(updated, restored);
+        assertEquals(List.of(payment, payment), restored.getPaymentRecords());
+    }
+
+    @Test
+    public void jsonRoundTrip_missingPaymentRecords_returnsEmptyHistory() throws Exception {
+        String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[]}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        Person restored = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType();
+        assertEquals(List.of(), restored.getPaymentRecords());
+    }
+
+    @Test
+    public void toModelType_nullPaymentElement_throwsIllegalValueException() throws Exception {
+        String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[],\"paymentRecords\":[null]}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class);
+        assertThrows(IllegalValueException.class, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_malformedPaymentEntry_throwsIllegalValueException() throws Exception {
+        String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[],\"paymentRecords\":[{\"amount\":\"0\","
+                + "\"date\":\"2026-01-01\"}]}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class);
+        assertThrows(IllegalValueException.class, PaymentRecord.MESSAGE_AMOUNT_CONSTRAINTS, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_paymentRecordsNotArray_throwsIoException() throws Exception {
+        String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[],\"paymentRecords\":{}}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        assertThrows(java.io.IOException.class, () -> JsonUtil.fromJsonString(json, JsonAdaptedPerson.class));
     }
 
 }

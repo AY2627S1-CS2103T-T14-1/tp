@@ -32,6 +32,7 @@ import seedu.address.model.person.DietaryRestrictions;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Goal;
 import seedu.address.model.person.HealthProfile;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutLogEntry;
@@ -43,6 +44,8 @@ public class MembershipPreservationTest {
 
     private static final Clock FIXED_CLOCK = Clock.fixed(
             Instant.parse("2026-06-15T00:00:00Z"), ZoneId.of("UTC"));
+    private static final PaymentRecord PAYMENT =
+            PaymentRecord.fromText("150", "2026-01-15", Optional.of("Initial fee"));
 
     private Model model;
     private MembershipPlan gold;
@@ -66,6 +69,7 @@ public class MembershipPreservationTest {
                 .withDietaryRestrictions("Peanuts")
                 .withHealthProfile("Asthma")
                 .withWorkoutSessions(List.of(session))
+                .withPaymentRecords(List.of(PAYMENT))
                 .build()
                 .withTrainingSession(
                         new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "Main gym"));
@@ -171,6 +175,19 @@ public class MembershipPreservationTest {
         Person reassigned = model.getAddressBook().getPersonList().get(0);
         assertEquals(original.getGoal(), reassigned.getGoal());
         assertEquals(30, reassigned.getMembershipAssignment().orElseThrow().getRemainingSessions());
+    }
+
+    @Test
+    public void execute_membershipCommands_preservePayments() throws Exception {
+        AddressBookParser parser = new AddressBookParser();
+        Person original = model.getAddressBook().getPersonList().get(0);
+
+        for (String commandText : List.of("imem 1 3", "dmem 1 3", "rmem 1", "amem Gold 1")) {
+            parser.parseCommand(commandText).execute(model);
+            assertEquals(original.getPaymentRecords(),
+                    model.getAddressBook().getPersonList().get(0).getPaymentRecords(),
+                    "Payments erased by: " + commandText);
+        }
     }
 
     @Test

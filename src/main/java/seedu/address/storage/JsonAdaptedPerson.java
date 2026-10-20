@@ -21,6 +21,7 @@ import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Goal;
 import seedu.address.model.person.HealthProfile;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
@@ -51,6 +52,7 @@ class JsonAdaptedPerson {
     private final List<JsonAdaptedWorkoutSession> workoutSessions = new ArrayList<>();
     private final JsonAdaptedMembershipAssignment membershipAssignment;
     private final JsonAdaptedBodyProgress bodyProgress;
+    private final List<JsonAdaptedPaymentRecord> paymentRecords = new ArrayList<>();
 
     /**
      * Constructs an adapter without plans or workout sessions.
@@ -155,7 +157,28 @@ class JsonAdaptedPerson {
                 workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, null);
     }
 
-    /** Constructs a strict adapter including the optional legacy-compatible body tracker. */
+    /** Constructs an adapter including the body tracker but without payment history. */
+    public JsonAdaptedPerson(
+            String name,
+            String phone,
+            String email,
+            String address,
+            String remark,
+            List<JsonAdaptedTag> tags,
+            List<JsonAdaptedExercise> exercises,
+            JsonAdaptedDietPlan dietPlan,
+            List<JsonAdaptedTrainingSession> trainingSessions,
+            String goal,
+            List<JsonAdaptedWorkoutSession> workoutSessions,
+            List<String> dietaryRestrictions,
+            String healthProfile,
+            JsonAdaptedMembershipAssignment membershipAssignment,
+            JsonAdaptedBodyProgress bodyProgress) {
+        this(name, phone, email, address, remark, tags, exercises, dietPlan, trainingSessions, goal,
+                workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, bodyProgress, null);
+    }
+
+    /** Constructs a strict adapter including the optional legacy-compatible body tracker and payments. */
     @JsonCreator
     public JsonAdaptedPerson(
             @JsonProperty("name") String name,
@@ -172,7 +195,8 @@ class JsonAdaptedPerson {
             @JsonProperty("dietaryRestrictions") List<String> dietaryRestrictions,
             @JsonProperty("healthProfile") String healthProfile,
             @JsonProperty("membershipAssignment") JsonAdaptedMembershipAssignment membershipAssignment,
-            @JsonProperty("bodyProgress") JsonAdaptedBodyProgress bodyProgress) {
+            @JsonProperty("bodyProgress") JsonAdaptedBodyProgress bodyProgress,
+            @JsonProperty("paymentRecords") List<JsonAdaptedPaymentRecord> paymentRecords) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -198,6 +222,9 @@ class JsonAdaptedPerson {
         }
         this.membershipAssignment = membershipAssignment;
         this.bodyProgress = bodyProgress;
+        if (paymentRecords != null) {
+            this.paymentRecords.addAll(paymentRecords);
+        }
     }
 
     /**
@@ -228,6 +255,9 @@ class JsonAdaptedPerson {
                 .collect(Collectors.toList()));
         membershipAssignment = source.getMembershipAssignment()
                 .map(JsonAdaptedMembershipAssignment::new).orElse(null);
+        paymentRecords.addAll(source.getPaymentRecords().stream()
+                .map(JsonAdaptedPaymentRecord::new)
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -334,12 +364,21 @@ class JsonAdaptedPerson {
             modelSessions.add(session);
         }
 
+        final List<PaymentRecord> modelPayments = new ArrayList<>();
+        for (JsonAdaptedPaymentRecord adaptedPayment : paymentRecords) {
+            if (adaptedPayment == null) {
+                throw new IllegalValueException("Payment records must not contain null entries.");
+            }
+            modelPayments.add(adaptedPayment.toModelType());
+        }
+
         return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags,
                 modelWorkoutPlan, modelDietPlan, modelGoal, modelTrainingSessions, modelSessions,
                 modelDietaryRestrictions, modelHealthProfile,
                 membershipAssignment == null
                         ? Optional.empty()
                         : Optional.of(membershipAssignment.toModelType()),
-                bodyProgress == null ? new BodyProgress() : bodyProgress.toModelType(clock));
+                bodyProgress == null ? new BodyProgress() : bodyProgress.toModelType(clock),
+                modelPayments);
     }
 }

@@ -14,6 +14,7 @@ import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -207,5 +208,23 @@ public class PersonTest {
 
         assertEquals(List.of(session), person.getWorkoutSessions());
         assertThrows(UnsupportedOperationException.class, () -> person.getWorkoutSessions().clear());
+    }
+
+    @Test
+    public void withCopyMethods_preservesPaymentRecords() {
+        PaymentRecord payment = PaymentRecord.fromText("150", "2026-01-15", Optional.of("Initial fee"));
+        Person person = new PersonBuilder().withPaymentRecords(List.of(payment, payment)).build();
+        List<PaymentRecord> expected = List.of(payment, payment);
+        assertEquals(expected, person.getPaymentRecords());
+
+        BodyProgress progress = new BodyProgress(Optional.of(new BodyBaseline(LocalDate.of(2026, 1, 1),
+                new BigDecimal("70"), new BigDecimal("175"))), List.of());
+        assertEquals(expected, person.withBodyProgress(progress).getPaymentRecords());
+        assertEquals(expected, person.withMembershipAssignment(Optional.empty()).getPaymentRecords());
+        assertEquals(expected, person.withTrainingSession(
+                new TrainingSession(LocalDateTime.of(2026, 2, 1, 9, 0), "Gym")).getPaymentRecords());
+        assertEquals(expected, person.withDietaryRestrictions(
+                new DietaryRestrictions(List.of("Peanuts"))).getPaymentRecords());
+        assertEquals(expected, person.withHealthProfile(new HealthProfile("Asthma")).getPaymentRecords());
     }
 }

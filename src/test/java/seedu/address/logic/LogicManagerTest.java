@@ -15,8 +15,10 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,7 @@ import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.PayCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -37,6 +40,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Exercise;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutPlan;
 import seedu.address.storage.JsonAddressBookStorage;
@@ -310,6 +314,35 @@ public class LogicManagerTest {
         assertCommandFailure("clearplan 1", CommandException.class,
                 String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()),
                 expectedModel);
+    }
+
+    @Test
+    public void execute_failingPaySave_rollsBackAndAllowsLaterSuccessfulPayment() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        Path addressBookPath = temporaryFolder.resolve("addressBook.json");
+        JsonAddressBookStorage workingStorage = new JsonAddressBookStorage(addressBookPath);
+        JsonUserPrefsStorage userPrefsStorage =
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
+        logic = new LogicManager(model, new StorageManager(workingStorage, userPrefsStorage));
+
+        logic.execute(ListCommand.COMMAND_WORD);
+        String savedBefore = Files.readString(addressBookPath);
+        AddressBook snapshot = new AddressBook(model.getAddressBook());
+
+        setFailingStorage(DUMMY_IO_EXCEPTION);
+        assertThrows(CommandException.class, PayCommand.MESSAGE_SAVE_FAILURE, () ->
+                logic.execute("pay 1 a/150 d/2026-01-15"));
+        assertEquals(snapshot, model.getAddressBook());
+        assertEquals(savedBefore, Files.readString(addressBookPath));
+
+        Logic retryLogic = new LogicManager(model, new StorageManager(workingStorage, userPrefsStorage));
+        CommandResult result = retryLogic.execute("pay 1 a/150 d/2026-01-15");
+        assertEquals(String.format(PayCommand.MESSAGE_SUCCESS, AMY.getName(), "150.00",
+                LocalDate.of(2026, 1, 15)), result.getFeedbackToUser());
+
+        PaymentRecord expected = PaymentRecord.fromText("150", "2026-01-15", Optional.empty());
+        ReadOnlyAddressBook saved = workingStorage.readAddressBook().orElseThrow();
+        assertEquals(List.of(expected), saved.getPersonList().get(0).getPaymentRecords());
     }
 
     @Test

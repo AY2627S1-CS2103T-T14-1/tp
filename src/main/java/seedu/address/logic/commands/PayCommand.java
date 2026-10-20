@@ -26,6 +26,8 @@ public class PayCommand extends Command {
             + "Example: " + COMMAND_WORD + " 1 a/150 d/2026-10-20";
 
     public static final String MESSAGE_SUCCESS = "Recorded payment for %1$s: %2$s on %3$s.";
+    public static final String MESSAGE_SAVE_FAILURE =
+            "Payment could not be saved. No payment was recorded.";
 
     private final Index targetIndex;
     private final PaymentRecord paymentRecord;

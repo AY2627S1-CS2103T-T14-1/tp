@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
@@ -24,6 +25,7 @@ import seedu.address.model.membership.MembershipName;
 import seedu.address.model.membership.MembershipPlan;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Exercise;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutLogEntry;
@@ -37,6 +39,9 @@ import seedu.address.testutil.PersonBuilder;
  * belonging to another feature stored on the same client.
  */
 public class CrossFeaturePreservationTest {
+
+    private static final PaymentRecord INITIAL_PAYMENT =
+            PaymentRecord.fromText("150", "2026-01-15", Optional.of("Initial fee"));
 
     @TempDir
     public Path testFolder;
@@ -115,6 +120,35 @@ public class CrossFeaturePreservationTest {
         assertEquals(original.getHealthProfile(), reloaded.getPersonList().get(0).getHealthProfile());
         assertEquals(original.getDietaryRestrictions(),
                 reloaded.getPersonList().get(0).getDietaryRestrictions());
+        assertEquals(original.getPaymentRecords(),
+                reloaded.getPersonList().get(0).getPaymentRecords());
+    }
+
+    @Test
+    public void execute_deleteClient_removesOnlyThatClientsPayments() throws Exception {
+        Model model = createModelWithRichClient();
+        PaymentRecord otherPayment = PaymentRecord.fromText("20", "2026-02-01", Optional.empty());
+        Person otherClient = new PersonBuilder()
+                .withName("Other Client")
+                .withPaymentRecords(List.of(otherPayment))
+                .build();
+        model.addPerson(otherClient);
+
+        new AddressBookParser().parseCommand("delete 1").execute(model);
+
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+        assertEquals(List.of(otherPayment),
+                model.getAddressBook().getPersonList().get(0).getPaymentRecords());
+    }
+
+    @Test
+    public void execute_clear_removesAllPayments() throws Exception {
+        Model model = createModelWithRichClient();
+        model.addPerson(new PersonBuilder().withName("Other Client").build());
+
+        new AddressBookParser().parseCommand("clear").execute(model);
+
+        assertTrue(model.getAddressBook().getPersonList().isEmpty());
     }
 
     /**
@@ -171,6 +205,9 @@ public class CrossFeaturePreservationTest {
             assertEquals(before.getMembershipAssignment(), after.getMembershipAssignment(),
                     "membership assignment erased");
         }
+        if (!changed.contains("paymentRecords")) {
+            assertEquals(before.getPaymentRecords(), after.getPaymentRecords(), "payment records erased");
+        }
     }
 
     private static Person currentPerson(Model model) {
@@ -200,6 +237,7 @@ public class CrossFeaturePreservationTest {
                 .withDietaryRestrictions("Peanuts")
                 .withHealthProfile("Asthma")
                 .withWorkoutSessions(List.of(session))
+                .withPaymentRecords(List.of(INITIAL_PAYMENT, INITIAL_PAYMENT))
                 .build()
                 .withTrainingSession(
                         new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "Main gym"));
