@@ -178,6 +178,41 @@ public class PayCommandParserTest {
         assertParseFailure(parser, "1 a/1 d/2026-10-20\n", formatError);
         assertParseFailure(parser, "1 a/1 d/2026-10-20 r/line1\nline2", formatError);
         assertParseFailure(parser, "1 a/1\r d/2026-10-20", formatError);
+        assertParseFailure(parser, "1 a/1 d/2026-10-20\u0085", formatError);
+        assertParseFailure(parser, "1 a/1 d/2026-10-20 r/note\u2028next", formatError);
+        assertParseFailure(parser, "1 a/1 d/2026-10-20 r/note\u2029next", formatError);
+    }
+
+    @Test
+    public void parse_multipleInvalidValues_reportsAmountFirst() {
+        assertParseFailure(parser, "1 a/0 d/2026-02-30 r/a\tb",
+                PaymentRecord.MESSAGE_AMOUNT_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_invalidDateAndRemarks_reportsDateBeforeRemarks() {
+        assertParseFailure(parser, "1 a/150 d/2026-02-30 r/a\tb",
+                PaymentRecord.MESSAGE_DATE_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_invalidRemarksOnly_reportsRemarksError() {
+        assertParseFailure(parser, "1 a/150 d/2026-10-20 r/a\tb",
+                PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_whitespaceOnlyPrefixValues_failure() {
+        assertParseFailure(parser, "1 a/   d/2026-10-20", formatError);
+        assertParseFailure(parser, "1 a/150 d/   ", formatError);
+        assertParseFailure(parser, "1 a/150 d/2026-10-20 r/   ", formatError);
+    }
+
+    @Test
+    public void parse_threeLetterSlashTokenInsideRemarks_remainsValid() {
+        String remarks = "see xyz/2 for reference";
+        assertParseSuccess(parser, "1 a/1 d/2026-10-20 r/" + remarks,
+                new PayCommand(INDEX_FIRST_PERSON, payment("1", "2026-10-20", remarks)));
     }
 
     private static PaymentRecord payment(String amount, String date, String remarks) {
