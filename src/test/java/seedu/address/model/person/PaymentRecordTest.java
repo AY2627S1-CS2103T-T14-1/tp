@@ -21,11 +21,26 @@ public class PaymentRecordTest {
         PaymentRecord whole = new PaymentRecord(new BigDecimal("150"), DATE, Optional.empty());
         PaymentRecord fraction = new PaymentRecord(new BigDecimal("150.5"), DATE, Optional.empty());
         PaymentRecord padded = new PaymentRecord(new BigDecimal("1.2300"), DATE, Optional.empty());
+        PaymentRecord decimal = new PaymentRecord(new BigDecimal("0.1"), DATE, Optional.empty());
 
         assertEquals(new BigDecimal("150.00"), whole.getAmount());
         assertEquals("150.00", whole.getFormattedAmount());
         assertEquals("150.50", fraction.getFormattedAmount());
         assertEquals("1.23", padded.getFormattedAmount());
+        assertEquals("0.10", decimal.getFormattedAmount());
+    }
+
+    @Test
+    public void parseAmount_normalizesTextAndRejectsInvalidValues() {
+        assertEquals(new BigDecimal("150.00"), PaymentRecord.parseAmount("150"));
+        assertEquals(new BigDecimal("0.10"), PaymentRecord.parseAmount("0.1"));
+        assertEquals(new BigDecimal("123456789012345678901234567890.12"),
+                PaymentRecord.parseAmount("123456789012345678901234567890.12"));
+
+        for (String invalid : new String[] {null, "0", "-1", "1.234"}) {
+            assertThrows(IllegalArgumentException.class, PaymentRecord.MESSAGE_AMOUNT_CONSTRAINTS, () ->
+                    PaymentRecord.parseAmount(invalid));
+        }
     }
 
     @Test
@@ -83,7 +98,9 @@ public class PaymentRecordTest {
 
     @Test
     public void remarksValidation_rejectsLineBreaksAndControlCharacters() {
-        for (String remarks : new String[] {"line1\nline2", "line1\rline2", "fee\u0000", "fee\u0007"}) {
+        String[] invalidRemarks = {"line1\nline2", "line1\rline2", "fee\u0000", "fee\u0007",
+            "fee\u0085", "fee\u2028", "fee\u2029"};
+        for (String remarks : invalidRemarks) {
             assertFalse(PaymentRecord.isValidRemarks(remarks), remarks);
         }
     }
