@@ -3,6 +3,8 @@ package seedu.address.logic;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.time.Clock;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -14,6 +16,8 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DietCommand;
 import seedu.address.logic.commands.MembershipCommand;
 import seedu.address.logic.commands.PayCommand;
+import seedu.address.logic.commands.RedoCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -36,6 +40,8 @@ public class LogicManager implements Logic {
     private final Model model;
     private final Storage storage;
     private final AddressBookParser addressBookParser;
+    private final Deque<AddressBook> undoStack = new ArrayDeque<>();
+    private final Deque<AddressBook> redoStack = new ArrayDeque<>();
 
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
@@ -55,36 +61,94 @@ public class LogicManager implements Logic {
     public CommandResult execute(String commandText) throws CommandException, ParseException {
         logger.info("----------------[USER COMMAND][" + commandText + "]");
 
-        CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
+        if (command instanceof UndoCommand) {
+            return executeUndo();
+        }
+        if (command instanceof RedoCommand) {
+            return executeRedo();
+        }
+
         // Snapshot the address book before execution so a failed save can restore
         // the previous model state instead of leaving in-memory changes behind.
         AddressBook backup = new AddressBook(model.getAddressBook());
-        commandResult = command.execute(model);
+        CommandResult commandResult = command.execute(model);
 
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (IOException ioe) {
             model.setAddressBook(backup);
-            if (command instanceof BodyMutationCommand) {
-                throw new CommandException(BodyMutationCommand.MESSAGE_SAVE_FAILURE, ioe);
-            }
-            if (command instanceof DietCommand) {
-                throw new CommandException(DietCommand.MESSAGE_SAVE_FAILURE, ioe);
-            }
-            if (command instanceof MembershipCommand) {
-                throw new CommandException(MembershipCommand.MESSAGE_SAVE_FAILURE, ioe);
-            }
-            if (command instanceof PayCommand) {
-                throw new CommandException(PayCommand.MESSAGE_SAVE_FAILURE, ioe);
-            }
-            if (ioe instanceof AccessDeniedException) {
-                throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, ioe.getMessage()), ioe);
-            }
-            throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
+            throw saveException(command, ioe);
+        }
+
+        // Only effective changes become one complete-address-book undo step.
+        if (!backup.equals(model.getAddressBook())) {
+            undoStack.push(backup);
+            redoStack.clear();
         }
 
         return commandResult;
+    }
+
+    private CommandResult executeUndo() throws CommandException {
+        if (undoStack.isEmpty()) {
+            return new CommandResult(UndoCommand.MESSAGE_FAILURE);
+        }
+
+        AddressBook restored = undoStack.peek();
+        AddressBook current = new AddressBook(model.getAddressBook());
+        model.setAddressBook(restored);
+        try {
+            storage.saveAddressBook(model.getAddressBook());
+        } catch (IOException ioe) {
+            model.setAddressBook(current);
+            throw saveException(new UndoCommand(), ioe);
+        }
+
+        undoStack.pop();
+        redoStack.push(current);
+        model.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
+        return new CommandResult(UndoCommand.MESSAGE_SUCCESS);
+    }
+
+    private CommandResult executeRedo() throws CommandException {
+        if (redoStack.isEmpty()) {
+            return new CommandResult(RedoCommand.MESSAGE_FAILURE);
+        }
+
+        AddressBook restored = redoStack.peek();
+        AddressBook current = new AddressBook(model.getAddressBook());
+        model.setAddressBook(restored);
+        try {
+            storage.saveAddressBook(model.getAddressBook());
+        } catch (IOException ioe) {
+            model.setAddressBook(current);
+            throw saveException(new RedoCommand(), ioe);
+        }
+
+        redoStack.pop();
+        undoStack.push(current);
+        model.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
+        return new CommandResult(RedoCommand.MESSAGE_SUCCESS);
+    }
+
+    private CommandException saveException(Command command, IOException ioe) {
+        if (command instanceof BodyMutationCommand) {
+            return new CommandException(BodyMutationCommand.MESSAGE_SAVE_FAILURE, ioe);
+        }
+        if (command instanceof DietCommand) {
+            return new CommandException(DietCommand.MESSAGE_SAVE_FAILURE, ioe);
+        }
+        if (command instanceof MembershipCommand) {
+            return new CommandException(MembershipCommand.MESSAGE_SAVE_FAILURE, ioe);
+        }
+        if (command instanceof PayCommand) {
+            return new CommandException(PayCommand.MESSAGE_SAVE_FAILURE, ioe);
+        }
+        if (ioe instanceof AccessDeniedException) {
+            return new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, ioe.getMessage()), ioe);
+        }
+        return new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
     }
 
     @Override

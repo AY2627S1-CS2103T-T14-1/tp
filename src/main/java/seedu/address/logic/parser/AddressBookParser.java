@@ -35,10 +35,12 @@ import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
 import seedu.address.logic.commands.MeetingCommand;
 import seedu.address.logic.commands.PayCommand;
+import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.RemoveMembershipPlanCommand;
 import seedu.address.logic.commands.ScheduleCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.commands.ViewMembershipPlansCommand;
 import seedu.address.logic.commands.ViewScheduleCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -150,6 +152,8 @@ public class AddressBookParser {
             case ViewMembershipPlansCommand.COMMAND_WORD ->
                 new ViewMembershipPlansCommandParser().parse(arguments);
             case ClearmemCommand.COMMAND_WORD -> new ClearmemCommand();
+            case UndoCommand.COMMAND_WORD -> new UndoCommandParser().parse(arguments);
+            case RedoCommand.COMMAND_WORD -> new RedoCommandParser().parse(arguments);
             case ExitCommand.COMMAND_WORD -> new ExitCommand();
             case HelpCommand.COMMAND_WORD -> new HelpCommand();
             default -> {

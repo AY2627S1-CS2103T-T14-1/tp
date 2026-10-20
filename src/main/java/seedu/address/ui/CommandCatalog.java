@@ -24,9 +24,11 @@ import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
 import seedu.address.logic.commands.PayCommand;
+import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.ScheduleCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.commands.ViewScheduleCommand;
 
 /** UI-facing catalogue of the existing command words and usage strings. */
@@ -56,6 +58,8 @@ final class CommandCatalog {
             new Entry(DeleteExerciseCommand.COMMAND_WORD, DeleteExerciseCommand.MESSAGE_USAGE),
             new Entry(ClearPlanCommand.COMMAND_WORD, ClearPlanCommand.MESSAGE_USAGE),
             new Entry(SetExerciseDayCommand.COMMAND_WORD, SetExerciseDayCommand.MESSAGE_USAGE),
+            new Entry(UndoCommand.COMMAND_WORD, UndoCommand.MESSAGE_USAGE),
+            new Entry(RedoCommand.COMMAND_WORD, RedoCommand.MESSAGE_USAGE),
             new Entry(ExitCommand.COMMAND_WORD, "exit: Exits Fittix."),
             new Entry(HelpCommand.COMMAND_WORD, HelpCommand.MESSAGE_USAGE));
 

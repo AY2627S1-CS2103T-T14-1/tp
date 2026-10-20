@@ -31,7 +31,9 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.PayCommand;
+import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
@@ -346,6 +348,120 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_undoRedoWithoutHistory_reportsEmptyAndKeepsData() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+
+        CommandResult undo = logic.execute(UndoCommand.COMMAND_WORD);
+        assertEquals(UndoCommand.MESSAGE_FAILURE, undo.getFeedbackToUser());
+        CommandResult redo = logic.execute(RedoCommand.COMMAND_WORD);
+        assertEquals(RedoCommand.MESSAGE_FAILURE, redo.getFeedbackToUser());
+
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_payAndUndoRedo_treatsEachPaymentAsOneStep() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        PaymentRecord record = PaymentRecord.fromText("150", "2026-10-20", Optional.empty());
+
+        logic.execute("pay 1 a/150 d/2026-10-20");
+        logic.execute("pay 1 a/150 d/2026-10-20");
+        assertEquals(List.of(record, record), paymentsOfFirstPerson());
+
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(List.of(record), paymentsOfFirstPerson());
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertTrue(paymentsOfFirstPerson().isEmpty());
+
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(List.of(record), paymentsOfFirstPerson());
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(List.of(record, record), paymentsOfFirstPerson());
+    }
+
+    @Test
+    public void execute_readOnlyOrFailedCommand_preservesRedoHistory() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("pay 1 a/150 d/2026-10-20");
+        logic.execute(UndoCommand.COMMAND_WORD);
+
+        logic.execute(ListCommand.COMMAND_WORD);
+        assertCommandException("pay 9 a/150 d/2026-10-20", MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandException("delete 9", MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        logic.execute("find AMY");
+
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(1, paymentsOfFirstPerson().size());
+    }
+
+    @Test
+    public void execute_newSuccessfulChangeAfterUndo_clearsRedoHistory() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("pay 1 a/150 d/2026-10-20");
+        logic.execute(UndoCommand.COMMAND_WORD);
+
+        logic.execute("pay 1 a/75 d/2026-10-19");
+
+        assertEquals(RedoCommand.MESSAGE_FAILURE, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(1, paymentsOfFirstPerson().size());
+        assertEquals("75.00", paymentsOfFirstPerson().get(0).getFormattedAmount());
+    }
+
+    @Test
+    public void execute_undoSaveFailure_restoresModelAndHistory() throws Exception {
+        ToggleableAddressBookStorage addressBookStorage =
+                new ToggleableAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        JsonUserPrefsStorage userPrefsStorage =
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
+        logic = new LogicManager(model, new StorageManager(addressBookStorage, userPrefsStorage));
+        model.addPerson(new PersonBuilder(AMY).build());
+        logic.execute("pay 1 a/150 d/2026-10-20");
+        AddressBook saved = new AddressBook(model.getAddressBook());
+
+        addressBookStorage.setFailing(true);
+        assertThrows(CommandException.class,
+                String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()), ()
+                -> logic.execute(UndoCommand.COMMAND_WORD));
+
+        assertEquals(saved, model.getAddressBook());
+        assertEquals(saved, addressBookStorage.readAddressBook().orElseThrow());
+
+        addressBookStorage.setFailing(false);
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertTrue(paymentsOfFirstPerson().isEmpty());
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(1, paymentsOfFirstPerson().size());
+    }
+
+    @Test
+    public void execute_restart_resetsHistoryButKeepsSavedData() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).build());
+        JsonAddressBookStorage addressBookStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        JsonUserPrefsStorage userPrefsStorage =
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
+        logic = new LogicManager(model, new StorageManager(addressBookStorage, userPrefsStorage));
+        logic.execute("pay 1 a/150 d/2026-10-20");
+
+        Logic restarted = new LogicManager(model, new StorageManager(addressBookStorage, userPrefsStorage));
+
+        assertEquals(UndoCommand.MESSAGE_FAILURE, restarted.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
+        assertEquals(1, paymentsOfFirstPerson().size());
+    }
+
+    @Test
+    public void execute_undoRedo_rejectsExtraArguments() {
+        assertParseException(UndoCommand.COMMAND_WORD + " now",
+                String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, UndoCommand.MESSAGE_USAGE));
+        assertParseException(RedoCommand.COMMAND_WORD + " now",
+                String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, RedoCommand.MESSAGE_USAGE));
+    }
+
+    private List<PaymentRecord> paymentsOfFirstPerson() {
+        return model.getFilteredPersonList().get(0).getPaymentRecords();
+    }
+
+    @Test
     public void getFilteredPersonList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().remove(0));
     }
@@ -456,5 +572,26 @@ public class LogicManagerTest {
         // After a failed save the model must be rolled back to its previous state.
         ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);
+    }
+
+    /** Address book storage whose save failures can be toggled without replacing the logic instance. */
+    private static final class ToggleableAddressBookStorage extends JsonAddressBookStorage {
+        private boolean failing;
+
+        private ToggleableAddressBookStorage(Path filePath) {
+            super(filePath);
+        }
+
+        private void setFailing(boolean failing) {
+            this.failing = failing;
+        }
+
+        @Override
+        public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+            if (failing) {
+                throw DUMMY_IO_EXCEPTION;
+            }
+            super.saveAddressBook(addressBook);
+        }
     }
 }

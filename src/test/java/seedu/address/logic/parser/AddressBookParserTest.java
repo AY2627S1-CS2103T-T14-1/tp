@@ -28,7 +28,9 @@ import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.PayCommand;
+import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemarkCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.ClientMatchesAnyPredicate;
 import seedu.address.model.person.Exercise;
@@ -111,6 +113,22 @@ public class AddressBookParserTest {
         PaymentRecord payment = PaymentRecord.fromText("150", "2026-10-20", Optional.empty());
         assertEquals(new PayCommand(INDEX_FIRST_PERSON, payment), parser.parseCommand(
                 PayCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased() + " a/150 d/2026-10-20"));
+    }
+
+    @Test
+    public void parseCommand_undo() throws Exception {
+        assertEquals(new UndoCommand(), parser.parseCommand(UndoCommand.COMMAND_WORD));
+        assertThrows(ParseException.class,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, UndoCommand.MESSAGE_USAGE), ()
+                -> parser.parseCommand(UndoCommand.COMMAND_WORD + " now"));
+    }
+
+    @Test
+    public void parseCommand_redo() throws Exception {
+        assertEquals(new RedoCommand(), parser.parseCommand(RedoCommand.COMMAND_WORD));
+        assertThrows(ParseException.class,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, RedoCommand.MESSAGE_USAGE), ()
+                -> parser.parseCommand(RedoCommand.COMMAND_WORD + " now"));
     }
 
     @Test
