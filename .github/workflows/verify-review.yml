@@ -1,0 +1,45 @@
+name: Verify undo redo review
+on:
+  push:
+    branches: [verify-undo-redo-review]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '25'
+      - name: Repository checks
+        working-directory: .github
+        run: ./run-checks.sh
+      - name: Gradle checks and packaged smoke test
+        run: xvfb-run -a ./gradlew check coverage universalJarSmokeTest
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Render undo diagrams
+        run: |
+          curl --fail --location --retry 3 -o /tmp/plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2026.6/plantuml-1.2026.6.jar
+          echo '89948f14c93756c7a3fb7b69078ff37e8489fd79dd430c582b931e2f65358690  /tmp/plantuml.jar' | sha256sum --check
+          for diagram in Logic Model; do
+            java -Djava.awt.headless=true -jar /tmp/plantuml.jar -tpng -o ../images "docs/diagrams/UndoSequenceDiagram-$diagram.puml"
+            java -Djava.awt.headless=true -jar /tmp/plantuml.jar -tsvg -o ../images "docs/diagrams/UndoSequenceDiagram-$diagram.puml"
+            echo "PNG_${diagram}_START"
+            base64 -w 120 "docs/images/UndoSequenceDiagram-$diagram.png"
+            echo "PNG_${diagram}_END"
+            cat "docs/images/UndoSequenceDiagram-$diagram.svg"
+            echo
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: undo-diagrams
+          path: docs/images/UndoSequenceDiagram-*
