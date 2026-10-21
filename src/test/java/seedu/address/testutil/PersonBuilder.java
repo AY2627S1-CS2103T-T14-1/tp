@@ -7,12 +7,14 @@ import java.util.Set;
 
 import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.BodyProgress;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.DietaryRestrictions;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Goal;
 import seedu.address.model.person.HealthProfile;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
@@ -33,6 +35,7 @@ public class PersonBuilder {
     public static final String DEFAULT_ADDRESS = "123, Jurong West Ave 6, #08-111";
     public static final String DEFAULT_REMARK = "";
 
+    private BodyProgress bodyProgress;
     private Name name;
     private Phone phone;
     private Email email;
@@ -47,11 +50,13 @@ public class PersonBuilder {
     private HealthProfile healthProfile;
     private List<WorkoutSession> workoutSessions;
     private Optional<MembershipAssignment> membershipAssignment;
+    private List<PaymentRecord> paymentRecords;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
      */
     public PersonBuilder() {
+        bodyProgress = new BodyProgress();
         name = new Name(DEFAULT_NAME);
         phone = new Phone(DEFAULT_PHONE);
         email = new Email(DEFAULT_EMAIL);
@@ -66,12 +71,14 @@ public class PersonBuilder {
         healthProfile = null;
         workoutSessions = List.of();
         membershipAssignment = Optional.empty();
+        paymentRecords = List.of();
     }
 
     /**
      * Initializes the PersonBuilder with the data of {@code personToCopy}.
      */
     public PersonBuilder(Person personToCopy) {
+        bodyProgress = personToCopy.getBodyProgress();
         name = personToCopy.getName();
         phone = personToCopy.getPhone();
         email = personToCopy.getEmail();
@@ -86,6 +93,7 @@ public class PersonBuilder {
         healthProfile = personToCopy.getHealthProfile().orElse(null);
         workoutSessions = personToCopy.getWorkoutSessions();
         membershipAssignment = personToCopy.getMembershipAssignment();
+        paymentRecords = personToCopy.getPaymentRecords();
     }
 
     /**
@@ -190,10 +198,24 @@ public class PersonBuilder {
     /**
      * Builds a {@code Person} with the details set in this builder.
      */
+    public PersonBuilder withBodyProgress(BodyProgress progress) {
+        bodyProgress = progress;
+        return this;
+    }
+
+    /**
+     * Sets the payment history of the {@code Person} that we are building.
+     */
+    public PersonBuilder withPaymentRecords(List<PaymentRecord> paymentRecords) {
+        this.paymentRecords = List.copyOf(paymentRecords);
+        return this;
+    }
+
+    /** Builds a person retaining every configured field. */
     public Person build() {
         return new Person(name, phone, email, address, remark, tags,
                 workoutPlan, dietPlan, goal, trainingSessions, workoutSessions,
-                dietaryRestrictions, healthProfile, membershipAssignment);
+                dietaryRestrictions, healthProfile, membershipAssignment, bodyProgress, paymentRecords);
     }
 
 }

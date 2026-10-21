@@ -1,38 +1,34 @@
 package seedu.address.logic.commands;
 
-import java.util.Objects;
-
-import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
-import seedu.address.model.ReadOnlyAddressBook;
 
-/** Restores the address book before the most recent saved change. */
+/**
+ * Restores the address book to the state before the most recent saved change.
+ * Session history is owned by {@code LogicManager}, which executes this marker command.
+ */
 public class UndoCommand extends Command {
+
     public static final String COMMAND_WORD = "undo";
-    public static final String MESSAGE_USAGE = "undo: Reverses the last saved change in this app session.\n"
-            + "Example: undo";
-    public static final String MESSAGE_NO_HISTORY = "No changes to undo.";
+
+    public static final String MESSAGE_USAGE = COMMAND_WORD
+            + ": Reverses the most recent saved data change.\n"
+            + "Example: " + COMMAND_WORD;
+
     public static final String MESSAGE_SUCCESS = "Undid the last change.";
+    public static final String MESSAGE_FAILURE = "No changes to undo.";
 
-    private final ReadOnlyAddressBook previous;
-
-    /** Creates a parsed undo command; LogicManager supplies its snapshot at execution time. */
-    public UndoCommand() {
-        this(null);
-    }
-
-    /** Creates an undo command targeting a prior saved address-book snapshot. */
-    public UndoCommand(ReadOnlyAddressBook previous) {
-        this.previous = previous;
+    @Override
+    public CommandResult execute(Model model) {
+        return new CommandResult(MESSAGE_FAILURE);
     }
 
     @Override
-    public CommandResult execute(Model model) throws CommandException {
-        Objects.requireNonNull(model);
-        if (previous == null) {
-            throw new CommandException(MESSAGE_NO_HISTORY);
-        }
-        model.setAddressBook(previous);
-        return new CommandResult(MESSAGE_SUCCESS);
+    public boolean equals(Object other) {
+        return other == this || other instanceof UndoCommand;
+    }
+
+    @Override
+    public int hashCode() {
+        return UndoCommand.class.hashCode();
     }
 }

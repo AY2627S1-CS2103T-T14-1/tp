@@ -13,16 +13,28 @@ import seedu.address.commons.util.ToStringBuilder;
  */
 public final class TrainingSession {
 
+    /** Distinguishes a training appointment from an ad-hoc client meeting. */
+    public enum Kind {
+        TRAINING, MEETING
+    }
+
     private final LocalDateTime dateTime;
     private final String location;
+    private final Kind kind;
 
     /**
      * Constructs a {@code TrainingSession} with a date, time, and meeting location.
      * A past date and time remains valid so saved sessions can still be loaded later.
      */
     public TrainingSession(LocalDateTime dateTime, String location) {
+        this(dateTime, location, Kind.TRAINING);
+    }
+
+    /** Constructs a dated training appointment or client meeting. */
+    public TrainingSession(LocalDateTime dateTime, String location, Kind kind) {
         this.dateTime = requireNonNull(dateTime);
         requireNonNull(location);
+        this.kind = requireNonNull(kind);
         if (location.isBlank()) {
             throw new IllegalArgumentException("Location cannot be blank");
         }
@@ -37,6 +49,10 @@ public final class TrainingSession {
         return location;
     }
 
+    public Kind getKind() {
+        return kind;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -45,12 +61,13 @@ public final class TrainingSession {
         if (!(other instanceof TrainingSession otherSession)) {
             return false;
         }
-        return dateTime.equals(otherSession.dateTime) && location.equals(otherSession.location);
+        return dateTime.equals(otherSession.dateTime)
+                && location.equals(otherSession.location) && kind == otherSession.kind;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dateTime, location);
+        return Objects.hash(dateTime, location, kind);
     }
 
     @Override
@@ -58,6 +75,7 @@ public final class TrainingSession {
         return new ToStringBuilder(this)
                 .add("dateTime", dateTime)
                 .add("location", location)
+                .add("kind", kind)
                 .toString();
     }
 }

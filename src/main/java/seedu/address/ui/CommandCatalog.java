@@ -5,6 +5,11 @@ import java.util.Locale;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddExerciseCommand;
+import seedu.address.logic.commands.BodyBaselineCommand;
+import seedu.address.logic.commands.BodyCompareCommand;
+import seedu.address.logic.commands.BodyDeleteCommand;
+import seedu.address.logic.commands.BodyHistoryCommand;
+import seedu.address.logic.commands.BodyLogCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -18,6 +23,7 @@ import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
+import seedu.address.logic.commands.PayCommand;
 import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.ScheduleCommand;
@@ -35,12 +41,16 @@ final class CommandCatalog {
             new Entry(DietCommand.COMMAND_WORD, DietCommand.MESSAGE_USAGE),
             new Entry(DietaryRestrictionsCommand.COMMAND_WORD, DietaryRestrictionsCommand.MESSAGE_USAGE),
             new Entry(HealthCommand.COMMAND_WORD, HealthCommand.MESSAGE_USAGE),
+            new Entry(BodyBaselineCommand.COMMAND_WORD, BodyBaselineCommand.MESSAGE_USAGE),
+            new Entry(BodyCompareCommand.COMMAND_WORD, BodyCompareCommand.MESSAGE_USAGE),
+            new Entry(BodyDeleteCommand.COMMAND_WORD, BodyDeleteCommand.MESSAGE_USAGE),
+            new Entry(BodyHistoryCommand.COMMAND_WORD, BodyHistoryCommand.MESSAGE_USAGE),
+            new Entry(BodyLogCommand.COMMAND_WORD, BodyLogCommand.MESSAGE_USAGE),
             new Entry(ClearCommand.COMMAND_WORD, "clear: Clears every client."),
             new Entry(FindCommand.COMMAND_WORD, FindCommand.MESSAGE_USAGE),
             new Entry(ListCommand.COMMAND_WORD, "list: Lists all clients."),
             new Entry(LogCommand.COMMAND_WORD, LogCommand.MESSAGE_USAGE),
-            new Entry(UndoCommand.COMMAND_WORD, UndoCommand.MESSAGE_USAGE),
-            new Entry(RedoCommand.COMMAND_WORD, RedoCommand.MESSAGE_USAGE),
+            new Entry(PayCommand.COMMAND_WORD, PayCommand.MESSAGE_USAGE),
             new Entry(RemarkCommand.COMMAND_WORD, RemarkCommand.MESSAGE_USAGE),
             new Entry(ScheduleCommand.COMMAND_WORD, ScheduleCommand.MESSAGE_USAGE),
             new Entry(ViewScheduleCommand.COMMAND_WORD, ViewScheduleCommand.MESSAGE_USAGE),
@@ -48,6 +58,8 @@ final class CommandCatalog {
             new Entry(DeleteExerciseCommand.COMMAND_WORD, DeleteExerciseCommand.MESSAGE_USAGE),
             new Entry(ClearPlanCommand.COMMAND_WORD, ClearPlanCommand.MESSAGE_USAGE),
             new Entry(SetExerciseDayCommand.COMMAND_WORD, SetExerciseDayCommand.MESSAGE_USAGE),
+            new Entry(UndoCommand.COMMAND_WORD, UndoCommand.MESSAGE_USAGE),
+            new Entry(RedoCommand.COMMAND_WORD, RedoCommand.MESSAGE_USAGE),
             new Entry(ExitCommand.COMMAND_WORD, "exit: Exits Fittix."),
             new Entry(HelpCommand.COMMAND_WORD, HelpCommand.MESSAGE_USAGE));
 

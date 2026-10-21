@@ -3,22 +3,28 @@ package seedu.address.ui;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.BodyProgressViewRequest;
 import seedu.address.model.person.Exercise;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Weekday;
 
@@ -26,6 +32,13 @@ import seedu.address.model.person.Weekday;
 public class ClientDetailPanel extends UiPart<Region> {
 
     private static final String FXML = "ClientDetailPanel.fxml";
+
+    private BodyProgressPanel bodyProgressPanel;
+    private Person displayedPerson;
+    @FXML
+    private StackPane bodyProgressPlaceholder;
+    @FXML
+    private ScrollPane detailsScroll;
 
     @FXML
     private VBox selectedContent;
@@ -63,17 +76,28 @@ public class ClientDetailPanel extends UiPart<Region> {
     private VBox workoutEmpty;
     @FXML
     private Label workoutEmptyCommand;
+    @FXML
+    private Label paymentSummary;
+    @FXML
+    private VBox paymentRows;
+    @FXML
+    private Label paymentEmpty;
 
     /** Creates an initially empty client detail panel. */
     public ClientDetailPanel() {
         super(FXML);
+        bodyProgressPanel = new BodyProgressPanel();
+        bodyProgressPlaceholder.getChildren().add(bodyProgressPanel.getRoot());
         showPerson(null, -1);
     }
 
     /** Displays {@code person} using its one-based index in the visible list. */
     public void showPerson(Person person, int displayedIndex) {
+        displayedPerson = person;
+        bodyProgressPanel.showPerson(person);
         boolean hasPerson = person != null;
         setShown(selectedContent, hasPerson);
+        setShown(detailsScroll, hasPerson);
         setShown(emptyContent, !hasPerson);
         if (!hasPerson) {
             return;
@@ -101,7 +125,71 @@ public class ClientDetailPanel extends UiPart<Region> {
         String remarkText = person.getRemark().value;
         remark.setText(remarkText);
         setShown(remarkBox, !remarkText.isBlank());
+        showPayments(person);
         showWorkoutPlan(person, displayedIndex);
+    }
+
+    /** Reveals the requested tracker section after MainWindow selects its resolved client. */
+    public void revealBodyProgress(BodyProgressViewRequest request) {
+        Platform.runLater(() -> {
+            if (!request.person().equals(displayedPerson)) {
+                return;
+            }
+            selectedContent.applyCss();
+            selectedContent.layout();
+            double overflow = selectedContent.getLayoutBounds().getHeight()
+                    - detailsScroll.getViewportBounds().getHeight();
+            detailsScroll.setVvalue(overflow <= 0 ? 0
+                    : Math.min(1, Math.max(0, bodyProgressPlaceholder.getBoundsInParent().getMinY() / overflow)));
+        });
+        bodyProgressPanel.reveal(request);
+    }
+
+    private void showPayments(Person person) {
+        List<PaymentRecord> payments = new ArrayList<>(person.getPaymentRecords());
+        payments.sort(Comparator.comparing(PaymentRecord::getDate));
+        paymentSummary.setText(payments.isEmpty() ? "None"
+                : payments.size() + (payments.size() == 1 ? " record" : " records"));
+
+        paymentRows.getChildren().clear();
+        setShown(paymentRows, !payments.isEmpty());
+        setShown(paymentEmpty, payments.isEmpty());
+        for (PaymentRecord payment : payments) {
+            paymentRows.getChildren().add(createPaymentRow(payment));
+        }
+    }
+
+    private GridPane createPaymentRow(PaymentRecord payment) {
+        GridPane row = new GridPane();
+        row.getStyleClass().add("payment-row");
+        row.setHgap(14);
+        ColumnConstraints dateColumn = new ColumnConstraints(104, 104, 104);
+        ColumnConstraints amountColumn = new ColumnConstraints(100, 100, 100);
+        ColumnConstraints remarksColumn = new ColumnConstraints();
+        remarksColumn.setHgrow(Priority.ALWAYS);
+        row.getColumnConstraints().addAll(dateColumn, amountColumn, remarksColumn);
+
+        Label date = new Label(payment.getDate().toString());
+        date.getStyleClass().addAll("payment-date", "mono");
+        Label amount = new Label(payment.getFormattedAmount());
+        amount.getStyleClass().addAll("payment-amount", "mono");
+        amount.setWrapText(true);
+        amount.setMinHeight(Region.USE_PREF_SIZE);
+        amount.setMaxWidth(Double.MAX_VALUE);
+        amount.setAlignment(Pos.CENTER_RIGHT);
+        row.add(date, 0, 0);
+        row.add(amount, 1, 0);
+
+        payment.getRemarks().ifPresent(remarks -> {
+            Label remarksLabel = new Label(remarks);
+            remarksLabel.getStyleClass().add("payment-remarks");
+            remarksLabel.setWrapText(true);
+            remarksLabel.setMinHeight(Region.USE_PREF_SIZE);
+            remarksLabel.setMaxWidth(Double.MAX_VALUE);
+            GridPane.setHgrow(remarksLabel, Priority.ALWAYS);
+            row.add(remarksLabel, 2, 0);
+        });
+        return row;
     }
 
     private void showWorkoutPlan(Person person, int displayedIndex) {

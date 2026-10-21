@@ -236,6 +236,7 @@ For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw argument
 Each `Person` owns an immutable `DietaryRestrictions` list, which is empty when no restrictions are recorded. `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` replaces the complete list; one blank sole `r/` clears it. The value object validates 1 to 10 ordered entries, each containing 1 to 100 printable Unicode characters and at least one letter or digit. It rejects duplicates after trimming and case-insensitive comparison while preserving the first supplied display text and ordering.
 
 `DietaryRestrictionsCommandParser` parses a displayed-list index and repeated `r/` values. `DietaryRestrictionsCommand` rejects an unchanged list and replaces the client with `Person#withDietaryRestrictions`, preserving unrelated data. `JsonAdaptedPerson` stores the list as `dietaryRestrictions`; an absent field loads as an empty list for backwards compatibility. `find dr/KEYWORDS` uses `DietaryRestrictionsContainsKeywordsPredicate` and retains the existing OR semantics. The selected-client detail pane only displays the list when nonempty. Restriction text is informational and does not determine allergy or meal safety.
+
 ### Health considerations
 
 Each `Person` has an optional immutable `HealthProfile` with one current trainer-visible note. `health INDEX h/NOTE` replaces the note and `health INDEX h/` clears it. `HealthProfile` trims outer whitespace, accepts 1 to 500 printable Unicode characters with at least one letter or digit, and rejects line breaks and control characters. The profile is serialized as the optional `healthProfile` field in `JsonAdaptedPerson`; older data without that field loads without a profile.
@@ -279,19 +280,19 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
-The client card shows a single membership tag reading `NAME Member: COUNT sessions left`, with ` [expires YYYY-MM-DD]` appended when an expiry exists. The tag wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. Command messages and error behavior follow the [Feature 7 specification](featureSpecs.md#feature-7-membership-plan).
+The client card shows a single membership tag reading `Plan_name Member: N sessions left`, with `[expires YYYY-MM-DD]` appended when an expiry exists and the plan name's first letter upper-cased. The tag joins the client's other tags in the card's tag area, directly under the name, and wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. The plan-list output of `view mem`/`view membership` prefixes each price with `S$` and upper-cases the first letter of each plan name. Command messages and error behavior follow the [Feature 14 specification](featureSpecs.md#feature-14-membership-plan).
 
-### [Planned v1.4] Body progress tracker
+### Body progress tracker
 
-**Design status:** This is a proposed implementation for the body-progress assignment, not a description of code already merged. The [Feature 10 contract](featureSpecs.md#feature-10-body-progress-tracker) and [planned UG section](UserGuide.md#body-progress-tracker-planned-for-v14) define user-visible behavior. Keep these documents synchronized as implementation increments land. The four required capabilities are baseline measurements, dated weight/notes, complete history and latest-to-baseline comparison. Progress-entry correction/deletion is part of the same feature.
+Implemented for v1.4. The [feature contract](featureSpecs.md#feature-13-body-progress-tracker) and [User Guide](UserGuide.md#body-progress-tracker) define user-visible behavior. The tracker supports baseline measurements, dated weight/notes, complete history, latest-to-baseline comparison, and correction/deletion.
 
 #### Ownership and invariants
 
-Proposed model names below are design targets. Each `Person` owns one immutable `BodyProgress` aggregate, initially empty. An optional `BodyBaseline` contains `LocalDate date`, `BigDecimal weightKg` and `BigDecimal heightCm`. Each immutable `BodyProgressEntry` contains a date, exact weight and optional notes. The aggregate defensively copies its entry collection and exposes an unmodifiable list in date order.
+Each `Person` owns one immutable `BodyProgress` aggregate, initially empty. An optional `BodyBaseline` contains `LocalDate date`, `BigDecimal weightKg` and `BigDecimal heightCm`. Each immutable `BodyProgressEntry` contains a date, exact weight and optional notes. The aggregate defensively copies its entry collection and exposes an unmodifiable list in date order.
 
-<img src="images/BodyProgressClassDiagram.png" alt="Proposed body progress model: a Person owns a BodyProgress aggregate with an optional baseline and dated entries" width="760" />
+<img src="images/BodyProgressClassDiagram.png" alt="Body progress model: a Person owns a BodyProgress aggregate with an optional baseline and dated entries" width="760" />
 
-The proposed model class diagram deliberately omits unrelated `Person` fields. It does not replace the shared Model diagram maintained by other members.
+The model class diagram deliberately omits unrelated `Person` fields. It does not replace the shared Model diagram maintained by other members.
 
 Aggregate invariants:
 
@@ -302,21 +303,21 @@ Aggregate invariants:
 * Baseline replacement retains entries and must validate its candidate date against **all** retained entries. Never silently drop or re-date history.
 * Same-date `bodylog` replaces the complete entry, including clearing notes when omitted. An exact duplicate is rejected before replacement. `bodydelete` cannot remove the baseline.
 
-Prefer `Person.withBodyProgress(updated)` as the body mutation path; it copies every unrelated field. Update all other client reconstruction/copy paths to preserve this aggregate, including test builders and later membership/health/workout-history fields. Include it in full value equality/hashCode, but do not change client identity solely because measurements changed. Deleting/clearing clients removes their owned aggregates; catalog operations preserve them.
+`Person.withBodyProgress(updated)` copies every unrelated field. Existing client reconstruction paths and `PersonBuilder` retain the tracker. Full person equality/hashCode include it; client identity does not depend on measurements. Deleting/clearing clients removes their owned aggregates; catalog operations preserve them.
 
 #### Commands, parsing and UI requests
 
-Proposed command/parser pairs are `BodyBaselineCommand` / `BodyBaselineCommandParser` (`bodybase`), `BodyLogCommand` / `BodyLogCommandParser` (`bodylog`), `BodyHistoryCommand` / `BodyHistoryCommandParser` (`bodyhistory`), `BodyCompareCommand` / `BodyCompareCommandParser` (`bodycompare`) and `BodyDeleteCommand` / `BodyDeleteCommandParser` (`bodydelete`). `BodyHistoryCommand` and `BodyCompareCommand` are queries and leave domain data unchanged; the three mutation classes create complete candidates before `Model#setPerson`.
+Command/parser pairs are `BodyBaselineCommand` / `BodyBaselineCommandParser` (`bodybase`), `BodyLogCommand` / `BodyLogCommandParser` (`bodylog`), `BodyHistoryCommand` / `BodyHistoryCommandParser` (`bodyhistory`), `BodyCompareCommand` / `BodyCompareCommandParser` (`bodycompare`) and `BodyDeleteCommand` / `BodyDeleteCommandParser` (`bodydelete`). `BodyHistoryCommand` and `BodyCompareCommand` are queries and leave domain data unchanged; the three mutation classes create complete candidates before `Model#setPerson`.
 
-Use one reusable body parsing helper for index, strict decimal syntax, dates, notes and prefix validation. Reserve alphabetic `PREFIX/` tokens only at argument boundaries; preserve `km/day` inside notes. Reject duplicate/unknown prefixes and raw nonprintable characters before normalization. Do not lowercase values or collapse notes' internal spacing. Recognize only the command's allowed prefixes. Tests must use the public command router as well as individual parsers so trimming at the router cannot hide a trailing newline.
+The reusable `BodyParserUtil` and `BodyMeasurements` helpers handle index, strict decimal syntax, dates, notes and prefix validation. Reserve alphabetic `PREFIX/` tokens only at argument boundaries; preserve `km/day` inside notes. Reject duplicate/unknown prefixes and raw nonprintable characters before normalization. Do not lowercase values or collapse notes' internal spacing. Recognize only the command's allowed prefixes. Tests must use the public command router as well as individual parsers so trimming at the router cannot hide a trailing newline.
 
 Date checks use an injectable `Clock` with the local zone, not fixed test dates or a global mutable clock. Validate future-date restrictions against the execution date (including if midnight passes after parsing). Load checks use the same clock policy. The model also validates structural, measurement and cross-date invariants independently of parsers. Exceptions handle bad user/stored input; assertions are only appropriate for internal assumptions after validation.
 
 Resolve indexes against `getFilteredPersonList()` exactly once before mutation. Do not reset the predicate to show all clients. `bodyhistory` and `bodycompare` should select/reveal the requested client even for valid empty-data states; invalid indexes must not change the UI.
 
-Proposed UI handoff: extend `CommandResult` with an optional typed `BodyProgressViewRequest` containing the resolved target `Person` and section (`HISTORY` or `COMPARISON`). Mutations request the updated client; queries request the existing client. Preserve the existing constructors/defaults and include the request in result equality/hashCode/tests. This is a **new integration point to implement**, not an existing API. `MainWindow` consumes the request only after `LogicManager.execute` returns successfully, selects the target in `PersonListPanel`, and reveals the section. Do not pass the numeric index on for later re-resolution against a potentially changed list, and do not mutate domain data to implement selection.
+`CommandResult` carries an optional typed `BodyProgressViewRequest` containing the resolved target `Person` and section (`HISTORY` or `COMPARISON`). Mutations request the updated client; queries request the existing client. Existing constructors retain an empty request by default; result equality and hashCode include the optional request. `MainWindow` consumes the request only after `LogicManager.execute` returns successfully, selects the target in `PersonListPanel`, and reveals the section. Do not pass the numeric index on for later re-resolution against a potentially changed list, and do not mutate domain data to implement selection.
 
-Show baseline, all entries and comparison in the selected client's existing scrollable details area. Observe selection and client replacement so every mutation, including deletion of the latest entry, refreshes the derived display. Clear stale rows, notes and comparison fields on selection changes. Wrap maximum-length notes and constrain controls to available width; use vertical scrolling rather than `sizeToScene()`/automatic window resizing. Coordinate placement with the separate UI-redesign PR without deferring the functional v1.4 view.
+`BodyProgressPanel` renders baseline, all entries and comparison in the centre column's `ClientDetailPanel`. The body card scrolls internally, and the centre details column scrolls when its content exceeds the available height. `MainWindow` observes selection/client replacement and consumes successful typed requests, then `ClientDetailPanel.revealBodyProgress` reveals the card and requested section. Maximum-length notes wrap within the available width. Selection changes rebuild/clear all body fields; the window never resizes automatically. All five commands are registered in `CommandCatalog` for usage hints and help.
 
 #### Deriving history and comparison
 
@@ -324,7 +325,7 @@ Build the view from the aggregate on demand. Baseline is separate from the progr
 
 #### Persistence schema and backward compatibility
 
-Proposed `JsonAdaptedBodyProgress`, `JsonAdaptedBodyBaseline` and `JsonAdaptedBodyProgressEntry` adapters add a nested `bodyProgress` field to each JSON person. There is no shared catalog or cross-client reference. A populated example is:
+`JsonAdaptedBodyProgress`, `JsonAdaptedBodyBaseline` and `JsonAdaptedBodyProgressEntry` adapters add a nested `bodyProgress` field to each JSON person. There is no shared catalog or cross-client reference. A populated example is:
 
 ```json
 {
@@ -350,19 +351,19 @@ Load then sort valid entries by date. On save, emit the canonical date order. Ro
 
 #### Atomic mutation, rollback and integration
 
-For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` A body-mutation marker or equivalent mapping can supply this specific message; read-only queries should not be classified as mutations merely to reuse it. Existing application-wide autosave behavior need not change for this feature, but history/comparison must leave all domain data unchanged.
+For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` `BodyMutationCommand` identifies the three mutations for this message mapping; read-only queries should not be classified as mutations merely to reuse it. Existing application-wide autosave behavior need not change for this feature, but history/comparison must leave all domain data unchanged.
 
-<img src="images/BodyProgressSaveSequence.png" alt="Proposed body mutation sequence with validation, atomic save and rollback on IOException" width="820" />
+<img src="images/BodyProgressSaveSequence.png" alt="Body mutation sequence with validation, atomic save and rollback on IOException" width="820" />
 
-The sequence diagram abstracts parsing and the actual filesystem temporary-file/move implementation. Its `commit` arrow represents the existing `Storage.saveAddressBook` boundary. Return a display request only on successful completion; an exception must not reveal or later persist a rejected candidate. Do not fire irreversible UI/history side effects during command execution before saving.
+The sequence diagram abstracts parsing and the actual filesystem temporary-file/move implementation. Its save arrow represents the existing `Storage.saveAddressBook` boundary. Return a display request only on successful completion; an exception must not reveal or later persist a rejected candidate. Do not fire irreversible UI/history side effects during command execution before saving.
 
-Snapshots, `AddressBook` copy/reset/equality, `Person` builders and any future shared undo/redo history must retain body data together with every other feature. This design adds no independent tracker undo stack; do not claim general undo/redo support until the shared implementation is integrated and tested. Body logging is independent of workout logging and never deducts membership sessions.
+Snapshots, `AddressBook` copy/reset/equality, `Person` builders and the shared undo/redo history retain body data together with every other feature. This design adds no independent tracker undo stack; the shared history stores and restores these complete snapshots. Body logging is independent of workout logging and never deducts membership sessions.
 
 #### Implementation increments and validation
 
-Implement and review in increments: (1) immutable model/adapters and legacy/invalid-file tests, (2) baseline/log/delete commands and rollback integration, (3) query/UI handoff and readable display. Keep the feature spec, UG and this DG aligned; remove "planned" labels only after the advertised behavior is actually delivered. These increments together, not just a foundation model, complete the assigned v1.4 scope.
+Implementation commits cover: (1) immutable model/adapters and legacy/invalid-file tests, (2) baseline/log/delete commands and rollback integration, (3) query/UI handoff and readable display. The feature spec, UG and this DG describe the complete runtime companion PR. Merge the runtime PR before this documentation update. These increments together, not just a foundation model, complete the assigned v1.4 scope.
 
-Automated evidence should cover:
+Automated coverage in `BodyProgressTest`, `JsonAdaptedBodyProgressTest`, `BodyProgressIntegrationTest` and `BodyProgressPanelTest` exercises:
 
 * Parser/router boundaries: zero/signed/oversized and filtered indexes; missing/repeated/unknown prefixes; newline preservation; leap/impossible/future dates; decimal syntax/bounds; Unicode code-point note limits and nonprintables.
 * Aggregate transitions: create/replace baseline; invalid correction keeps all entries; create/replace/delete entry; notes clearing; exact duplicates versus case-only note edits; duplicate dates; sorted backdating; independent clients.
@@ -371,91 +372,74 @@ Automated evidence should cover:
 * Fault injection for every mutation form (including both creation and replacement): unchanged model/filter/catalogs and original file bytes, cleaned temporary files, and a later successful command not persisting rejected values.
 * UI selection/refresh, invalid-index stability, maximum-length notes and supported narrow-window layout; confirm target/notes/delta are not stale when switching clients or after failed saves.
 
-The manual scenarios in the appendix complement automated tests; they are planned acceptance checks, not evidence of tests already run.
+The manual scenarios in the appendix complement automated tests. Runtime validation includes the full Gradle test/Checkstyle suite and the packaged application smoke test; the UI tests exercise command entry and produce a minimum-window screenshot for visual inspection.
 
-### \[Proposed\] Undo/redo feature
+### Undo/redo feature
 
-#### Proposed Implementation
+#### Saved snapshots in `LogicManager`
 
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
+`LogicManager` owns two in-memory `Deque<AddressBook>` stacks: `undoStack` and `redoStack`.
+Each snapshot contains the complete client records and membership-plan catalogue. Immutable client values,
+including body progress and workout sessions, can be shared safely between snapshots. The stacks are not
+written to JSON and start empty whenever the application starts.
 
-- `VersionedAddressBook#commit()` — Saves the current address book state in its history.
-- `VersionedAddressBook#undo()` — Restores the previous address book state from its history.
-- `VersionedAddressBook#redo()` — Restores a previously undone address book state from its history.
+`AddressBookParser` uses `UndoCommandParser` and `RedoCommandParser` to reject extra arguments and
+create marker commands. `LogicManager` handles them through `executeUndo` and `executeRedo`; their
+`execute` methods are not used to restore data. An empty stack returns `No changes to undo.` or
+`No changes to redo.` without saving or changing data.
 
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
+For an ordinary command, `LogicManager` copies the current address book into `backup` before execution.
+For undo/redo, it copies the current data into `current` and restores the top snapshot using
+`Model#setAddressBook`. It saves the resulting address book through `Storage#saveAddressBook` before
+changing either stack:
 
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
+| Successfully saved operation | Undo stack | Redo stack |
+| --- | --- | --- |
+| An ordinary command changes address-book data | Push `backup`; discard the oldest snapshot if over the limit | Clear |
+| `undo` | Pop the restored snapshot | Push `current` |
+| `redo` | Push `current`, applying the same limit | Pop the restored snapshot |
+| An ordinary command leaves address-book data unchanged | Unchanged | Unchanged |
 
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
+`MAX_UNDO_HISTORY_SIZE` limits the undo stack to **50 snapshots**. The newest snapshot is at the front;
+`pushUndoState` removes the oldest snapshot at the back when necessary. At most 50 undo steps can be
+moved to the redo stack, so redo history is bounded by the same limit. A new saved mutation after undo
+clears redo history. History retains complete snapshots, so memory still depends on the amount of client
+data in those retained states.
 
-![UndoRedoState0](images/UndoRedoState0.png)
+The following diagram shows a successful undo with a nonempty undo stack. Parsing is summarized inside
+`LogicManager`; the restored snapshot is `undoStack.peek()`.
 
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
+<img src="images/UndoSequenceDiagram-Logic.png" alt="Successful undo restores a snapshot, saves it, then advances the history stacks" width="960" style="max-width:100%; height:auto;" />
 
-![UndoRedoState1](images/UndoRedoState1.png)
+#### Failure handling and search state
 
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+If command execution fails, no save or history transition occurs. If saving throws `IOException`,
+`LogicManager` restores the snapshot from before execution (`backup` or `current`) and reports the existing command-specific or generic save error.
+Neither stack is advanced, so a failed undo or redo can be retried after the storage problem is resolved.
+The existing atomic JSON save boundary protects the previous file contents.
 
-![UndoRedoState2](images/UndoRedoState2.png)
+<img src="images/UndoSequenceDiagram-Model.png" alt="A failed undo save restores the current snapshot and leaves both history stacks unchanged" width="960" style="max-width:100%; height:auto;" />
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
+After a successful undo or redo, `LogicManager` resets the client predicate to
+`Model.PREDICATE_SHOW_ALL_PERSONS`, and `MainWindow` clears the query indicator to `All clients`.
+Restored clients are visible, and index-based commands use that complete list. An empty-history response
+or a failed save leaves both the active search predicate and its indicator unchanged. Window settings,
+the saved file location and command-entry history are not reversed.
 
-</div>
+For example, after a saved `delete 1` and a saved `add` command, two undo operations restore the states
+before the add and before the deletion. A `list` between those undos does not consume a history step.
+Redo reapplies the saved states in the opposite order. A new successful mutation replaces that redo path.
 
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
+#### Design considerations and verification
 
-![UndoRedoState3](images/UndoRedoState3.png)
+Complete snapshots keep undo/redo independent of individual command implementations and preserve all
+client features and shared plans together. The 50-step cap bounds the number of retained states. An
+alternative would store inverse operations per command; that could reduce memory but would require each
+mutation to implement and validate its own inverse.
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-
-</div>
-
-The following sequence diagram shows how an undo operation goes through the `Logic` component:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Logic.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `UndoCommand` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-
-</div>
-
-Similarly, how an undo operation goes through the `Model` component is shown below:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Model.png)
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-
-</div>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-![UndoRedoState4](images/UndoRedoState4.png)
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …​` command. This is the behavior that most modern desktop applications follow.
-
-![UndoRedoState5](images/UndoRedoState5.png)
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-<img src="images/CommitActivityDiagram.png" width="250" />
-
-#### Design considerations:
-
-**Aspect: How undo & redo execute:**
-
-- **Alternative 1 (current choice):** Saves the entire address book.
-  - Pros: Easy to implement.
-  - Cons: May have performance issues in terms of memory usage.
-
-- **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  - Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
-  - Cons: We must ensure that the implementation of each individual command is correct.
-
-_{more aspects and alternatives to be added}_
+`LogicManagerTest` covers multiple undos/redos, read-only commands, rejected commands, redo invalidation,
+the history limit and save failure. `MainWindowUndoRedoTest` exercises real command entry through
+`find`, undo and redo, checking the visible query, counts and subsequent indexed target.
 
 ### \[Proposed\] Data archiving
 
@@ -750,7 +734,7 @@ _{More to be added}_
 
 **Use case: UC08 - Schedule a session with a client**
 
-The first increment stores an immutable `TrainingSession` (date/time and location) in each client's `Person` record. The `schedule` command validates a future ISO date and 24-hour time, then replaces the client record with a copy containing the new session. `viewschedule` orders saved sessions by date/time. JSON storage writes a `trainingSessions` list for each client; when that field is absent, older data loads with an empty list. Editing a client or its remark preserves its sessions. Session conflict detection and recurring appointments remain separate increments.
+Each client's `Person` record stores immutable `TrainingSession` appointments with a date/time, location, and kind (`TRAINING` or `MEETING`). The `schedule` and `meeting` commands validate a future ISO date and 24-hour time, then replace the client record with a copy containing the new appointment. `AppointmentScheduler` checks every client in the full address book for another appointment at the same start time before changing the model. `viewschedule` orders saved appointments by date/time; `dayschedule` combines appointments across clients for a date. JSON storage writes a `trainingSessions` list for each client. Missing lists load as empty, and missing `kind` values load as `TRAINING` for older data. Editing a client or its remark preserves appointments. Appointment durations and recurring appointments are not stored; therefore only equal start times can be detected as conflicts.
 
 **MSS**
 
@@ -778,7 +762,20 @@ The first increment stores an immutable `TrainingSession` (date/time and locatio
 
     Use case resumes at step 3.
 
-**Use case: UC10 - Record starting body measurements [planned v1.4]**
+- 3d. The requested start time equals an existing appointment start time.
+  - 3d1. Fittix shows a clash warning naming the conflicting client and does not save the appointment.
+
+    Use case ends.
+
+**Use case: UC09 - Monitor clients and daily appointments**
+
+1. The trainer enters `inactive DAYS` to list clients without a completed workout logged within the last `DAYS` calendar days, including today. The full address book is searched, regardless of the current filter; a client with no workout logs is included.
+2. The trainer enters `dayschedule d/YYYY-MM-DD` to list all appointments on that date across the full address book, sorted by start time and client name. Training sessions and ad-hoc meetings are identified separately.
+3. The trainer enters `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION` to record an ad-hoc client meeting. It uses the same validation and conflict check as `schedule`; `INDEX` refers to the currently displayed client list.
+
+The command parsers reject invalid dates, times, blank locations, and nonpositive day counts before model mutation. Both kinds of appointment use the existing `trainingSessions` storage list with a new `kind` field, so older saved files remain readable.
+
+**Use case: UC10 - Record starting body measurements**
 
 **MSS**
 
@@ -796,7 +793,7 @@ Use case ends.
 * 3b. The baseline is identical: Fittix reports that it is already current. Use case ends.
 * 3c. Saving fails: Fittix reports the body-save error and retains the previous model and file. Use case ends.
 
-**Use case: UC11 - Record or correct dated body progress [planned v1.4]**
+**Use case: UC11 - Record or correct dated body progress**
 
 **Precondition:** The client has a body baseline.
 
@@ -818,7 +815,7 @@ Use case ends.
 * 4a. Saving fails: Fittix reports the body-save error and restores the previous model/file. Use case ends.
 * Correction alternative: Trainer deletes a progress entry by client/date; Fittix preserves the baseline and other entries and refreshes the latest comparison after saving. A missing entry or an attempt to delete the baseline is rejected. The same save-failure guarantee applies.
 
-**Use case: UC12 - View complete body-progress history [planned v1.4]**
+**Use case: UC12 - View complete body-progress history**
 
 **MSS**
 
@@ -833,7 +830,7 @@ Use case ends.
 * 2a. No baseline exists: Fittix shows the selected client's missing-baseline state. Use case ends.
 * 2b. Only a baseline exists: Fittix shows it and the no-progress state. Use case ends.
 
-**Use case: UC13 - Compare latest body progress with the baseline [planned v1.4]**
+**Use case: UC13 - Compare latest body progress with the baseline**
 
 **MSS**
 
@@ -1069,7 +1066,7 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
 Use a disposable address book with at least two clients.
 
 1. Run `addmem n/Gold p/150 s/30` and `addmem n/Silver p/80 s/12`, then `view mem` and `view membership`.<br>
-   Expected: Both views list Gold then Silver with two-decimal prices and starting session counts. Adding `n/gold` again is rejected.
+   Expected: Both views list Gold then Silver with `S$`-prefixed two-decimal prices and starting session counts. Adding `n/gold` again is rejected.
 2. Run `amem Gold 1 e/YYYY-MM-DD` with a real date later than today, then `amem Gold 2`.<br>
    Expected: Both clients start with 30 sessions. Only the first card shows an expiry date; another assignment to either client is rejected.
 3. Run `imem 1 3` and `dmem 2 2`.<br>
@@ -1085,9 +1082,9 @@ Use a disposable address book with at least two clients.
 8. Run `addmem n/Platinum p/200 s/40`, then `clear`, then `view mem`.<br>
    Expected: `clear` deletes all clients, but the Platinum plan is still listed, confirming that clearing clients does not delete membership plans.
 
-### Body progress tracker [planned v1.4 acceptance checks]
+### Body progress tracker acceptance checks
 
-Run these once the feature is implemented, using disposable data and a correct local clock. The fixed dates below are historical; on a controlled test clock earlier than them, substitute equivalent past dates. Prepare two uniquely named clients, Priya Nair and Daniel Tan. Run `list` and use their actual displayed indexes in place of `P` and `D`. Preserve Daniel's values for cross-client checks. Start Priya with no tracker; optionally give her diet/workout/schedule/membership data to verify preservation.
+Run these using disposable data and a correct local clock. The fixed dates below are historical; on a controlled test clock earlier than them, substitute equivalent past dates. Prepare two uniquely named clients, Priya Nair and Daniel Tan. Run `list` and use their actual displayed indexes in place of `P` and `D`. Preserve Daniel's values for cross-client checks. Start Priya with no tracker; optionally give her diet/workout/schedule/membership data to verify preservation.
 
 1. Run `bodyhistory P` and `bodycompare P`, then `bodylog P d/2020-01-08 w/74.80`.<br>
    Expected: Queries select Priya and display the missing-baseline state without changing data. Logging fails with `No body baseline recorded for Priya Nair. Use bodybase first.`
