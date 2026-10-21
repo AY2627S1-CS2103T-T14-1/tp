@@ -37,6 +37,7 @@ public class Person {
     private final List<TrainingSession> trainingSessions;
     private final List<WorkoutSession> workoutSessions;
     private final Optional<MembershipAssignment> membershipAssignment;
+    private final BodyProgress bodyProgress;
 
     /**
      * Every field must be present and not null.
@@ -146,8 +147,18 @@ public class Person {
             List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
             DietaryRestrictions dietaryRestrictions, HealthProfile healthProfile,
             Optional<MembershipAssignment> membershipAssignment) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions,
+                workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, new BodyProgress());
+    }
+
+    /** Constructs a person with every supported field, including their immutable body tracker. */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
+            DietaryRestrictions dietaryRestrictions, HealthProfile healthProfile,
+            Optional<MembershipAssignment> membershipAssignment, BodyProgress bodyProgress) {
         requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan,
-                trainingSessions, workoutSessions, dietaryRestrictions, membershipAssignment);
+                trainingSessions, workoutSessions, dietaryRestrictions, membershipAssignment, bodyProgress);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -162,6 +173,17 @@ public class Person {
         this.trainingSessions = List.copyOf(trainingSessions);
         this.workoutSessions = List.copyOf(workoutSessions);
         this.membershipAssignment = membershipAssignment;
+        this.bodyProgress = bodyProgress;
+    }
+
+    public BodyProgress getBodyProgress() {
+        return bodyProgress;
+    }
+
+    /** Returns a copy with body data replaced and all unrelated fields retained. */
+    public Person withBodyProgress(BodyProgress progress) {
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
+                trainingSessions, workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, progress);
     }
 
     public Name getName() {
@@ -224,7 +246,8 @@ public class Person {
     public Person withMembershipAssignment(Optional<MembershipAssignment> membershipAssignment) {
         Objects.requireNonNull(membershipAssignment);
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment);
+                trainingSessions, workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment,
+                        bodyProgress);
     }
 
     /** Returns a copy with one additional session. */
@@ -233,19 +256,19 @@ public class Person {
         List<TrainingSession> updated = new ArrayList<>(trainingSessions);
         updated.add(session);
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, updated,
-                workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment);
+                workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, bodyProgress);
     }
 
     /** Returns a copy with the supplied current dietary restrictions. */
     public Person withDietaryRestrictions(DietaryRestrictions restrictions) {
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions, restrictions, healthProfile, membershipAssignment);
+                trainingSessions, workoutSessions, restrictions, healthProfile, membershipAssignment, bodyProgress);
     }
 
     /** Returns a copy with the supplied current health profile, or none when {@code profile} is null. */
     public Person withHealthProfile(HealthProfile profile) {
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions, dietaryRestrictions, profile, membershipAssignment);
+                trainingSessions, workoutSessions, dietaryRestrictions, profile, membershipAssignment, bodyProgress);
     }
 
     /**
@@ -297,14 +320,16 @@ public class Person {
                 && Objects.equals(healthProfile, otherPerson.healthProfile)
                 && trainingSessions.equals(otherPerson.trainingSessions)
                 && workoutSessions.equals(otherPerson.workoutSessions)
-                && membershipAssignment.equals(otherPerson.membershipAssignment);
+                && membershipAssignment.equals(otherPerson.membershipAssignment)
+                && bodyProgress.equals(otherPerson.bodyProgress);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
         return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                dietaryRestrictions, healthProfile, trainingSessions, workoutSessions, membershipAssignment);
+                dietaryRestrictions, healthProfile, trainingSessions, workoutSessions, membershipAssignment,
+                        bodyProgress);
     }
 
     @Override
@@ -324,6 +349,7 @@ public class Person {
                 .add("trainingSessions", trainingSessions)
                 .add("workoutSessions", workoutSessions)
                 .add("membershipAssignment", membershipAssignment)
+                .add("bodyProgress", bodyProgress)
                 .toString();
     }
 

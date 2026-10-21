@@ -5,12 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
@@ -19,10 +21,14 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.BodyBaseline;
+import seedu.address.model.person.BodyProgress;
+import seedu.address.model.person.BodyProgressEntry;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutLogEntry;
 import seedu.address.model.person.WorkoutSession;
+import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.testutil.PersonBuilder;
 
 /** Tests complete workout history and replacement of one displayed session. */
@@ -95,6 +101,33 @@ public class WorkoutHistoryCommandTest {
     }
 
     @Test
+    public void edit_populatedBodyProgress_preservedAfterSavingAndReloading(@TempDir Path folder) throws Exception {
+        BodyProgress progress = new BodyProgress(Optional.of(new BodyBaseline(
+                LocalDate.of(2020, 1, 1), new BigDecimal("75.50"), new BigDecimal("175"))),
+                List.of(new BodyProgressEntry(LocalDate.of(2020, 1, 8),
+                        new BigDecimal("74.80"), Optional.of("Before breakfast")),
+                        new BodyProgressEntry(LocalDate.of(2020, 1, 15),
+                                new BigDecimal("74.20"), Optional.empty())));
+        WorkoutSession existing = session(15, Optional.empty(), List.of(SQUAT));
+        WorkoutSession replacement = session(16, Optional.empty(), List.of(BENCH));
+        Person original = withSessions(new PersonBuilder().withBodyProgress(progress).build(), List.of(existing));
+        Person other = new PersonBuilder().withName("Other Client").build();
+        Model model = modelWith(original, other);
+
+        new EditLogCommand(FIRST, FIRST, replacement).execute(model);
+
+        Person updated = model.getAddressBook().getPersonList().get(0);
+        assertEquals(progress, updated.getBodyProgress());
+        assertEquals(progress, original.getBodyProgress());
+        assertEquals(List.of(replacement), updated.getWorkoutSessions());
+        assertEquals(other, model.getAddressBook().getPersonList().get(1));
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(folder.resolve("clients.json"));
+        storage.saveAddressBook(model.getAddressBook());
+        assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
+        assertEquals(progress, storage.readAddressBook().orElseThrow().getPersonList().get(0).getBodyProgress());
+    }
+
+    @Test
     public void edit_sameKeyAsAnotherSession_rejectedWithoutMutation() {
         WorkoutSession early = session(15, Optional.empty(), List.of(SQUAT));
         WorkoutSession late = session(17, Optional.empty(), List.of(BENCH));
@@ -153,7 +186,7 @@ public class WorkoutHistoryCommandTest {
                 client.getRemark(), client.getTags(), client.getWorkoutPlan(), client.getDietPlan(),
                 client.getGoal().orElse(null), client.getTrainingSessions(), sessions,
                 client.getDietaryRestrictions(), client.getHealthProfile().orElse(null),
-                client.getMembershipAssignment());
+                client.getMembershipAssignment(), client.getBodyProgress());
     }
 
     private static Model modelWith(Person... people) {

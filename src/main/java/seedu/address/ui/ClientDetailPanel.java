@@ -6,18 +6,22 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.BodyProgressViewRequest;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Weekday;
@@ -26,6 +30,13 @@ import seedu.address.model.person.Weekday;
 public class ClientDetailPanel extends UiPart<Region> {
 
     private static final String FXML = "ClientDetailPanel.fxml";
+
+    private BodyProgressPanel bodyProgressPanel;
+    private Person displayedPerson;
+    @FXML
+    private StackPane bodyProgressPlaceholder;
+    @FXML
+    private ScrollPane detailsScroll;
 
     @FXML
     private VBox selectedContent;
@@ -67,13 +78,18 @@ public class ClientDetailPanel extends UiPart<Region> {
     /** Creates an initially empty client detail panel. */
     public ClientDetailPanel() {
         super(FXML);
+        bodyProgressPanel = new BodyProgressPanel();
+        bodyProgressPlaceholder.getChildren().add(bodyProgressPanel.getRoot());
         showPerson(null, -1);
     }
 
     /** Displays {@code person} using its one-based index in the visible list. */
     public void showPerson(Person person, int displayedIndex) {
+        displayedPerson = person;
+        bodyProgressPanel.showPerson(person);
         boolean hasPerson = person != null;
         setShown(selectedContent, hasPerson);
+        setShown(detailsScroll, hasPerson);
         setShown(emptyContent, !hasPerson);
         if (!hasPerson) {
             return;
@@ -102,6 +118,22 @@ public class ClientDetailPanel extends UiPart<Region> {
         remark.setText(remarkText);
         setShown(remarkBox, !remarkText.isBlank());
         showWorkoutPlan(person, displayedIndex);
+    }
+
+    /** Reveals the requested tracker section after MainWindow selects its resolved client. */
+    public void revealBodyProgress(BodyProgressViewRequest request) {
+        Platform.runLater(() -> {
+            if (!request.person().equals(displayedPerson)) {
+                return;
+            }
+            selectedContent.applyCss();
+            selectedContent.layout();
+            double overflow = selectedContent.getLayoutBounds().getHeight()
+                    - detailsScroll.getViewportBounds().getHeight();
+            detailsScroll.setVvalue(overflow <= 0 ? 0
+                    : Math.min(1, Math.max(0, bodyProgressPlaceholder.getBoundsInParent().getMinY() / overflow)));
+        });
+        bodyProgressPanel.reveal(request);
     }
 
     private void showWorkoutPlan(Person person, int displayedIndex) {

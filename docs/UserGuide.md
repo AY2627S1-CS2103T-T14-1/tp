@@ -34,7 +34,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
    * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records a diet plan for the 2nd client shown.
-  
+
    * `log 1 d/2020-01-15 ex/Push-up|0|3|12` : Records a completed workout session for the 1st client shown.
 
    * `clear` : Deletes all contacts, but keeps membership plans.
@@ -107,15 +107,43 @@ Adds a future training session to the client at the displayed index. Sessions ar
 
 Format: `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
 
-The date and 24-hour time must be valid, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client.
+The date and 24-hour time must be valid and in the future, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client. Fittix rejects an appointment when another client already has a training session or meeting at the same start time.
 
 ### Viewing a client's training sessions: `viewschedule`
 
-Shows all saved sessions for the client at the displayed index, ordered by date and time. Past sessions remain visible for reference.
+Shows all saved training sessions and meetings for the client at the displayed index, ordered by date and time. Meetings are marked `(meeting)`. Past appointments remain visible for reference.
 
 Format: `viewschedule INDEX`
 
 Example: `viewschedule 1`
+
+### Recording a client meeting: `meeting`
+
+Records a future ad-hoc meeting for the client at the displayed index. Give the date, 24-hour time, and meeting location.
+
+Format: `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
+
+Example: `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
+
+The meeting appears in `viewschedule` and `dayschedule`. A meeting cannot use a start time already occupied by any client's training session or meeting.
+
+### Viewing all appointments on a day: `dayschedule`
+
+Lists all clients with a training session or meeting on the specified date, ordered by time. This checks the full client roster, even if the displayed list is filtered.
+
+Format: `dayschedule d/YYYY-MM-DD`
+
+Example: `dayschedule d/2099-03-15`
+
+### Finding clients who have not trained recently: `inactive`
+
+Lists clients without a **recorded completed workout** in the last `DAYS` calendar days, including today. Clients with no recorded workout are included. Scheduled appointments alone do not count as completed workouts. The command checks the full client roster.
+
+Format: `inactive DAYS` (a positive whole number)
+
+Example: `inactive 14`
+
+Fittix stores appointment start times, not durations. Conflict detection checks equal start times; it cannot identify appointments that start at different times but overlap.
 
 ### Editing a client: `edit`
 
@@ -481,7 +509,7 @@ If any exercise entry or other required value is invalid, the entire command is 
 
 #### Viewing recorded sessions
 
-Select a client in the list to see **WORKOUT HISTORY** in the context panel. Each row shows the session's date, time, and all exercise entries. When time was omitted, it appears as `Time not specified`. Text wraps, and the details pane can be scrolled.
+Select a client in the list to see **Completed workouts** under **HISTORY** in the context panel. Each row shows the session's date, time, and all exercise entries. When time was omitted, it appears as `Time not specified`. Text wraps, and the details pane can be scrolled.
 
 Sessions appear newest first by date and time, with every exercise entry shown. On the same date, a session without a time appears after sessions with a time. The number beside each session is its current `SESSION_INDEX`. A client without sessions shows an empty history state.
 
@@ -578,9 +606,9 @@ Failed membership commands leave every plan, assignment, and balance unchanged. 
 * `Cannot decrease sessions below zero. The balance remains unchanged.` and `Cannot increase sessions above 1000. The balance remains unchanged.` — adjustments past the 0 to 1000 limits.
 * `The membership change could not be saved. No plan, assignment, or balance was changed.` — the change could not be written to disk.
 
-### Body progress tracker [planned for v1.4]
+### Body progress tracker
 
-**Availability:** The commands in this section are planned for v1.4 and do not work in v1.3. They let you record starting measurements, maintain dated weight records, view history, and compare the latest weight with the starting weight. The values are trainer-entered records, not a health assessment.
+**Availability:** Available in v1.4; these commands do not work in v1.3. They let you record starting measurements, maintain dated weight records, view history, and compare the latest weight with the starting weight. The values are trainer-entered records, not a health assessment.
 
 Use the client's positive index from the **current** list, including search results. For example, after `find Priya`, index `1` means the first displayed match. Body commands preserve that filter and numbering. Command words and prefixes are lowercase and case-sensitive; each prefix can appear only once. Prefixed fields may follow the index in any order.
 
@@ -615,7 +643,7 @@ Format: `bodyhistory INDEX`
 
 Example: `bodyhistory 1`
 
-Selects that client and reveals their body-progress history in the scrollable details area. It shows the baseline separately, then **all** progress entries in date order, oldest first, with weight and notes. The baseline is not counted as an entry. Missing notes appear as `—`. Long notes wrap; scroll vertically to read older or longer records.
+Selects that client and reveals their body-progress history in the **Body progress** card in the centre details column. Scroll inside the card to read the complete history or comparison; the centre column also scrolls when needed. It shows the baseline separately, then **all** progress entries in date order, oldest first, with weight and notes. The baseline is not counted as an entry. Missing notes appear as `—`. Long notes wrap; scroll vertically to read older or longer records.
 
 Successful feedback is `Showing body progress history for NAME: N entries.` With only a baseline, it displays the baseline and `No body progress entries recorded.` With no baseline, it selects the requested client and shows `No body baseline recorded for NAME. Use bodybase first.` These empty views do not change data.
 
@@ -748,12 +776,15 @@ Action | Format, Examples
 **Increase remaining sessions** | `imem PERSON_INDEX NUMBER_TO_INCREMENT`<br> e.g., `imem 1 3`
 **Decrease remaining sessions** | `dmem PERSON_INDEX NUMBER_TO_DECREMENT`<br> e.g., `dmem 1 2`
 **Delete membership plan** | `delmem n/NAME`<br> e.g., `delmem n/Silver`
-**Body baseline (planned v1.4)** | `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM`<br> e.g., `bodybase 1 d/2020-01-01 w/75.50 h/175`
-**Body progress record/correction (planned v1.4)** | `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]`<br> e.g., `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`
-**Body progress history (planned v1.4)** | `bodyhistory INDEX`
-**Body progress comparison (planned v1.4)** | `bodycompare INDEX`
-**Delete body progress entry (planned v1.4)** | `bodydelete INDEX d/DATE`<br> e.g., `bodydelete 1 d/2020-01-08`
+**Body baseline (v1.4)** | `bodybase INDEX d/DATE w/WEIGHT_KG h/HEIGHT_CM`<br> e.g., `bodybase 1 d/2020-01-01 w/75.50 h/175`
+**Body progress record/correction (v1.4)** | `bodylog INDEX d/DATE w/WEIGHT_KG [n/NOTES]`<br> e.g., `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`
+**Body progress history (v1.4)** | `bodyhistory INDEX`
+**Body progress comparison (v1.4)** | `bodycompare INDEX`
+**Delete body progress entry (v1.4)** | `bodydelete INDEX d/DATE`<br> e.g., `bodydelete 1 d/2020-01-08`
 **Schedule** | `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`
+**Meeting** | `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`<br> e.g., `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
 **View schedule** | `viewschedule INDEX`<br> e.g., `viewschedule 1`
+**Day schedule** | `dayschedule d/YYYY-MM-DD`<br> e.g., `dayschedule d/2099-03-15`
+**Inactive clients** | `inactive DAYS`<br> e.g., `inactive 14`
 **Help** | `help`
 **Log workout session** | `log INDEX d/DATE [t/TIME] ex/EXERCISE\|WEIGHT\|SETS\|REPS [ex/EXERCISE\|WEIGHT\|SETS\|REPS]...`<br> e.g., `log 1 d/2020-01-15 t/18:00 ex/Back squat\|60\|3\|10`
