@@ -70,6 +70,31 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_undoHistoryLimit_discardsOldestStateAndKeepsRedoOrder() throws Exception {
+        model.addPerson(new PersonBuilder().build());
+        for (int i = 1; i <= LogicManager.MAX_UNDO_HISTORY_SIZE + 1; i++) {
+            logic.execute("remark 1 r/Change " + i);
+        }
+        AddressBook latest = new AddressBook(model.getAddressBook());
+
+        for (int i = 0; i < LogicManager.MAX_UNDO_HISTORY_SIZE; i++) {
+            logic.execute("undo");
+        }
+        assertEquals("Change 1", model.getAddressBook().getPersonList().get(0).getRemark().value);
+        assertEquals(UndoCommand.MESSAGE_FAILURE, logic.execute("undo").getFeedbackToUser());
+
+        for (int i = 0; i < LogicManager.MAX_UNDO_HISTORY_SIZE; i++) {
+            logic.execute("redo");
+        }
+        assertEquals(latest, model.getAddressBook());
+        assertEquals(RedoCommand.MESSAGE_FAILURE, logic.execute("redo").getFeedbackToUser());
+        for (int i = 0; i < LogicManager.MAX_UNDO_HISTORY_SIZE; i++) {
+            logic.execute("undo");
+        }
+        assertEquals(UndoCommand.MESSAGE_FAILURE, logic.execute("undo").getFeedbackToUser());
+    }
+
+    @Test
     public void execute_invalidCommandFormat_throwsParseException() {
         String invalidCommand = "uicfhmowqewca";
         assertParseException(invalidCommand, MESSAGE_UNKNOWN_COMMAND);
@@ -550,6 +575,15 @@ public class LogicManagerTest {
         addressBookStorage.setFailing(false);
         assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute(UndoCommand.COMMAND_WORD).getFeedbackToUser());
         assertTrue(paymentsOfFirstPerson().isEmpty());
+        AddressBook undone = new AddressBook(model.getAddressBook());
+        addressBookStorage.setFailing(true);
+        assertThrows(CommandException.class,
+                String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()), ()
+                -> logic.execute(RedoCommand.COMMAND_WORD));
+        assertEquals(undone, model.getAddressBook());
+        assertEquals(undone, addressBookStorage.readAddressBook().orElseThrow());
+
+        addressBookStorage.setFailing(false);
         assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
         assertEquals(1, paymentsOfFirstPerson().size());
     }

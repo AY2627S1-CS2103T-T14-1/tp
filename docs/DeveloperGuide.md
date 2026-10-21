@@ -357,7 +357,7 @@ For each mutation, take/retain the existing complete address-book snapshot, vali
 
 The sequence diagram abstracts parsing and the actual filesystem temporary-file/move implementation. Its save arrow represents the existing `Storage.saveAddressBook` boundary. Return a display request only on successful completion; an exception must not reveal or later persist a rejected candidate. Do not fire irreversible UI/history side effects during command execution before saving.
 
-Snapshots, `AddressBook` copy/reset/equality, `Person` builders and any future shared undo/redo history must retain body data together with every other feature. This design adds no independent tracker undo stack; do not claim general undo/redo support until the shared implementation is integrated and tested. Body logging is independent of workout logging and never deducts membership sessions.
+Snapshots, `AddressBook` copy/reset/equality, `Person` builders and the shared undo/redo history retain body data together with every other feature. This design adds no independent tracker undo stack; the shared history stores and restores these complete snapshots. Body logging is independent of workout logging and never deducts membership sessions.
 
 #### Implementation increments and validation
 
@@ -374,89 +374,72 @@ Automated coverage in `BodyProgressTest`, `JsonAdaptedBodyProgressTest`, `BodyPr
 
 The manual scenarios in the appendix complement automated tests. Runtime validation includes the full Gradle test/Checkstyle suite and the packaged application smoke test; the UI tests exercise command entry and produce a minimum-window screenshot for visual inspection.
 
-### \[Proposed\] Undo/redo feature
+### Undo/redo feature
 
-#### Proposed Implementation
+#### Saved snapshots in `LogicManager`
 
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
+`LogicManager` owns two in-memory `Deque<AddressBook>` stacks: `undoStack` and `redoStack`.
+Each snapshot contains the complete client records and membership-plan catalogue. Immutable client values,
+including body progress and workout sessions, can be shared safely between snapshots. The stacks are not
+written to JSON and start empty whenever the application starts.
 
-- `VersionedAddressBook#commit()` — Saves the current address book state in its history.
-- `VersionedAddressBook#undo()` — Restores the previous address book state from its history.
-- `VersionedAddressBook#redo()` — Restores a previously undone address book state from its history.
+`AddressBookParser` uses `UndoCommandParser` and `RedoCommandParser` to reject extra arguments and
+create marker commands. `LogicManager` handles them through `executeUndo` and `executeRedo`; their
+`execute` methods are not used to restore data. An empty stack returns `No changes to undo.` or
+`No changes to redo.` without saving or changing data.
 
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
+For an ordinary command, `LogicManager` copies the current address book into `backup` before execution.
+For undo/redo, it copies the current data into `current` and restores the top snapshot using
+`Model#setAddressBook`. It saves the resulting address book through `Storage#saveAddressBook` before
+changing either stack:
 
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
+| Successfully saved operation | Undo stack | Redo stack |
+| --- | --- | --- |
+| An ordinary command changes address-book data | Push `backup`; discard the oldest snapshot if over the limit | Clear |
+| `undo` | Pop the restored snapshot | Push `current` |
+| `redo` | Push `current`, applying the same limit | Pop the restored snapshot |
+| An ordinary command leaves address-book data unchanged | Unchanged | Unchanged |
 
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
+`MAX_UNDO_HISTORY_SIZE` limits the undo stack to **50 snapshots**. The newest snapshot is at the front;
+`pushUndoState` removes the oldest snapshot at the back when necessary. At most 50 undo steps can be
+moved to the redo stack, so redo history is bounded by the same limit. A new saved mutation after undo
+clears redo history. History retains complete snapshots, so memory still depends on the amount of client
+data in those retained states.
 
-![UndoRedoState0](images/UndoRedoState0.png)
+The following diagram shows a successful undo with a nonempty undo stack. Parsing is summarized inside
+`LogicManager`; the restored snapshot is `undoStack.peek()`.
 
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
+<img src="images/UndoSequenceDiagram-Logic.png" alt="Successful undo restores a snapshot, saves it, then advances the history stacks" width="960" style="max-width:100%; height:auto;" />
 
-![UndoRedoState1](images/UndoRedoState1.png)
+#### Failure handling and search state
 
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+If command execution fails, no save or history transition occurs. If saving throws `IOException`,
+`LogicManager` restores the snapshot from before execution (`backup` or `current`) and reports the existing command-specific or generic save error.
+Neither stack is advanced, so a failed undo or redo can be retried after the storage problem is resolved.
+The existing atomic JSON save boundary protects the previous file contents.
 
-![UndoRedoState2](images/UndoRedoState2.png)
+<img src="images/UndoSequenceDiagram-Model.png" alt="A failed undo save restores the current snapshot and leaves both history stacks unchanged" width="960" style="max-width:100%; height:auto;" />
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
+After a successful undo or redo, `LogicManager` resets the client predicate to
+`Model.PREDICATE_SHOW_ALL_PERSONS`, and `MainWindow` clears the query indicator to `All clients`.
+Restored clients are visible, and index-based commands use that complete list. An empty-history response
+or a failed save leaves both the active search predicate and its indicator unchanged. Window settings,
+the saved file location and command-entry history are not reversed.
 
-</div>
+For example, after a saved `delete 1` and a saved `add` command, two undo operations restore the states
+before the add and before the deletion. A `list` between those undos does not consume a history step.
+Redo reapplies the saved states in the opposite order. A new successful mutation replaces that redo path.
 
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
+#### Design considerations and verification
 
-![UndoRedoState3](images/UndoRedoState3.png)
+Complete snapshots keep undo/redo independent of individual command implementations and preserve all
+client features and shared plans together. The 50-step cap bounds the number of retained states. An
+alternative would store inverse operations per command; that could reduce memory but would require each
+mutation to implement and validate its own inverse.
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-
-</div>
-
-The following sequence diagram shows how an undo operation goes through the `Logic` component:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Logic.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `UndoCommand` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-
-</div>
-
-Similarly, how an undo operation goes through the `Model` component is shown below:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Model.png)
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-
-</div>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-![UndoRedoState4](images/UndoRedoState4.png)
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …​` command. This is the behavior that most modern desktop applications follow.
-
-![UndoRedoState5](images/UndoRedoState5.png)
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-<img src="images/CommitActivityDiagram.png" width="250" />
-
-#### Design considerations:
-
-**Aspect: How undo & redo execute:**
-
-- **Alternative 1 (current choice):** Saves the entire address book.
-  - Pros: Easy to implement.
-  - Cons: May have performance issues in terms of memory usage.
-
-- **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  - Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
-  - Cons: We must ensure that the implementation of each individual command is correct.
-
-_{more aspects and alternatives to be added}_
+`LogicManagerTest` covers multiple undos/redos, read-only commands, rejected commands, redo invalidation,
+the history limit and save failure. `MainWindowUndoRedoTest` exercises real command entry through
+`find`, undo and redo, checking the visible query, counts and subsequent indexed target.
 
 ### \[Proposed\] Data archiving
 

@@ -742,6 +742,7 @@ Neither command accepts parameters; extra text is rejected.
 * A new successful data-changing command after an undo clears the redo history. Read-only and failed commands leave redo history available.
 * After a successful `undo` or `redo`, the full unfiltered client list is shown so restored clients are visible. Window settings and the saved data file location are not reversed.
 * If saving a restored state fails, the in-memory address book and the undo/redo history remain unchanged.
+* History retains up to **50 saved data changes**. When a new change exceeds this limit, the oldest undo step is discarded.
 * Undo/redo history exists only for the current session. Restarting Fittix loads saved data but starts with empty undo and redo histories; changes from an earlier session cannot be undone.
 
 Example:
