@@ -7,7 +7,7 @@ Fittix is a desktop application for gym trainers to manage their clients and tra
 The planned product brings together:
 
 * Client contact details and training schedules
-* Workout and diet plans for each client
+* Workout plans and diet goals for each client
 * Logs of completed workout sessions, including exercises, weights, sets, and repetitions
 
 ![Mockup of the Fittix training schedule](docs/images/Ui.png)

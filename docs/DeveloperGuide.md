@@ -219,17 +219,21 @@ The workout plan feature lets a trainer keep a per-client list of prescribed exe
   - Non-empty plan groups exercises under bold full-weekday headings in Monday-to-Sunday order with `Day not specified` last; only non-empty groups are shown, separated by an 8px spacer. Within each group, one `Label` per exercise is numbered with the continuous 1-based display index (`1. ...`, `2. ...`) using the `Name SetsxReps @Weightkg` format (e.g. `Bench Press 4x10 @60kg`). These numbers are exactly the `EXERCISE_INDEX` values accepted by `delex` and `dayex`, so the card doubles as the index reference; `addex`/`dayex`/`delex` re-sort and renumber, so callers must always use the current card numbering.
   - Labels wrap (`setWrapText(true)`, max width 350) so long lists grow vertically without breaking the card layout. The card observes the filtered person list, so it refreshes automatically after each command.
 
-### Diet plan management
+<a id="diet-plan-management"></a>
 
-Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the plan in the client's JSON record, so deleting the client also removes the plan. A client has at most one current plan and no plan history.
+### Diet goals
 
-For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw arguments to `DietCommandParser`. This preserves invalid line breaks for validation. The parser recognises single-letter prefixes only at the beginning of an argument or after horizontal whitespace; it leaves slashes inside values such as `kcal/day` untouched. It validates the displayed-list index, one required target, at most one optional notes value, and rejects unknown or repeated prefixes. `DietCommand` looks up the `Person` in the filtered list, compares the candidate with the current plan after trimming and ignoring case, then uses `Model#setPerson` to replace the client record while retaining the other fields and current list filter. An omitted `n/` creates a plan without notes, even when the previous plan had notes.
+Diet goals consist of one current nutrition target and optional coaching notes per client. The implementation retains the existing `DietPlan` model, `dietPlan` JSON field, and command-message wording; the feature rename does not change the command syntax or saved-data format.
+
+Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the diet goals in the client's JSON record, so deleting the client also removes their diet goals. A client has at most one current target record and no history of diet goals.
+
+For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw arguments to `DietCommandParser`. This preserves invalid line breaks for validation. The parser recognises single-letter prefixes only at the beginning of an argument or after horizontal whitespace; it leaves slashes inside values such as `kcal/day` untouched. It validates the displayed-list index, one required target, at most one optional notes value, and rejects unknown or repeated prefixes. `DietCommand` looks up the `Person` in the filtered list, compares the candidate with the current diet goals after trimming and ignoring case, then uses `Model#setPerson` to replace the client record while retaining the other fields and current list filter. An omitted `n/` saves diet goals without notes, even when the previous record had notes.
 
 `LogicManager` snapshots the address book before executing a diet command. `JsonAddressBookStorage` writes a complete JSON document to a temporary file in the data file's directory, then atomically moves it over the old file. If writing or replacing the file fails, `LogicManager` restores the snapshot and returns `The diet plan could not be saved. The previous plan remains unchanged.` The storage layer does not fall back to a non-atomic replacement when the filesystem does not support atomic moves. Validation and duplicate failures occur before any model change.
 
-`PersonListPanel` observes the selected client and the filtered client list. Its details pane shows the current target and notes, hides notes when absent, and provides an empty state for clients without a plan. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the plan's nutritional or medical suitability.
+`ClientContextPanel` shows the selected client's diet goals in the right-hand **DIET** section. It shows the current target and notes, hides notes when absent, and displays `No diet target recorded.` for clients without diet goals. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the diet goals' nutritional or medical suitability.
 
-`DietCommandParserTest`, `DietCommandTest`, `DietIntegrationTest`, and `PersonListPanelTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, injected commit failure, and selected-client display. The manual scenarios below cover the main user flows.
+`DietCommandParserTest`, `DietCommandTest`, and `DietIntegrationTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, and injected commit failure. `WorkoutSessionDisplayTest#dietPlan_showsTargetAndOptionalNotes` checks the `ClientContextPanel` target text, optional-note visibility, and displayed client index in the command hint. `WorkoutSessionDisplayTest#switchingToClientWithoutRecords_clearsPriorRows` checks that switching to a client without records shows the empty diet state. The manual scenarios below cover the main user flows.
 
 ### Dietary restrictions
 
@@ -259,7 +263,7 @@ On success, the command appends the session to a copy of the existing session li
 
 `LogicManager` saves the updated address book through the storage component. If saving throws an `IOException`, it restores the address-book snapshot taken before command execution and reports the save error.
 
-`PersonListPanel` observes the selected client and changes to the client list. It displays the last session in the selected client's session list, including every exercise entry. It shows an empty state when the client has no sessions and hides the workout details when no client is selected. Labels wrap, and the details pane supports scrolling.
+`ClientContextPanel#showHistory` displays every completed session for the selected client under **HISTORY** / **Completed workouts**. It sorts a copy of the session list by workout date and optional time, newest first; the stored recording order is unchanged. Unspecified times use `LocalTime.MIN` for sorting and display as `Time not specified`. Each row includes the workout date, time, and every exercise entry in its recorded order. A client without sessions sees `No completed workouts logged.`; no selection shows the context placeholder. Exercise labels wrap, and the context panel supports scrolling.
 
 Automated coverage includes model validation and immutability, JSON round trips and legacy records, parser validation, duplicate rejection, filtered-list targeting, preservation of sessions by other client-update commands, and selected-client display.
 
@@ -276,7 +280,7 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 `AddressBookParser` routes `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`, `delmem n/NAME`, `amem MEMBERSHIP_NAME PERSON_INDEX [e/YYYY-MM-DD]`, `rmem PERSON_INDEX`, `imem PERSON_INDEX NUMBER_TO_INCREMENT`, `dmem PERSON_INDEX NUMBER_TO_DECREMENT`, `clearmem`, and both `view mem` and `view membership`. Command words and the `view` argument are case-sensitive; prefix letters and plan name matching are case-insensitive. Client indexes refer to the currently displayed client list. For `amem`, the final non-prefixed token before an optional `e/` is the client index, allowing spaces in the plan name.
 
-`ClearmemCommand` (`COMMAND_WORD = clearmem`, `MESSAGE_SUCCESS = Cleared all membership plans.`) takes no parameters and deletes every plan in the catalog while leaving all other data, including client records, workout plans, schedules, diet plans, and workout logs, unchanged. Before deleting, it checks whether any plan is referenced by a client assignment. If so, it deletes nothing and returns `MESSAGE_PLANS_IN_USE = Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.`, consistent with `delmem`'s rule that a referenced plan cannot be deleted. The client `clear` command (`ClearCommand`) is the counterpart for client records: it removes all persons only and must not delete any membership plans, so it bypasses the in-use check. Either command persists its result through the automatic save after the command runs.
+`ClearmemCommand` (`COMMAND_WORD = clearmem`, `MESSAGE_SUCCESS = Cleared all membership plans.`) takes no parameters and deletes every plan in the catalog while leaving all other data, including client records, workout plans, schedules, diet goals, and workout logs, unchanged. Before deleting, it checks whether any plan is referenced by a client assignment. If so, it deletes nothing and returns `MESSAGE_PLANS_IN_USE = Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.`, consistent with `delmem`'s rule that a referenced plan cannot be deleted. The client `clear` command (`ClearCommand`) is the counterpart for client records: it removes all persons only and must not delete any membership plans, so it bypasses the in-use check. Either command persists its result through the automatic save after the command runs.
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
@@ -478,7 +482,7 @@ _{Explain here how the data archiving feature will be implemented}_
 
 **Value proposition**:
 
-- **All-in-one client management:** Keep client goals, injuries, workout plans, diet plans, progress, sessions, and payments in one place.
+- **All-in-one client management:** Keep client goals, injuries, workout plans, diet goals, progress, sessions, and payments in one place.
 - **Fast and efficient:** Quickly access and update information between sessions.
 - **Progress tracking:** Easily monitor each client's fitness progress over time.
 - **Session & payment management:** Track remaining sessions, payments, and unpaid balances.
@@ -494,14 +498,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | gym trainer | record a client's gym schedule                                                       | schedule my business appropriately                                     |
 | `* * *`  | gym trainer | record the workout plan for each client                                              | ensure consistent progress through a consistent workout plan           |
 | `* * *`  | gym trainer | log a completed workout session, including exercises, weights, sets, and repetitions | review the client's training history                                   |
-| `* * *`  | gym trainer | record the diet plan for each client                                                 | track the impact of diet on their improvement                          |
+| `* * *`  | gym trainer | record diet goals for each client                                                    | track the impact of diet on their improvement                          |
 | `* * *`  | gym trainer | delete a former client                                                               | keep my active roster uncluttered                                      |
 | `* * *`  | gym trainer | record when and where to meet each client                                            | remind myself of upcoming client sessions                              |
 | `* * *` | gym trainer | record dated body weights and optional notes | review changes between training sessions |
 | `* *`    | gym trainer | track fee payments                                                                   | check which clients have paid their fees                               |
 | `* *`    | gym trainer | search for clients by name                                                           | find a particular client quickly                                       |
 | `* *`    | gym trainer | filter clients by training goal                                                      | work with clients who have similar objectives                          |
-| `* *`    | gym trainer | record a client's dietary restrictions                                               | ensure their diet plan is suitable for them                            |
+| `* *`    | gym trainer | record a client's dietary restrictions                                               | keep food requirements visible alongside their diet goals             |
 | `* *`    | gym trainer | list clients with unpaid fees                                                        | quickly identify which payments need to be followed up                 |
 | `* *`    | gym trainer | check whether a proposed session time conflicts with another client                  | avoid accidentally double-booking myself                               |
 | `* *`    | gym trainer | view all clients scheduled for a particular day                                      | quickly prepare for the clients I will be training that day            |
@@ -694,14 +698,14 @@ _{More to be added}_
 
     Use case resumes at step 5.
 
-**Use case: UC07 - Record a diet plan for a client**
+**Use case: UC07 - Record diet goals for a client**
 
 **MSS**
 
 1.  Trainer requests to list clients.
 2.  Fittix shows a list of clients.
 3.  Trainer gives the displayed client index, a nutrition target, and optional notes.
-4.  Fittix saves and shows the target and notes as that client's current plan.
+4.  Fittix saves and shows the target and notes as that client's current diet goals.
 
     Use case ends.
 
@@ -713,22 +717,22 @@ _{More to be added}_
     Use case resumes at step 2.
 
 - 3b. The target or supplied notes are invalid, or a parameter is repeated or unsupported.
-  - 3b1. Fittix shows the relevant validation or format error and leaves the current plan unchanged.
+  - 3b1. Fittix shows the relevant validation or format error and leaves the current diet goals unchanged.
 
     Use case resumes at step 3.
 
-- 3c. The candidate matches the current plan after trimming and ignoring case.
-  - 3c1. Fittix reports that the plan is already current and does not replace it.
+- 3c. The candidate matches the current diet goals after trimming and ignoring case.
+  - 3c1. Fittix reports that the diet goals are already current and does not replace them.
 
     Use case ends.
 
-- 4a. The client already has a different plan.
-  - 4a1. Fittix replaces the complete plan and reports the replacement. Old versions are not retained.
+- 4a. The client already has different diet goals.
+  - 4a1. Fittix replaces the complete target and notes and reports the replacement. Old versions are not retained.
 
     Use case ends.
 
 - 4b. Saving fails.
-  - 4b1. Fittix reports the failure; the previous plan remains unchanged in memory and on disk.
+  - 4b1. Fittix reports the failure; the previous diet goals remain unchanged in memory and on disk.
 
     Use case ends.
 
@@ -885,7 +889,7 @@ Use case ends.
 - **Session**: One completed training appointment, logged with the exercises, weights, sets and repetitions performed
 - **Package**: A block of prepaid sessions (typically 10 or 20) bought by a client
 - **Workout plan**: The client's current prescribed set of exercises; a client has at most one at a time
-- **Diet plan**: The client's current prescribed eating guidance; a client has at most one at a time
+- **Diet goals**: The client's current nutrition target and optional coaching notes; a client has at most one current target record at a time
 
 ---
 
@@ -930,11 +934,13 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases …​ }_
 
-### Diet plan management
+<a id="diet-plan-management-1"></a>
+
+### Diet goals
 
 Use a disposable copy of the data file. Start with at least two clients; run `list` and note the displayed index and name of one client.
 
-1. Create a target-only plan: `diet 1 t/1800 kcal per day, 120 g protein`.<br>
+1. Record diet goals without notes: `diet 1 t/1800 kcal per day, 120 g protein`.<br>
    Expected: `Created diet plan for NAME.` and the selected client's details pane shows the full target without notes.
 1. Add notes: `diet 1 t/1800 kcal per day, 120 g protein n/Prioritise vegetables`.<br>
    Expected: `Replaced diet plan for NAME.` and the notes appear in the pane.
@@ -943,13 +949,13 @@ Use a disposable copy of the data file. Start with at least two clients; run `li
 1. Repeat `diet 1 t/2000 KCAL/DAY`.<br>
    Expected: `This is already the current diet plan for NAME.` and the saved spelling remains `2000 kcal/day`.
 1. Try `diet 1 t/`, `diet 1 t/2000 kcal n/`, `diet 1 t/2000 kcal r/vegan`, and `diet 0 t/2000 kcal`.<br>
-   Expected: Respectively, the target, notes, format, and client-index errors appear. The previous plan remains visible.
+   Expected: Respectively, the target, notes, format, and client-index errors appear. The previous diet goals remain visible.
 1. Close and restart the app.<br>
    Expected: Selecting the same client shows the saved target with no notes.
 1. Run `find` for that client and use the index shown in the filtered list in a `diet` command.<br>
-   Expected: Only the displayed client is updated. Run `list` to confirm the other client's plan is unchanged.
+   Expected: Only the displayed client is updated. Run `list` to confirm the other client's diet goals are unchanged.
 1. Delete the client using the displayed index, then restart.<br>
-   Expected: The client and their plan are gone; the details pane no longer shows the deleted client's target.
+   Expected: The client and their diet goals are gone; the context panel no longer shows the deleted client's target.
 
 An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it forces the atomic replacement to throw, verifies the specified failure message, confirms that both the model and original JSON bytes are unchanged, and checks that the temporary file is removed.
 
@@ -1035,16 +1041,16 @@ An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it
 Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, providing the required contact fields, then run `find WorkoutLogManualTest`. The following commands assume that client is displayed at index 1.
 
 1. Run `log 1 d/2020-01-15 t/18:00 ex/Back squat|60|3|10 ex/Bench press|40.25|3|8`.
-   Expected: The success message names the client and session date and time. Selecting the client shows both exercises in the entered order under LAST RECORDED WORKOUT SESSION.
+   Expected: The success message names the client and session date and time. Selecting the client shows both exercises in the entered order in the right-hand **HISTORY** / **Completed workouts** section.
 
 2. Repeat the same command.
    Expected: `This client already has a workout session with the same date and time.` The existing session remains unchanged.
 
 3. Run `log 1 d/2020-01-16 ex/Push-up|0|3|12`.
-   Expected: The session is recorded. The panel shows `Date: 2020-01-16`, `Time: Not specified`, and the Push-up entry.
+   Expected: The session is recorded. A new history row shows `Thu 16 Jan 2020`, `Time not specified`, and the Push-up entry above the session dated 2020-01-15.
 
 4. Run `log 1 d/2020-01-16 t/19:00 ex/Push-up|0|3|12`.
-   Expected: The session is accepted because a specified time differs from an unspecified time.
+   Expected: The session is accepted because a specified time differs from an unspecified time. Its `19:00` row appears above the unspecified-time row on the same date.
 
 5. Run `log 1 d/2020-01-17 ex/Back squat|60|3|10 ex/Bench press|-1|3|8`.
    Expected: A weight validation error appears. Neither exercise is saved as a new session.
@@ -1053,13 +1059,13 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
    Expected: The corrected command succeeds, confirming that the rejected command did not reserve the session's date and time.
 
 7. Run `log 1 d/2020-01-14 ex/Stretch|0|1|1`.
-   Expected: The panel displays this newly recorded session despite its earlier workout date.
+   Expected: The history includes this newly recorded session below the newer dated sessions. Adding an older workout does not move it to the top of the history.
 
 8. Close and restart the app, then find and select the same client.
-   Expected: The panel still displays the session dated 2020-01-14. Repeating the command from step 1 is rejected as a duplicate, confirming that earlier sessions were also retained.
+   Expected: All recorded sessions remain visible in newest-first workout-date/time order, including the session dated 2020-01-14. Repeating the command from step 1 is rejected as a duplicate, confirming that the earlier entry was retained.
 
 9. Select another client with no recorded sessions.
-   Expected: `No workout sessions recorded.` appears, and the previous client's workout details disappear.
+   Expected: `No completed workouts logged.` appears, and the previous client's workout details disappear.
 
 ### Membership plan management
 

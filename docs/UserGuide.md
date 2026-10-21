@@ -3,7 +3,7 @@ layout: page
 title: User Guide
 ---
 
-Fittix is a **desktop application for gym trainers to manage clients, workout plans, diet plans and training sessions through a Command Line Interface (CLI)**, with a Graphical User Interface (GUI) for viewing client details.
+Fittix is a **desktop application for gym trainers to manage clients, workout plans, diet goals and training sessions through a Command Line Interface (CLI)**, with a Graphical User Interface (GUI) for viewing client details.
 
 * Table of Contents
 {:toc}
@@ -33,7 +33,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
-   * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records a diet plan for the 2nd client shown.
+   * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records diet goals for the 2nd client shown.
 
    * `log 1 d/2020-01-15 ex/Push-up|0|3|12` : Records a completed workout session for the 1st client shown.
 
@@ -177,9 +177,13 @@ Examples:
 * `edit 2 n/Betsy Crower t/` edits the name and clears all existing tags.
 * `edit 3 g/Marathon prep` sets a fitness goal; `edit 3 g/` clears it.
 
-### Recording a client's diet plan: `diet`
+<a id="recording-a-clients-diet-plan-diet"></a>
 
-Stores one current diet plan for a client. Select a client in the list to read the complete target and optional notes in the **CURRENT DIET PLAN** pane below the list. The pane shows **No diet plan recorded.** when that client has no plan. Long text wraps, and the pane can be scrolled.
+### Recording a client's diet goals: `diet`
+
+Records a client's current nutrition target and optional coaching notes. Together, these are the client's **diet goals**; only one current target record is stored per client. Select a client in the list to read their target and notes in the **DIET** section of the right-hand context panel. The section shows **No diet target recorded.** when that client has no diet goals. Long text wraps, and the panel can be scrolled.
+
+The `diet` command's feedback still calls this record a "diet plan". The messages below quote the application's exact wording.
 
 Format: `diet INDEX t/TARGET [n/NOTES]`
 
@@ -187,14 +191,14 @@ Format: `diet INDEX t/TARGET [n/NOTES]`
 * `TARGET` is required. After trimming outer whitespace, it must contain 1 to 200 printable characters and at least one letter or digit. Numbers, units, punctuation, internal spaces, and letter case are preserved. Line breaks and control characters are rejected.
 * `NOTES` is optional. If `n/` is supplied, its value must contain 1 to 300 printable characters after trimming. A blank `n/` is invalid; omit `n/` when no notes are needed. Internal spacing and case are preserved, and line breaks and control characters are rejected.
 * `t/` and `n/` may appear in either order, but each may appear only once. They are recognised at the start of an argument or after whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. Dietary restrictions are managed separately with the `restriction` command.
-* A different plan **replaces the complete current plan**. Omitting `n/` during replacement clears any old notes. Earlier versions are not kept. A plan with the same trimmed target and notes, ignoring case, is rejected without changing the saved plan.
+* Different diet goals **replace the complete current target and notes**. Omitting `n/` during replacement clears any old notes. Earlier versions are not kept. Diet goals with the same trimmed target and notes, ignoring case, are rejected without changing the saved record.
 
 Examples:
 
-* `diet 2 t/1800 kcal per day, 120 g protein` creates a target-only plan.
+* `diet 2 t/1800 kcal per day, 120 g protein` records diet goals without coaching notes.
 * `diet 2 t/1800 kcal per day, 120 g protein n/Prioritise lean protein and vegetables` adds notes.
-* `diet 2 t/2000 kcal/day n/Include fruit` replaces the full plan; the slash in `kcal/day` is ordinary text.
-* `diet 2 t/2000 kcal/day` replaces the plan again and removes its notes.
+* `diet 2 t/2000 kcal/day n/Include fruit` replaces the target and notes; the slash in `kcal/day` is ordinary text.
+* `diet 2 t/2000 kcal/day` replaces the target again and removes its notes.
 * `diet 3 t/2000 kcal per day n/Prioritise lean protein` records coaching notes. Use `restriction` for separate dietary restrictions.
 
 On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan for NAME.`. Common errors include:
@@ -209,14 +213,14 @@ On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan 
 | Unknown prefix or extra text | `Invalid command format. Use: diet INDEX t/TARGET [n/NOTES]` |
 | Invalid target | `Diet target must contain 1 to 200 printable characters.` |
 | Invalid supplied notes | `Diet-plan notes must contain 1 to 300 printable characters.` |
-| Same current plan | `This is already the current diet plan for NAME.` |
+| Same current diet goals | `This is already the current diet plan for NAME.` |
 | Saving fails | `The diet plan could not be saved. The previous plan remains unchanged.` |
 
-Invalid commands and failed saves leave the previous plan unchanged. Deleting a client permanently removes that client's diet plan along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
+Invalid commands and failed saves leave the previous diet goals unchanged. Deleting a client permanently removes that client's diet goals along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
 
 ### Recording dietary restrictions: `restriction`
 
-Stores a client's current ordered list of allergies, exclusions, religious requirements, or food preferences separately from their diet plan.
+Stores a client's current ordered list of allergies, exclusions, religious requirements, or food preferences separately from their diet goals.
 
 Format: `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`
 
@@ -507,15 +511,17 @@ A duplicate is rejected with `This client already has a workout session with the
 
 If any exercise entry or other required value is invalid, the entire command is rejected. No part of that session is added.
 
-#### Viewing the recorded session
+<a id="viewing-the-recorded-session"></a>
 
-Select a client in the list to view **LAST RECORDED WORKOUT SESSION** below their diet plan.
+#### Viewing completed workouts
 
-The panel shows the date, time, and all exercise entries. An omitted time appears as `Time: Not specified`. Text wraps, and the details pane can be scrolled.
+Select a client in the list to view **HISTORY** / **Completed workouts** in the right-hand context panel, below their diet goals and schedule.
 
-The displayed session is the one most recently added using `log`, even if its workout date is earlier than another recorded session. A client without sessions shows `No workout sessions recorded.`
+The section shows all of the client's recorded sessions, ordered by workout date and time with the newest first. Recording an older workout adds it at its chronological position rather than at the top. On the same date, a session without a time sorts as `00:00`; its displayed time is `Time not specified`.
 
-Earlier sessions remain saved, but browsing the complete history and editing or deleting individual sessions are not currently supported.
+Each session shows its date, time, and all exercise entries in the order entered. Text wraps, and the context panel can be scrolled to read the complete history. A client without sessions shows `No completed workouts logged.`
+
+Editing or deleting individual recorded sessions is not currently supported by the `log` command.
 
 ### Managing membership plans
 
@@ -575,7 +581,7 @@ A plan assigned to any client cannot be deleted. Remove all its client assignmen
 
 Format: `clearmem`
 
-Deletes all membership plans and nothing else. Every plan in the catalog is removed. No other data is deleted: client records, workout plans, schedules, diet plans, and workout logs are left unchanged. The command takes no parameters.
+Deletes all membership plans and nothing else. Every plan in the catalog is removed. No other data is deleted: client records, workout plans, schedules, diet goals, and workout logs are left unchanged. The command takes no parameters.
 
 A plan that is assigned to any client cannot be cleared. If at least one plan is still in use, `clearmem` deletes nothing and shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` Remove every assignment with [`rmem`](#assigning-and-removing-a-clients-plan-amem-rmem) first, or delete individual unreferenced plans with [`delmem`](#deleting-a-plan-delmem).
 
@@ -810,7 +816,7 @@ Action | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
 **Assign/change exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`
-**Diet plan** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
+**Diet goals** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
 **Dietary restrictions** | `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`<br> e.g., `restriction 2 r/Peanut allergy r/Halal meals`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
 **Record payment** | `pay PERSON_INDEX a/AMOUNT d/YYYY-MM-DD [r/REMARKS]`<br> e.g., `pay 1 a/150 d/2026-10-20`

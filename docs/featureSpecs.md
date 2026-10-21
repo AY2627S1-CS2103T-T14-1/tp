@@ -11,7 +11,7 @@
 - [Feature 3: Workout plan management](#feature-3-workout-plan-management)
 - [Feature 4: Workout session logging](#feature-4-workout-session-logging)
 - [Feature 5: Workout history](#feature-5-workout-history)
-- [Feature 6: Diet plan management](#feature-6-diet-plan-management)
+- [Feature 6: Diet goals](#feature-6-diet-goals)
 - [Feature 7: Search clients by name](#feature-7-search-clients-by-name)
 - [Feature 8: Search clients by phone number or email](#feature-8-search-clients-by-phone-number-or-email)
 - [Feature 9: Record each client's fitness goal](#feature-9-record-each-clients-fitness-goal)
@@ -335,7 +335,7 @@ The selected client's profile and contact fields refresh to show the edited valu
 
 #### Must have
 
-Replace only the supplied editable fields while preserving the client's remark, workout plan, workout sessions, training schedule, diet plan, dietary restrictions, health considerations, membership assignment, and body-progress records.
+Replace only the supplied editable fields while preserving the client's remark, workout plan, workout sessions, training schedule, diet goals, dietary restrictions, health considerations, membership assignment, and body-progress records.
 
 #### Nice to have or later
 
@@ -851,7 +851,7 @@ The replacement follows Feature 4's rules: the date must be today or earlier in 
 
 Reject a replacement if another session for the same client already has the proposed date and optional time. An unchanged replacement reports `The workout session is unchanged.` and leaves the model intact. An invalid session number reports `The workout session index provided is invalid.` Parsing and validation finish before any model change. On success, report `Edited workout session SESSION_INDEX for NAME.`
 
-Replacing a client preserves their name, contact data, goal, workout plan, diet plan, schedule, dietary restrictions, health profile, and membership assignment. A successful edit is saved through the existing address-book storage path. If saving fails, the pre-command address-book snapshot is restored; no partial change is retained. Editing a workout session does not deduct membership sessions.
+Replacing a client preserves their name, contact data, goal, workout plan, diet goals, schedule, dietary restrictions, health profile, and membership assignment. A successful edit is saved through the existing address-book storage path. If saving fails, the pre-command address-book snapshot is restored; no partial change is retained. Editing a workout session does not deduct membership sessions.
 
 ### 7. Duplicate handling
 
@@ -881,15 +881,19 @@ Complete text and panel history; correct latest-session ordering; full-session r
 
 History deletion, changing one exercise without supplying the complete replacement session, and duration/distance records.
 
-## Feature 6: Diet plan management
+<a id="feature-6-diet-plan-management"></a>
+
+## Feature 6: Diet goals
 
 ### 1. Feature
 
-Create or replace a client's current diet plan.
+Record or replace a client's current diet goals: one nutrition target and optional coaching notes.
 
 ### 2. Purpose
 
 Stores one current nutrition target and optional notes per client. Dietary restrictions are stored independently under Feature 12.
+
+The feature name is **Diet goals**. The existing `diet` command and its feedback retain the term "diet plan"; the output and error examples below quote that wording exactly. This name change does not introduce multiple target records or a history of diet goals.
 
 ### 3. Command format
 
@@ -922,7 +926,7 @@ INDEX is a positive whole number identifying a client in the currently displayed
 | Aspect         | Rule, message and rationale                                                                                                                                                               |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Accepted value | 1 to 200 printable characters after trimming, with at least one letter or digit. Internal spaces, punctuation, numbers, units, and case are preserved. Supports varied nutrition targets. |
-| Line breaks    | Line breaks are rejected. The current plan must remain readable in the details panel.                                                                                                     |
+| Line breaks    | Line breaks are rejected. The current diet goals must remain readable in the context panel.                                                                                               |
 | Error          | Diet target must contain 1 to 200 printable characters.                                                                                                                                   |
 
 Fittix records the trainer's text. It does not decide whether the target is medically appropriate.
@@ -932,22 +936,22 @@ Fittix records the trainer's text. It does not decide whether the target is medi
 | Aspect         | Rule, message and rationale                                                                                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | Accepted value | Optional. 1 to 300 printable characters after trimming. Internal spacing, punctuation, and case are preserved. Optional coaching instructions. |
-| Line breaks    | Line breaks are rejected. The plan remains compact and easy to scan.                                                                           |
+| Line breaks    | Line breaks are rejected. The diet goals remain compact and easy to scan.                                                                     |
 | Error          | Diet-plan notes must contain 1 to 300 printable characters.                                                                                    |
 
 ### 6. Output
 
-#### Create a plan
+#### Record diet goals
 
-Save and display the target and optional notes as the current plan.
+Save and display the target and optional notes as the client's current diet goals.
 
 ```text
 Created diet plan for Priya Nair.
 ```
 
-#### Replace a plan
+#### Replace diet goals
 
-Replaces a different current plan in full; previous versions are not retained.
+Replaces different current diet goals in full; previous versions are not retained.
 
 ```text
 Replaced diet plan for Priya Nair.
@@ -959,7 +963,7 @@ Replaced diet plan for Priya Nair.
 
 **Unknown parameter or extra text:** Invalid command format. Use: `diet INDEX t/TARGET [n/NOTES]`
 
-Any failure leaves the current plan unchanged.
+Any failure leaves the current diet goals unchanged.
 
 ### 7. Duplicate handling
 
@@ -969,7 +973,7 @@ Reject matching trimmed targets and notes, compared case-insensitively.
 This is already the current diet plan for Priya Nair.
 ```
 
-A different plan replaces the current version.
+Different diet goals replace the current target and notes.
 
 ### 8. Possible errors
 
@@ -979,14 +983,14 @@ The `diet` command does not accept a restrictions prefix. Use `restriction` (Fea
 
 #### Medical suitability
 
-Fittix must not claim that an entered plan is safe, medically suitable, or nutritionally complete.
+Fittix must not claim that entered diet goals are safe, medically suitable, or nutritionally complete.
 
 **Data cannot be saved:** The diet plan could not be saved. The previous plan remains unchanged.
 
 ### 9. Relevant UI mockup
 
 ```text
-Clients          | Priya Nair — CURRENT DIET PLAN
+Clients          | Priya Nair — DIET
 2. Priya Nair [SELECTED] | Target: 1800 kcal per day, 120 g protein
                  | Notes: Prioritise lean protein
                  | and vegetables
@@ -1461,7 +1465,7 @@ Dated medical history, structured injury categories, severity, clinician details
 
 ### 1. Feature
 
-Record a client's current dietary restrictions separately from the client's diet-plan target and coaching notes.
+Record a client's current dietary restrictions separately from the client's diet goals (nutrition target and coaching notes).
 
 ### 2. Purpose
 
@@ -1552,7 +1556,7 @@ The dietary-restrictions section is shown only when the selected client has at l
 
 #### Must have
 
-Replace, clear, validate, persist, display, and search one current ordered list of dietary restrictions per client. Saved data without this optional list loads with an empty list, and other client updates preserve it independently of the diet plan.
+Replace, clear, validate, persist, display, and search one current ordered list of dietary restrictions per client. Saved data without this optional list loads with an empty list, and other client updates preserve it independently of the diet goals.
 
 This feature is described as implemented in the client-profile source.
 
@@ -1774,7 +1778,7 @@ view mem[bership]
 clearmem
 ```
 
-`clearmem` deletes every membership plan in the catalog and nothing else. It takes no parameters. It does not delete clients, workout plans, schedules, diet plans, workout logs, or any other data. If any membership plan is assigned to a client, no plans are deleted and Fittix shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` Remove every assignment with `rmem` first, or use `delmem` to delete individual unreferenced plans. The general client command `clear` removes clients only and does **not** delete membership plans; use `clearmem` when the catalog must be emptied.
+`clearmem` deletes every membership plan in the catalog and nothing else. It takes no parameters. It does not delete clients, workout plans, schedules, diet goals, workout logs, or any other data. If any membership plan is assigned to a client, no plans are deleted and Fittix shows `Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.` Remove every assignment with `rmem` first, or use `delmem` to delete individual unreferenced plans. The general client command `clear` removes clients only and does **not** delete membership plans; use `clearmem` when the catalog must be emptied.
 
 ### 4. Example commands
 

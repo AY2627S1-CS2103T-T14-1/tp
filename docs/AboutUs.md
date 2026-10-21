@@ -26,7 +26,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/itzkhoadao)]
 
 * Role: Developer
-* Responsibilities: Diet plan management
+* Responsibilities: Diet goals
 
 ### Pham Doan Gia Hien
 
