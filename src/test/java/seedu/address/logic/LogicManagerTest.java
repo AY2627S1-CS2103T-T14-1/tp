@@ -145,8 +145,41 @@ public class LogicManagerTest {
         failSave[0] = false;
         logic.execute("undo");
         assertTrue(model.getAddressBook().getPersonList().isEmpty());
+        String undone = Files.readString(path);
+        failSave[0] = true;
+        assertCommandException("redo", String.format(LogicManager.FILE_OPS_ERROR_FORMAT,
+                DUMMY_IO_EXCEPTION.getMessage()));
+        assertTrue(model.getAddressBook().getPersonList().isEmpty());
+        assertEquals(undone, Files.readString(path));
+
+        failSave[0] = false;
         logic.execute("redo");
         assertEquals(added, model.getAddressBook());
+    }
+
+    @Test
+    public void execute_undoHistoryLimit_discardsOldestStateAndKeepsRedoOrder() throws Exception {
+        model.addPerson(new PersonBuilder().build());
+        for (int i = 1; i <= LogicManager.MAX_UNDO_HISTORY_SIZE + 1; i++) {
+            logic.execute("remark 1 r/Change " + i);
+        }
+        AddressBook latest = new AddressBook(model.getAddressBook());
+
+        for (int i = 0; i < LogicManager.MAX_UNDO_HISTORY_SIZE; i++) {
+            logic.execute("undo");
+        }
+        assertEquals("Change 1", model.getAddressBook().getPersonList().get(0).getRemark().value);
+        assertCommandException("undo", UndoCommand.MESSAGE_NO_HISTORY);
+
+        for (int i = 0; i < LogicManager.MAX_UNDO_HISTORY_SIZE; i++) {
+            logic.execute("redo");
+        }
+        assertEquals(latest, model.getAddressBook());
+        assertCommandException("redo", RedoCommand.MESSAGE_NO_HISTORY);
+        for (int i = 0; i < LogicManager.MAX_UNDO_HISTORY_SIZE; i++) {
+            logic.execute("undo");
+        }
+        assertCommandException("undo", UndoCommand.MESSAGE_NO_HISTORY);
     }
 
     @Test

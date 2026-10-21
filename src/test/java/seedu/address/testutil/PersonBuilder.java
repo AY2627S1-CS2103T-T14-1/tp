@@ -7,6 +7,7 @@ import java.util.Set;
 
 import seedu.address.model.membership.MembershipAssignment;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.BodyProgress;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.DietaryRestrictions;
 import seedu.address.model.person.Email;
@@ -33,6 +34,7 @@ public class PersonBuilder {
     public static final String DEFAULT_ADDRESS = "123, Jurong West Ave 6, #08-111";
     public static final String DEFAULT_REMARK = "";
 
+    private BodyProgress bodyProgress;
     private Name name;
     private Phone phone;
     private Email email;
@@ -52,6 +54,7 @@ public class PersonBuilder {
      * Creates a {@code PersonBuilder} with the default details.
      */
     public PersonBuilder() {
+        bodyProgress = new BodyProgress();
         name = new Name(DEFAULT_NAME);
         phone = new Phone(DEFAULT_PHONE);
         email = new Email(DEFAULT_EMAIL);
@@ -72,6 +75,7 @@ public class PersonBuilder {
      * Initializes the PersonBuilder with the data of {@code personToCopy}.
      */
     public PersonBuilder(Person personToCopy) {
+        bodyProgress = personToCopy.getBodyProgress();
         name = personToCopy.getName();
         phone = personToCopy.getPhone();
         email = personToCopy.getEmail();
@@ -190,10 +194,16 @@ public class PersonBuilder {
     /**
      * Builds a {@code Person} with the details set in this builder.
      */
+    public PersonBuilder withBodyProgress(BodyProgress progress) {
+        bodyProgress = progress;
+        return this;
+    }
+
+    /** Builds a person retaining every configured field. */
     public Person build() {
         return new Person(name, phone, email, address, remark, tags,
                 workoutPlan, dietPlan, goal, trainingSessions, workoutSessions,
-                dietaryRestrictions, healthProfile, membershipAssignment);
+                dietaryRestrictions, healthProfile, membershipAssignment, bodyProgress);
     }
 
 }

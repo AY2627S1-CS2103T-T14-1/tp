@@ -1,23 +1,33 @@
 @startuml
-!include style.puml
-skinparam ArrowFontStyle plain
+skinparam ArrowFontSize 20
+skinparam ParticipantFontSize 20
+skinparam Shadowing false
+hide footbox
+participant ":LogicManager" as logic
+participant "undo:UndoCommand" as command
+participant ":Model" as model
+participant ":Storage" as storage
 
-box Model MODEL_COLOR_T1
-participant ":Model" as Model MODEL_COLOR
-participant ":VersionedAddressBook" as VersionedAddressBook MODEL_COLOR
-end box
-
-[-> Model : undoAddressBook()
-activate Model
-
-Model -> VersionedAddressBook : undo()
-activate VersionedAddressBook
-
-VersionedAddressBook -> VersionedAddressBook :resetData(ReadOnlyAddressBook)
-VersionedAddressBook --> Model :
-deactivate VersionedAddressBook
-
-[<-- Model
-deactivate Model
-
+[-> logic : execute("undo")
+activate logic
+note over logic, model : backup contains the current address book
+logic -> command : execute(model)
+activate command
+command -> model : setAddressBook(\nprevious)
+activate model
+model --> command
+deactivate model
+command --> logic : CommandResult
+deactivate command
+logic -> storage : saveAddressBook(\nrestoredState)
+activate storage
+storage --> logic : throws IOException
+deactivate storage
+logic -> model : setAddressBook(\nbackup)
+activate model
+model --> logic
+deactivate model
+note over logic : Both history stacks\nremain unchanged
+[<-- logic : throws CommandException
+deactivate logic
 @enduml
