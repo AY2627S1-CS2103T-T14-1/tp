@@ -1,6 +1,9 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
+skinparam SequenceMessageFontSize 22
+skinparam SequenceParticipantFontSize 22
+skinparam SequenceActorFontSize 22
 
 Actor User as user USER_COLOR
 Participant ":UI" as ui UI_COLOR
