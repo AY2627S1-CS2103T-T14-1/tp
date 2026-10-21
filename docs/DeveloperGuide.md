@@ -54,9 +54,9 @@ The bulk of the app's work is done by the following four components:
 
 **How the architecture components interact with each other**
 
-The _Sequence Diagram_ below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
+The _Sequence Diagram_ below shows how the components interact when a trainer records a completed workout session using `log 1 d/2020-01-15 ex/Push-up|0|3|12`. This shows the successful case: client 1 exists in the displayed list and has no session with the same date and time.
 
-<img src="images/ArchitectureSequenceDiagram.png" width="574" />
+<img src="images/ArchitectureSequenceDiagram.png" width="960" style="max-width:100%; height:auto;" />
 
 Each of the four main components (also shown in the diagram above),
 
