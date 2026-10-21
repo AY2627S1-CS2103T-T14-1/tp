@@ -33,8 +33,11 @@ import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.PayCommand;
+import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Person;
@@ -50,7 +53,7 @@ public class MainWindow extends UiPart<Stage> {
             DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH);
     private static final Set<String> INDEX_COMMANDS = Set.of(
             "edit", "delete", "diet", "remark", "schedule", "viewschedule",
-            "addex", "delex", "clearplan", "dayex", "log", "editlog", "history",
+            "addex", "delex", "clearplan", "dayex", "log", "editlog", "history", PayCommand.COMMAND_WORD,
             DietaryRestrictionsCommand.COMMAND_WORD, HealthCommand.COMMAND_WORD);
     private static final Set<String> RESET_FILTER_COMMANDS = Set.of(
             AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD,
@@ -245,6 +248,10 @@ public class MainWindow extends UiPart<Stage> {
         if (FindCommand.COMMAND_WORD.equals(commandWord)) {
             filterQuery = commandText.substring(commandWord.length()).trim();
         } else if (RESET_FILTER_COMMANDS.contains(commandWord)
+                || (UndoCommand.COMMAND_WORD.equals(commandWord)
+                    && UndoCommand.MESSAGE_SUCCESS.equals(result.getFeedbackToUser()))
+                || (RedoCommand.COMMAND_WORD.equals(commandWord)
+                    && RedoCommand.MESSAGE_SUCCESS.equals(result.getFeedbackToUser()))
                 || ClearPlanCommand.COMMAND_WORD.equals(commandWord)
                 && result.getFeedbackToUser().startsWith("Cleared workout plan")) {
             filterQuery = null;

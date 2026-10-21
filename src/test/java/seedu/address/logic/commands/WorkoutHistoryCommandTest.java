@@ -25,6 +25,7 @@ import seedu.address.model.person.BodyBaseline;
 import seedu.address.model.person.BodyProgress;
 import seedu.address.model.person.BodyProgressEntry;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutLogEntry;
 import seedu.address.model.person.WorkoutSession;
@@ -110,7 +111,8 @@ public class WorkoutHistoryCommandTest {
                                 new BigDecimal("74.20"), Optional.empty())));
         WorkoutSession existing = session(15, Optional.empty(), List.of(SQUAT));
         WorkoutSession replacement = session(16, Optional.empty(), List.of(BENCH));
-        Person original = withSessions(new PersonBuilder().withBodyProgress(progress).build(), List.of(existing));
+        Person original = withSessions(new PersonBuilder().withBodyProgress(progress).build().withAddedPayment(
+                PaymentRecord.fromText("150", "2020-01-10", Optional.of("Membership"))), List.of(existing));
         Person other = new PersonBuilder().withName("Other Client").build();
         Model model = modelWith(original, other);
 
@@ -118,6 +120,7 @@ public class WorkoutHistoryCommandTest {
 
         Person updated = model.getAddressBook().getPersonList().get(0);
         assertEquals(progress, updated.getBodyProgress());
+        assertEquals(original.getPaymentRecords(), updated.getPaymentRecords());
         assertEquals(progress, original.getBodyProgress());
         assertEquals(List.of(replacement), updated.getWorkoutSessions());
         assertEquals(other, model.getAddressBook().getPersonList().get(1));
@@ -186,7 +189,7 @@ public class WorkoutHistoryCommandTest {
                 client.getRemark(), client.getTags(), client.getWorkoutPlan(), client.getDietPlan(),
                 client.getGoal().orElse(null), client.getTrainingSessions(), sessions,
                 client.getDietaryRestrictions(), client.getHealthProfile().orElse(null),
-                client.getMembershipAssignment(), client.getBodyProgress());
+                client.getMembershipAssignment(), client.getBodyProgress(), client.getPaymentRecords());
     }
 
     private static Model modelWith(Person... people) {
