@@ -173,6 +173,8 @@ public class ClientDetailPanel extends UiPart<Region> {
         date.getStyleClass().addAll("payment-date", "mono");
         Label amount = new Label(payment.getFormattedAmount());
         amount.getStyleClass().addAll("payment-amount", "mono");
+        amount.setWrapText(true);
+        amount.setMinHeight(Region.USE_PREF_SIZE);
         amount.setMaxWidth(Double.MAX_VALUE);
         amount.setAlignment(Pos.CENTER_RIGHT);
         row.add(date, 0, 0);
@@ -182,6 +184,7 @@ public class ClientDetailPanel extends UiPart<Region> {
             Label remarksLabel = new Label(remarks);
             remarksLabel.getStyleClass().add("payment-remarks");
             remarksLabel.setWrapText(true);
+            remarksLabel.setMinHeight(Region.USE_PREF_SIZE);
             remarksLabel.setMaxWidth(Double.MAX_VALUE);
             GridPane.setHgrow(remarksLabel, Priority.ALWAYS);
             row.add(remarksLabel, 2, 0);

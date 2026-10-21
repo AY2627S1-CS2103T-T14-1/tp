@@ -22,6 +22,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
@@ -246,6 +247,35 @@ public class ClientDetailPanelTest {
             assertTrue(remarks.isWrapText());
             assertTrue(remarks.getMaxWidth() > 0);
             assertEquals(PaymentRecord.MAX_REMARKS_LENGTH, remarks.getText().length());
+            return null;
+        });
+    }
+
+    @Test
+    public void payments_largeAmountsAndRemarksRemainFullyRenderedAfterLayout() throws Exception {
+        runOnFxThread(() -> {
+            for (int width : List.of(480, 660, 1000)) {
+                for (String amount : List.of("123456789012345678901234567890.12", "9".repeat(120) + ".50")) {
+                    String remarks = "x".repeat(PaymentRecord.MAX_REMARKS_LENGTH);
+                    PaymentRecord payment = PaymentRecord.fromText(amount, "2026-10-20", Optional.of(remarks));
+                    ClientDetailPanel panel = new ClientDetailPanel();
+                    panel.showPerson(new PersonBuilder().withPaymentRecords(List.of(payment)).build(), 1);
+                    Scene scene = new Scene(panel.getRoot(), width, 900);
+                    scene.getStylesheets().add(getClass().getResource("/view/FittixTheme.css").toExternalForm());
+                    panel.getRoot().applyCss();
+                    panel.getRoot().layout();
+
+                    for (String style : List.of("payment-amount", "payment-remarks")) {
+                        Label value = (Label) panel.getRoot().lookup("." + style);
+                        Text rendered = (Text) value.lookup(".text");
+                        assertEquals(value.getText(), rendered.getText(), style + " at width " + width);
+                        assertTrue(rendered.getLayoutBounds().getHeight() <= value.getHeight(),
+                                style + " must have enough height for every wrapped line");
+                        assertTrue(rendered.getLayoutBounds().getWidth() <= value.getWidth(),
+                                style + " must fit within its column");
+                    }
+                }
+            }
             return null;
         });
     }
