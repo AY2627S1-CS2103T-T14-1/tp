@@ -1,7 +1,7 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
-skinparam SequenceMessageFontSize 22
+skinparam ArrowFontSize 22
 skinparam SequenceParticipantFontSize 22
 skinparam SequenceActorFontSize 22
 
@@ -11,10 +11,10 @@ Participant ":Logic" as logic LOGIC_COLOR
 Participant ":Model" as model MODEL_COLOR
 Participant ":Storage" as storage STORAGE_COLOR
 
-user -[USER_COLOR]> ui : "log 1 d/2020-01-15\nex/Push-up|0|3|12"
+user -[USER_COLOR]> ui : "log 1\nd/2020-01-15\nex/Push-up|0|3|12"
 activate ui UI_COLOR
 
-ui -[UI_COLOR]> logic : execute(commandText)
+ui -[UI_COLOR]> logic : execute(\ncommandText)
 activate logic LOGIC_COLOR
 
 logic -[LOGIC_COLOR]> model : getFilteredPersonList()
@@ -22,12 +22,12 @@ activate model MODEL_COLOR
 model --[MODEL_COLOR]> logic : displayedClients
 deactivate model
 
-logic -[LOGIC_COLOR]> model : setPerson(client, updatedClient)
+logic -[LOGIC_COLOR]> model : setPerson(client,\nupdatedClient)
 activate model MODEL_COLOR
 model --[MODEL_COLOR]> logic
 deactivate model
 
-logic -[LOGIC_COLOR]> storage : saveAddressBook(addressBook)
+logic -[LOGIC_COLOR]> storage : saveAddressBook(\naddressBook)
 activate storage STORAGE_COLOR
 
 storage -[STORAGE_COLOR]> storage : Save to file
@@ -41,6 +41,6 @@ deactivate storage
 logic --[LOGIC_COLOR]> ui : CommandResult
 deactivate logic
 
-ui --[UI_COLOR]> user : Show success feedback
+ui --[UI_COLOR]> user : Show success\nfeedback
 deactivate ui
 @enduml
