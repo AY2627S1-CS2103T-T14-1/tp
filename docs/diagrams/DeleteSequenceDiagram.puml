@@ -10,6 +10,15 @@ participant "d:DeleteCommand" as DeleteCommand LOGIC_COLOR
 participant "r:CommandResult" as CommandResult LOGIC_COLOR
 end box
 
+box Storage STORAGE_COLOR_T1
+participant ":Storage" as Storage STORAGE_COLOR
+end box
+
+note over LogicManager, Storage
+Example: the displayed list contains at least one person.
+Model internals and utility calls are omitted.
+end note
+
 box Model MODEL_COLOR_T1
 participant "m:Model" as Model MODEL_COLOR
 end box
@@ -27,11 +36,12 @@ activate DeleteCommandParser
 DeleteCommandParser --> AddressBookParser
 deactivate DeleteCommandParser
 
-AddressBookParser -> DeleteCommandParser : parse("1")
+AddressBookParser -> DeleteCommandParser : parse(" 1")
 activate DeleteCommandParser
 
+note right of DeleteCommandParser : ParserUtil.parseIndex(" 1") returns\nan Index with zero-based value 0.
 create DeleteCommand
-DeleteCommandParser -> DeleteCommand
+DeleteCommandParser -> DeleteCommand : DeleteCommand(index)
 activate DeleteCommand
 
 DeleteCommand --> DeleteCommandParser :
@@ -46,17 +56,33 @@ destroy DeleteCommandParser
 AddressBookParser --> LogicManager : d
 deactivate AddressBookParser
 
+LogicManager -> Model : getAddressBook()
+activate Model
+Model --> LogicManager : addressBook
+deactivate Model
+note right of LogicManager : backup = new AddressBook(addressBook)
+
 LogicManager -> DeleteCommand : execute(m)
 activate DeleteCommand
 
-DeleteCommand -> Model : deletePerson(1)
+DeleteCommand -> Model : getFilteredPersonList()
+activate Model
+Model --> DeleteCommand : lastShownList
+deactivate Model
+note right of DeleteCommand
+Check targetIndex.getZeroBased() < lastShownList.size().
+Otherwise throw CommandException; no save or history update.
+personToDelete = lastShownList.get(0)
+end note
+
+DeleteCommand -> Model : deletePerson(personToDelete)
 activate Model
 
 Model --> DeleteCommand
 deactivate Model
 
 create CommandResult
-DeleteCommand -> CommandResult
+DeleteCommand -> CommandResult : CommandResult(formatted success message)
 activate CommandResult
 
 CommandResult --> DeleteCommand
@@ -65,6 +91,34 @@ deactivate CommandResult
 DeleteCommand --> LogicManager : r
 deactivate DeleteCommand
 
-[<--LogicManager
+LogicManager -> Model : getAddressBook()
+activate Model
+Model --> LogicManager : addressBook
+deactivate Model
+LogicManager -> Storage : saveAddressBook(addressBook)
+activate Storage
+Storage --> LogicManager : returns, or throws IOException
+deactivate Storage
+
+alt save failed (IOException)
+    LogicManager -> Model : setAddressBook(backup)
+    activate Model
+    Model --> LogicManager
+    deactivate Model
+    LogicManager -> LogicManager : saveException(d, ioe)
+    [<-- LogicManager : throws CommandException
+else save succeeded
+    LogicManager -> Model : getAddressBook()
+    activate Model
+    Model --> LogicManager : addressBook
+    deactivate Model
+    opt !backup.equals(addressBook)
+        note right of LogicManager
+        undoStack.push(backup)
+        redoStack.clear()
+        end note
+    end
+    [<-- LogicManager : r
+end
 deactivate LogicManager
 @enduml
