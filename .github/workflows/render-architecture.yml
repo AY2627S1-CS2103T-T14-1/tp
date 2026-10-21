@@ -1,0 +1,33 @@
+name: Render architecture diagram
+on:
+  push:
+    branches: [render-architecture-legibility]
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Render PNG and SVG
+        run: |
+          curl --fail --location --retry 3 -o /tmp/plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2026.6/plantuml-1.2026.6.jar
+          echo '89948f14c93756c7a3fb7b69078ff37e8489fd79dd430c582b931e2f65358690  /tmp/plantuml.jar' | sha256sum --check
+          java -Djava.awt.headless=true -jar /tmp/plantuml.jar -tpng -o ../images docs/diagrams/ArchitectureSequenceDiagram.puml
+          java -Djava.awt.headless=true -jar /tmp/plantuml.jar -tsvg -o ../images docs/diagrams/ArchitectureSequenceDiagram.puml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: architecture-diagram
+          path: |
+            docs/images/ArchitectureSequenceDiagram.png
+            docs/images/ArchitectureSequenceDiagram.svg
+      - name: PNG bytes for review
+        run: |
+          echo PNG_BASE64_START
+          base64 -w 120 docs/images/ArchitectureSequenceDiagram.png
+          echo PNG_BASE64_END
+          cat docs/images/ArchitectureSequenceDiagram.svg
