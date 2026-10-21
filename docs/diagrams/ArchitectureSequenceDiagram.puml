@@ -1,7 +1,7 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
-skinparam SequenceMessageFontSize 22
+skinparam ArrowFontSize 22
 skinparam SequenceParticipantFontSize 22
 skinparam SequenceActorFontSize 22
 
