@@ -10,6 +10,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -26,11 +27,15 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.PayCommand;
+import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemarkCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.ClientMatchesAnyPredicate;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Remark;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
@@ -101,6 +106,42 @@ public class AddressBookParserTest {
     public void parseCommand_remark() throws Exception {
         assertEquals(new RemarkCommand(INDEX_FIRST_PERSON, new Remark(VALID_REMARK_AMY)), parser.parseCommand(
                 RemarkCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased() + " r/" + VALID_REMARK_AMY));
+    }
+
+    @Test
+    public void parseCommand_pay() throws Exception {
+        PaymentRecord payment = PaymentRecord.fromText("150", "2026-10-20", Optional.empty());
+        assertEquals(new PayCommand(INDEX_FIRST_PERSON, payment), parser.parseCommand(
+                PayCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased() + " a/150 d/2026-10-20"));
+    }
+
+    @Test
+    public void parseCommand_undo() throws Exception {
+        assertEquals(new UndoCommand(), parser.parseCommand(UndoCommand.COMMAND_WORD));
+        assertThrows(ParseException.class,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, UndoCommand.MESSAGE_USAGE), ()
+                -> parser.parseCommand(UndoCommand.COMMAND_WORD + " now"));
+    }
+
+    @Test
+    public void parseCommand_redo() throws Exception {
+        assertEquals(new RedoCommand(), parser.parseCommand(RedoCommand.COMMAND_WORD));
+        assertThrows(ParseException.class,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, RedoCommand.MESSAGE_USAGE), ()
+                -> parser.parseCommand(RedoCommand.COMMAND_WORD + " now"));
+    }
+
+    @Test
+    public void parseCommand_uppercasePay_throwsParseException() {
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, ()
+                -> parser.parseCommand("PAY 1 a/150 d/2026-10-20"));
+    }
+
+    @Test
+    public void parseCommand_payWithLineBreak_throwsParseException() {
+        assertThrows(ParseException.class,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, PayCommand.MESSAGE_USAGE), ()
+                -> parser.parseCommand(PayCommand.COMMAND_WORD + " 1 a/150 d/2026-10-20\n"));
     }
 
     @Test

@@ -4,31 +4,30 @@ skinparam ParticipantFontSize 20
 skinparam Shadowing false
 hide footbox
 participant ":LogicManager" as logic
-participant "undo:UndoCommand" as command
 participant ":Model" as model
 participant ":Storage" as storage
 
 [-> logic : execute("undo")
 activate logic
-logic -> logic : Parse request; supply\nundoStates.peek()
+logic -> logic : Parse UndoCommand;\nexecuteUndo()
 logic -> model : getAddressBook()
 activate model
 model --> logic : currentState
 deactivate model
-logic -> logic : backup = new\nAddressBook(currentState)
-logic -> command : execute(model)
-activate command
-command -> model : setAddressBook(\nprevious)
+logic -> logic : current = new\nAddressBook(currentState)
+logic -> model : setAddressBook(\nundoStack.peek())
 activate model
-model --> command
+model --> logic
 deactivate model
-command --> logic : CommandResult
-deactivate command
 logic -> storage : saveAddressBook(\nrestoredState)
 activate storage
 storage --> logic : Saved
 deactivate storage
-logic -> logic : undoStates.pop()\nredoStates.push(backup)
+logic -> logic : undoStack.pop()\nredoStack.push(current)
+logic -> model : updateFilteredPersonList(\nPREDICATE_SHOW_ALL_PERSONS)
+activate model
+model --> logic
+deactivate model
 [<-- logic : Success
 deactivate logic
 @enduml

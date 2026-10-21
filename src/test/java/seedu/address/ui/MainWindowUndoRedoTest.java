@@ -50,7 +50,7 @@ public class MainWindowUndoRedoTest {
     }
 
     @Test
-    public void undoRedo_afterFind_preservesFilterIndicatorAndDisplayedIndex() throws Exception {
+    public void undoRedo_afterFind_resetsFilterAndIndicatorTogether() throws Exception {
         runOnFxThread(() -> {
             Person alice = new PersonBuilder().withName("Alice").withRemark("Original").build();
             Person bob = new PersonBuilder().withName("Bob").build();
@@ -68,16 +68,18 @@ public class MainWindowUndoRedoTest {
                 assertFilteredBob(window, model, bob);
 
                 enter(window, "undo");
-                assertFilteredBob(window, model, bob);
+                assertAllClients(window, model);
                 assertEquals("Original", model.getAddressBook().getPersonList().get(0).getRemark().value);
 
-                enter(window, "redo");
+                enter(window, "find Bob");
                 assertFilteredBob(window, model, bob);
+                enter(window, "redo");
+                assertAllClients(window, model);
                 assertEquals("Changed Alice", model.getAddressBook().getPersonList().get(0).getRemark().value);
 
-                enter(window, "remark 1 r/Target Bob");
-                assertEquals("Target Bob", model.getAddressBook().getPersonList().get(1).getRemark().value);
-                assertEquals("Changed Alice", model.getAddressBook().getPersonList().get(0).getRemark().value);
+                enter(window, "remark 1 r/Target Alice");
+                assertEquals("Target Alice", model.getAddressBook().getPersonList().get(0).getRemark().value);
+                assertEquals(bob, model.getAddressBook().getPersonList().get(1));
             } finally {
                 window.getPrimaryStage().hide();
             }
@@ -100,6 +102,15 @@ public class MainWindowUndoRedoTest {
         Label count = (Label) window.getPrimaryStage().getScene().lookup("#filterCountText");
         assertEquals("find: Bob", indicator.getText());
         assertEquals("1 of 2", count.getText());
+    }
+
+    private static void assertAllClients(MainWindow window, Model model) {
+        assertEquals(model.getAddressBook().getPersonList(), model.getFilteredPersonList());
+        assertEquals(2, window.getPersonListPanel().getDisplayedCount());
+        Label indicator = (Label) window.getPrimaryStage().getScene().lookup("#filterStateText");
+        Label count = (Label) window.getPrimaryStage().getScene().lookup("#filterCountText");
+        assertEquals("All clients", indicator.getText());
+        assertEquals("2 of 2", count.getText());
     }
 
     private static <T> T runOnFxThread(Callable<T> action) throws Exception {

@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -32,6 +33,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.BodyProgress;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -164,6 +166,27 @@ class BodyProgressIntegrationTest {
             }
             logic(model, normal).execute("bodyhistory 1");
             assertEquals(before, new AddressBook(normal.readAddressBook().orElseThrow()));
+        }
+    }
+
+    @Test
+    void bodyMutations_preservePaymentRecords() throws Exception {
+        ModelManager model = model();
+        PaymentRecord payment = PaymentRecord.fromText("150", "2026-01-15", Optional.of("Initial fee"));
+        Person amy = selected(model);
+        model.setPerson(amy, amy.withAddedPayment(payment));
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(
+                directory.resolve("payments.json"), CLOCK);
+        LogicManager logic = logic(model, storage);
+
+        for (String command : List.of(BASE, "bodylog 1 d/2020-01-08 w/74.80 n/Before breakfast",
+                "bodydelete 1 d/2020-01-08")) {
+            logic.execute(command);
+            assertEquals(List.of(payment), selected(model).getPaymentRecords(), command);
+            Person savedAmy = storage.readAddressBook().orElseThrow().getPersonList().stream()
+                    .filter(person -> person.getName().fullName.equals("Amy Bee"))
+                    .findFirst().orElseThrow();
+            assertEquals(List.of(payment), savedAmy.getPaymentRecords(), command);
         }
     }
 

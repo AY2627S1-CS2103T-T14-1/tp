@@ -23,6 +23,7 @@ import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
+import seedu.address.logic.commands.PayCommand;
 import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.ScheduleCommand;
@@ -49,8 +50,7 @@ final class CommandCatalog {
             new Entry(FindCommand.COMMAND_WORD, FindCommand.MESSAGE_USAGE),
             new Entry(ListCommand.COMMAND_WORD, "list: Lists all clients."),
             new Entry(LogCommand.COMMAND_WORD, LogCommand.MESSAGE_USAGE),
-            new Entry(UndoCommand.COMMAND_WORD, UndoCommand.MESSAGE_USAGE),
-            new Entry(RedoCommand.COMMAND_WORD, RedoCommand.MESSAGE_USAGE),
+            new Entry(PayCommand.COMMAND_WORD, PayCommand.MESSAGE_USAGE),
             new Entry(RemarkCommand.COMMAND_WORD, RemarkCommand.MESSAGE_USAGE),
             new Entry(ScheduleCommand.COMMAND_WORD, ScheduleCommand.MESSAGE_USAGE),
             new Entry(ViewScheduleCommand.COMMAND_WORD, ViewScheduleCommand.MESSAGE_USAGE),
@@ -58,6 +58,8 @@ final class CommandCatalog {
             new Entry(DeleteExerciseCommand.COMMAND_WORD, DeleteExerciseCommand.MESSAGE_USAGE),
             new Entry(ClearPlanCommand.COMMAND_WORD, ClearPlanCommand.MESSAGE_USAGE),
             new Entry(SetExerciseDayCommand.COMMAND_WORD, SetExerciseDayCommand.MESSAGE_USAGE),
+            new Entry(UndoCommand.COMMAND_WORD, UndoCommand.MESSAGE_USAGE),
+            new Entry(RedoCommand.COMMAND_WORD, RedoCommand.MESSAGE_USAGE),
             new Entry(ExitCommand.COMMAND_WORD, "exit: Exits Fittix."),
             new Entry(HelpCommand.COMMAND_WORD, HelpCommand.MESSAGE_USAGE));
 

@@ -38,6 +38,7 @@ public class Person {
     private final List<WorkoutSession> workoutSessions;
     private final Optional<MembershipAssignment> membershipAssignment;
     private final BodyProgress bodyProgress;
+    private final List<PaymentRecord> paymentRecords;
 
     /**
      * Every field must be present and not null.
@@ -157,8 +158,23 @@ public class Person {
             List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
             DietaryRestrictions dietaryRestrictions, HealthProfile healthProfile,
             Optional<MembershipAssignment> membershipAssignment, BodyProgress bodyProgress) {
+        this(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, trainingSessions,
+                workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, bodyProgress, List.of());
+    }
+
+    /**
+     * Constructs a person with every supported field, including the body tracker and payment history.
+     * The payment list is defensively copied in entry order.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags,
+            WorkoutPlan workoutPlan, Optional<DietPlan> dietPlan, Goal goal,
+            List<TrainingSession> trainingSessions, List<WorkoutSession> workoutSessions,
+            DietaryRestrictions dietaryRestrictions, HealthProfile healthProfile,
+            Optional<MembershipAssignment> membershipAssignment, BodyProgress bodyProgress,
+            List<PaymentRecord> paymentRecords) {
         requireAllNonNull(name, phone, email, address, remark, tags, workoutPlan, dietPlan,
-                trainingSessions, workoutSessions, dietaryRestrictions, membershipAssignment, bodyProgress);
+                trainingSessions, workoutSessions, dietaryRestrictions, membershipAssignment, bodyProgress,
+                paymentRecords);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -174,16 +190,33 @@ public class Person {
         this.workoutSessions = List.copyOf(workoutSessions);
         this.membershipAssignment = membershipAssignment;
         this.bodyProgress = bodyProgress;
+        this.paymentRecords = List.copyOf(paymentRecords);
     }
 
     public BodyProgress getBodyProgress() {
         return bodyProgress;
     }
 
+    /** Returns an immutable list of payment records in entry order. */
+    public List<PaymentRecord> getPaymentRecords() {
+        return paymentRecords;
+    }
+
+    /** Returns a copy with one payment record appended, retaining every other field. */
+    public Person withAddedPayment(PaymentRecord paymentRecord) {
+        Objects.requireNonNull(paymentRecord);
+        List<PaymentRecord> updatedPayments = new ArrayList<>(paymentRecords);
+        updatedPayments.add(paymentRecord);
+        return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
+                trainingSessions, workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment,
+                bodyProgress, updatedPayments);
+    }
+
     /** Returns a copy with body data replaced and all unrelated fields retained. */
     public Person withBodyProgress(BodyProgress progress) {
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, progress);
+                trainingSessions, workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, progress,
+                paymentRecords);
     }
 
     public Name getName() {
@@ -247,7 +280,7 @@ public class Person {
         Objects.requireNonNull(membershipAssignment);
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
                 trainingSessions, workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment,
-                        bodyProgress);
+                bodyProgress, paymentRecords);
     }
 
     /** Returns a copy with one additional session. */
@@ -256,19 +289,22 @@ public class Person {
         List<TrainingSession> updated = new ArrayList<>(trainingSessions);
         updated.add(session);
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal, updated,
-                workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, bodyProgress);
+                workoutSessions, dietaryRestrictions, healthProfile, membershipAssignment, bodyProgress,
+                paymentRecords);
     }
 
     /** Returns a copy with the supplied current dietary restrictions. */
     public Person withDietaryRestrictions(DietaryRestrictions restrictions) {
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions, restrictions, healthProfile, membershipAssignment, bodyProgress);
+                trainingSessions, workoutSessions, restrictions, healthProfile, membershipAssignment, bodyProgress,
+                paymentRecords);
     }
 
     /** Returns a copy with the supplied current health profile, or none when {@code profile} is null. */
     public Person withHealthProfile(HealthProfile profile) {
         return new Person(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
-                trainingSessions, workoutSessions, dietaryRestrictions, profile, membershipAssignment, bodyProgress);
+                trainingSessions, workoutSessions, dietaryRestrictions, profile, membershipAssignment, bodyProgress,
+                paymentRecords);
     }
 
     /**
@@ -321,7 +357,8 @@ public class Person {
                 && trainingSessions.equals(otherPerson.trainingSessions)
                 && workoutSessions.equals(otherPerson.workoutSessions)
                 && membershipAssignment.equals(otherPerson.membershipAssignment)
-                && bodyProgress.equals(otherPerson.bodyProgress);
+                && bodyProgress.equals(otherPerson.bodyProgress)
+                && paymentRecords.equals(otherPerson.paymentRecords);
     }
 
     @Override
@@ -329,7 +366,7 @@ public class Person {
         // use this method for custom fields hashing instead of implementing your own
         return Objects.hash(name, phone, email, address, remark, tags, workoutPlan, dietPlan, goal,
                 dietaryRestrictions, healthProfile, trainingSessions, workoutSessions, membershipAssignment,
-                        bodyProgress);
+                bodyProgress, paymentRecords);
     }
 
     @Override
@@ -350,6 +387,7 @@ public class Person {
                 .add("workoutSessions", workoutSessions)
                 .add("membershipAssignment", membershipAssignment)
                 .add("bodyProgress", bodyProgress)
+                .add("paymentRecords", paymentRecords)
                 .toString();
     }
 

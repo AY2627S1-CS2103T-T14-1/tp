@@ -378,25 +378,27 @@ The manual scenarios in the appendix complement automated tests. Runtime validat
 
 #### Saved snapshots in `LogicManager`
 
-`LogicManager` owns two in-memory `Deque<AddressBook>` stacks: `undoStates` and `redoStates`.
+`LogicManager` owns two in-memory `Deque<AddressBook>` stacks: `undoStack` and `redoStack`.
 Each snapshot contains the complete client records and membership-plan catalogue. Immutable client values,
 including body progress and workout sessions, can be shared safely between snapshots. The stacks are not
 written to JSON and start empty whenever the application starts.
 
-`AddressBookParser` accepts `undo` and `redo` without arguments. It returns a request command without a
-snapshot. Before execution, `LogicManager` supplies the relevant stack's top snapshot to a new
-`UndoCommand` or `RedoCommand`. The command rejects an empty stack with `No changes to undo.` or
-`No changes to redo.`; otherwise, it restores the supplied snapshot using `Model#setAddressBook`.
+`AddressBookParser` uses `UndoCommandParser` and `RedoCommandParser` to reject extra arguments and
+create marker commands. `LogicManager` handles them through `executeUndo` and `executeRedo`; their
+`execute` methods are not used to restore data. An empty stack returns `No changes to undo.` or
+`No changes to redo.` without saving or changing data.
 
-For every command, `LogicManager` copies the current address book into `backup` before execution.
-It saves the resulting address book through `Storage#saveAddressBook` before changing either stack:
+For an ordinary command, `LogicManager` copies the current address book into `backup` before execution.
+For undo/redo, it copies the current data into `current` and restores the top snapshot using
+`Model#setAddressBook`. It saves the resulting address book through `Storage#saveAddressBook` before
+changing either stack:
 
 | Successfully saved operation | Undo stack | Redo stack |
 | --- | --- | --- |
-| A command changes address-book data | Push `backup`; discard the oldest snapshot if over the limit | Clear |
-| `undo` | Pop the restored snapshot | Push `backup` |
-| `redo` | Push `backup`, applying the same limit | Pop the restored snapshot |
-| A command leaves address-book data unchanged | Unchanged | Unchanged |
+| An ordinary command changes address-book data | Push `backup`; discard the oldest snapshot if over the limit | Clear |
+| `undo` | Pop the restored snapshot | Push `current` |
+| `redo` | Push `current`, applying the same limit | Pop the restored snapshot |
+| An ordinary command leaves address-book data unchanged | Unchanged | Unchanged |
 
 `MAX_UNDO_HISTORY_SIZE` limits the undo stack to **50 snapshots**. The newest snapshot is at the front;
 `pushUndoState` removes the oldest snapshot at the back when necessary. At most 50 undo steps can be
@@ -405,23 +407,24 @@ clears redo history. History retains complete snapshots, so memory still depends
 data in those retained states.
 
 The following diagram shows a successful undo with a nonempty undo stack. Parsing is summarized inside
-`LogicManager`; the supplied `previous` snapshot is `undoStates.peek()`.
+`LogicManager`; the restored snapshot is `undoStack.peek()`.
 
 <img src="images/UndoSequenceDiagram-Logic.png" alt="Successful undo restores a snapshot, saves it, then advances the history stacks" width="960" style="max-width:100%; height:auto;" />
 
 #### Failure handling and search state
 
 If command execution fails, no save or history transition occurs. If saving throws `IOException`,
-`LogicManager` restores `backup` and reports the existing command-specific or generic save error.
+`LogicManager` restores the snapshot from before execution (`backup` or `current`) and reports the existing command-specific or generic save error.
 Neither stack is advanced, so a failed undo or redo can be retried after the storage problem is resolved.
 The existing atomic JSON save boundary protects the previous file contents.
 
 <img src="images/UndoSequenceDiagram-Model.png" alt="A failed undo save restores the current snapshot and leaves both history stacks unchanged" width="960" style="max-width:100%; height:auto;" />
 
-Undo and redo restore domain data, not search predicates or command-entry history. `Model#setAddressBook`
-retains the active client filter, and `MainWindow` keeps the corresponding filter query and indicator.
-After `find Bob`, undoing an edit to Alice therefore still shows Bob and the `find: Bob` indicator;
-index 1 continues to refer to Bob. Run `list` to show every client again.
+After a successful undo or redo, `LogicManager` resets the client predicate to
+`Model.PREDICATE_SHOW_ALL_PERSONS`, and `MainWindow` clears the query indicator to `All clients`.
+Restored clients are visible, and index-based commands use that complete list. An empty-history response
+or a failed save leaves both the active search predicate and its indicator unchanged. Window settings,
+the saved file location and command-entry history are not reversed.
 
 For example, after a saved `delete 1` and a saved `add` command, two undo operations restore the states
 before the add and before the deletion. A `list` between those undos does not consume a history step.
@@ -436,7 +439,7 @@ mutation to implement and validate its own inverse.
 
 `LogicManagerTest` covers multiple undos/redos, read-only commands, rejected commands, redo invalidation,
 the history limit and save failure. `MainWindowUndoRedoTest` exercises real command entry through
-`find`, undo and redo, checking the visible query, counts, selection and subsequent indexed target.
+`find`, undo and redo, checking the visible query, counts and subsequent indexed target.
 
 ### \[Proposed\] Data archiving
 
