@@ -63,8 +63,8 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 * Prefixed parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable. Positional parameters, such as the indices and day in `dayex PERSON_INDEX EXERCISE_INDEX DAY`, must follow the order shown.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, `clear`, and `clearmem`, are ignored.<br>
-  For example, `help 123` is interpreted as `help`.
+* Extraneous parameters are ignored for most commands that take no parameters, such as `help`, `list`, `exit`, `clear`, and `clearmem`.<br>
+  For example, `help 123` is interpreted as `help`. `undo` and `redo` are exceptions: they reject any extra text.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </div>
@@ -694,6 +694,66 @@ Invalid mutations and failed saves leave all previous data unchanged. Successful
 
 Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` permanently removes their body records with the client. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
 
+### Recording a client payment: `pay`
+
+Records one payment received from a client and shows that client's payment history on their information card. Payments are independent of membership plans: recording a payment does not change a plan, its price, or the client's remaining sessions.
+
+Format: `pay PERSON_INDEX a/AMOUNT d/YYYY-MM-DD [r/REMARKS]`
+
+Examples:
+
+* `pay 1 a/150 d/2026-10-20`
+* `pay 2 d/2026-10-19 a/75.50 r/October membership payment`
+
+* `PERSON_INDEX` is a positive whole-number index in the **current** client list, including search results. An index outside that list is invalid.
+* `a/AMOUNT` is required. It must be greater than zero and have at most two decimal places, without a currency symbol, sign, or thousands separator. `150`, `150.5`, and `150.50` are accepted; `0`, `-5`, `1.234`, and `S$150` are rejected. Amounts are stored and displayed with exactly two decimal places without floating-point rounding.
+* `d/YYYY-MM-DD` is required. It must be a real Gregorian date in exactly four-digit-year, two-digit-month, two-digit-day form, with the year between 0001 and 9999. Past, current, and future dates are accepted.
+* `r/REMARKS` is optional. After trimming outer whitespace it must contain 1 to 300 printable characters. Internal spacing, punctuation, and case are preserved. A blank `r/` is invalid, as are line breaks and control characters. Omit `r/` when no remarks are needed.
+* `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. A token such as `x/` inside remarks is treated as an unknown prefix; ordinary punctuation such as `and/or` and `1/2` remains valid.
+
+On success, Fittix saves the record, selects the client, and reports `Recorded payment for NAME: AMOUNT on YYYY-MM-DD.` The client's **Payments** section shows every saved record oldest first, keeping entry order for records on the same date. Each record shows its date, its amount to two decimal places, and remarks when present. Long remarks wrap and the card scrolls; they are never truncated. A client with no payments shows `No payments recorded.`
+
+Every successful `pay` creates a separate record, even when the date, amount, and remarks are identical. Records survive unrelated edits and application restarts. Deleting a client or using `clear` removes that client's payments with the client.
+
+Common errors:
+
+| Cause | Message |
+| --- | --- |
+| Missing index, repeated/unknown/empty prefix, or extra text | `Invalid command format!` followed by the `pay` usage |
+| Invalid amount | `Amount must be greater than zero and have at most two decimal places.` |
+| Invalid date | `Payment date must be a valid date in YYYY-MM-DD format.` |
+| Invalid supplied remarks | `Remarks must contain 1 to 300 printable characters without line breaks when r/ is supplied.` |
+| Index outside the displayed list | `The person index provided is invalid.` |
+| Saving fails | `Payment could not be saved. No payment was recorded.` |
+
+A failed command adds no payment to saved or in-memory data and creates no undo step.
+
+### Undoing and redoing changes: `undo`, `redo`
+
+Reverses the most recent saved data change, or restores a change that was undone. The complete address book is restored, including clients, workout plans, diet plans, schedules, membership data, body progress, and payments.
+
+Format: `undo` or `redo`
+
+Neither command accepts parameters; extra text is rejected.
+
+* Every successful command that changes saved data creates exactly one undo step. Read-only commands such as `list`, `find`, and `help`, commands that fail, and commands that leave saved data unchanged create no step.
+* `undo` restores the state immediately before the most recent saved change and saves the restored state. It reports `Undid the last change.` If no step is available, it reports `No changes to undo.` without changing data.
+* `redo` restores the state replaced by the most recent undo and saves it. It reports `Redid the last change.` If no step is available, it reports `No changes to redo.` without changing data.
+* A new successful data-changing command after an undo clears the redo history. Read-only and failed commands leave redo history available.
+* After a successful `undo` or `redo`, the full unfiltered client list is shown so restored clients are visible. Window settings and the saved data file location are not reversed.
+* If saving a restored state fails, the in-memory address book and the undo/redo history remain unchanged.
+* Undo/redo history exists only for the current session. Restarting Fittix loads saved data but starts with empty undo and redo histories; changes from an earlier session cannot be undone.
+
+Example:
+
+```text
+pay 1 a/150 d/2026-10-20
+undo
+redo
+```
+
+The `undo` removes the new payment and the `redo` restores it.
+
 ### Exiting the program: `exit`
 
 Exits the program.
@@ -752,6 +812,9 @@ Action | Format, Examples
 **Diet plan** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
 **Dietary restrictions** | `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`<br> e.g., `restriction 2 r/Peanut allergy r/Halal meals`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
+**Record payment** | `pay PERSON_INDEX a/AMOUNT d/YYYY-MM-DD [r/REMARKS]`<br> e.g., `pay 1 a/150 d/2026-10-20`
+**Undo** | `undo`
+**Redo** | `redo`
 **Find** | `find KEYWORD [MORE_KEYWORDS]...` or `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`<br> e.g., `find n/James g/strength`
 **Health considerations** | `health INDEX h/NOTE`<br> e.g., `health 2 h/Avoid jumping exercises`
 **List** | `list`

@@ -62,7 +62,7 @@ public class ClearPlanCommand extends Command {
                 personToEdit.getGoal().orElse(null), personToEdit.getTrainingSessions(),
                 personToEdit.getWorkoutSessions(), personToEdit.getDietaryRestrictions(),
                 personToEdit.getHealthProfile().orElse(null), personToEdit.getMembershipAssignment(),
-                        personToEdit.getBodyProgress());
+                        personToEdit.getBodyProgress(), personToEdit.getPaymentRecords());
 
         model.setPerson(personToEdit, editedPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);

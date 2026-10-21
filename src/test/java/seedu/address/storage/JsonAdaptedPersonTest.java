@@ -1,6 +1,7 @@
 package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.storage.JsonAdaptedPerson.MISSING_FIELD_MESSAGE_FORMAT;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.BENSON;
@@ -8,6 +9,7 @@ import static seedu.address.testutil.TypicalPersons.BENSON;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import seedu.address.model.person.Email;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Goal;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Remark;
@@ -219,4 +222,130 @@ public class JsonAdaptedPersonTest {
         assertEquals(new PersonBuilder(BENSON).build(), person.toModelType());
     }
 
+    @Test
+    public void jsonRoundTrip_paymentRecords_preservesOrderAndDuplicates() throws Exception {
+        PaymentRecord first = PaymentRecord.fromText("50", "2026-01-10", Optional.empty());
+        PaymentRecord duplicate = PaymentRecord.fromText("50", "2026-01-10", Optional.empty());
+        PaymentRecord second = PaymentRecord.fromText("25.50", "2026-01-05", Optional.of("Late fee"));
+        Person person = new PersonBuilder(BENSON)
+                .withPaymentRecords(List.of(first, duplicate, second))
+                .build();
+
+        String json = JsonUtil.toJsonString(new JsonAdaptedPerson(person));
+        Person restored = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType();
+
+        assertEquals(person, restored);
+        assertEquals(List.of(first, duplicate, second), restored.getPaymentRecords());
+    }
+
+    @Test
+    public void legacyPerson_addDuplicatePayments_roundTripPreservesBothInOrder() throws Exception {
+        String legacyJson = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[]}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        Person legacy = JsonUtil.fromJsonString(legacyJson, JsonAdaptedPerson.class).toModelType();
+        assertEquals(List.of(), legacy.getPaymentRecords());
+
+        PaymentRecord payment = PaymentRecord.fromText("40", "2026-04-01", Optional.empty());
+        Person updated = legacy.withAddedPayment(payment).withAddedPayment(payment);
+        String saved = JsonUtil.toJsonString(new JsonAdaptedPerson(updated));
+        Person restored = JsonUtil.fromJsonString(saved, JsonAdaptedPerson.class).toModelType();
+
+        assertEquals(updated, restored);
+        assertEquals(List.of(payment, payment), restored.getPaymentRecords());
+    }
+
+    @Test
+    public void jsonRoundTrip_missingPaymentRecords_returnsEmptyHistory() throws Exception {
+        String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[]}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        Person restored = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType();
+        assertEquals(List.of(), restored.getPaymentRecords());
+    }
+
+    @Test
+    public void toModelType_nullPaymentElement_throwsIllegalValueException() throws Exception {
+        String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[],\"paymentRecords\":[null]}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class);
+        assertThrows(IllegalValueException.class, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_malformedPaymentEntry_throwsIllegalValueException() throws Exception {
+        String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[],\"paymentRecords\":[{\"amount\":\"0\","
+                + "\"date\":\"2026-01-01\"}]}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class);
+        assertThrows(IllegalValueException.class, PaymentRecord.MESSAGE_AMOUNT_CONSTRAINTS, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullPaymentRecords_returnsEmptyHistory() throws Exception {
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(
+                jsonWithPayments("null"), JsonAdaptedPerson.class);
+        assertEquals(List.of(), person.toModelType().getPaymentRecords());
+    }
+
+    @Test
+    public void jsonRoundTrip_emptyPaymentRecords_returnsEmptyHistory() throws Exception {
+        Person restored = JsonUtil.fromJsonString(
+                jsonWithPayments("[]"), JsonAdaptedPerson.class).toModelType();
+        assertEquals(List.of(), restored.getPaymentRecords());
+    }
+
+    @Test
+    public void jsonRoundTrip_leapDayLargeAmounts_retainsOrderDuplicatesAndScale() throws Exception {
+        String amount = "123456789012345678901234567890.12";
+        String payments = String.format("[{\"amount\":\"%s\",\"date\":\"2024-02-29\","
+                + "\"remarks\":\"Leap fee\"},"
+                + "{\"amount\":\"%s\",\"date\":\"2024-02-29\",\"remarks\":\"Leap fee\"}]",
+                amount, amount);
+
+        Person restored = JsonUtil.fromJsonString(
+                jsonWithPayments(payments), JsonAdaptedPerson.class).toModelType();
+        PaymentRecord expected = PaymentRecord.fromText(amount, "2024-02-29", Optional.of("Leap fee"));
+
+        assertEquals(List.of(expected, expected), restored.getPaymentRecords());
+        String saved = JsonUtil.toJsonString(new JsonAdaptedPerson(restored));
+        assertTrue(saved.contains("\"" + amount + "\""), saved);
+        assertTrue(saved.contains("\"2024-02-29\""), saved);
+    }
+
+    @Test
+    public void toModelType_whitespaceOnlyPaymentRemarks_throwsIllegalValueException() throws Exception {
+        String payments = "[{\"amount\":\"20.00\",\"date\":\"2026-01-01\",\"remarks\":\"   \"}]";
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(
+                jsonWithPayments(payments), JsonAdaptedPerson.class);
+        assertThrows(IllegalValueException.class, PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS,
+                person::toModelType);
+    }
+
+    @Test
+    public void toModelType_controlCharacterPaymentRemarks_throwsIllegalValueException() throws Exception {
+        String payments = "[{\"amount\":\"20.00\",\"date\":\"2026-01-01\","
+                + "\"remarks\":\"fee\\u0000\"}]";
+        JsonAdaptedPerson person = JsonUtil.fromJsonString(
+                jsonWithPayments(payments), JsonAdaptedPerson.class);
+        assertThrows(IllegalValueException.class, PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS,
+                person::toModelType);
+    }
+
+    @Test
+    public void toModelType_paymentRecordsNotArray_throwsIoException() throws Exception {
+        String json = String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[],\"paymentRecords\":{}}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK);
+        assertThrows(java.io.IOException.class, () -> JsonUtil.fromJsonString(json, JsonAdaptedPerson.class));
+    }
+
+
+    private static String jsonWithPayments(String paymentRecordsJson) {
+        return String.format("{\"name\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\","
+                + "\"remark\":\"%s\",\"tags\":[],\"paymentRecords\":%s}",
+                VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_REMARK, paymentRecordsJson);
+    }
 }

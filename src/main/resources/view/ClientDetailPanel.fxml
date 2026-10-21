@@ -58,6 +58,18 @@
         </VBox>
       </VBox>
 
+      <VBox spacing="0" styleClass="card,payments-card">
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="payments-header">
+          <Label text="Payments" minWidth="-Infinity" styleClass="section-title" />
+          <Label fx:id="paymentSummary" styleClass="muted" />
+          <Region HBox.hgrow="ALWAYS" />
+          <Label text="pay" minWidth="-Infinity" styleClass="command-chip,mono" />
+        </HBox>
+        <VBox fx:id="paymentRows" spacing="0" styleClass="payments-list" />
+        <Label fx:id="paymentEmpty" text="No payments recorded." wrapText="true"
+               styleClass="muted,payment-empty" />
+      </VBox>
+
       <StackPane fx:id="bodyProgressPlaceholder" />
 
       <VBox spacing="0" styleClass="card,workout-card" VBox.vgrow="ALWAYS">

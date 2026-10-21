@@ -128,7 +128,8 @@ public class EditCommand extends Command {
                 updatedWorkoutPlan, personToEdit.getDietPlan(), updatedGoal,
                 personToEdit.getTrainingSessions(), personToEdit.getWorkoutSessions(),
                 personToEdit.getDietaryRestrictions(), personToEdit.getHealthProfile().orElse(null),
-                personToEdit.getMembershipAssignment(), personToEdit.getBodyProgress());
+                personToEdit.getMembershipAssignment(), personToEdit.getBodyProgress(),
+                personToEdit.getPaymentRecords());
     }
 
     @Override
