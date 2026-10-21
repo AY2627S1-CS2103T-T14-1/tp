@@ -79,7 +79,7 @@ public class MainWindowUndoRedoTest {
                 assertEquals("Target Bob", model.getAddressBook().getPersonList().get(1).getRemark().value);
                 assertEquals("Changed Alice", model.getAddressBook().getPersonList().get(0).getRemark().value);
             } finally {
-                window.hide();
+                window.getPrimaryStage().hide();
             }
             return null;
         });

@@ -1,5 +1,6 @@
 @startuml
 skinparam ArrowFontSize 20
+skinparam NoteFontSize 20
 skinparam ParticipantFontSize 20
 skinparam Shadowing false
 hide footbox
@@ -10,7 +11,7 @@ participant ":Storage" as storage
 
 [-> logic : execute("undo")
 activate logic
-note over logic, model : backup contains the current address book
+note over logic, model : backup contains the\ncurrent address book
 logic -> command : execute(model)
 activate command
 command -> model : setAddressBook(\nprevious)
