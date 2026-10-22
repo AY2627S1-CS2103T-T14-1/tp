@@ -1,0 +1,275 @@
+package seedu.address.logic.commands;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import seedu.address.commons.core.index.Index;
+import seedu.address.logic.Messages;
+import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.model.AddressBook;
+import seedu.address.model.Model;
+import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
+import seedu.address.model.person.BodyBaseline;
+import seedu.address.model.person.BodyProgress;
+import seedu.address.model.person.BodyProgressEntry;
+import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.PaymentRecord;
+import seedu.address.model.person.Person;
+import seedu.address.model.person.WorkoutLogEntry;
+import seedu.address.model.person.WorkoutSession;
+import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.testutil.PersonBuilder;
+
+/** Tests complete workout history and replacement of one displayed session. */
+public class WorkoutHistoryCommandTest {
+    private static final Index FIRST = Index.fromOneBased(1);
+    private static final Index SECOND = Index.fromOneBased(2);
+    private static final WorkoutLogEntry SQUAT =
+            new WorkoutLogEntry("Back squat", new BigDecimal("60"), 3, 10);
+    private static final WorkoutLogEntry BENCH =
+            new WorkoutLogEntry("Bench press", new BigDecimal("40"), 3, 8);
+
+    @Test
+    public void history_sortsNewestFirstAndPreservesExerciseOrder() throws Exception {
+        WorkoutSession early = session(15, Optional.empty(), List.of(SQUAT, BENCH));
+        WorkoutSession late = session(17, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
+        Person client = withSessions(new PersonBuilder().build(), List.of(early, late));
+        Model model = modelWith(client);
+
+        String feedback = new HistoryCommand(FIRST).execute(model).getFeedbackToUser();
+
+        assertEquals("Workout history for " + client.getName() + ":\n"
+                + "1. 2020-01-17 at 18:00\n   Bench press | 40 kg | 3 sets | 8 reps\n"
+                + "2. 2020-01-15 (time not specified)\n"
+                + "   Back squat | 60 kg | 3 sets | 10 reps\n"
+                + "   Bench press | 40 kg | 3 sets | 8 reps", feedback);
+        assertEquals(List.of(early, late), model.getAddressBook().getPersonList().get(0).getWorkoutSessions());
+    }
+
+    @Test
+    public void history_emptyClient_returnsEmptyState() throws Exception {
+        Person client = new PersonBuilder().build();
+        Model model = modelWith(client);
+        assertEquals("No workout sessions recorded for " + client.getName() + ".",
+                new HistoryCommand(FIRST).execute(model).getFeedbackToUser());
+        assertEquals(List.of(client), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void history_sameDate_ordersUnspecifiedBeforeEveningAndMidnight() throws Exception {
+        WorkoutSession noTime = session(15, Optional.empty(), List.of(SQUAT));
+        WorkoutSession midnight = session(15, Optional.of(LocalTime.MIDNIGHT), List.of(SQUAT));
+        WorkoutSession evening = session(15, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
+        for (List<WorkoutSession> stored : List.of(
+                List.of(noTime, midnight, evening), List.of(evening, midnight, noTime))) {
+            Person client = withSessions(new PersonBuilder().build(), stored);
+            Model model = modelWith(client);
+
+            String feedback = new HistoryCommand(FIRST).execute(model).getFeedbackToUser();
+
+            assertEquals("Workout history for " + client.getName() + ":\n"
+                    + "1. 2020-01-15 (time not specified)\n   Back squat | 60 kg | 3 sets | 10 reps\n"
+                    + "2. 2020-01-15 at 18:00\n   Bench press | 40 kg | 3 sets | 8 reps\n"
+                    + "3. 2020-01-15 at 00:00\n   Back squat | 60 kg | 3 sets | 10 reps", feedback);
+            assertEquals(stored, model.getAddressBook().getPersonList().get(0).getWorkoutSessions());
+        }
+    }
+
+    @Test
+    public void edit_sameDate_targetsDisplayedSessionInEitherStorageOrder() throws Exception {
+        WorkoutSession noTime = session(15, Optional.empty(), List.of(SQUAT));
+        WorkoutSession midnight = session(15, Optional.of(LocalTime.MIDNIGHT), List.of(SQUAT));
+        WorkoutSession evening = session(15, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
+        List<WorkoutSession> displayed = List.of(noTime, evening, midnight);
+        for (List<WorkoutSession> stored : List.of(
+                List.of(noTime, midnight, evening), List.of(evening, midnight, noTime))) {
+            for (int index = 0; index < displayed.size(); index++) {
+                Model model = modelWith(withSessions(new PersonBuilder().build(), stored));
+                WorkoutSession target = displayed.get(index);
+                WorkoutSession replacement = new WorkoutSession(target.getDate(), target.getTime(),
+                        List.of(SQUAT, BENCH));
+
+                CommandResult result = new EditLogCommand(
+                        FIRST, Index.fromZeroBased(index), replacement).execute(model);
+
+                List<WorkoutSession> expected = new ArrayList<>(stored);
+                expected.set(stored.indexOf(target), replacement);
+                assertEquals(expected, model.getAddressBook().getPersonList().get(0).getWorkoutSessions());
+                assertEquals(String.format(EditLogCommand.MESSAGE_SUCCESS, index + 1,
+                        model.getAddressBook().getPersonList().get(0).getName()), result.getFeedbackToUser());
+            }
+        }
+    }
+
+    @Test
+    public void edit_invalidClient_rejectedWithoutMutation() {
+        Person client = new PersonBuilder().build();
+        Model model = modelWith(client);
+        EditLogCommand command = new EditLogCommand(SECOND, FIRST,
+                session(15, Optional.empty(), List.of(SQUAT)));
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, exception.getMessage());
+        assertEquals(List.of(client), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void history_equalsAndHashCode_followClientIndex() {
+        HistoryCommand command = new HistoryCommand(FIRST);
+        HistoryCommand copy = new HistoryCommand(FIRST);
+        assertEquals(command, command);
+        assertEquals(command, copy);
+        assertEquals(command.hashCode(), copy.hashCode());
+        assertFalse(command.equals(new HistoryCommand(SECOND)));
+        assertFalse(command.equals(null));
+        assertFalse(command.equals("history"));
+    }
+
+    @Test
+    public void edit_equalsAndHashCode_followBothIndexesAndReplacement() {
+        WorkoutSession replacement = session(15, Optional.empty(), List.of(SQUAT));
+        EditLogCommand command = new EditLogCommand(FIRST, FIRST, replacement);
+        EditLogCommand copy = new EditLogCommand(FIRST, FIRST, replacement);
+        assertEquals(command, command);
+        assertEquals(command, copy);
+        assertEquals(command.hashCode(), copy.hashCode());
+        assertFalse(command.equals(new EditLogCommand(SECOND, FIRST, replacement)));
+        assertFalse(command.equals(new EditLogCommand(FIRST, SECOND, replacement)));
+        assertFalse(command.equals(new EditLogCommand(FIRST, FIRST,
+                session(16, Optional.empty(), List.of(SQUAT)))));
+        assertFalse(command.equals(null));
+        assertFalse(command.equals("editlog"));
+    }
+
+    @Test
+    public void edit_secondDisplayedSession_preservesStoredOrderAndOtherFields() throws Exception {
+        WorkoutSession older = session(15, Optional.empty(), List.of(SQUAT));
+        WorkoutSession newer = session(17, Optional.empty(), List.of(BENCH));
+        WorkoutSession replacement = session(18, Optional.of(LocalTime.of(19, 0)), List.of(BENCH, SQUAT));
+        Person original = withSessions(new PersonBuilder().withGoal("Build strength")
+                .withRemark("Likes swimming").build(), List.of(older, newer));
+        Model model = modelWith(original);
+
+        new EditLogCommand(FIRST, SECOND, replacement).execute(model);
+
+        Person updated = model.getAddressBook().getPersonList().get(0);
+        assertEquals(List.of(replacement, newer), updated.getWorkoutSessions());
+        assertEquals(original.getGoal(), updated.getGoal());
+        assertEquals(original.getRemark(), updated.getRemark());
+        assertEquals(List.of(older, newer), original.getWorkoutSessions());
+        assertEquals(replacement, updated.getWorkoutSessions().get(0));
+    }
+
+    @Test
+    public void edit_populatedBodyProgress_preservedAfterSavingAndReloading(@TempDir Path folder) throws Exception {
+        BodyProgress progress = new BodyProgress(Optional.of(new BodyBaseline(
+                LocalDate.of(2020, 1, 1), new BigDecimal("75.50"), new BigDecimal("175"))),
+                List.of(new BodyProgressEntry(LocalDate.of(2020, 1, 8),
+                        new BigDecimal("74.80"), Optional.of("Before breakfast")),
+                        new BodyProgressEntry(LocalDate.of(2020, 1, 15),
+                                new BigDecimal("74.20"), Optional.empty())));
+        WorkoutSession existing = session(15, Optional.empty(), List.of(SQUAT));
+        WorkoutSession replacement = session(16, Optional.empty(), List.of(BENCH));
+        Person original = withSessions(new PersonBuilder().withBodyProgress(progress).build().withAddedPayment(
+                PaymentRecord.fromText("150", "2020-01-10", Optional.of("Membership"))), List.of(existing));
+        Person other = new PersonBuilder().withName("Other Client").build();
+        Model model = modelWith(original, other);
+
+        new EditLogCommand(FIRST, FIRST, replacement).execute(model);
+
+        Person updated = model.getAddressBook().getPersonList().get(0);
+        assertEquals(progress, updated.getBodyProgress());
+        assertEquals(original.getPaymentRecords(), updated.getPaymentRecords());
+        assertEquals(progress, original.getBodyProgress());
+        assertEquals(List.of(replacement), updated.getWorkoutSessions());
+        assertEquals(other, model.getAddressBook().getPersonList().get(1));
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(folder.resolve("clients.json"));
+        storage.saveAddressBook(model.getAddressBook());
+        assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
+        assertEquals(progress, storage.readAddressBook().orElseThrow().getPersonList().get(0).getBodyProgress());
+    }
+
+    @Test
+    public void edit_sameKeyAsAnotherSession_rejectedWithoutMutation() {
+        WorkoutSession early = session(15, Optional.empty(), List.of(SQUAT));
+        WorkoutSession late = session(17, Optional.empty(), List.of(BENCH));
+        Person original = withSessions(new PersonBuilder().build(), List.of(early, late));
+        Model model = modelWith(original);
+        WorkoutSession collision = session(17, Optional.empty(), List.of(SQUAT));
+
+        EditLogCommand command = new EditLogCommand(FIRST, SECOND, collision);
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals(EditLogCommand.MESSAGE_DUPLICATE_SESSION, exception.getMessage());
+        assertEquals(List.of(original), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void edit_unchangedOrInvalidSession_rejectedWithoutMutation() {
+        WorkoutSession existing = session(15, Optional.empty(), List.of(SQUAT));
+        Person original = withSessions(new PersonBuilder().build(), List.of(existing));
+        Model model = modelWith(original);
+        EditLogCommand unchangedCommand = new EditLogCommand(FIRST, FIRST, existing);
+        EditLogCommand missingCommand = new EditLogCommand(FIRST, SECOND, existing);
+        CommandException unchanged = assertThrows(CommandException.class, () -> unchangedCommand.execute(model));
+        CommandException missing = assertThrows(CommandException.class, () -> missingCommand.execute(model));
+        assertEquals(EditLogCommand.MESSAGE_NO_CHANGE, unchanged.getMessage());
+        assertEquals(EditLogCommand.MESSAGE_INVALID_SESSION_INDEX, missing.getMessage());
+        assertEquals(List.of(original), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void historyAndEdit_useFilteredClientIndex() throws Exception {
+        Person alice = new PersonBuilder().withName("Alice").build();
+        Person bob = withSessions(new PersonBuilder().withName("Bob").build(),
+                List.of(session(15, Optional.empty(), List.of(SQUAT))));
+        Model model = modelWith(alice, bob);
+        model.updateFilteredPersonList(new NameContainsKeywordsPredicate(List.of("Bob")));
+
+        assertEquals("Workout history for Bob:\n1. 2020-01-15 (time not specified)\n"
+                + "   Back squat | 60 kg | 3 sets | 10 reps",
+                new HistoryCommand(FIRST).execute(model).getFeedbackToUser());
+        WorkoutSession replacement = session(16, Optional.empty(), List.of(BENCH));
+        new EditLogCommand(FIRST, FIRST, replacement).execute(model);
+        assertEquals(List.of(alice, withSessions(bob, List.of(replacement))),
+                model.getAddressBook().getPersonList());
+        assertEquals(1, model.getFilteredPersonList().size());
+        HistoryCommand invalidCommand = new HistoryCommand(SECOND);
+        CommandException invalidClient = assertThrows(CommandException.class, () -> invalidCommand.execute(model));
+        assertEquals(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, invalidClient.getMessage());
+    }
+
+    private static WorkoutSession session(int day, Optional<LocalTime> time, List<WorkoutLogEntry> entries) {
+        return new WorkoutSession(LocalDate.of(2020, 1, day), time, entries);
+    }
+
+    private static Person withSessions(Person client, List<WorkoutSession> sessions) {
+        return new Person(client.getName(), client.getPhone(), client.getEmail(), client.getAddress(),
+                client.getRemark(), client.getTags(), client.getWorkoutPlan(), client.getDietPlan(),
+                client.getGoal().orElse(null), client.getTrainingSessions(), sessions,
+                client.getDietaryRestrictions(), client.getHealthProfile().orElse(null),
+                client.getMembershipAssignment(), client.getBodyProgress(), client.getPaymentRecords());
+    }
+
+    private static Model modelWith(Person... people) {
+        Model model = new ModelManager(new AddressBook(), new UserPrefs());
+        for (Person person : people) {
+            model.addPerson(person);
+        }
+        return model;
+    }
+}

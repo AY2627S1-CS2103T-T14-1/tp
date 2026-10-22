@@ -87,7 +87,7 @@ public class ClientContextPanel extends UiPart<Region> {
 
         dietCommandHint.setText("diet " + displayedIndex);
         sessionCommandHint.setText("schedule " + displayedIndex);
-        historyCommandHint.setText("log " + displayedIndex);
+        historyCommandHint.setText("history " + displayedIndex);
         showDiet(person, displayedIndex);
         showDietaryRestrictions(person);
         showSessions(person, displayedIndex);
@@ -185,24 +185,28 @@ public class ClientContextPanel extends UiPart<Region> {
     }
 
     private void showHistory(Person person, int displayedIndex) {
-        Comparator<WorkoutSession> newestFirst = Comparator.comparing(WorkoutSession::getDate)
-                .thenComparing(session -> session.getTime().orElse(LocalTime.MIN)).reversed();
+        Comparator<WorkoutSession> newestFirst =
+                Comparator.comparing(WorkoutSession::getDate, Comparator.reverseOrder())
+                .thenComparing(session -> session.getTime().isPresent())
+                .thenComparing(session -> session.getTime().orElse(LocalTime.MIN), Comparator.reverseOrder());
         List<WorkoutSession> sessions = person.getWorkoutSessions().stream().sorted(newestFirst).toList();
         historyRows.getChildren().clear();
         setShown(historyRows, !sessions.isEmpty());
         setShown(historyEmpty, sessions.isEmpty());
         historyEmptyCommand.setText("log " + displayedIndex
                 + " d/2020-01-15 t/18:00 ex/Back squat|60|3|10");
-        sessions.forEach(session -> historyRows.getChildren().add(createHistoryRow(session)));
+        for (int i = 0; i < sessions.size(); i++) {
+            historyRows.getChildren().add(createHistoryRow(sessions.get(i), i + 1));
+        }
     }
 
-    private HBox createHistoryRow(WorkoutSession session) {
+    private HBox createHistoryRow(WorkoutSession session, int historyIndex) {
         Label icon = new Label("✓");
         icon.getStyleClass().add("history-icon");
         icon.setAlignment(Pos.CENTER);
         icon.setMinSize(22, 22);
 
-        Label date = new Label(session.getDate().format(HISTORY_DATE_FORMAT));
+        Label date = new Label(historyIndex + ". " + session.getDate().format(HISTORY_DATE_FORMAT));
         date.getStyleClass().add("history-date");
         Label time = new Label(session.getTime().map(value -> value.format(TIME_FORMAT)).orElse("Time not specified"));
         time.getStyleClass().addAll("history-time", "mono");

@@ -143,12 +143,37 @@ public class WorkoutSessionDisplayTest {
             VBox rows = vbox(panel, "historyRows");
 
             assertEquals(2, rows.getChildren().size());
-            assertEquals(List.of("✓", "Wed 15 Jan 2020", "18:00",
+            assertEquals(List.of("✓", "1. Wed 15 Jan 2020", "18:00",
                     "Bench press · 3 × 8 · 40.25 kg", "Back squat · 3 × 10 · 60 kg"),
                     labelTexts(rows.getChildren().get(0)));
-            assertEquals(List.of("✓", "Tue 14 Jan 2020", "Time not specified",
+            assertEquals(List.of("✓", "2. Tue 14 Jan 2020", "Time not specified",
                     "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(1)));
-            assertEquals("log 4", label(panel, "historyCommandHint").getText());
+            assertEquals("history 4", label(panel, "historyCommandHint").getText());
+            return null;
+        });
+    }
+
+    @Test
+    public void completedWorkouts_sameDate_numbersUnspecifiedBeforeEveningAndMidnight() throws Exception {
+        runOnFxThread(() -> {
+            LocalDate date = LocalDate.of(2020, 1, 15);
+            WorkoutSession noTime = new WorkoutSession(date, Optional.empty(), List.of(SQUAT));
+            WorkoutSession midnight = new WorkoutSession(date, Optional.of(LocalTime.MIDNIGHT), List.of(SQUAT));
+            WorkoutSession evening = new WorkoutSession(date, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
+            ClientContextPanel panel = new ClientContextPanel();
+            for (List<WorkoutSession> stored : List.of(
+                    List.of(noTime, midnight, evening), List.of(evening, midnight, noTime))) {
+                panel.showPerson(new PersonBuilder().withWorkoutSessions(stored).build(), 1);
+                VBox rows = vbox(panel, "historyRows");
+
+                assertEquals(3, rows.getChildren().size());
+                assertEquals(List.of("✓", "1. Wed 15 Jan 2020", "Time not specified",
+                        "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(0)));
+                assertEquals(List.of("✓", "2. Wed 15 Jan 2020", "18:00",
+                        "Bench press · 3 × 8 · 40.25 kg"), labelTexts(rows.getChildren().get(1)));
+                assertEquals(List.of("✓", "3. Wed 15 Jan 2020", "00:00",
+                        "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(2)));
+            }
             return null;
         });
     }
