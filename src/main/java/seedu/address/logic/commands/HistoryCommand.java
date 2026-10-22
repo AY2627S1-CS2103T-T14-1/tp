@@ -20,9 +20,9 @@ public class HistoryCommand extends Command {
     public static final String MESSAGE_USAGE = "history CLIENT_INDEX\nExample: history 1";
 
     private static final Comparator<WorkoutSession> NEWEST_FIRST =
-            Comparator.comparing(WorkoutSession::getDate)
-                    .thenComparing(session -> session.getTime().orElse(LocalTime.MIN))
-                    .reversed();
+            Comparator.comparing(WorkoutSession::getDate, Comparator.reverseOrder())
+                    .thenComparing(session -> session.getTime().isPresent())
+                    .thenComparing(session -> session.getTime().orElse(LocalTime.MIN), Comparator.reverseOrder());
 
     private final Index clientIndex;
 

@@ -511,7 +511,7 @@ If any exercise entry or other required value is invalid, the entire command is 
 
 Select a client in the list to see **Completed workouts** under **HISTORY** in the context panel. Each row shows the session's date, time, and all exercise entries. When time was omitted, it appears as `Time not specified`. Text wraps, and the details pane can be scrolled.
 
-Sessions appear newest first by date and time, with every exercise entry shown. On the same date, a session without a time appears after sessions with a time. The number beside each session is its current `SESSION_INDEX`. A client without sessions shows an empty history state.
+Sessions appear newest first by date and time, with every exercise entry shown. On the same date, a session without a time appears before sessions with a time; specified times are shown newest first, including midnight (`00:00`) last. The number beside each session is its current `SESSION_INDEX`. A client without sessions shows an empty history state.
 
 #### Viewing a client's workout history: `history`
 

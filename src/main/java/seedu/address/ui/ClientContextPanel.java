@@ -185,8 +185,10 @@ public class ClientContextPanel extends UiPart<Region> {
     }
 
     private void showHistory(Person person, int displayedIndex) {
-        Comparator<WorkoutSession> newestFirst = Comparator.comparing(WorkoutSession::getDate)
-                .thenComparing(session -> session.getTime().orElse(LocalTime.MIN)).reversed();
+        Comparator<WorkoutSession> newestFirst =
+                Comparator.comparing(WorkoutSession::getDate, Comparator.reverseOrder())
+                .thenComparing(session -> session.getTime().isPresent())
+                .thenComparing(session -> session.getTime().orElse(LocalTime.MIN), Comparator.reverseOrder());
         List<WorkoutSession> sessions = person.getWorkoutSessions().stream().sorted(newestFirst).toList();
         historyRows.getChildren().clear();
         setShown(historyRows, !sessions.isEmpty());

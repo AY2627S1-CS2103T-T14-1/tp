@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -8,6 +9,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,18 +70,90 @@ public class WorkoutHistoryCommandTest {
     }
 
     @Test
-    public void history_sameDateUnspecifiedTimeAppearsAfterSpecifiedTime() throws Exception {
+    public void history_sameDate_ordersUnspecifiedBeforeEveningAndMidnight() throws Exception {
         WorkoutSession noTime = session(15, Optional.empty(), List.of(SQUAT));
-        WorkoutSession morning = session(15, Optional.of(LocalTime.of(9, 0)), List.of(SQUAT));
+        WorkoutSession midnight = session(15, Optional.of(LocalTime.MIDNIGHT), List.of(SQUAT));
         WorkoutSession evening = session(15, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
-        Model model = modelWith(withSessions(new PersonBuilder().build(), List.of(noTime, morning, evening)));
+        for (List<WorkoutSession> stored : List.of(
+                List.of(noTime, midnight, evening), List.of(evening, midnight, noTime))) {
+            Person client = withSessions(new PersonBuilder().build(), stored);
+            Model model = modelWith(client);
 
-        String feedback = new HistoryCommand(FIRST).execute(model).getFeedbackToUser();
+            String feedback = new HistoryCommand(FIRST).execute(model).getFeedbackToUser();
 
-        assertTrue(feedback.indexOf("1. 2020-01-15 at 18:00")
-                < feedback.indexOf("2. 2020-01-15 at 09:00"));
-        assertTrue(feedback.indexOf("2. 2020-01-15 at 09:00")
-                < feedback.indexOf("3. 2020-01-15 (time not specified)"));
+            assertEquals("Workout history for " + client.getName() + ":\n"
+                    + "1. 2020-01-15 (time not specified)\n   Back squat | 60 kg | 3 sets | 10 reps\n"
+                    + "2. 2020-01-15 at 18:00\n   Bench press | 40 kg | 3 sets | 8 reps\n"
+                    + "3. 2020-01-15 at 00:00\n   Back squat | 60 kg | 3 sets | 10 reps", feedback);
+            assertEquals(stored, model.getAddressBook().getPersonList().get(0).getWorkoutSessions());
+        }
+    }
+
+    @Test
+    public void edit_sameDate_targetsDisplayedSessionInEitherStorageOrder() throws Exception {
+        WorkoutSession noTime = session(15, Optional.empty(), List.of(SQUAT));
+        WorkoutSession midnight = session(15, Optional.of(LocalTime.MIDNIGHT), List.of(SQUAT));
+        WorkoutSession evening = session(15, Optional.of(LocalTime.of(18, 0)), List.of(BENCH));
+        List<WorkoutSession> displayed = List.of(noTime, evening, midnight);
+        for (List<WorkoutSession> stored : List.of(
+                List.of(noTime, midnight, evening), List.of(evening, midnight, noTime))) {
+            for (int index = 0; index < displayed.size(); index++) {
+                Model model = modelWith(withSessions(new PersonBuilder().build(), stored));
+                WorkoutSession target = displayed.get(index);
+                WorkoutSession replacement = new WorkoutSession(target.getDate(), target.getTime(),
+                        List.of(SQUAT, BENCH));
+
+                CommandResult result = new EditLogCommand(
+                        FIRST, Index.fromZeroBased(index), replacement).execute(model);
+
+                List<WorkoutSession> expected = new ArrayList<>(stored);
+                expected.set(stored.indexOf(target), replacement);
+                assertEquals(expected, model.getAddressBook().getPersonList().get(0).getWorkoutSessions());
+                assertEquals(String.format(EditLogCommand.MESSAGE_SUCCESS, index + 1,
+                        model.getAddressBook().getPersonList().get(0).getName()), result.getFeedbackToUser());
+            }
+        }
+    }
+
+    @Test
+    public void edit_invalidClient_rejectedWithoutMutation() {
+        Person client = new PersonBuilder().build();
+        Model model = modelWith(client);
+        EditLogCommand command = new EditLogCommand(SECOND, FIRST,
+                session(15, Optional.empty(), List.of(SQUAT)));
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, exception.getMessage());
+        assertEquals(List.of(client), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void history_equalsAndHashCode_followClientIndex() {
+        HistoryCommand command = new HistoryCommand(FIRST);
+        HistoryCommand copy = new HistoryCommand(FIRST);
+        assertEquals(command, command);
+        assertEquals(command, copy);
+        assertEquals(command.hashCode(), copy.hashCode());
+        assertFalse(command.equals(new HistoryCommand(SECOND)));
+        assertFalse(command.equals(null));
+        assertFalse(command.equals("history"));
+    }
+
+    @Test
+    public void edit_equalsAndHashCode_followBothIndexesAndReplacement() {
+        WorkoutSession replacement = session(15, Optional.empty(), List.of(SQUAT));
+        EditLogCommand command = new EditLogCommand(FIRST, FIRST, replacement);
+        EditLogCommand copy = new EditLogCommand(FIRST, FIRST, replacement);
+        assertEquals(command, command);
+        assertEquals(command, copy);
+        assertEquals(command.hashCode(), copy.hashCode());
+        assertFalse(command.equals(new EditLogCommand(SECOND, FIRST, replacement)));
+        assertFalse(command.equals(new EditLogCommand(FIRST, SECOND, replacement)));
+        assertFalse(command.equals(new EditLogCommand(FIRST, FIRST,
+                session(16, Optional.empty(), List.of(SQUAT)))));
+        assertFalse(command.equals(null));
+        assertFalse(command.equals("editlog"));
     }
 
     @Test
