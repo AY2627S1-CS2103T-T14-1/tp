@@ -4,17 +4,24 @@
 !pragma layout elk
 !include style.puml
 title Fittix UI component
-skinparam arrowThickness 1.1
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam titleFontSize 22
+skinparam classFontSize 18
+skinparam classStereotypeFontSize 14
+skinparam packageFontSize 20
+skinparam legendFontSize 16
+skinparam arrowThickness 1.3
 skinparam arrowColor UI_COLOR_T4
 skinparam classBackgroundColor UI_COLOR
-skinparam ArrowFontSize 11
-skinparam nodesep 45
-skinparam ranksep 75
+skinparam ArrowFontSize 16
+skinparam nodesep 30
+skinparam ranksep 60
 skinparam Note {
     BackgroundColor #F3FAF1
     BorderColor UI_COLOR_T3
     FontColor #222222
-    FontSize 12
+    FontSize 16
 }
 
 package UI <<Rectangle>> {
@@ -66,7 +73,7 @@ ClientDetailPanel *-down-> "1" BodyProgressPanel
 
 ' Locally created controllers are not retained as fields.
 MainWindow ..> StatusBarFooter : creates
-PersonListPanel ..> PersonCard : creates via list cells
+PersonListPanel ..> PersonCard : creates via\nlist cells
 
 ' Every visible controller loads FXML through UiPart<T>.
 MainWindow -up-|> UiPart
@@ -82,7 +89,7 @@ ResultDisplay -up-|> UiPart
 
 ' A method reference supplies the callback; MainWindow does not implement it.
 CommandBox --> "1" CommandExecutor
-MainWindow ..> CommandExecutor : supplies this::executeCommand
+MainWindow ..> CommandExecutor : supplies\nthis::executeCommand
 CommandExecutor ..> CommandResult : returns
 ResultDisplay ..> CommandResult : presents
 

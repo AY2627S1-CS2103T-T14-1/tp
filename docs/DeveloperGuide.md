@@ -73,7 +73,13 @@ The sections below give more details of each component.
 
 The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/ui/Ui.java). `UiManager` implements this interface, loads the bundled fonts, and creates the `MainWindow` when the application starts.
 
-![Structure of the UI Component](images/UiClassDiagram.png)
+*Scroll horizontally to explore the diagram, or click it to open the full-size image.*
+
+<div class="diagram-scroll" role="region" aria-label="UI class diagram (scroll horizontally to view the full diagram)" tabindex="0">
+  <a href="images/UiClassDiagram.png">
+    <img src="images/UiClassDiagram.png" alt="Structure of the UI component, showing UI controllers and their relationships with Logic and Model" />
+  </a>
+</div>
 
 The workspace has three columns: `PersonListPanel` displays clients and manages selection, `ClientDetailPanel` shows the selected client's profile and workout plan, and `ClientContextPanel` shows their diet, restrictions, appointments, and workout history. `ClientDetailPanel` owns a `BodyProgressPanel` for baseline measurements, progress history, and the latest comparison. These visible controllers, together with `MainWindow`, `CommandBox`, `ResultDisplay`, `HelpWindow`, `PersonCard`, and `StatusBarFooter`, inherit from the abstract `UiPart<T>` class, which loads their FXML and exposes their root node.
 
