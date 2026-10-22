@@ -1,6 +1,9 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
+skinparam ArrowFontSize 22
+skinparam SequenceParticipantFontSize 22
+skinparam SequenceActorFontSize 22
 
 Actor User as user USER_COLOR
 Participant ":UI" as ui UI_COLOR
@@ -8,19 +11,23 @@ Participant ":Logic" as logic LOGIC_COLOR
 Participant ":Model" as model MODEL_COLOR
 Participant ":Storage" as storage STORAGE_COLOR
 
-user -[USER_COLOR]> ui : "delete 1"
+user -[USER_COLOR]> ui : "log 1\nd/2020-01-15\nex/Push-up|0|3|12"
 activate ui UI_COLOR
 
-ui -[UI_COLOR]> logic : execute("delete 1")
+ui -[UI_COLOR]> logic : execute(\ncommandText)
 activate logic LOGIC_COLOR
 
-logic -[LOGIC_COLOR]> model : deletePerson(p)
+logic -[LOGIC_COLOR]> model : getFilteredPersonList()
 activate model MODEL_COLOR
-
-model -[MODEL_COLOR]-> logic
+model --[MODEL_COLOR]> logic : displayedClients
 deactivate model
 
-logic -[LOGIC_COLOR]> storage : saveAddressBook(addressBook)
+logic -[LOGIC_COLOR]> model : setPerson(client,\nupdatedClient)
+activate model MODEL_COLOR
+model --[MODEL_COLOR]> logic
+deactivate model
+
+logic -[LOGIC_COLOR]> storage : saveAddressBook(\naddressBook)
 activate storage STORAGE_COLOR
 
 storage -[STORAGE_COLOR]> storage : Save to file
@@ -31,9 +38,9 @@ deactivate storage
 storage --[STORAGE_COLOR]> logic
 deactivate storage
 
-logic --[LOGIC_COLOR]> ui
+logic --[LOGIC_COLOR]> ui : CommandResult
 deactivate logic
 
-ui--[UI_COLOR]> user
+ui --[UI_COLOR]> user : Show success\nfeedback
 deactivate ui
 @enduml

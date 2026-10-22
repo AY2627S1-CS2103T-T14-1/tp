@@ -30,6 +30,7 @@ import seedu.address.storage.Storage;
  * The main LogicManager of the app.
  */
 public class LogicManager implements Logic {
+    public static final int MAX_UNDO_HISTORY_SIZE = 50;
     public static final String FILE_OPS_ERROR_FORMAT = "Could not save data due to the following error: %s";
 
     public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
@@ -83,7 +84,7 @@ public class LogicManager implements Logic {
 
         // Only effective changes become one complete-address-book undo step.
         if (!backup.equals(model.getAddressBook())) {
-            undoStack.push(backup);
+            pushUndoState(backup);
             redoStack.clear();
         }
 
@@ -127,9 +128,16 @@ public class LogicManager implements Logic {
         }
 
         redoStack.pop();
-        undoStack.push(current);
+        pushUndoState(current);
         model.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
         return new CommandResult(RedoCommand.MESSAGE_SUCCESS);
+    }
+
+    private void pushUndoState(AddressBook state) {
+        undoStack.push(state);
+        if (undoStack.size() > MAX_UNDO_HISTORY_SIZE) {
+            undoStack.removeLast();
+        }
     }
 
     private CommandException saveException(Command command, IOException ioe) {

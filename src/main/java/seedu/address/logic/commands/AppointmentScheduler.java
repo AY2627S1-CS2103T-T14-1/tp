@@ -1,7 +1,9 @@
 package seedu.address.logic.commands;
 
 import java.time.format.DateTimeFormatter;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -14,6 +16,7 @@ import seedu.address.model.person.TrainingSession.Kind;
 final class AppointmentScheduler {
     static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     static final String MESSAGE_CONFLICT = "Scheduling conflict: %s already has an appointment at %s.";
+    private static final Logger logger = LogsCenter.getLogger(AppointmentScheduler.class);
 
     private AppointmentScheduler() {
     }
@@ -27,12 +30,14 @@ final class AppointmentScheduler {
             boolean occupied = existingClient.getTrainingSessions().stream()
                     .anyMatch(existing -> existing.getDateTime().equals(session.getDateTime()));
             if (occupied) {
+                logger.info("Rejected appointment because its start time is already occupied");
                 throw new CommandException(String.format(MESSAGE_CONFLICT, existingClient.getName(),
                         session.getDateTime().format(DISPLAY_FORMAT)));
             }
         }
 
         model.setPerson(client, client.withTrainingSession(session));
+        logger.info("Recorded " + session.getKind() + " appointment");
         String prefix = session.getKind() == Kind.MEETING ? "Recorded meeting for " : "Scheduled session for ";
         return new CommandResult(prefix + client.getName() + ": "
                 + session.getDateTime().format(DISPLAY_FORMAT) + " at " + session.getLocation());

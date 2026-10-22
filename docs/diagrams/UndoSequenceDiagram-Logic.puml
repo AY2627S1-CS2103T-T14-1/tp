@@ -1,46 +1,33 @@
 @startuml
-!include style.puml
-skinparam ArrowFontStyle plain
+skinparam ArrowFontSize 20
+skinparam ParticipantFontSize 20
+skinparam Shadowing false
+hide footbox
+participant ":LogicManager" as logic
+participant ":Model" as model
+participant ":Storage" as storage
 
-box Logic LOGIC_COLOR_T1
-participant ":LogicManager" as LogicManager LOGIC_COLOR
-participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
-participant "u:UndoCommand" as UndoCommand LOGIC_COLOR
-end box
-
-box Model MODEL_COLOR_T1
-participant ":Model" as Model MODEL_COLOR
-end box
-[-> LogicManager : execute(undo)
-activate LogicManager
-
-LogicManager -> AddressBookParser : parseCommand(undo)
-activate AddressBookParser
-
-create UndoCommand
-AddressBookParser -> UndoCommand
-activate UndoCommand
-
-UndoCommand --> AddressBookParser
-deactivate UndoCommand
-
-AddressBookParser --> LogicManager : u
-deactivate AddressBookParser
-
-LogicManager -> UndoCommand : execute()
-activate UndoCommand
-
-UndoCommand -> Model : undoAddressBook()
-activate Model
-
-Model --> UndoCommand
-deactivate Model
-
-UndoCommand --> LogicManager : result
-deactivate UndoCommand
-UndoCommand -[hidden]-> LogicManager : result
-destroy UndoCommand
-
-[<--LogicManager
-deactivate LogicManager
+[-> logic : execute("undo")
+activate logic
+logic -> logic : Parse UndoCommand;\nexecuteUndo()
+logic -> model : getAddressBook()
+activate model
+model --> logic : currentState
+deactivate model
+logic -> logic : current = new\nAddressBook(currentState)
+logic -> model : setAddressBook(\nundoStack.peek())
+activate model
+model --> logic
+deactivate model
+logic -> storage : saveAddressBook(\nrestoredState)
+activate storage
+storage --> logic : Saved
+deactivate storage
+logic -> logic : undoStack.pop()\nredoStack.push(current)
+logic -> model : updateFilteredPersonList(\nPREDICATE_SHOW_ALL_PERSONS)
+activate model
+model --> logic
+deactivate model
+[<-- logic : Success
+deactivate logic
 @enduml

@@ -54,9 +54,9 @@ The bulk of the app's work is done by the following four components:
 
 **How the architecture components interact with each other**
 
-The _Sequence Diagram_ below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
+The _Sequence Diagram_ below shows how the components interact when a trainer records a completed workout session using `log 1 d/2020-01-15 ex/Push-up|0|3|12`. This shows the successful case: client 1 exists in the displayed list and has no session with the same date and time.
 
-<img src="images/ArchitectureSequenceDiagram.png" width="574" />
+<img src="images/ArchitectureSequenceDiagram.png" width="960" style="max-width:100%; height:auto;" />
 
 Each of the four main components (also shown in the diagram above),
 
@@ -71,20 +71,25 @@ The sections below give more details of each component.
 
 ### UI component
 
-The **API** of this component is specified in [`Ui.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/Ui.java)
+The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/ui/Ui.java). `UiManager` implements this interface, loads the bundled fonts, and creates the `MainWindow` when the application starts.
 
-![Structure of the UI Component](images/UiClassDiagram.png)
+*Scroll horizontally to explore the diagram, or click it to open the full-size image.*
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+<div class="diagram-scroll" role="region" aria-label="UI class diagram (scroll horizontally to view the full diagram)" tabindex="0">
+  <a href="images/UiClassDiagram.png">
+    <img src="images/UiClassDiagram.png" alt="Structure of the UI component, showing UI controllers and their relationships with Logic and Model" />
+  </a>
+</div>
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
+The workspace has three columns: `PersonListPanel` displays clients and manages selection, `ClientDetailPanel` shows the selected client's profile and workout plan, and `ClientContextPanel` shows their diet, restrictions, appointments, and workout history. `ClientDetailPanel` owns a `BodyProgressPanel` for baseline measurements, progress history, and the latest comparison. These visible controllers, together with `MainWindow`, `CommandBox`, `ResultDisplay`, `HelpWindow`, `PersonCard`, and `StatusBarFooter`, inherit from the abstract `UiPart<T>` class, which loads their FXML and exposes their root node.
 
-The `UI` component,
+`MainWindow` creates and retains the main panels, command box, result display, and help window. It also creates a `StatusBarFooter` locally and supplies the save path and the list panel's observable client count. The footer binds its count label to that property. The list panel creates `PersonCard` controllers through its JavaFX cell renderer; it does not retain a separate card controller for every client.
 
-- executes user commands using the `Logic` component.
-- listens for changes to `Model` data so that the UI can be updated with the modified data.
-- keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-- depends on some classes in the `Model` component because it displays `Person` objects from the model.
+`CommandBox` receives a `CommandExecutor` callback supplied as `MainWindow`'s `this::executeCommand` method reference. `MainWindow` calls `Logic.execute`, appends results or errors to `ResultDisplay`, and updates selection and filter indicators. `CommandCatalog` supplies command hints and help details. `ResultDisplay` retains up to 50 immutable `CommandFeedback` entries for its scrolling history. `MainWindow` does not implement the callback interface itself.
+
+`MainWindow` listens to the list panel's selection and the observable client data supplied by `Logic`, then refreshes both selected-client panels. A `CommandResult` may also contain a `BodyProgressViewRequest`; after a successful body-progress command, `MainWindow` selects the resolved client and forwards the request through `ClientDetailPanel` to reveal the requested tracker section. UI controllers display `Person` data from the Model component.
+
+The `UI` component uses JavaFX. Layouts are defined in `.fxml` resources under `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/resources/view/MainWindow.fxml) defines the layout loaded by [`MainWindow`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/ui/MainWindow.java). The diagram omits individual JavaFX controls, private rendering helpers, and the detailed Model classes to keep the component relationships readable.
 
 ### Logic component
 
@@ -219,17 +224,21 @@ The workout plan feature lets a trainer keep a per-client list of prescribed exe
   - Non-empty plan groups exercises under bold full-weekday headings in Monday-to-Sunday order with `Day not specified` last; only non-empty groups are shown, separated by an 8px spacer. Within each group, one `Label` per exercise is numbered with the continuous 1-based display index (`1. ...`, `2. ...`) using the `Name SetsxReps @Weightkg` format (e.g. `Bench Press 4x10 @60kg`). These numbers are exactly the `EXERCISE_INDEX` values accepted by `delex` and `dayex`, so the card doubles as the index reference; `addex`/`dayex`/`delex` re-sort and renumber, so callers must always use the current card numbering.
   - Labels wrap (`setWrapText(true)`, max width 350) so long lists grow vertically without breaking the card layout. The card observes the filtered person list, so it refreshes automatically after each command.
 
-### Diet plan management
+<a id="diet-plan-management"></a>
 
-Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the plan in the client's JSON record, so deleting the client also removes the plan. A client has at most one current plan and no plan history.
+### Diet goals
 
-For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw arguments to `DietCommandParser`. This preserves invalid line breaks for validation. The parser recognises single-letter prefixes only at the beginning of an argument or after horizontal whitespace; it leaves slashes inside values such as `kcal/day` untouched. It validates the displayed-list index, one required target, at most one optional notes value, and rejects unknown or repeated prefixes. `DietCommand` looks up the `Person` in the filtered list, compares the candidate with the current plan after trimming and ignoring case, then uses `Model#setPerson` to replace the client record while retaining the other fields and current list filter. An omitted `n/` creates a plan without notes, even when the previous plan had notes.
+Diet goals consist of one current nutrition target and optional coaching notes per client. The implementation retains the existing `DietPlan` model, `dietPlan` JSON field, and command-message wording; the feature rename does not change the command syntax or saved-data format.
+
+Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the diet goals in the client's JSON record, so deleting the client also removes their diet goals. A client has at most one current target record and no history of diet goals.
+
+For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw arguments to `DietCommandParser`. This preserves invalid line breaks for validation. The parser recognises single-letter prefixes only at the beginning of an argument or after horizontal whitespace; it leaves slashes inside values such as `kcal/day` untouched. It validates the displayed-list index, one required target, at most one optional notes value, and rejects unknown or repeated prefixes. `DietCommand` looks up the `Person` in the filtered list, compares the candidate with the current diet goals after trimming and ignoring case, then uses `Model#setPerson` to replace the client record while retaining the other fields and current list filter. An omitted `n/` saves diet goals without notes, even when the previous record had notes.
 
 `LogicManager` snapshots the address book before executing a diet command. `JsonAddressBookStorage` writes a complete JSON document to a temporary file in the data file's directory, then atomically moves it over the old file. If writing or replacing the file fails, `LogicManager` restores the snapshot and returns `The diet plan could not be saved. The previous plan remains unchanged.` The storage layer does not fall back to a non-atomic replacement when the filesystem does not support atomic moves. Validation and duplicate failures occur before any model change.
 
-`PersonListPanel` observes the selected client and the filtered client list. Its details pane shows the current target and notes, hides notes when absent, and provides an empty state for clients without a plan. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the plan's nutritional or medical suitability.
+`ClientContextPanel` shows the selected client's diet goals in the right-hand **DIET** section. It shows the current target and notes, hides notes when absent, and displays `No diet target recorded.` for clients without diet goals. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the diet goals' nutritional or medical suitability.
 
-`DietCommandParserTest`, `DietCommandTest`, `DietIntegrationTest`, and `PersonListPanelTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, injected commit failure, and selected-client display. The manual scenarios below cover the main user flows.
+`DietCommandParserTest`, `DietCommandTest`, and `DietIntegrationTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, and injected commit failure. `WorkoutSessionDisplayTest#dietPlan_showsTargetAndOptionalNotes` checks the `ClientContextPanel` target text, optional-note visibility, and displayed client index in the command hint. `WorkoutSessionDisplayTest#switchingToClientWithoutRecords_clearsPriorRows` checks that switching to a client without records shows the empty diet state. The manual scenarios below cover the main user flows.
 
 ### Dietary restrictions
 
@@ -259,7 +268,7 @@ On success, the command appends the session to a copy of the existing session li
 
 `LogicManager` saves the updated address book through the storage component. If saving throws an `IOException`, it restores the address-book snapshot taken before command execution and reports the save error.
 
-`MainWindow` observes the selected client and changes to the client list. `ClientContextPanel` displays every recorded session newest first by date and optional time, numbering rows consistently with `history`. It shows an empty state when the client has no sessions and hides workout details when no client is selected. Labels wrap, and the details pane supports scrolling.
+`MainWindow` observes the selected client and changes to the client list. `ClientContextPanel#showHistory` displays every completed session under **HISTORY** / **Completed workouts**, numbering rows consistently with `history`. It sorts a copy by date descending, then places unspecified times before specified times on the same date, with specified times descending. Unspecified times are distinct from midnight and display as `Time not specified`. The stored recording order and exercise order are unchanged. A client without sessions sees `No completed workouts logged.`; no selection shows the context placeholder. Exercise labels wrap, and the context panel supports scrolling.
 
 `HistoryCommand` reads the filtered client list and formats all sessions without modifying data. `EditLogCommandParser` reuses `LogCommandParser` validation to construct a complete replacement session. `EditLogCommand` resolves the displayed client and history indexes, rejects unchanged and duplicate-key replacements, replaces the selected session in the client's stored list, and preserves every unrelated client field. `MainWindow` selects the targeted client before command execution. The usual `LogicManager` save and snapshot restoration protect edits from failed writes.
 
@@ -278,7 +287,7 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 `AddressBookParser` routes `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`, `delmem n/NAME`, `amem MEMBERSHIP_NAME PERSON_INDEX [e/YYYY-MM-DD]`, `rmem PERSON_INDEX`, `imem PERSON_INDEX NUMBER_TO_INCREMENT`, `dmem PERSON_INDEX NUMBER_TO_DECREMENT`, `clearmem`, and both `view mem` and `view membership`. Command words and the `view` argument are case-sensitive; prefix letters and plan name matching are case-insensitive. Client indexes refer to the currently displayed client list. For `amem`, the final non-prefixed token before an optional `e/` is the client index, allowing spaces in the plan name.
 
-`ClearmemCommand` (`COMMAND_WORD = clearmem`, `MESSAGE_SUCCESS = Cleared all membership plans.`) takes no parameters and deletes every plan in the catalog while leaving all other data, including client records, workout plans, schedules, diet plans, and workout logs, unchanged. Before deleting, it checks whether any plan is referenced by a client assignment. If so, it deletes nothing and returns `MESSAGE_PLANS_IN_USE = Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.`, consistent with `delmem`'s rule that a referenced plan cannot be deleted. The client `clear` command (`ClearCommand`) is the counterpart for client records: it removes all persons only and must not delete any membership plans, so it bypasses the in-use check. Either command persists its result through the automatic save after the command runs.
+`ClearmemCommand` (`COMMAND_WORD = clearmem`, `MESSAGE_SUCCESS = Cleared all membership plans.`) takes no parameters and deletes every plan in the catalog while leaving all other data, including client records, workout plans, schedules, diet goals, and workout logs, unchanged. Before deleting, it checks whether any plan is referenced by a client assignment. If so, it deletes nothing and returns `MESSAGE_PLANS_IN_USE = Membership plans are in use and cannot be cleared. Remove all client assignments with rmem first.`, consistent with `delmem`'s rule that a referenced plan cannot be deleted. The client `clear` command (`ClearCommand`) is the counterpart for client records: it removes all persons only and must not delete any membership plans, so it bypasses the in-use check. Either command persists its result through the automatic save after the command runs.
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
@@ -359,7 +368,7 @@ For each mutation, take/retain the existing complete address-book snapshot, vali
 
 The sequence diagram abstracts parsing and the actual filesystem temporary-file/move implementation. Its save arrow represents the existing `Storage.saveAddressBook` boundary. Return a display request only on successful completion; an exception must not reveal or later persist a rejected candidate. Do not fire irreversible UI/history side effects during command execution before saving.
 
-Snapshots, `AddressBook` copy/reset/equality, `Person` builders and any future shared undo/redo history must retain body data together with every other feature. This design adds no independent tracker undo stack; do not claim general undo/redo support until the shared implementation is integrated and tested. Body logging is independent of workout logging and never deducts membership sessions.
+Snapshots, `AddressBook` copy/reset/equality, `Person` builders and the shared undo/redo history retain body data together with every other feature. This design adds no independent tracker undo stack; the shared history stores and restores these complete snapshots. Body logging is independent of workout logging and never deducts membership sessions.
 
 #### Implementation increments and validation
 
@@ -376,89 +385,72 @@ Automated coverage in `BodyProgressTest`, `JsonAdaptedBodyProgressTest`, `BodyPr
 
 The manual scenarios in the appendix complement automated tests. Runtime validation includes the full Gradle test/Checkstyle suite and the packaged application smoke test; the UI tests exercise command entry and produce a minimum-window screenshot for visual inspection.
 
-### \[Proposed\] Undo/redo feature
+### Undo/redo feature
 
-#### Proposed Implementation
+#### Saved snapshots in `LogicManager`
 
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
+`LogicManager` owns two in-memory `Deque<AddressBook>` stacks: `undoStack` and `redoStack`.
+Each snapshot contains the complete client records and membership-plan catalogue. Immutable client values,
+including body progress and workout sessions, can be shared safely between snapshots. The stacks are not
+written to JSON and start empty whenever the application starts.
 
-- `VersionedAddressBook#commit()` — Saves the current address book state in its history.
-- `VersionedAddressBook#undo()` — Restores the previous address book state from its history.
-- `VersionedAddressBook#redo()` — Restores a previously undone address book state from its history.
+`AddressBookParser` uses `UndoCommandParser` and `RedoCommandParser` to reject extra arguments and
+create marker commands. `LogicManager` handles them through `executeUndo` and `executeRedo`; their
+`execute` methods are not used to restore data. An empty stack returns `No changes to undo.` or
+`No changes to redo.` without saving or changing data.
 
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
+For an ordinary command, `LogicManager` copies the current address book into `backup` before execution.
+For undo/redo, it copies the current data into `current` and restores the top snapshot using
+`Model#setAddressBook`. It saves the resulting address book through `Storage#saveAddressBook` before
+changing either stack:
 
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
+| Successfully saved operation | Undo stack | Redo stack |
+| --- | --- | --- |
+| An ordinary command changes address-book data | Push `backup`; discard the oldest snapshot if over the limit | Clear |
+| `undo` | Pop the restored snapshot | Push `current` |
+| `redo` | Push `current`, applying the same limit | Pop the restored snapshot |
+| An ordinary command leaves address-book data unchanged | Unchanged | Unchanged |
 
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
+`MAX_UNDO_HISTORY_SIZE` limits the undo stack to **50 snapshots**. The newest snapshot is at the front;
+`pushUndoState` removes the oldest snapshot at the back when necessary. At most 50 undo steps can be
+moved to the redo stack, so redo history is bounded by the same limit. A new saved mutation after undo
+clears redo history. History retains complete snapshots, so memory still depends on the amount of client
+data in those retained states.
 
-![UndoRedoState0](images/UndoRedoState0.png)
+The following diagram shows a successful undo with a nonempty undo stack. Parsing is summarized inside
+`LogicManager`; the restored snapshot is `undoStack.peek()`.
 
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
+<img src="images/UndoSequenceDiagram-Logic.png" alt="Successful undo restores a snapshot, saves it, then advances the history stacks" width="960" style="max-width:100%; height:auto;" />
 
-![UndoRedoState1](images/UndoRedoState1.png)
+#### Failure handling and search state
 
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+If command execution fails, no save or history transition occurs. If saving throws `IOException`,
+`LogicManager` restores the snapshot from before execution (`backup` or `current`) and reports the existing command-specific or generic save error.
+Neither stack is advanced, so a failed undo or redo can be retried after the storage problem is resolved.
+The existing atomic JSON save boundary protects the previous file contents.
 
-![UndoRedoState2](images/UndoRedoState2.png)
+<img src="images/UndoSequenceDiagram-Model.png" alt="A failed undo save restores the current snapshot and leaves both history stacks unchanged" width="960" style="max-width:100%; height:auto;" />
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
+After a successful undo or redo, `LogicManager` resets the client predicate to
+`Model.PREDICATE_SHOW_ALL_PERSONS`, and `MainWindow` clears the query indicator to `All clients`.
+Restored clients are visible, and index-based commands use that complete list. An empty-history response
+or a failed save leaves both the active search predicate and its indicator unchanged. Window settings,
+the saved file location and command-entry history are not reversed.
 
-</div>
+For example, after a saved `delete 1` and a saved `add` command, two undo operations restore the states
+before the add and before the deletion. A `list` between those undos does not consume a history step.
+Redo reapplies the saved states in the opposite order. A new successful mutation replaces that redo path.
 
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
+#### Design considerations and verification
 
-![UndoRedoState3](images/UndoRedoState3.png)
+Complete snapshots keep undo/redo independent of individual command implementations and preserve all
+client features and shared plans together. The 50-step cap bounds the number of retained states. An
+alternative would store inverse operations per command; that could reduce memory but would require each
+mutation to implement and validate its own inverse.
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-
-</div>
-
-The following sequence diagram shows how an undo operation goes through the `Logic` component:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Logic.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `UndoCommand` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-
-</div>
-
-Similarly, how an undo operation goes through the `Model` component is shown below:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Model.png)
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-
-</div>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-![UndoRedoState4](images/UndoRedoState4.png)
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …​` command. This is the behavior that most modern desktop applications follow.
-
-![UndoRedoState5](images/UndoRedoState5.png)
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-<img src="images/CommitActivityDiagram.png" width="250" />
-
-#### Design considerations:
-
-**Aspect: How undo & redo execute:**
-
-- **Alternative 1 (current choice):** Saves the entire address book.
-  - Pros: Easy to implement.
-  - Cons: May have performance issues in terms of memory usage.
-
-- **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  - Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
-  - Cons: We must ensure that the implementation of each individual command is correct.
-
-_{more aspects and alternatives to be added}_
+`LogicManagerTest` covers multiple undos/redos, read-only commands, rejected commands, redo invalidation,
+the history limit and save failure. `MainWindowUndoRedoTest` exercises real command entry through
+`find`, undo and redo, checking the visible query, counts and subsequent indexed target.
 
 ### \[Proposed\] Data archiving
 
@@ -497,7 +489,7 @@ _{Explain here how the data archiving feature will be implemented}_
 
 **Value proposition**:
 
-- **All-in-one client management:** Keep client goals, injuries, workout plans, diet plans, progress, sessions, and payments in one place.
+- **All-in-one client management:** Keep client goals, injuries, workout plans, diet goals, progress, sessions, and payments in one place.
 - **Fast and efficient:** Quickly access and update information between sessions.
 - **Progress tracking:** Easily monitor each client's fitness progress over time.
 - **Session & payment management:** Track remaining sessions, payments, and unpaid balances.
@@ -513,14 +505,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | gym trainer | record a client's gym schedule                                                       | schedule my business appropriately                                     |
 | `* * *`  | gym trainer | record the workout plan for each client                                              | ensure consistent progress through a consistent workout plan           |
 | `* * *`  | gym trainer | log a completed workout session, including exercises, weights, sets, and repetitions | review the client's training history                                   |
-| `* * *`  | gym trainer | record the diet plan for each client                                                 | track the impact of diet on their improvement                          |
+| `* * *`  | gym trainer | record diet goals for each client                                                    | track the impact of diet on their improvement                          |
 | `* * *`  | gym trainer | delete a former client                                                               | keep my active roster uncluttered                                      |
 | `* * *`  | gym trainer | record when and where to meet each client                                            | remind myself of upcoming client sessions                              |
 | `* * *` | gym trainer | record dated body weights and optional notes | review changes between training sessions |
 | `* *`    | gym trainer | track fee payments                                                                   | check which clients have paid their fees                               |
 | `* *`    | gym trainer | search for clients by name                                                           | find a particular client quickly                                       |
 | `* *`    | gym trainer | filter clients by training goal                                                      | work with clients who have similar objectives                          |
-| `* *`    | gym trainer | record a client's dietary restrictions                                               | ensure their diet plan is suitable for them                            |
+| `* *`    | gym trainer | record a client's dietary restrictions                                               | keep food requirements visible alongside their diet goals             |
 | `* *`    | gym trainer | list clients with unpaid fees                                                        | quickly identify which payments need to be followed up                 |
 | `* *`    | gym trainer | check whether a proposed session time conflicts with another client                  | avoid accidentally double-booking myself                               |
 | `* *`    | gym trainer | view all clients scheduled for a particular day                                      | quickly prepare for the clients I will be training that day            |
@@ -713,14 +705,14 @@ _{More to be added}_
 
     Use case resumes at step 5.
 
-**Use case: UC07 - Record a diet plan for a client**
+**Use case: UC07 - Record diet goals for a client**
 
 **MSS**
 
 1.  Trainer requests to list clients.
 2.  Fittix shows a list of clients.
 3.  Trainer gives the displayed client index, a nutrition target, and optional notes.
-4.  Fittix saves and shows the target and notes as that client's current plan.
+4.  Fittix saves and shows the target and notes as that client's current diet goals.
 
     Use case ends.
 
@@ -732,22 +724,22 @@ _{More to be added}_
     Use case resumes at step 2.
 
 - 3b. The target or supplied notes are invalid, or a parameter is repeated or unsupported.
-  - 3b1. Fittix shows the relevant validation or format error and leaves the current plan unchanged.
+  - 3b1. Fittix shows the relevant validation or format error and leaves the current diet goals unchanged.
 
     Use case resumes at step 3.
 
-- 3c. The candidate matches the current plan after trimming and ignoring case.
-  - 3c1. Fittix reports that the plan is already current and does not replace it.
+- 3c. The candidate matches the current diet goals after trimming and ignoring case.
+  - 3c1. Fittix reports that the diet goals are already current and does not replace them.
 
     Use case ends.
 
-- 4a. The client already has a different plan.
-  - 4a1. Fittix replaces the complete plan and reports the replacement. Old versions are not retained.
+- 4a. The client already has different diet goals.
+  - 4a1. Fittix replaces the complete target and notes and reports the replacement. Old versions are not retained.
 
     Use case ends.
 
 - 4b. Saving fails.
-  - 4b1. Fittix reports the failure; the previous plan remains unchanged in memory and on disk.
+  - 4b1. Fittix reports the failure; the previous diet goals remain unchanged in memory and on disk.
 
     Use case ends.
 
@@ -904,7 +896,7 @@ Use case ends.
 - **Session**: One completed training appointment, logged with the exercises, weights, sets and repetitions performed
 - **Package**: A block of prepaid sessions (typically 10 or 20) bought by a client
 - **Workout plan**: The client's current prescribed set of exercises; a client has at most one at a time
-- **Diet plan**: The client's current prescribed eating guidance; a client has at most one at a time
+- **Diet goals**: The client's current nutrition target and optional coaching notes; a client has at most one current target record at a time
 
 ---
 
@@ -949,11 +941,13 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases …​ }_
 
-### Diet plan management
+<a id="diet-plan-management-1"></a>
+
+### Diet goals
 
 Use a disposable copy of the data file. Start with at least two clients; run `list` and note the displayed index and name of one client.
 
-1. Create a target-only plan: `diet 1 t/1800 kcal per day, 120 g protein`.<br>
+1. Record diet goals without notes: `diet 1 t/1800 kcal per day, 120 g protein`.<br>
    Expected: `Created diet plan for NAME.` and the selected client's details pane shows the full target without notes.
 1. Add notes: `diet 1 t/1800 kcal per day, 120 g protein n/Prioritise vegetables`.<br>
    Expected: `Replaced diet plan for NAME.` and the notes appear in the pane.
@@ -962,13 +956,13 @@ Use a disposable copy of the data file. Start with at least two clients; run `li
 1. Repeat `diet 1 t/2000 KCAL/DAY`.<br>
    Expected: `This is already the current diet plan for NAME.` and the saved spelling remains `2000 kcal/day`.
 1. Try `diet 1 t/`, `diet 1 t/2000 kcal n/`, `diet 1 t/2000 kcal r/vegan`, and `diet 0 t/2000 kcal`.<br>
-   Expected: Respectively, the target, notes, format, and client-index errors appear. The previous plan remains visible.
+   Expected: Respectively, the target, notes, format, and client-index errors appear. The previous diet goals remain visible.
 1. Close and restart the app.<br>
    Expected: Selecting the same client shows the saved target with no notes.
 1. Run `find` for that client and use the index shown in the filtered list in a `diet` command.<br>
-   Expected: Only the displayed client is updated. Run `list` to confirm the other client's plan is unchanged.
+   Expected: Only the displayed client is updated. Run `list` to confirm the other client's diet goals are unchanged.
 1. Delete the client using the displayed index, then restart.<br>
-   Expected: The client and their plan are gone; the details pane no longer shows the deleted client's target.
+   Expected: The client and their diet goals are gone; the context panel no longer shows the deleted client's target.
 
 An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it forces the atomic replacement to throw, verifies the specified failure message, confirms that both the model and original JSON bytes are unchanged, and checks that the temporary file is removed.
 
@@ -1054,16 +1048,16 @@ An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it
 Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, providing the required contact fields, then run `find WorkoutLogManualTest`. The following commands assume that client is displayed at index 1.
 
 1. Run `log 1 d/2020-01-15 t/18:00 ex/Back squat|60|3|10 ex/Bench press|40.25|3|8`.
-   Expected: The success message names the client and session date and time. Selecting the client shows both exercises in the entered order under LAST RECORDED WORKOUT SESSION.
+   Expected: The success message names the client and session date and time. Selecting the client shows both exercises in the entered order in the right-hand **HISTORY** / **Completed workouts** section.
 
 2. Repeat the same command.
    Expected: `This client already has a workout session with the same date and time.` The existing session remains unchanged.
 
 3. Run `log 1 d/2020-01-16 ex/Push-up|0|3|12`.
-   Expected: The session is recorded. The panel shows `Date: 2020-01-16`, `Time: Not specified`, and the Push-up entry.
+   Expected: The session is recorded. A new history row shows `Thu 16 Jan 2020`, `Time not specified`, and the Push-up entry above the session dated 2020-01-15.
 
 4. Run `log 1 d/2020-01-16 t/19:00 ex/Push-up|0|3|12`.
-   Expected: The session is accepted because a specified time differs from an unspecified time.
+   Expected: The session is accepted because a specified time differs from an unspecified time. Its `19:00` row appears above the unspecified-time row on the same date.
 
 5. Run `log 1 d/2020-01-17 ex/Back squat|60|3|10 ex/Bench press|-1|3|8`.
    Expected: A weight validation error appears. Neither exercise is saved as a new session.
@@ -1072,13 +1066,13 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
    Expected: The corrected command succeeds, confirming that the rejected command did not reserve the session's date and time.
 
 7. Run `log 1 d/2020-01-14 ex/Stretch|0|1|1`.
-   Expected: The panel displays this newly recorded session despite its earlier workout date.
+   Expected: The history includes this newly recorded session below the newer dated sessions. Adding an older workout does not move it to the top of the history.
 
 8. Close and restart the app, then find and select the same client.
-   Expected: The panel still displays the session dated 2020-01-14. Repeating the command from step 1 is rejected as a duplicate, confirming that earlier sessions were also retained.
+   Expected: All recorded sessions remain visible in newest-first workout-date/time order, including the session dated 2020-01-14. Repeating the command from step 1 is rejected as a duplicate, confirming that the earlier entry was retained.
 
 9. Select another client with no recorded sessions.
-   Expected: `No workout sessions recorded.` appears, and the previous client's workout details disappear.
+   Expected: `No completed workouts logged.` appears, and the previous client's workout details disappear.
 
 ### Membership plan management
 
