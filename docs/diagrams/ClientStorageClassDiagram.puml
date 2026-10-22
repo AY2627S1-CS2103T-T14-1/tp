@@ -21,6 +21,7 @@ package "Storage: client JSON adapters" {
     class JsonAdaptedWorkoutSession
     class JsonAdaptedWorkoutLogEntry
     class JsonAdaptedMembershipAssignment
+    class JsonAdaptedPaymentRecord
     class JsonAdaptedBodyProgress
     class JsonAdaptedBodyBaseline
     class JsonAdaptedBodyProgressEntry
@@ -28,6 +29,7 @@ package "Storage: client JSON adapters" {
 
 JsonAdaptedPerson --> "0..1" JsonAdaptedBodyProgress
 JsonAdaptedPerson --> "0..1" JsonAdaptedMembershipAssignment
+JsonAdaptedPerson --> "0..*" JsonAdaptedPaymentRecord
 JsonAdaptedPerson --> "0..*" JsonAdaptedWorkoutSession
 JsonAdaptedPerson --> "0..*" JsonAdaptedTrainingSession
 JsonAdaptedPerson --> "0..1" JsonAdaptedDietPlan

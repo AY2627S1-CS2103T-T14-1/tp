@@ -148,9 +148,9 @@ The `Model` component,
 
 <img src="images/StorageClassDiagram.png" alt="Storage services and top-level client and membership catalog adapters" width="450" />
 
-`JsonSerializableAddressBook` contains the saved clients and shared membership-plan catalog. Each `JsonAdaptedPerson` retains adapters for its tags, exercises, optional diet plan, scheduled sessions, recorded workouts, optional membership assignment and optional body tracker. The detail diagram expands these client adapters; its multiplicities describe supported, validated data. In particular, a recorded workout contains 1 to 30 exercise entries.
+`JsonSerializableAddressBook` contains the saved clients and shared membership-plan catalog. Each `JsonAdaptedPerson` retains adapters for its tags, exercises, optional diet plan, scheduled sessions, recorded workouts, payment records, optional membership assignment and optional body tracker. Its payment-history list retains zero or more `JsonAdaptedPaymentRecord` instances, each storing an amount, date and optional remarks. The detail diagram expands these client adapters; its multiplicities describe supported, validated data. In particular, a recorded workout contains 1 to 30 exercise entries.
 
-<img src="images/ClientStorageClassDiagram.png" alt="Client JSON adapter associations and body-progress conversion dependencies" width="800" />
+<img src="images/ClientStorageClassDiagram.png" alt="Client JSON adapter associations, including payment records, and body-progress conversion dependencies" width="800" />
 
 A membership assignment stores a plan key rather than a reference to `JsonAdaptedMembershipPlan`; loading validates that key against the catalog. `JsonAdaptedBodyProgress` retains a raw `JsonNode` and uses the baseline/entry adapters temporarily during conversion, so those helper relationships are dependencies rather than retained associations. Goal, health information and dietary restrictions are stored as strings or lists of strings and therefore have no separate adapter classes in these diagrams.
 
