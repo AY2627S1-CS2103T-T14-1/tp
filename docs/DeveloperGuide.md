@@ -147,15 +147,19 @@ The `Model` component,
 
 ### Storage component
 
-**API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+**API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/storage/Storage.java)
 
-<img src="images/StorageClassDiagram.png" width="550" />
+`StorageManager` implements `Storage` and delegates JSON file access to one `JsonAddressBookStorage` and one `JsonUserPrefsStorage`. The overview shows these services and the top-level JSON representation. Model classes and common JSON/file utilities are omitted to keep the view focused on the storage component.
 
-The `Storage` component,
+<img src="images/StorageClassDiagram.png" alt="Storage services and top-level client and membership catalog adapters" width="450" />
 
-- can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
-- is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
-- depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+`JsonSerializableAddressBook` contains the saved clients and shared membership-plan catalog. Each `JsonAdaptedPerson` retains adapters for its tags, exercises, optional diet plan, scheduled sessions, recorded workouts, payment records, optional membership assignment and optional body tracker. Its payment-history list retains zero or more `JsonAdaptedPaymentRecord` instances, each storing an amount, date and optional remarks. The detail diagram expands these client adapters; its multiplicities describe supported, validated data. In particular, a recorded workout contains 1 to 30 exercise entries.
+
+<img src="images/ClientStorageClassDiagram.png" alt="Client JSON adapter associations, including payment records, and body-progress conversion dependencies" width="800" />
+
+A membership assignment stores a plan key rather than a reference to `JsonAdaptedMembershipPlan`; loading validates that key against the catalog. `JsonAdaptedBodyProgress` retains a raw `JsonNode` and uses the baseline/entry adapters temporarily during conversion, so those helper relationships are dependencies rather than retained associations. Goal, health information and dietary restrictions are stored as strings or lists of strings and therefore have no separate adapter classes in these diagrams.
+
+The storage component reads JSON back into the corresponding model objects and saves model data in JSON form. It therefore depends on model classes even though those dependencies are outside the scope of the two diagrams.
 
 ### Common classes
 
