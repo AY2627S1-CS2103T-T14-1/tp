@@ -4,6 +4,26 @@ h2, h3, h4, h5, h6 {
   color: #e46c0a;
 }
 
+// Preserve readable diagram labels instead of shrinking to the text column.
+.diagram-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-bottom: $spacing-unit / 2;
+  border: 1px solid $brand-color-light;
+  border-radius: 4px;
+
+  &:focus-visible {
+    outline: 2px solid $link-base-color;
+    outline-offset: 2px;
+  }
+
+  img {
+    display: block;
+    width: auto;
+    max-width: none;
+  }
+}
+
 // Bootstrap style alerts
 .alert {
   position: relative;
@@ -31,4 +51,3 @@ h2, h3, h4, h5, h6 {
     @include alert-variant(color-level($value, $alert-bg-level), color-level($value, $alert-border-level), color-level($value, $alert-color-level));
   }
 }
-

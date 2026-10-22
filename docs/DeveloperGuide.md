@@ -71,20 +71,25 @@ The sections below give more details of each component.
 
 ### UI component
 
-The **API** of this component is specified in [`Ui.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/Ui.java)
+The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/ui/Ui.java). `UiManager` implements this interface, loads the bundled fonts, and creates the `MainWindow` when the application starts.
 
-![Structure of the UI Component](images/UiClassDiagram.png)
+*Scroll horizontally to explore the diagram, or click it to open the full-size image.*
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+<div class="diagram-scroll" role="region" aria-label="UI class diagram (scroll horizontally to view the full diagram)" tabindex="0">
+  <a href="images/UiClassDiagram.png">
+    <img src="images/UiClassDiagram.png" alt="Structure of the UI component, showing UI controllers and their relationships with Logic and Model" />
+  </a>
+</div>
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
+The workspace has three columns: `PersonListPanel` displays clients and manages selection, `ClientDetailPanel` shows the selected client's profile and workout plan, and `ClientContextPanel` shows their diet, restrictions, appointments, and workout history. `ClientDetailPanel` owns a `BodyProgressPanel` for baseline measurements, progress history, and the latest comparison. These visible controllers, together with `MainWindow`, `CommandBox`, `ResultDisplay`, `HelpWindow`, `PersonCard`, and `StatusBarFooter`, inherit from the abstract `UiPart<T>` class, which loads their FXML and exposes their root node.
 
-The `UI` component,
+`MainWindow` creates and retains the main panels, command box, result display, and help window. It also creates a `StatusBarFooter` locally and supplies the save path and the list panel's observable client count. The footer binds its count label to that property. The list panel creates `PersonCard` controllers through its JavaFX cell renderer; it does not retain a separate card controller for every client.
 
-- executes user commands using the `Logic` component.
-- listens for changes to `Model` data so that the UI can be updated with the modified data.
-- keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-- depends on some classes in the `Model` component because it displays `Person` objects from the model.
+`CommandBox` receives a `CommandExecutor` callback supplied as `MainWindow`'s `this::executeCommand` method reference. `MainWindow` calls `Logic.execute`, appends results or errors to `ResultDisplay`, and updates selection and filter indicators. `CommandCatalog` supplies command hints and help details. `ResultDisplay` retains up to 50 immutable `CommandFeedback` entries for its scrolling history. `MainWindow` does not implement the callback interface itself.
+
+`MainWindow` listens to the list panel's selection and the observable client data supplied by `Logic`, then refreshes both selected-client panels. A `CommandResult` may also contain a `BodyProgressViewRequest`; after a successful body-progress command, `MainWindow` selects the resolved client and forwards the request through `ClientDetailPanel` to reveal the requested tracker section. UI controllers display `Person` data from the Model component.
+
+The `UI` component uses JavaFX. Layouts are defined in `.fxml` resources under `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/resources/view/MainWindow.fxml) defines the layout loaded by [`MainWindow`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/ui/MainWindow.java). The diagram omits individual JavaFX controls, private rendering helpers, and the detailed Model classes to keep the component relationships readable.
 
 ### Logic component
 
