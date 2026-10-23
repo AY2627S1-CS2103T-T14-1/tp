@@ -7,15 +7,16 @@
 - [Feature 1A: Add client](#feature-1a-add-client)
 - [Feature 1B: Delete client](#feature-1b-delete-client)
 - [Feature 1C: Edit client personal details](#feature-1c-edit-client-personal-details)
+- [Feature 1D: Search Clients](#feature-1d-search-clients)
+- [Feature 1E: List all clients](#feature-1e-list-all-clients)
+- [Feature 1F: Clear all data](#feature-1f-clear-all-data)
+- [Feature 1G: Help](#feature-1g-help)
 - [Feature 2: Training schedule](#feature-2-training-schedule)
 - [Feature 3: Workout plan management](#feature-3-workout-plan-management)
 - [Feature 4: Workout session logging](#feature-4-workout-session-logging)
 - [Feature 5: Workout history](#feature-5-workout-history)
 - [Feature 6: Diet goals](#feature-6-diet-goals)
-- [Feature 7: Search clients by name](#feature-7-search-clients-by-name)
-- [Feature 8: Search clients by phone number or email](#feature-8-search-clients-by-phone-number-or-email)
 - [Feature 9: Record each client's fitness goal](#feature-9-record-each-clients-fitness-goal)
-- [Feature 10: Filter clients by fitness goal](#feature-10-filter-clients-by-fitness-goal)
 - [Feature 11: Health considerations (injuries and physical limitations)](#feature-11-health-considerations-injuries-and-physical-limitations)
 - [Feature 12: Dietary restrictions](#feature-12-dietary-restrictions)
 - [Feature 13: Body progress tracker](#feature-13-body-progress-tracker)
@@ -340,6 +341,250 @@ Replace only the supplied editable fields while preserving the client's remark, 
 #### Nice to have or later
 
 No additional later scope is specified for this feature in the source.
+
+## Feature 1D: Search Clients
+
+### 1. Feature
+
+Search clients by name, phone number, email, or fitness goal using `find`.
+
+### 2. Purpose
+
+Lets trainers locate client records without scanning the full list.
+
+### 3. Command format
+
+```text
+find KEYWORD [MORE_KEYWORDS]...
+find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]
+```
+
+Unprefixed keywords search names only. Prefixed criteria may be combined; at least one nonblank criterion is required. Do not mix unprefixed text with prefixed criteria.
+
+### 4. Example commands
+
+```text
+find priya daniel
+find n/priya g/mobility
+find p/9123-4567 e/example.com
+find g/strength
+```
+
+### 5. Parameters
+
+| Criterion | Matching rule |
+| --- | --- |
+| Name keywords or `n/` | Case-insensitive substrings; whitespace-separated keywords are alternatives. |
+| Phone `p/` | Must contain a digit. Remove spaces and hyphens from query and stored number, then match the complete query as a substring. |
+| Email `e/` | Case-insensitive substrings; whitespace-separated keywords are alternatives. |
+| Goal `g/` | Case-insensitive substrings of the recorded goal; whitespace-separated keywords are alternatives. Clients without a goal do not match this criterion. |
+
+Each prefix may appear once. Supplied criteria are combined using OR, so matching any one criterion includes the client. The `dr/` and `h/` criteria are described in Features 12 and 11 respectively.
+
+### 6. Output
+
+Search replaces the displayed client list with matching clients and reports `Found N client(s).` If there are no matches, report `Found 0 client(s). Use list to show all clients.`
+
+### 7. Duplicate handling
+
+Display each matching client once, even if several keywords or criteria match. Search does not change saved data.
+
+### 8. Possible errors
+
+A missing keyword, empty prefixed value, phone query without a digit, repeated prefix, or mixed prefixed and unprefixed text is rejected without changing the displayed list. Use the corresponding `find` error message for the invalid input.
+
+### 9. Relevant UI mockup
+
+```text
+Command: find n/priya g/strength
+
+Clients
+1. Priya Nair — Goal: Build strength
+2. Alex Tan — Goal: Improve strength and mobility
+
+Result: Found 2 client(s).
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Search names, normalized phone numbers, emails, and recorded goals; combine keywords and criteria using OR; show each client once and report the result count.
+
+#### Nice to have or later
+
+No additional later scope is specified for these search criteria.
+
+## Feature 1E: List all clients
+
+### 1. Feature
+
+Show all clients with `list`.
+
+### 2. Purpose
+
+Restores the full client list after a search and lets trainers browse every client.
+
+### 3. Command format
+
+```text
+list
+```
+
+### 4. Example commands
+
+```text
+list
+```
+
+### 5. Parameters
+
+No parameters are required. Extraneous parameters are ignored, as described in the User Guide.
+
+### 6. Output
+
+Display all clients in the client list. The displayed indexes can be used by commands that accept a client index. If there are no clients, show the empty list.
+
+### 7. Duplicate handling
+
+Each saved client appears once. Listing does not change saved data.
+
+### 8. Possible errors
+
+No command-specific errors are specified in the User Guide.
+
+### 9. Relevant UI mockup
+
+```text
+Command: list
+
+Clients
+1. Priya Nair
+2. Daniel Tan
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Show the full client list with current indexes.
+
+#### Nice to have or later
+
+No additional later scope is specified in the User Guide.
+
+## Feature 1F: Clear all data
+
+### 1. Feature
+
+Clear all client entries with `clear`.
+
+### 2. Purpose
+
+Lets trainers remove the client records in one command.
+
+### 3. Command format
+
+```text
+clear
+```
+
+### 4. Example commands
+
+```text
+clear
+```
+
+### 5. Parameters
+
+No parameters are required. Extraneous parameters are ignored, as described in the User Guide.
+
+### 6. Output
+
+The client list becomes empty. Clearing a client also removes data owned by that client, including body records and payments.
+
+### 7. Duplicate handling
+
+All client entries are removed by one command. Membership plan definitions remain; use `clearmem` to clear those separately.
+
+### 8. Possible errors
+
+No command-specific errors are specified in the User Guide. There is no confirmation step.
+
+### 9. Relevant UI mockup
+
+```text
+Command: clear
+
+Clients
+(no clients)
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Remove all client entries and their owned data while retaining membership plan definitions.
+
+#### Nice to have or later
+
+No additional later scope is specified in the User Guide.
+
+## Feature 1G: Help
+
+### 1. Feature
+
+Show how to access the help page with `help`.
+
+### 2. Purpose
+
+Lets users find command guidance from within the application.
+
+### 3. Command format
+
+```text
+help
+```
+
+### 4. Example commands
+
+```text
+help
+```
+
+### 5. Parameters
+
+No parameters are required. Extraneous parameters are ignored, as described in the User Guide.
+
+### 6. Output
+
+Show a message explaining how to access the help page. The User Guide notes that a minimized Help Window must be restored manually; invoking `help` again does not create a new window.
+
+### 7. Duplicate handling
+
+Repeated use does not change saved data.
+
+### 8. Possible errors
+
+No command-specific errors are specified in the User Guide.
+
+### 9. Relevant UI mockup
+
+```text
+Command: help
+
+Result: Message explaining how to access the help page.
+```
+
+### 10. Priority distinctions
+
+#### Must have
+
+Provide access instructions for the help page.
+
+#### Nice to have or later
+
+No additional later scope is specified in the User Guide.
 
 ## Feature 2: Training schedule
 
@@ -1007,181 +1252,6 @@ Store, replace, and display one required target with optional notes per client.
 
 Structured macros, version history, meal templates, partial edits, and suitability checks. The independent restriction list is included in Feature 12.
 
-## Feature 7: Search clients by name
-
-### 1. Feature
-
-Search for clients using all or part of their names.
-
-### 2. Purpose
-
-Lets trainers locate one or more client records without manually scanning the full client list.
-
-### 3. Command format
-
-```text
-find KEYWORD [MORE_KEYWORDS]...
-
-find n/NAME_KEYWORDS
-```
-
-Both forms search names only. At least one nonblank keyword is required. The `n/` form can also be combined with other prefixed search criteria.
-
-### 4. Example commands
-
-```text
-find priya
-
-find priya daniel
-
-find n/priya daniel
-```
-
-### 5. Parameters
-
-| Aspect            | Rule and current behaviour                                                                                                       |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Name keyword      | Each whitespace-separated value is treated as a name keyword.                                                                    |
-| Matching          | A client matches when the client's name contains at least one keyword. Matching ignores letter case and uses substring matching. |
-| Multiple keywords | Keywords are combined using OR. `find priya daniel` matches a name containing `priya` or `daniel`.                               |
-| Prefixed form     | `n/` may appear once and allows the name criterion to be combined with other prefixed criteria using OR.                         |
-| Required value    | At least one nonblank keyword must follow `find`.                                                                                |
-
-### 6. Output
-
-A successful search replaces the displayed client list with the matching clients.
-
-```text
-Found 2 client(s).
-```
-
-When no client matches:
-
-```text
-Found 0 client(s). Use list to show all clients.
-```
-
-### 7. Duplicate handling
-
-Each matching client appears once even if the name matches more than one supplied keyword. The search does not modify any client data.
-
-### 8. Possible errors
-
-**Missing keyword:** `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`
-
-### 9. Relevant UI mockup
-
-```text
-Command: find priya daniel
-
-Clients
-1. Daniel Tan
-2. Priya Nair
-
-Result: Found 2 client(s).
-```
-
-### 10. Priority distinctions
-
-#### Must have
-
-Search names using one or more case-insensitive substring keywords, display each matching client once, and report the result count.
-
-#### Nice to have or later
-
-No additional later scope is specified for this feature in the source.
-
-## Feature 8: Search clients by phone number or email
-
-### 1. Feature
-
-Search for clients using all or part of their phone numbers or email addresses.
-
-### 2. Purpose
-
-Lets trainers retrieve a client when contact information is known but the client's name is not.
-
-### 3. Command format
-
-```text
-find p/PHONE
-
-find e/EMAIL_KEYWORDS
-
-find p/PHONE e/EMAIL_KEYWORDS
-```
-
-The `p/` and `e/` prefixes may each appear at most once. When both are supplied, a client matches either criterion.
-
-### 4. Example commands
-
-```text
-find p/9123-4567
-
-find e/example.com
-
-find p/91234567 e/priya
-```
-
-### 5. Parameters
-
-| Parameter         | Rule and current behaviour                                                                                                             |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Phone `p/`        | Must contain at least one digit. Spaces and hyphens are removed from both the query and stored phone number before substring matching. |
-| Email `e/`        | Accepts one or more whitespace-separated keywords. A client matches when the email contains any keyword, ignoring letter case.         |
-| Empty value       | A supplied `p/` or `e/` value cannot be empty.                                                                                         |
-| Repeated prefix   | Each supported search prefix may appear only once.                                                                                     |
-| Combined criteria | Phone and email criteria are combined using OR. Matching either criterion includes the client.                                         |
-
-### 6. Output
-
-A successful search replaces the displayed client list and reports the number of matches.
-
-```text
-Found 1 client(s).
-```
-
-When no client matches:
-
-```text
-Found 0 client(s). Use list to show all clients.
-```
-
-### 7. Duplicate handling
-
-Phone matching uses the complete supplied `p/` value as one normalized substring query. Email matching treats whitespace-separated values as alternative keywords. A client matching both criteria is displayed only once.
-
-### 8. Possible errors
-
-**Empty search value:** `The p/ search value cannot be empty.` or `The e/ search value cannot be empty.`
-
-**Phone query without a digit:** `Phone search must contain at least one digit.`
-
-**Repeated search prefix:** `The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.`
-
-**Unprefixed text mixed with prefixes:** `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`
-
-### 9. Relevant UI mockup
-
-```text
-Command: find p/9123-4567
-
-Clients
-1. Priya Nair — 91234567
-
-Result: Found 1 client(s).
-```
-
-### 10. Priority distinctions
-
-#### Must have
-
-Search normalized phone substrings and case-insensitive email substrings, combine supplied criteria using OR, and report the result count.
-
-#### Nice to have or later
-
-No additional later scope is specified for this feature in the source.
-
 ## Feature 9: Record each client's fitness goal
 
 ### 1. Feature
@@ -1269,92 +1339,6 @@ The selected client's details display the goal. When no goal is recorded, the go
 #### Must have
 
 Create, replace, clear, validate, persist, display, and search one optional current fitness goal per client. Other client updates preserve the recorded goal.
-
-#### Nice to have or later
-
-No additional later scope is specified for this feature in the source.
-
-## Feature 10: Filter clients by fitness goal
-
-### 1. Feature
-
-Filter the client list using the clients' recorded fitness goals.
-
-### 2. Purpose
-
-Lets trainers find clients who share a goal keyword, such as strength, mobility, or endurance.
-
-### 3. Command format
-
-```text
-find g/GOAL_KEYWORDS
-```
-
-The `g/` prefix may appear at most once. Goal search can be combined with the other supported prefixed search criteria.
-
-### 4. Example commands
-
-```text
-find g/strength
-
-find g/build strength
-
-find n/priya g/mobility
-```
-
-### 5. Parameters
-
-| Aspect            | Rule and current behaviour                                                                                                                                        |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Goal keyword      | The `g/` value is split into whitespace-separated keywords.                                                                                                       |
-| Matching          | A client matches when the current goal contains at least one supplied keyword, ignoring letter case.                                                              |
-| Missing goal      | A client without a recorded goal does not match a goal criterion.                                                                                                 |
-| Combined criteria | Goal and other prefixed criteria are combined using OR. `find n/priya g/mobility` matches a client whose name contains `priya` or whose goal contains `mobility`. |
-| Required value    | A supplied `g/` value cannot be empty.                                                                                                                            |
-
-### 6. Output
-
-The displayed client list is replaced with matching clients.
-
-```text
-Found 3 client(s).
-```
-
-When no client matches:
-
-```text
-Found 0 client(s). Use list to show all clients.
-```
-
-### 7. Duplicate handling
-
-Multiple goal keywords are alternatives. Each matching client appears once even when its goal contains more than one keyword or it also matches another supplied search criterion.
-
-### 8. Possible errors
-
-**Empty goal search:** `The g/ search value cannot be empty.`
-
-**Repeated goal prefix:** `The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.`
-
-**Mixed unprefixed and prefixed search:** `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`
-
-### 9. Relevant UI mockup
-
-```text
-Command: find g/strength
-
-Clients
-1. Priya Nair — Goal: Build strength
-2. Alex Tan — Goal: Improve strength and mobility
-
-Result: Found 2 client(s).
-```
-
-### 10. Priority distinctions
-
-#### Must have
-
-Filter clients by case-insensitive goal substrings, support multiple alternative keywords, and combine goal criteria with other prefixed criteria using OR.
 
 #### Nice to have or later
 
