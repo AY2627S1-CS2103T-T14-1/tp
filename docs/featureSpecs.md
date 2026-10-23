@@ -16,14 +16,14 @@
 - [Feature 4: Workout session logging](#feature-4-workout-session-logging)
 - [Feature 5: Workout history](#feature-5-workout-history)
 - [Feature 6: Diet goals](#feature-6-diet-goals)
-- [Feature 9: Record each client's fitness goal](#feature-9-record-each-clients-fitness-goal)
-- [Feature 11: Health considerations (injuries and physical limitations)](#feature-11-health-considerations-injuries-and-physical-limitations)
-- [Feature 12: Dietary restrictions](#feature-12-dietary-restrictions)
-- [Feature 13: Body progress tracker](#feature-13-body-progress-tracker)
-- [Feature 14: Membership plan](#feature-14-membership-plan)
-- [Feature 15: Advanced scheduling and client monitoring](#feature-15-advanced-scheduling-and-client-monitoring)
-- [Feature 16: Undo and redo](#feature-16-undo-and-redo)
-- [Feature 17: Payment records](#feature-17-payment-records)
+- [Feature 7: Record each client's fitness goal](#feature-7-record-each-clients-fitness-goal)
+- [Feature 8: Health considerations (injuries and physical limitations)](#feature-8-health-considerations-injuries-and-physical-limitations)
+- [Feature 9: Dietary restrictions](#feature-9-dietary-restrictions)
+- [Feature 10: Body progress tracker](#feature-10-body-progress-tracker)
+- [Feature 11: Membership plan](#feature-11-membership-plan)
+- [Feature 12: Advanced scheduling and client monitoring](#feature-12-advanced-scheduling-and-client-monitoring)
+- [Feature 13: Undo and redo](#feature-13-undo-and-redo)
+- [Feature 14: Payment records](#feature-14-payment-records)
 
 ## Feature 1A: Add client
 
@@ -160,7 +160,7 @@ Add, validate, normalize, deduplicate, display, and select a client using requir
 
 #### Nice to have or later
 
-Bulk import, custom identifiers, and tag-based filtering. Health considerations are covered by Feature 11.
+Bulk import, custom identifiers, and tag-based filtering. Health considerations are covered by Feature 8.
 
 ## Feature 1B: Delete client
 
@@ -222,7 +222,7 @@ The index identifies one record, even when names or phones match. The result sho
 
 #### Accidental deletion
 
-Deletion has no confirmation step. In the combined v1.4 scope, shared `undo` can restore a deleted client and all owned data during the current application session (Feature 16). After restart, earlier changes cannot be undone. The User Guide must explain this limit.
+Deletion has no confirmation step. In the combined v1.4 scope, shared `undo` can restore a deleted client and all owned data during the current application session (Feature 13). After restart, earlier changes cannot be undone. The User Guide must explain this limit.
 
 ### 9. Relevant UI mockup
 
@@ -242,7 +242,7 @@ Delete by valid displayed index, remove owned data, and identify the deleted cli
 
 #### Nice to have or later
 
-Confirmation, archiving, and bulk deletion. Shared session-scoped undo is included in Feature 16.
+Confirmation, archiving, and bulk deletion. Shared session-scoped undo is included in Feature 13.
 
 ## Feature 1C: Edit client personal details
 
@@ -281,7 +281,7 @@ edit 2 g/
 | Phone `p/`        | Must contain only digits and be at least 3 digits long.                                                                 |
 | Email `e/`        | Must follow the application's local-part and domain email format.                                                       |
 | Address `a/`      | May contain any value but must not be blank.                                                                            |
-| Goal `g/`         | A nonblank value replaces the goal. An empty `g/` clears it. Nonblank goals follow the fitness-goal rules in Feature 9. |
+| Goal `g/`         | A nonblank value replaces the goal. An empty `g/` clears it. Nonblank goals follow the fitness-goal rules in Feature 7. |
 | Tags `t/`         | Each tag must be alphanumeric. Supplied tags replace the complete tag set; a single empty `t/` clears all tags.         |
 | Repeated prefixes | `n/`, `p/`, `e/`, `a/`, and `g/` may each appear once. Repeat `t/` to supply multiple tags.                             |
 
@@ -391,7 +391,17 @@ Display each matching client once, even if several keywords or criteria match. S
 
 ### 8. Possible errors
 
-A missing keyword, empty prefixed value, phone query without a digit, repeated prefix, or mixed prefixed and unprefixed text is rejected without changing the displayed list. Use the corresponding `find` error message for the invalid input.
+**Missing keyword:** `Search keyword is required. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`
+
+**Empty prefixed value:** Report `The p/ search value cannot be empty.`, `The e/ search value cannot be empty.`, or `The g/ search value cannot be empty.` for the corresponding criterion.
+
+**Phone query without a digit:** `Phone search must contain at least one digit.`
+
+**Repeated prefix:** `The n/, p/, e/, g/, dr/ and h/ prefixes may each be used only once.`
+
+**Mixed unprefixed and prefixed text:** `Invalid command format. Use: find KEYWORD... or find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`
+
+Reject invalid searches without changing the displayed list.
 
 ### 9. Relevant UI mockup
 
@@ -657,11 +667,11 @@ Training sessions for Priya Nair:
 
 If no sessions have been saved, the result is `No training sessions saved for Priya Nair.` The index in either command must refer to a client in the current displayed list.
 
-In the combined v1.4 scope, `viewschedule` also includes meetings and identifies appointment types (Feature 15). Legacy appointments without a type load as training.
+In the combined v1.4 scope, `viewschedule` also includes meetings and identifies appointment types (Feature 12). Legacy appointments without a type load as training.
 
 ### 7. Duplicate handling
 
-In the combined v1.4 scope, reject an appointment if any client already has a training session or meeting at the same date and start time, including the selected client. Report `Scheduling conflict: NAME already has an appointment at YYYY-MM-DD HH:mm.` and change nothing. Different start times remain allowed because durations are not stored. Feature 15 defines the shared check. Appointment editing and deletion remain later scope.
+In the combined v1.4 scope, reject an appointment if any client already has a training session or meeting at the same date and start time, including the selected client. Report `Scheduling conflict: NAME already has an appointment at YYYY-MM-DD HH:mm.` and change nothing. Different start times remain allowed because durations are not stored. Feature 12 defines the shared check. Appointment editing and deletion remain later scope.
 
 ### 8. Possible errors
 
@@ -688,7 +698,7 @@ Record multiple dated sessions per client and view them in date/time order. Pres
 
 #### Nice to have or later
 
-Calendar layout, reminders, recurring sessions, durations and interval-overlap detection, and edit/delete commands. Exact start-time conflict detection and the daily agenda are included in Feature 15.
+Calendar layout, reminders, recurring sessions, durations and interval-overlap detection, and edit/delete commands. Exact start-time conflict detection and the daily agenda are included in Feature 12.
 
 ## Feature 3: Workout plan management
 
@@ -1136,7 +1146,7 @@ Record or replace a client's current diet goals: one nutrition target and option
 
 ### 2. Purpose
 
-Stores one current nutrition target and optional notes per client. Dietary restrictions are stored independently under Feature 12.
+Stores one current nutrition target and optional notes per client. Dietary restrictions are stored independently under Feature 9.
 
 The feature name is **Diet goals**. The existing `diet` command and its feedback retain the term "diet plan"; the output and error examples below quote that wording exactly. This name change does not introduce multiple target records or a history of diet goals.
 
@@ -1156,7 +1166,7 @@ diet 2 t/1800 kcal per day, 120 g protein n/Prioritise lean protein and vegetabl
 diet 3 t/2000 kcal per day n/Halal meals only; avoid shellfish
 ```
 
-The final example remains valid free-text coaching content. Record searchable restrictions separately using Feature 12; diet notes do not populate that restriction list.
+The final example remains valid free-text coaching content. Record searchable restrictions separately using Feature 9; diet notes do not populate that restriction list.
 
 **Parsing rule:** Parameter prefixes such as `t/` and `n/` are recognized only at the beginning of an argument or after whitespace. A slash within a value, such as `kcal/day`, is treated as ordinary text.
 
@@ -1224,7 +1234,7 @@ Different diet goals replace the current target and notes.
 
 **Unsupported restrictions prefix:** Invalid command format. Use: `diet INDEX t/TARGET [n/NOTES]`
 
-The `diet` command does not accept a restrictions prefix. Use `restriction` (Feature 12) to manage the separate restriction list.
+The `diet` command does not accept a restrictions prefix. Use `restriction` (Feature 9) to manage the separate restriction list.
 
 #### Medical suitability
 
@@ -1250,9 +1260,9 @@ Store, replace, and display one required target with optional notes per client.
 
 #### Nice to have or later
 
-Structured macros, version history, meal templates, partial edits, and suitability checks. The independent restriction list is included in Feature 12.
+Structured macros, version history, meal templates, partial edits, and suitability checks. The independent restriction list is included in Feature 9.
 
-## Feature 9: Record each client's fitness goal
+## Feature 7: Record each client's fitness goal
 
 ### 1. Feature
 
@@ -1344,7 +1354,7 @@ Create, replace, clear, validate, persist, display, and search one optional curr
 
 No additional later scope is specified for this feature in the source.
 
-## Feature 11: Health considerations (injuries and physical limitations)
+## Feature 8: Health considerations (injuries and physical limitations)
 
 ### 1. Feature
 
@@ -1445,7 +1455,7 @@ This feature is described as implemented in the client-profile source.
 
 Dated medical history, structured injury categories, severity, clinician details, attachments, treatment recommendations, and automated exercise warnings.
 
-## Feature 12: Dietary restrictions
+## Feature 9: Dietary restrictions
 
 ### 1. Feature
 
@@ -1548,7 +1558,7 @@ This feature is described as implemented in the client-profile source.
 
 Restriction categories, severity, expiry dates, meal validation, nutritional guidance, and historical changes.
 
-## Feature 13: Body progress tracker
+## Feature 10: Body progress tracker
 
 ### 1. Feature
 
@@ -1650,7 +1660,7 @@ No baseline: use the same missing-baseline message as history. Baseline only: `N
 
 #### Corrections: `bodydelete`
 
-Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion has no confirmation step. Once Feature 16 is integrated, deletion will participate in shared session-scoped undo/redo; after restart, that history will be unavailable. Until that integration is merged, deletion cannot be undone through an application command.
+Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion has no confirmation step. Once Feature 13 is integrated, deletion will participate in shared session-scoped undo/redo; after restart, that history will be unavailable. Until that integration is merged, deletion cannot be undone through an application command.
 
 Success: `Deleted body progress for NAME on DATE.` Deleting the last entry retains the baseline and produces empty history/comparison states. There is no command to delete only the baseline; it can be corrected by replacement.
 
@@ -1698,9 +1708,9 @@ all four assigned capabilities and the correction/deletion paths above; strict v
 
 #### Nice to have or later
 
-circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. Shared application-wide undo/redo is specified under Feature 16 and depends on that feature's integration. These are not needed to complete this v1.4 feature.
+circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. Shared application-wide undo/redo is specified under Feature 13 and depends on that feature's integration. These are not needed to complete this v1.4 feature.
 
-## Feature 14: Membership plan
+## Feature 11: Membership plan
 
 ### 1. Feature
 
@@ -1910,9 +1920,9 @@ Create, view, and delete uniquely named plans with a price and 1 to 1000 startin
 
 #### Nice to have or later
 
-Edit plan definitions, replace an assignment without first removing it, preserve unused sessions on renewal, automatic deductions from workout logs, renewal history, and expiry enforcement and alerts. Payment records are covered by Feature 17.
+Edit plan definitions, replace an assignment without first removing it, preserve unused sessions on renewal, automatic deductions from workout logs, renewal history, and expiry enforcement and alerts. Payment records are covered by Feature 14.
 
-## Feature 15: Advanced scheduling and client monitoring
+## Feature 12: Advanced scheduling and client monitoring
 
 ### 1. Feature
 
@@ -1933,7 +1943,7 @@ meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION
 schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION
 ```
 
-`schedule` is the existing training appointment command (Feature 2); Feature 15 adds the shared start-time conflict rule. `viewschedule INDEX` continues to show one client's appointments, including meetings.
+`schedule` is the existing training appointment command (Feature 2); Feature 12 adds the shared start-time conflict rule. `viewschedule INDEX` continues to show one client's appointments, including meetings.
 
 ### 4. Example commands
 
@@ -2010,7 +2020,7 @@ The four commands and behaviors above: full-roster inactivity and day views, dat
 
 Appointment durations and overlap detection, recurring meetings, reminders, calendar layout, and edit/delete appointment commands.
 
-## Feature 16: Undo and redo
+## Feature 13: Undo and redo
 
 ### 1. Feature
 
@@ -2109,7 +2119,7 @@ Complete saved-address-book snapshots; single-step and repeated undo/redo; norma
 
 Cross-session undo/redo history is outside the current session-only contract. No other later capabilities are specified in the source.
 
-## Feature 17: Payment records
+## Feature 14: Payment records
 
 ### 1. Feature
 
@@ -2187,7 +2197,7 @@ Result: Recorded payment for Priya Nair: 150.00 on 2026-10-20.
 
 #### Must have
 
-Add, validate, persist, and display all payment records for a client, including optional remarks. Load older client data with no payment field as an empty payment history. A successful `pay` is one data change for Feature 16's undo and redo.
+Add, validate, persist, and display all payment records for a client, including optional remarks. Load older client data with no payment field as an empty payment history. A successful `pay` is one data change for Feature 13's undo and redo.
 
 #### Nice to have or later
 
