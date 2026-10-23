@@ -62,6 +62,9 @@ public class ResultDisplayTest {
             CommandFeedback feedback = display.getFeedbackEntries().get(0);
             assertEquals(CommandFeedback.Kind.INFO, feedback.kind());
             assertTrue(feedback.details().stream().anyMatch(line -> line.startsWith("schedule")));
+            assertTrue(feedback.details().stream().anyMatch(line -> line.startsWith("meeting")));
+            assertTrue(feedback.details().stream().anyMatch(line -> line.startsWith("dayschedule")));
+            assertTrue(feedback.details().stream().anyMatch(line -> line.startsWith("inactive")));
             assertTrue(feedback.details().stream().anyMatch(line -> line.startsWith("restriction")));
             assertTrue(feedback.details().stream().anyMatch(line -> line.startsWith("dayex")));
             return null;

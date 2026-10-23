@@ -131,6 +131,21 @@ public class WorkoutSessionDisplayTest {
     }
 
     @Test
+    public void meeting_isIdentifiedInClientAppointmentCard() throws Exception {
+        runOnFxThread(() -> {
+            Person person = new PersonBuilder().build()
+                    .withTrainingSession(new TrainingSession(
+                            LocalDateTime.of(2099, 3, 15, 15, 30), "Cafe", TrainingSession.Kind.MEETING));
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(person, 1);
+
+            assertEquals(List.of("SUN", "15", "MAR", "Cafe", "Next meeting", "15:30"),
+                    labelTexts(vbox(panel, "sessionRows").getChildren().getFirst()));
+            return null;
+        });
+    }
+
+    @Test
     public void completedWorkouts_areNewestFirstAndKeepAllEntries() throws Exception {
         runOnFxThread(() -> {
             WorkoutSession older = new WorkoutSession(LocalDate.of(2020, 1, 14),

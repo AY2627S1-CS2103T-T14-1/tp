@@ -12,6 +12,7 @@ import seedu.address.logic.commands.BodyHistoryCommand;
 import seedu.address.logic.commands.BodyLogCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.ClearPlanCommand;
+import seedu.address.logic.commands.DayScheduleCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.DietCommand;
@@ -23,8 +24,10 @@ import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.HistoryCommand;
+import seedu.address.logic.commands.InactiveCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.LogCommand;
+import seedu.address.logic.commands.MeetingCommand;
 import seedu.address.logic.commands.PayCommand;
 import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemarkCommand;
@@ -58,6 +61,9 @@ final class CommandCatalog {
             new Entry(RemarkCommand.COMMAND_WORD, RemarkCommand.MESSAGE_USAGE),
             new Entry(ScheduleCommand.COMMAND_WORD, ScheduleCommand.MESSAGE_USAGE),
             new Entry(ViewScheduleCommand.COMMAND_WORD, ViewScheduleCommand.MESSAGE_USAGE),
+            new Entry(MeetingCommand.COMMAND_WORD, MeetingCommand.MESSAGE_USAGE),
+            new Entry(DayScheduleCommand.COMMAND_WORD, DayScheduleCommand.MESSAGE_USAGE),
+            new Entry(InactiveCommand.COMMAND_WORD, InactiveCommand.MESSAGE_USAGE),
             new Entry(AddExerciseCommand.COMMAND_WORD, AddExerciseCommand.MESSAGE_USAGE),
             new Entry(DeleteExerciseCommand.COMMAND_WORD, DeleteExerciseCommand.MESSAGE_USAGE),
             new Entry(ClearPlanCommand.COMMAND_WORD, ClearPlanCommand.MESSAGE_USAGE),

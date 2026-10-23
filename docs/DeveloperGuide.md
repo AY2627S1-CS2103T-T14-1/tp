@@ -171,6 +171,16 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Training schedule and client monitoring (`schedule` / `viewschedule` / `meeting` / `dayschedule` / `inactive`)
+
+Each `Person` stores an immutable list of `TrainingSession` appointments. A session contains a `LocalDateTime`, a nonblank location, and a `Kind` of `TRAINING` or `MEETING`. `Person#withTrainingSession` returns a replacement person with the new appointment appended; the commands do not mutate the existing person. `JsonAdaptedTrainingSession` persists the appointment type alongside its date, time, and location. For compatibility with older saved data, a missing type is read as `TRAINING`.
+
+`ScheduleCommandParser` and `MeetingCommandParser` use `AppointmentParser` to validate the displayed-list index, real calendar date, 24-hour time, nonblank location, and a start time later than the current local time. Their commands delegate to `AppointmentScheduler#add`. It searches the **entire** address book, including clients hidden by a filter, for an appointment with the same start time. If one exists, it reports the conflicting client and makes no change. Otherwise, it replaces the selected client with one containing the new appointment. Training sessions and meetings use the same conflict check. Because no duration is stored, appointments at different start times can still overlap in practice.
+
+`ViewScheduleCommand` sorts one displayed client's appointments by start time; meetings are marked in the result. `DayScheduleCommand` instead scans all clients for the requested date, then orders appointments by start time and client name. Both commands are read-only. `InactiveCommand` also scans the full roster: for `inactive DAYS`, it calculates `today - (DAYS - 1)` and lists clients with no **completed workout log** on or after that date. A scheduled session or meeting does not count as a workout. The inactive list is ordered by client name and includes the latest recorded workout date, if any. `ClientContextPanel` labels meeting rows separately from training sessions, and `CommandCatalog` supplies usage hints for all five scheduling and monitoring commands.
+
+To verify the main path manually, add two clients; use `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`, then `meeting 2 d/2099-03-15 tm/15:30 l/Cafe`. `dayschedule d/2099-03-15` should list both in time order, and `viewschedule 2` should mark the second as a meeting. Scheduling either client at `14:30` again should report a conflict without adding an appointment. `inactive 1` should still list both clients until a completed workout is logged for them.
+
 ### Workout plan feature (`addex` / `delex` / `dayex` / `clearplan`)
 
 The workout plan feature lets a trainer keep a per-client list of prescribed exercises, optionally scheduled by weekday. Each `Person` owns one immutable `WorkoutPlan` (possibly empty); each `Exercise` is immutable and validated at construction. Plans are always kept sorted Monday-to-Sunday, with unscheduled exercises last.
