@@ -29,6 +29,8 @@ public final class UniversalLauncher {
         List<URL> libraries = extractLibraries(archive, directory, platform);
         // This loader must stay open while JavaFX is running: resources and classes load lazily.
         URLClassLoader loader = new URLClassLoader(libraries.toArray(URL[]::new), ClassLoader.getPlatformClassLoader());
+        // Configure application assertions before any application classes are initialized.
+        loader.setPackageAssertionStatus("seedu.address", true);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> closeLoader(loader), "fittix-runtime-cleanup"));
         Thread.currentThread().setContextClassLoader(loader);
         try {

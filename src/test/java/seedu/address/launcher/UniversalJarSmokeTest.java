@@ -1,5 +1,7 @@
 package seedu.address.launcher;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
@@ -69,14 +71,46 @@ public final class UniversalJarSmokeTest {
             try {
                 List<?> windows = new ArrayList<>((List<?>) window.getMethod("getWindows").invoke(null));
                 if (!windows.isEmpty()) {
-                    for (Object stage : windows) {
-                        window.getMethod("hide").invoke(stage);
+                    try {
+                        verifyApplicationAssertions(loader);
+                    } finally {
+                        for (Object stage : windows) {
+                            window.getMethod("hide").invoke(stage);
+                        }
+                        windowShown.countDown();
                     }
-                    windowShown.countDown();
                 }
-            } catch (ReflectiveOperationException exception) {
+            } catch (ReflectiveOperationException | AssertionError exception) {
                 failure.set(exception);
             }
         });
+    }
+
+    private static void verifyApplicationAssertions(ClassLoader loader) throws ReflectiveOperationException {
+        for (String name : List.of("seedu.address.Main", "seedu.address.MainApp",
+                "seedu.address.logic.Messages", "seedu.address.logic.commands.EditCommand",
+                "seedu.address.logic.parser.EditCommandParser")) {
+            if (!Class.forName(name, false, loader).desiredAssertionStatus()) {
+                throw new AssertionError("Application assertions are disabled for " + name);
+            }
+        }
+        if (Class.forName("javafx.application.Platform", false, loader).desiredAssertionStatus()) {
+            throw new AssertionError("The release should enable assertions only for application packages");
+        }
+
+        Class<?> messages = Class.forName("seedu.address.logic.Messages", true, loader);
+        Class<?> prefix = Class.forName("seedu.address.logic.parser.Prefix", false, loader);
+        Object emptyPrefixes = Array.newInstance(prefix, 0);
+        try {
+            messages.getMethod("getErrorMessageForDuplicatePrefixes", emptyPrefixes.getClass())
+                    .invoke(null, emptyPrefixes);
+        } catch (InvocationTargetException exception) {
+            if (exception.getCause() instanceof AssertionError) {
+                System.out.println("Application assertion verified: empty duplicate prefixes caused AssertionError.");
+                return;
+            }
+            throw exception;
+        }
+        throw new AssertionError("The application skipped an existing Java assert statement");
     }
 }
