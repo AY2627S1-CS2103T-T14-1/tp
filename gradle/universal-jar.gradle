@@ -60,3 +60,11 @@ tasks.register('universalJarSmokeTest', JavaExec) {
         workingDir.mkdirs()
     }
 }
+
+// Include the real release-launch process in the coverage report uploaded by CI.
+def releaseSmokeTest = tasks.named('universalJarSmokeTest').get()
+jacoco.applyTo(releaseSmokeTest)
+tasks.named('coverage', JacocoReport) {
+    dependsOn releaseSmokeTest
+    executionData releaseSmokeTest
+}
