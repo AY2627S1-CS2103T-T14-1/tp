@@ -172,7 +172,11 @@ public class ClientContextPanel extends UiPart<Region> {
         Label location = new Label(session.getLocation());
         location.getStyleClass().add("session-location");
         location.setWrapText(true);
-        Label status = new Label(past ? "Past" : next ? "Next session" : "Upcoming");
+        boolean meeting = session.getKind() == TrainingSession.Kind.MEETING;
+        String statusText = past ? (meeting ? "Past meeting" : "Past")
+                : next ? (meeting ? "Next meeting" : "Next session")
+                : (meeting ? "Upcoming meeting" : "Upcoming");
+        Label status = new Label(statusText);
         status.getStyleClass().add("session-status");
         VBox details = new VBox(3, location, status);
 

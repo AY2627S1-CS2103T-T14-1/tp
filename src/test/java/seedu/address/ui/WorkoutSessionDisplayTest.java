@@ -131,6 +131,50 @@ public class WorkoutSessionDisplayTest {
     }
 
     @Test
+    public void meeting_isIdentifiedInClientAppointmentCard() throws Exception {
+        runOnFxThread(() -> {
+            Person person = new PersonBuilder().build()
+                    .withTrainingSession(new TrainingSession(
+                            LocalDateTime.of(2099, 3, 15, 15, 30), "Cafe", TrainingSession.Kind.MEETING));
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(person, 1);
+
+            assertEquals(List.of("SUN", "15", "MAR", "Cafe", "Next meeting", "15:30"),
+                    labelTexts(vbox(panel, "sessionRows").getChildren().getFirst()));
+            return null;
+        });
+    }
+
+    @Test
+    public void meetings_showPastNextAndUpcomingStatuses() throws Exception {
+        runOnFxThread(() -> {
+            Person person = new PersonBuilder().build()
+                    .withTrainingSession(new TrainingSession(
+                            LocalDateTime.of(2020, 1, 15, 18, 0), "Old cafe", TrainingSession.Kind.MEETING))
+                    .withTrainingSession(new TrainingSession(
+                            LocalDateTime.of(2099, 3, 15, 15, 30), "Cafe", TrainingSession.Kind.MEETING))
+                    .withTrainingSession(new TrainingSession(
+                            LocalDateTime.of(2099, 3, 16, 16, 0), "Office", TrainingSession.Kind.MEETING))
+                    .withTrainingSession(new TrainingSession(
+                            LocalDateTime.of(2099, 3, 17, 17, 0), "Main gym"));
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(person, 1);
+            VBox rows = vbox(panel, "sessionRows");
+
+            assertEquals(4, rows.getChildren().size());
+            assertEquals(List.of("WED", "15", "JAN", "Old cafe", "Past meeting", "18:00"),
+                    labelTexts(rows.getChildren().get(0)));
+            assertEquals(List.of("SUN", "15", "MAR", "Cafe", "Next meeting", "15:30"),
+                    labelTexts(rows.getChildren().get(1)));
+            assertEquals(List.of("MON", "16", "MAR", "Office", "Upcoming meeting", "16:00"),
+                    labelTexts(rows.getChildren().get(2)));
+            assertEquals(List.of("TUE", "17", "MAR", "Main gym", "Upcoming", "17:00"),
+                    labelTexts(rows.getChildren().get(3)));
+            return null;
+        });
+    }
+
+    @Test
     public void completedWorkouts_areNewestFirstAndKeepAllEntries() throws Exception {
         runOnFxThread(() -> {
             WorkoutSession older = new WorkoutSession(LocalDate.of(2020, 1, 14),

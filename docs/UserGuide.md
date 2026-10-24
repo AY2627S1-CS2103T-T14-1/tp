@@ -12,17 +12,17 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 
 ## Quick start
 
-1. Ensure that Java `25` or later is installed on your computer.<br>
+1. Ensure that Java `25` is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download **`fittix-v1.jar`** from the **Assets** section of the [Fittix release](https://github.com/AY2627S1-CS2103T-T14-1/tp/releases/latest). The same JAR supports Windows x64, macOS Intel or Apple silicon, and Linux x64 or ARM64.
+1. Download the JAR from the **Assets** section of the [latest Fittix release](https://github.com/AY2627S1-CS2103T-T14-1/tp/releases/latest). For v1.4, the file is named **`fittix-v1.4.jar`**. The same JAR supports Windows x64, macOS Intel or Apple silicon, and Linux x64 or ARM64.
 
 1. Copy the file to a folder where you have write permission. Use this folder as your Fittix _home folder_.
 
-1. Open a terminal, `cd` to that folder, and run `java -jar fittix-v1.jar`.<br>
+1. Open a terminal, `cd` to that folder, and run `java -jar fittix-v1.4.jar` (replace the filename if you downloaded a newer release).<br>
    Fittix saves its `data` folder and `preferences.json` in the terminal's current folder. Always start it from the same home folder to use the same client records.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
-   ![Ui](images/Ui.png)
+   ![Fittix v1.4 running with sample client data](images/FittixActualV14.jpg)
 
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
@@ -73,7 +73,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 
 Shows a message explaining how to access the help page.
 
-![help message](images/helpMessage.png)
+![Fittix v1.4 help window showing the User Guide link](images/HelpActualV14.jpg)
 
 Format: `help`
 
@@ -125,7 +125,7 @@ Format: `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
 
 Example: `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
 
-The meeting appears in `viewschedule` and `dayschedule`. A meeting cannot use a start time already occupied by any client's training session or meeting.
+The meeting appears in `viewschedule` and `dayschedule`. The selected client's Schedule card identifies a meeting as a **Next meeting**, **Upcoming meeting**, or **Past meeting**. A meeting cannot use a start time already occupied by any client's training session or meeting.
 
 ### Viewing all appointments on a day: `dayschedule`
 
