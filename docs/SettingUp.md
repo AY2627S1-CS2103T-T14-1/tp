@@ -22,6 +22,7 @@ If you plan to use IntelliJ IDEA (highly recommended):
 1. **Configure the JDK**: Follow the guide [_[se-edu/guides] IDEA: Configuring the JDK_](https://se-education.org/guides/tutorials/intellijJdk.html) to ensure IntelliJ is configured to use **JDK 25**.
 1. **Import the project as a Gradle project**: Follow the guide [_[se-edu/guides] IDEA: Importing a Gradle project_](https://se-education.org/guides/tutorials/intellijImportGradleProject.html) to import the project into IDEA.<br>
   :exclamation: Note: Importing a Gradle project is slightly different from importing a normal Java project.
+1. **Enable assertions for direct IDEA runs**: If running `seedu.address.Main` directly, add `-ea` under **Run > Edit Configurations > Modify options > Add VM options**. See the [IDEA assertion guide](https://se-education.org/guides/tutorials/intellijUsefulSettings.html#enabling-assertions). Running through `gradlew run` already enables assertions. The universal release JAR enables assertions for Fittix's application packages automatically, including when started with `java -jar`.
 1. **Verify the setup**:
    1. Run `seedu.address.Main` and try a few commands.
    1. [Run the tests](Testing.md) to ensure they all pass.

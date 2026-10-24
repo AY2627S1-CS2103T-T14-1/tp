@@ -52,6 +52,8 @@ tasks.register('universalJarSmokeTest', JavaExec) {
     dependsOn tasks.named('universalJar'), tasks.named('testClasses')
     classpath = files(sourceSets.test.output)
     mainClass = 'seedu.address.launcher.UniversalJarSmokeTest'
+    // The release must enable its own application assertions without relying on the caller's JVM flags.
+    jvmArgs '-da'
     args tasks.named('universalJar').flatMap { it.archiveFile }.get().asFile.absolutePath
     workingDir = layout.buildDirectory.dir('universal-smoke').get().asFile
     doFirst {
