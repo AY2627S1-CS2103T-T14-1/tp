@@ -3,6 +3,7 @@ package seedu.address.ui;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.Locale;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -16,7 +17,8 @@ import seedu.address.model.person.TrainingSession;
 public class PersonCard extends UiPart<Region> {
 
     private static final String FXML = "PersonListCard.fxml";
-    private static final DateTimeFormatter NEXT_SESSION_FORMAT = DateTimeFormatter.ofPattern("EEE d MMM");
+    private static final DateTimeFormatter NEXT_SESSION_FORMAT =
+            DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH);
 
     public final Person person;
 

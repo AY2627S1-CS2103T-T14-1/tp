@@ -107,7 +107,7 @@ Adds a future training session to the client at the displayed index. Sessions ar
 
 Format: `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
 
-The date and 24-hour time must be valid and in the future, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client. Fittix rejects an appointment when another client already has a training session or meeting at the same start time.
+The date and 24-hour time must be valid and in the future, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client. Fittix rejects an appointment when any client, including the selected client, already has a training session or meeting at the same start time.
 
 ### Viewing a client's training sessions: `viewschedule`
 
