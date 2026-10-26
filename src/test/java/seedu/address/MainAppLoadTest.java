@@ -55,6 +55,7 @@ public class MainAppLoadTest {
         app.stop();
 
         assertTrue(exception.getMessage().contains("protect the existing file"));
+        assertTrue(exception.getMessage().contains(dataFile.toString()));
         assertArrayEquals(original, Files.readAllBytes(dataFile));
     }
 
