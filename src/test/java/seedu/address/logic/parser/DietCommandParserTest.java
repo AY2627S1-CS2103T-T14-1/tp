@@ -45,7 +45,7 @@ public class DietCommandParserTest {
     public void parse_duplicateOrUnknownPrefix_rejectsInput() {
         assertParseFailure(parser, "1 t/1800 kcal t/2000 kcal", DietCommand.MESSAGE_REPEATED_PREFIX);
         assertParseFailure(parser, "1 t/1800 kcal n/Lean n/Vegetables", DietCommand.MESSAGE_REPEATED_PREFIX);
-        for (String prefix : new String[] {"r/", "x/", "T/", "a/"}) {
+        for (String prefix : new String[] {"r/", "x/", "T/", "a/", "nn/", "tt/", "ad/"}) {
             assertParseFailure(parser, "1 t/1800 kcal " + prefix + "extra", DietCommand.MESSAGE_INVALID_FORMAT);
         }
     }
@@ -81,4 +81,10 @@ public class DietCommandParserTest {
     public void parse_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> parser.parse(null));
     }
+    @Test
+    public void parse_mistypedNotesPrefix_rejectsInEitherOrder() {
+        assertParseFailure(parser, "1 t/2000 kcal nn/Include vegetables", DietCommand.MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 nn/Include vegetables t/2000 kcal", DietCommand.MESSAGE_INVALID_FORMAT);
+    }
+
 }

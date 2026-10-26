@@ -99,4 +99,11 @@ public class MembershipNameTest {
     public void toString_returnsDisplayValue() {
         assertEquals("Gold Plus", new MembershipName("Gold Plus").toString());
     }
+    @Test
+    public void isValidMembershipName_asciiOnlyRestrictionIsExplicit() {
+        assertTrue(MembershipName.isValidMembershipName("Elite"));
+        assertFalse(MembershipName.isValidMembershipName("Élite"));
+        assertTrue(MembershipName.MESSAGE_CONSTRAINTS.contains("ASCII letters"));
+    }
+
 }

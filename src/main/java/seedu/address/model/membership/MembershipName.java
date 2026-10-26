@@ -17,7 +17,7 @@ import java.util.Locale;
 public class MembershipName {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Membership plan name must contain 1 to 50 characters and may contain only letters, digits, "
+            "Membership plan name must contain 1 to 50 characters and may contain only ASCII letters, digits, "
                     + "spaces, apostrophes, hyphens, and full stops.";
 
     public static final int MAX_LENGTH = 50;

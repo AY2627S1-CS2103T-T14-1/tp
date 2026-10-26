@@ -153,6 +153,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 
 * Edits the client at the specified `INDEX`. The index refers to the index number shown in the displayed client list. The index must be a positive whole number; leading zeros are accepted.
 * At least one field must be provided.
+* One- or two-letter markers followed by `/` at an argument boundary are reserved for parameters. Unsupported markers such as `ad/` or `gg/` are rejected rather than stored inside another value. Use `a/` for the address. A slash embedded in a token such as `10km/day` remains ordinary text.
 * Existing values will be updated to the input values.
 * `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags.
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
@@ -187,6 +188,8 @@ The `diet` command's feedback still calls this record a "diet plan". The message
 
 Format: `diet INDEX t/TARGET [n/NOTES]`
 
+One- or two-letter parameter markers are reserved at argument boundaries. Mistyped markers such as `nn/` are rejected without changing the previous target or notes. Ordinary slash-containing words such as `kcal/day` remain valid.
+
 * `INDEX` is the positive whole-number index shown in the **current** client list. For example, after `find Priya`, `diet 1 ...` updates the first displayed search result. Leading zeros are accepted; `0`, negative numbers, signs, decimals, and indices outside the displayed list are rejected.
 * `TARGET` is required. After trimming outer whitespace, it must contain 1 to 200 printable characters and at least one letter or digit. Numbers, units, punctuation, internal spaces, and letter case are preserved. Line breaks and control characters are rejected.
 * `NOTES` is optional. If `n/` is supplied, its value must contain 1 to 300 printable characters after trimming. A blank `n/` is invalid; omit `n/` when no notes are needed. Internal spacing and case are preserved, and line breaks and control characters are rejected.
@@ -216,7 +219,7 @@ On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan 
 | Same current diet goals | `This is already the current diet plan for NAME.` |
 | Saving fails | `The diet plan could not be saved. The previous plan remains unchanged.` |
 
-Invalid commands and failed saves leave the previous diet goals unchanged. Deleting a client permanently removes that client's diet goals along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
+Invalid commands and failed saves leave the previous diet goals unchanged. Deleting a client removes their diet goals with the client record. Shared [undo](#undo-redo) can recover the deletion while its change remains in the current session's 50-step history; recovery through that history is unavailable after restart or once the step is discarded. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
 
 ### Recording dietary restrictions: `restriction`
 
@@ -486,7 +489,7 @@ Exercise values must satisfy these rules:
 
 | Value | Accepted input |
 | --- | --- |
-| `EXERCISE` | 1 to 50 characters, including at least one letter. Only letters, digits, spaces, hyphens, apostrophes, and parentheses are allowed. |
+| `EXERCISE` | 1 to 50 characters after Unicode NFC normalization, including at least one letter. Only letters, digits, spaces, hyphens, apostrophes, and parentheses are allowed. Canonically equivalent accented spellings are stored in the same normalized form. |
 | `WEIGHT` | A number from 0 to 1000, inclusive, in kilograms, with at most 2 decimal places. Enter the number without a unit, for example `40.25`. |
 | `SETS` | A whole number from 1 to 100, inclusive. |
 | `REPS` | A whole number from 1 to 1000, inclusive. |
@@ -549,7 +552,7 @@ Format: `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`
 
 Example: `addmem n/Gold Plus p/150.50 s/30`
 
-Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The stored name keeps the case you entered, but the plan list and client card render its first character in upper case, so a plan entered as `gold` is shown as `Gold`. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
+Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: ASCII letters (`A-Z`, `a-z`), digits (`0-9`), spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The stored name keeps the case you entered, but the plan list and client card render its first character in upper case, so a plan entered as `gold` is shown as `Gold`. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
 
 Format: `view mem` or `view membership`
 
@@ -683,7 +686,7 @@ Format: `bodydelete INDEX d/DATE`
 
 Example: `bodydelete 1 d/2020-01-15`
 
-Deletes only the progress entry on that date for that client. **Deletion is permanent in the v1.4 tracker, with no confirmation step.** The baseline and all other entries remain. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
+Deletes only the progress entry on that date for that client. **There is no confirmation step.** Shared [undo](#undo-redo) can restore the deleted entry while this change remains in the current session's 50-step history. Recovery through that history is unavailable after restart or once the step is discarded. The baseline and all other entries remain. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
 
 Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest entry makes the next greatest date the latest. Deleting the last entry keeps the baseline and restores the no-progress view. `bodydelete` cannot delete a baseline; use `bodybase` to correct it.
 
@@ -714,7 +717,7 @@ Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest ent
 
 Invalid mutations and failed saves leave all previous data unchanged. Successful changes select the affected client and refresh their details after saving. Baseline, weights and notes survive restarting the app; data files created before this feature load with no body tracker. A wrong local clock can cause date validation/loading failures, so check it before entering or opening dated records.
 
-Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` permanently removes their body records with the client. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
+Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` removes body records with the client. Shared [undo](#undo-redo) can restore these records while the change remains in the current session's 50-step history; restarting or discarding the step removes that recovery route. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
 
 ### Recording a client payment: `pay`
 
@@ -749,6 +752,8 @@ Common errors:
 | Saving fails | `Payment could not be saved. No payment was recorded.` |
 
 A failed command adds no payment to saved or in-memory data and creates no undo step.
+
+<a id="undo-redo"></a>
 
 ### Undoing and redoing changes: `undo`, `redo`
 
@@ -791,12 +796,18 @@ Workout exercises, their sets, reps, weight, and assigned weekdays are restored 
 
 Membership plans and each client's plan name, remaining sessions, and expiry date are restored the same way. An assignment whose expiry date has passed is still shown so you can act on it.
 
+### If saved client data cannot be loaded
+
+Fittix stops startup if an existing client data file cannot be read or validated. It does not open an empty roster that could overwrite the original file. The terminal error identifies the file and explains that startup stopped to protect it.
+
+Before changing anything, back up the file. Check the computer's date and time zone: a workout recorded as today in one time zone can appear future-dated in another. Correct the settings or restore a known valid backup, then restart. A missing data file still starts with sample clients. Use a separate empty folder if you need a fresh test session; keep the original file intact for recovery.
+
 ### Editing the data file
 
 AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
-If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
+If your changes make the data file invalid, Fittix stops startup and leaves that file untouched. Restore a valid backup or correct the invalid data before restarting. Always back up the file before editing it.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
