@@ -15,10 +15,10 @@ import seedu.address.model.person.DietPlan;
 
 /**
  * Parses diet plans without treating slashes inside words, such as kcal/day, as prefixes.
- * One- or two-letter prefix tokens at argument boundaries are reserved; only t/ and n/ are supported.
+ * Single-letter prefix tokens at argument boundaries are reserved; only t/ and n/ are supported.
  */
 public class DietCommandParser implements Parser<DietCommand> {
-    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|[\\p{Zs}\\t]+)([A-Za-z]{1,2})/");
+    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?:^|[\\p{Zs}\\t]+)([A-Za-z])/");
 
     @Override
     public DietCommand parse(String args) throws ParseException {

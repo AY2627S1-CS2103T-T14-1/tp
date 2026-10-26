@@ -25,6 +25,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
@@ -217,6 +218,38 @@ public class WorkoutSessionDisplayTest {
                         "Bench press · 3 × 8 · 40.25 kg"), labelTexts(rows.getChildren().get(1)));
                 assertEquals(List.of("✓", "3. Wed 15 Jan 2020", "00:00",
                         "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(2)));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void completedWorkouts_narrowContext_showsFullDatesAndTimes() throws Exception {
+        runOnFxThread(() -> {
+            Font.loadFont(ClientContextPanel.class.getResource("/fonts/Manrope-Regular.ttf").toExternalForm(), 14);
+            Font.loadFont(ClientContextPanel.class.getResource("/fonts/JetBrainsMono-Medium.ttf").toExternalForm(), 14);
+            Person person = new PersonBuilder().withWorkoutSessions(List.of(
+                    new WorkoutSession(LocalDate.of(2020, 1, 15), Optional.empty(), List.of(SQUAT)),
+                    new WorkoutSession(LocalDate.of(2020, 1, 14), Optional.of(LocalTime.of(18, 0)), List.of(BENCH)),
+                    new WorkoutSession(LocalDate.of(2014, 1, 15), Optional.empty(), List.of(SQUAT)))).build();
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(person, 1);
+            Region root = panel.getRoot();
+            Scene scene = new Scene(root, 340, 900);
+            scene.getStylesheets().add(ClientContextPanel.class.getResource("/view/FittixTheme.css").toExternalForm());
+
+            for (double width : List.of(300.0, 340.0)) {
+                root.resize(width, 900);
+                root.applyCss();
+                root.layout();
+                for (String style : List.of(".history-date", ".history-time")) {
+                    assertEquals(3, root.lookupAll(style).size());
+                    for (Node node : root.lookupAll(style)) {
+                        Label text = (Label) node;
+                        assertTrue(text.getWidth() > 0);
+                        assertFalse(text.isTextTruncated(), text.getText() + " at context width " + width);
+                    }
+                }
             }
             return null;
         });

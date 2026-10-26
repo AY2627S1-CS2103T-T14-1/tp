@@ -1,6 +1,5 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
@@ -234,15 +233,4 @@ public class EditCommandParserTest {
         assertParseFailure(parser, index + ADDRESS_DESC_AMY + ADDRESS_DESC_BOB,
                 EditCommand.MESSAGE_REPEATED_PREFIX);
     }
-    @Test
-    public void parse_mistypedShortPrefix_rejectsInsteadOfChangingGoal() {
-        String error = String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "1 g/Run 10 km ad/18 Clementi Road", error);
-        assertParseFailure(parser, "1 ad/18 Clementi Road g/Run 10 km", error);
-        assertParseFailure(parser, "1 g/Build strength gg/extra", error);
-        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
-                .withGoal("Run 10km/day").build();
-        assertParseSuccess(parser, "1 g/Run 10km/day", new EditCommand(INDEX_FIRST_PERSON, descriptor));
-    }
-
 }

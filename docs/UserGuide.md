@@ -153,7 +153,6 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 
 * Edits the client at the specified `INDEX`. The index refers to the index number shown in the displayed client list. The index must be a positive whole number; leading zeros are accepted.
 * At least one field must be provided.
-* One- or two-letter markers followed by `/` at an argument boundary are reserved for parameters. Unsupported markers such as `ad/` or `gg/` are rejected rather than stored inside another value. Use `a/` for the address. A slash embedded in a token such as `10km/day` remains ordinary text.
 * Existing values will be updated to the input values.
 * `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags.
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
@@ -187,8 +186,6 @@ Records a client's current nutrition target and optional coaching notes. Togethe
 The `diet` command's feedback still calls this record a "diet plan". The messages below quote the application's exact wording.
 
 Format: `diet INDEX t/TARGET [n/NOTES]`
-
-One- or two-letter parameter markers are reserved at argument boundaries. Mistyped markers such as `nn/` are rejected without changing the previous target or notes. Ordinary slash-containing words such as `kcal/day` remain valid.
 
 * `INDEX` is the positive whole-number index shown in the **current** client list. For example, after `find Priya`, `diet 1 ...` updates the first displayed search result. Leading zeros are accepted; `0`, negative numbers, signs, decimals, and indices outside the displayed list are rejected.
 * `TARGET` is required. After trimming outer whitespace, it must contain 1 to 200 printable characters and at least one letter or digit. Numbers, units, punctuation, internal spaces, and letter case are preserved. Line breaks and control characters are rejected.
@@ -552,7 +549,7 @@ Format: `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`
 
 Example: `addmem n/Gold Plus p/150.50 s/30`
 
-Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: ASCII letters (`A-Z`, `a-z`), digits (`0-9`), spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The stored name keeps the case you entered, but the plan list and client card render its first character in upper case, so a plan entered as `gold` is shown as `Gold`. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
+Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The stored name keeps the case you entered, but the plan list and client card render its first character in upper case, so a plan entered as `gold` is shown as `Gold`. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
 
 Format: `view mem` or `view membership`
 

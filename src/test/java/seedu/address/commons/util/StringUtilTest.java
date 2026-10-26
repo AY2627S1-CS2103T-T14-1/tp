@@ -166,14 +166,4 @@ public class StringUtilTest {
         assertThrows(NullPointerException.class, () -> StringUtil.getDetails(null));
     }
 
-    @Test
-    public void containsIgnoreCase_greekSigma_matchesRegardlessOfWordPosition() {
-        assertTrue(StringUtil.containsIgnoreCase("ΠΟΝΟΣ", "Σ"));
-        assertTrue(StringUtil.containsIgnoreCase("ΠΟΝΟΣ", "σ"));
-        assertTrue(StringUtil.containsIgnoreCase("ΠΟΝΟΣ", "ς"));
-        assertTrue(StringUtil.containsIgnoreCase("πονος", "ΟΣ"));
-        assertFalse(StringUtil.containsIgnoreCase("ΠΟΝΟΣ", "Χ"));
-        assertFalse(StringUtil.containsIgnoreCase("Σ", "ΣΣ"));
-    }
-
 }

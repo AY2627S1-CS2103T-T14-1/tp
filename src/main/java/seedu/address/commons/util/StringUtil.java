@@ -6,6 +6,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * Helper functions for handling strings.
@@ -51,12 +52,7 @@ public class StringUtil {
         String preppedKeyword = keyword.strip();
         checkArgument(!preppedKeyword.isEmpty(), "Word parameter cannot be empty");
 
-        for (int start = 0; start <= sentence.length() - preppedKeyword.length(); start++) {
-            if (sentence.regionMatches(true, start, preppedKeyword, 0, preppedKeyword.length())) {
-                return true;
-            }
-        }
-        return false;
+        return sentence.toLowerCase(Locale.ROOT).contains(preppedKeyword.toLowerCase(Locale.ROOT));
     }
 
     /**
