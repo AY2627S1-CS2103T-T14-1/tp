@@ -227,6 +227,7 @@ Format: `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`
 * Repeating `r/` replaces the complete existing list. A single blank `r/` clears all restrictions.
 * Supply 1 to 10 nonblank restrictions; each must contain 1 to 100 printable characters and at least one letter or digit.
 * Restrictions that match after trimming and ignoring case are rejected as duplicates.
+* Single-letter prefix tokens at argument boundaries are reserved; only `r/` is accepted. For example, `restriction 1 r/No dairy x/unknown` is rejected without replacing the existing list. Slashes within words such as `milk/egg` and fractions such as `1/2` remain part of the text.
 * Fittix records trainer-entered information only; it does not determine allergy, nutritional, or meal safety.
 
 Examples:

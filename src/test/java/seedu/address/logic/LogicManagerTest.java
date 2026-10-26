@@ -245,6 +245,27 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_unknownRestrictionPrefix_preservesModelSavedDataAndRedo() throws Exception {
+        model.addPerson(AMY);
+        logic.execute("restriction 1 r/Peanut allergy");
+        logic.execute("restriction 1 r/No shellfish");
+        logic.execute("undo");
+        AddressBook before = new AddressBook(model.getAddressBook());
+        Path savedPath = temporaryFolder.resolve("addressBook.json");
+        String saved = Files.readString(savedPath);
+
+        assertThrows(ParseException.class, () -> logic.execute("restriction 1 r/No dairy x/unknown"));
+
+        assertEquals(before, model.getAddressBook());
+        assertEquals(saved, Files.readString(savedPath));
+        assertEquals("Peanut allergy", model.getFilteredPersonList().getFirst()
+                .getDietaryRestrictions().getValues().getFirst());
+        logic.execute("redo");
+        assertEquals(List.of("No shellfish"), model.getFilteredPersonList().getFirst()
+                .getDietaryRestrictions().getValues());
+    }
+
+    @Test
     public void execute_deleteExercise_success() throws Exception {
         Exercise benchPress = new Exercise("Bench Press", 3, 10, 60.0);
         Exercise squat = new Exercise("Squat", 4, 8, 80.0);

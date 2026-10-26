@@ -51,13 +51,15 @@
       </VBox>
 
       <VBox spacing="12" styleClass="card,context-card">
-        <HBox alignment="CENTER_LEFT" spacing="10">
-          <Label text="✓" alignment="CENTER" minWidth="20" minHeight="20" styleClass="history-header-icon" />
-          <Label text="HISTORY" styleClass="caps-label" />
-          <Label text="Completed workouts" styleClass="context-title" />
-          <Region HBox.hgrow="ALWAYS" />
-          <Label fx:id="historyCommandHint" styleClass="context-command-hint,mono" />
-        </HBox>
+        <VBox spacing="5">
+          <HBox alignment="CENTER_LEFT" spacing="10">
+            <Label text="✓" alignment="CENTER" minWidth="20" minHeight="20" styleClass="history-header-icon" />
+            <Label text="HISTORY" styleClass="caps-label" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="historyCommandHint" styleClass="context-command-hint,mono" />
+          </HBox>
+          <Label text="Completed workouts" wrapText="true" styleClass="context-title" />
+        </VBox>
         <VBox fx:id="historyRows" />
         <VBox fx:id="historyEmpty" spacing="8" styleClass="empty-box">
           <Label text="No completed workouts logged." styleClass="muted" />

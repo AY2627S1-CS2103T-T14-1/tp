@@ -25,6 +25,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
@@ -236,6 +237,32 @@ public class WorkoutSessionDisplayTest {
             assertTrue(region(panel, "dietEmpty").isManaged());
             assertTrue(region(panel, "sessionsEmpty").isManaged());
             assertTrue(region(panel, "historyEmpty").isManaged());
+            return null;
+        });
+    }
+
+    @Test
+    public void historyHeading_atContextColumnWidth_displaysAllHeaderText() throws Exception {
+        runOnFxThread(() -> {
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(new PersonBuilder().build(), 1);
+            Region root = panel.getRoot();
+            root.setMinSize(0, 0);
+            Scene scene = new Scene(root, 310, 900);
+            scene.getStylesheets().add(getClass().getResource("/view/FittixTheme.css").toExternalForm());
+            root.applyCss();
+            root.layout();
+
+            List<String> headings = List.of("HISTORY", "Completed workouts", "history 1");
+            List<Label> labels = root.lookupAll(".label").stream()
+                    .map(node -> (Label) node).filter(label -> headings.contains(label.getText())).toList();
+            assertEquals(3, labels.size());
+            for (Label label : labels) {
+                Text text = new Text(label.getText());
+                text.setFont(label.getFont());
+                assertTrue(label.getWidth() + 1 >= text.getLayoutBounds().getWidth()
+                        + label.getPadding().getLeft() + label.getPadding().getRight(), label.getText());
+            }
             return null;
         });
     }

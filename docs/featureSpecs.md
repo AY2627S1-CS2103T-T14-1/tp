@@ -1526,6 +1526,8 @@ The command replaces the complete current list rather than appending to it. Dupl
 
 **Missing restriction prefix:** The command is rejected using the `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` usage message.
 
+**Unknown parameter:** Single-letter prefix tokens at argument boundaries are reserved, and only `r/` is accepted. An unknown token such as `x/unknown` rejects the whole command without replacing the previous list. Slashes within words such as `milk/egg` and fractions such as `1/2` are literal restriction text.
+
 **Invalid clear form:** An empty `r/` cannot be repeated or combined with a nonblank restriction.
 
 **Invalid client index or format:** The command is rejected using the restriction command usage message when the index cannot be parsed.
