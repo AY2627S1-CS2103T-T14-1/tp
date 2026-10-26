@@ -27,7 +27,9 @@ import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PersonBuilder;
 
-/** Verifies that startup never replaces an unreadable existing client file with an empty roster. */
+/**
+ * Verifies that startup never replaces an unreadable existing client file with an empty roster.
+ */
 @ResourceLock("java.util.TimeZone.default")
 public class MainAppLoadTest {
     @TempDir
