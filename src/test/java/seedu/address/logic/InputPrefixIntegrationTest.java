@@ -21,7 +21,9 @@ import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PersonBuilder;
 
-/** Exercises rejected prefix typos through the real parser, model and JSON storage path. */
+/**
+ * Exercises rejected prefix typos through the real parser, model and JSON storage path.
+ */
 public class InputPrefixIntegrationTest {
     @TempDir
     public Path folder;
