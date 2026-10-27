@@ -23,6 +23,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.model.person.DietPlan;
@@ -126,6 +127,36 @@ public class WorkoutSessionDisplayTest {
                     labelTexts(rows.getChildren().get(1)));
             assertTrue(rows.getChildren().get(0).getStyleClass().contains("past"));
             assertTrue(rows.getChildren().get(1).getStyleClass().contains("next"));
+            return null;
+        });
+    }
+
+    @Test
+    public void sessions_longLocation_keepsAppointmentTimeReadable() throws Exception {
+        runOnFxThread(() -> {
+            for (String location : List.of("ActiveSG Clementi Sports Centre - Level 2",
+                    "NUS University Sports Centre, Sports Hall 1")) {
+                Person person = new PersonBuilder().build().withTrainingSession(new TrainingSession(
+                        LocalDateTime.of(2099, 3, 15, 14, 30), location));
+                ClientContextPanel panel = new ClientContextPanel();
+                panel.showPerson(person, 1);
+                Scene scene = new Scene(panel.getRoot(), 340, 900);
+                scene.getStylesheets().add(WorkoutSessionDisplayTest.class
+                        .getResource("/view/FittixTheme.css").toExternalForm());
+                panel.getRoot().applyCss();
+                panel.getRoot().layout();
+
+                VBox rows = vbox(panel, "sessionRows");
+                GridPane row = (GridPane) rows.getChildren().getFirst();
+                Label time = (Label) row.getChildren().stream()
+                        .filter(node -> node.getStyleClass().contains("session-time"))
+                        .findFirst().orElseThrow();
+                assertEquals("14:30", time.getText());
+                assertTrue(row.getWidth() <= rows.getWidth() + 0.5,
+                        "Appointment row exceeds the Schedule card for: " + location);
+                assertTrue(time.getWidth() + 0.5 >= time.prefWidth(-1),
+                        "Appointment time is clipped for: " + location);
+            }
             return null;
         });
     }

@@ -35,7 +35,8 @@ public final class TrainingSession {
         this.dateTime = requireNonNull(dateTime);
         requireNonNull(location);
         this.kind = requireNonNull(kind);
-        if (location.isBlank()) {
+        if (location.codePoints().allMatch(character -> Character.isWhitespace(character)
+                || Character.isSpaceChar(character))) {
             throw new IllegalArgumentException("Location cannot be blank");
         }
         this.location = location;
