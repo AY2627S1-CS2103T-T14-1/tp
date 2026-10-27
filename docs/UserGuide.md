@@ -90,6 +90,7 @@ A client can have any number of tags, including zero.
 
 * `g/GOAL` is optional. A goal must contain 1 to 100 characters after trimming and include at least one letter or digit.
 * A supplied goal is saved with the client and shown on the client card.
+* The address supplied to `add` must be nonblank and contain at most 200 characters after trimming leading and trailing whitespace. Internal spacing and case are preserved. The limit counts Unicode code points, so a supplementary Unicode character counts as one character. Existing saved addresses remain readable and are not truncated.
 
 Examples:
 * `add n/Priya Nair p/91234567 e/priya@example.com a/123 Clementi Road g/Build strength`
