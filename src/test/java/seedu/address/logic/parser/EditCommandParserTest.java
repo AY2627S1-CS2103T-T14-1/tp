@@ -219,6 +219,21 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_whitespaceOnlyGoal_clearsGoal() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptor();
+        descriptor.clearGoal();
+        assertParseSuccess(parser, INDEX_THIRD_PERSON.getOneBased() + " g/   ",
+                new EditCommand(INDEX_THIRD_PERSON, descriptor));
+    }
+
+    @Test
+    public void parse_whitespaceOnlyTags_clearsTags() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withTags().build();
+        assertParseSuccess(parser, INDEX_THIRD_PERSON.getOneBased() + " t/   ",
+                new EditCommand(INDEX_THIRD_PERSON, descriptor));
+    }
+
+    @Test
     public void parse_repeatedGoal_failure() {
         assertParseFailure(parser, INDEX_FIRST_PERSON.getOneBased() + GOAL_DESC + " g/Run 5 km",
                 EditCommand.MESSAGE_REPEATED_PREFIX);

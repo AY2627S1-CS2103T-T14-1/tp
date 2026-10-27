@@ -21,6 +21,12 @@ public class HealthCommandParserTest {
     }
 
     @Test
+    public void parse_whitespaceOnlyValue_clears() {
+        assertParseSuccess(parser, "1 h/   ", new HealthCommand(
+                seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON, null));
+    }
+
+    @Test
     public void parse_invalidInput_failure() {
         String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, HealthCommand.MESSAGE_USAGE);
         assertParseFailure(parser, "1", usage);
