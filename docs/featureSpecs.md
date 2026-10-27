@@ -1170,6 +1170,8 @@ The final example remains valid free-text coaching content. Record searchable re
 
 **Parsing rule:** Parameter prefixes such as `t/` and `n/` are recognized only at the beginning of an argument or after whitespace. A slash within a value, such as `kcal/day`, is treated as ordinary text.
 
+At those boundaries, reserve single-letter prefixes and markers made by repeating or mixing `t` and `n` in either case. Only exact lowercase `t/` and `n/` are supported. Other reserved markers, including `nn/`, `tt/`, `nt/`, and `tn/`, produce the invalid-format error without changing the existing target or notes. This also applies inside notes. Other slash-separated words, such as `protein/carbs` and `kcal/day`, remain ordinary text.
+
 ### 5. Parameters
 
 #### Client index
