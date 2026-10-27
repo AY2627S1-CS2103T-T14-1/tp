@@ -191,6 +191,7 @@ Format: `diet INDEX t/TARGET [n/NOTES]`
 * `TARGET` is required. After trimming outer whitespace, it must contain 1 to 200 printable characters and at least one letter or digit. Numbers, units, punctuation, internal spaces, and letter case are preserved. Line breaks and control characters are rejected.
 * `NOTES` is optional. If `n/` is supplied, its value must contain 1 to 300 printable characters after trimming. A blank `n/` is invalid; omit `n/` when no notes are needed. Internal spacing and case are preserved, and line breaks and control characters are rejected.
 * `t/` and `n/` may appear in either order, but each may appear only once. They are recognised at the start of an argument or after whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. Dietary restrictions are managed separately with the `restriction` command.
+* At those boundaries, single-letter prefixes other than `t/` and `n/` are invalid. Mistyped markers made by repeating or mixing `t` and `n` (in either case), such as `nn/`, `tt/`, `nt/`, and `tn/`, are also rejected, including inside notes. Fittix reports `Invalid command format. Use: diet INDEX t/TARGET [n/NOTES]` and keeps the existing target and notes unchanged. Correct the marker and retry.
 * Different diet goals **replace the complete current target and notes**. Omitting `n/` during replacement clears any old notes. Earlier versions are not kept. Diet goals with the same trimmed target and notes, ignoring case, are rejected without changing the saved record.
 
 Examples:
