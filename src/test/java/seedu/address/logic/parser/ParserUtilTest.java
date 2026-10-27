@@ -195,6 +195,26 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseTags_maxDistinctTags_returnsTagSet() throws Exception {
+        List<String> tags = List.of("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten");
+        assertEquals(Tag.MAX_TAGS, ParserUtil.parseTags(tags).size());
+    }
+
+    @Test
+    public void parseTags_moreThanMaxDistinctTags_throwsParseException() {
+        List<String> tags = List.of("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+                "eleven");
+        assertThrows(ParseException.class, Tag.MESSAGE_TOO_MANY_TAGS, () -> ParserUtil.parseTags(tags));
+    }
+
+    @Test
+    public void parseTags_duplicatesCollapseToMax_returnsTagSet() throws Exception {
+        List<String> tags = List.of("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+                "ten", "one");
+        assertEquals(Tag.MAX_TAGS, ParserUtil.parseTags(tags).size());
+    }
+
+    @Test
     public void parseTags_emptyCollection_returnsEmptySet() throws Exception {
         assertTrue(ParserUtil.parseTags(List.of()).isEmpty());
     }

@@ -170,6 +170,14 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_moreThanMaxDistinctTags_failure() {
+        String index = Integer.toString(INDEX_FIRST_PERSON.getOneBased());
+        assertParseFailure(parser, index
+                + " t/one t/two t/three t/four t/five t/six t/seven t/eight t/nine t/ten t/eleven",
+                Tag.MESSAGE_TOO_MANY_TAGS);
+    }
+
+    @Test
     public void parse_multipleRepeatedFields_failure() {
         // More extensive testing of duplicate parameter detections is done in
         // AddCommandParserTest#parse_repeatedNonTagValue_failure()
