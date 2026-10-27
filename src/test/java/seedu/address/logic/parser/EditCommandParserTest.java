@@ -248,4 +248,41 @@ public class EditCommandParserTest {
         assertParseFailure(parser, index + ADDRESS_DESC_AMY + ADDRESS_DESC_BOB,
                 EditCommand.MESSAGE_REPEATED_PREFIX);
     }
+
+    @Test
+    public void parse_mistypedPrefixAbsorbedIntoGoal_rejected() throws Exception {
+        // Reproduces issue #253: a mistyped "ad/" address token is swallowed by the goal value.
+        String userInput = INDEX_FIRST_PERSON.getOneBased() + " g/Run 10 km ad/18 Clementi Road";
+
+        String expectedMessage = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "ad/")
+                + " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN, "a/ (address)");
+        assertParseFailure(parser, userInput, expectedMessage);
+    }
+
+    @Test
+    public void parse_unknownPrefixInsideGoal_rejected() {
+        // Any letter-prefixed token inside a recognised prefix's value is rejected.
+        String userInput = INDEX_FIRST_PERSON.getOneBased() + " g/Build strength rr/5";
+        assertParseFailure(parser, userInput, String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "rr/"));
+    }
+
+    @Test
+    public void parse_multiWordGoalWithoutPrefixShape_success() {
+        // A normal multi-word goal must still parse successfully.
+        Index targetIndex = INDEX_FIRST_PERSON;
+        String userInput = targetIndex.getOneBased() + " g/Run 10 km three times a week";
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withGoal("Run 10 km three times a week").build();
+        assertParseSuccess(parser, userInput, new EditCommand(targetIndex, descriptor));
+    }
+
+    @Test
+    public void parse_addressWithNumberSlashNotFlagged_success() {
+        // An address value containing a digit/slash token is not treated as a parameter prefix.
+        Index targetIndex = INDEX_FIRST_PERSON;
+        String userInput = targetIndex.getOneBased() + " a/Blk 45/10 Geylor Road";
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withAddress("Blk 45/10 Geylor Road").build();
+        assertParseSuccess(parser, userInput, new EditCommand(targetIndex, descriptor));
+    }
 }
