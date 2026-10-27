@@ -22,4 +22,12 @@ public class DietaryRestrictionsTest {
                 List.of("Peanut allergy", " peanut ALLERGY ")));
         assertThrows(IllegalArgumentException.class, () -> new DietaryRestrictions(List.of("a".repeat(101))));
     }
+
+    @Test
+    public void constructor_greekSigmaVariants_rejectedAsDuplicates() {
+        assertThrows(IllegalArgumentException.class, () -> new DietaryRestrictions(
+                List.of("No dairy \u03A3", "NO DAIRY \u03C2")));
+        assertThrows(IllegalArgumentException.class, () -> new DietaryRestrictions(
+                List.of("no dairy \u03C3", "NO DAIRY \u03C2")));
+    }
 }

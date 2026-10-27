@@ -333,7 +333,8 @@ class JsonAdaptedPerson {
         final DietaryRestrictions modelDietaryRestrictions;
         try {
             modelDietaryRestrictions = dietaryRestrictions.isEmpty()
-                    ? new DietaryRestrictions() : new DietaryRestrictions(dietaryRestrictions);
+                    ? new DietaryRestrictions()
+                    : new DietaryRestrictions(dropCaseFoldDuplicates(dietaryRestrictions));
         } catch (IllegalArgumentException | NullPointerException exception) {
             throw new IllegalValueException(DietaryRestrictions.MESSAGE_CONSTRAINTS);
         }
@@ -381,4 +382,21 @@ class JsonAdaptedPerson {
                 bodyProgress == null ? new BodyProgress() : bodyProgress.toModelType(clock),
                 modelPayments);
     }
+
+    /**
+     * Drops later entries that equal an earlier one after {@link DietaryRestrictions#foldCase(String)}, so
+     * files saved before Unicode-aware duplicate detection (e.g. "X σ" and "X ς") still load. Invalid or null
+     * entries are kept for the model to reject.
+     */
+    private static List<String> dropCaseFoldDuplicates(List<String> values) {
+        Set<String> seen = new HashSet<>();
+        List<String> kept = new ArrayList<>();
+        for (String value : values) {
+            if (value == null || seen.add(DietaryRestrictions.foldCase(value.strip()))) {
+                kept.add(value);
+            }
+        }
+        return kept;
+    }
+
 }

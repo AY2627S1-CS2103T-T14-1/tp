@@ -34,10 +34,19 @@ public final class DietaryRestrictions {
             requireNonNull(value);
             checkArgument(isValidRestriction(value), MESSAGE_CONSTRAINTS);
             String trimmed = value.strip();
-            checkArgument(seen.add(trimmed.toLowerCase(Locale.ROOT)), MESSAGE_CONSTRAINTS);
+            checkArgument(seen.add(foldCase(trimmed)), MESSAGE_CONSTRAINTS);
             normalized.add(trimmed);
         }
         this.values = List.copyOf(normalized);
+    }
+
+    /**
+     * Returns {@code value} folded for case-insensitive comparison. Lower-casing alone turns a capital sigma into
+     * {@code ς} or {@code σ} depending on its position, so Greek final sigma is normalised to {@code σ} explicitly.
+     */
+    public static String foldCase(String value) {
+        requireNonNull(value);
+        return value.toUpperCase(Locale.ROOT).toLowerCase(Locale.ROOT).replace('\u03C2', '\u03C3');
     }
 
     /** Returns whether one restriction value is valid. */
