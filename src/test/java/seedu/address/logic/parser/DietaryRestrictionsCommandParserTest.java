@@ -25,6 +25,12 @@ public class DietaryRestrictionsCommandParserTest {
     }
 
     @Test
+    public void parse_whitespaceOnlyValue_clears() {
+        assertParseSuccess(parser, "1 r/   ",
+                new DietaryRestrictionsCommand(INDEX_FIRST_PERSON, new DietaryRestrictions()));
+    }
+
+    @Test
     public void parse_invalidInput_failure() {
         String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, DietaryRestrictionsCommand.MESSAGE_USAGE);
         assertParseFailure(parser, "1", usage);
