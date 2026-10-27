@@ -15,10 +15,14 @@ public class HealthProfileContainsKeywordsPredicate implements Predicate<Person>
     @Override
     public boolean test(Person person) {
         return person.getHealthProfile()
-                .map(profile -> profile.value.toLowerCase(Locale.ROOT))
+                .map(profile -> foldCase(profile.value))
                 .map(profile -> keywords.stream()
-                        .anyMatch(keyword -> profile.contains(keyword.toLowerCase(Locale.ROOT))))
+                        .anyMatch(keyword -> profile.contains(foldCase(keyword))))
                 .orElse(false);
+    }
+
+    private static String foldCase(String text) {
+        return text.toLowerCase(Locale.ROOT).replace('\u03C2', '\u03C3');
     }
 
     @Override
