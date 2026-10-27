@@ -159,6 +159,7 @@ public class ParserUtilTest {
     public void parseGoal_validAndInvalidValues() throws Exception {
         assertEquals(new Goal("Build strength"), ParserUtil.parseGoal(" Build strength "));
         assertThrows(ParseException.class, Goal.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseGoal("!!!"));
+        assertThrows(ParseException.class, Goal.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseGoal("\fabc"));
     }
 
     @Test

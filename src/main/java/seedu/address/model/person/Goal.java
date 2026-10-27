@@ -34,7 +34,7 @@ public class Goal {
         int length = strippedTest.codePointCount(0, strippedTest.length());
         return length >= 1
                 && length <= MAX_LENGTH
-                && strippedTest.matches("[^\\p{Cntrl}]+")
+                && test.matches("[^\\p{Cntrl}]+")
                 && strippedTest.matches(".*[\\p{L}\\p{N}].*");
     }
 

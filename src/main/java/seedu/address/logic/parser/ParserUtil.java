@@ -107,11 +107,10 @@ public class ParserUtil {
     /** Parses a {@code String goal} into a {@code Goal}. */
     public static Goal parseGoal(String goal) throws ParseException {
         requireNonNull(goal);
-        String trimmedGoal = goal.trim();
-        if (!Goal.isValidGoal(trimmedGoal)) {
+        if (!Goal.isValidGoal(goal)) {
             throw new ParseException(Goal.MESSAGE_CONSTRAINTS);
         }
-        return new Goal(trimmedGoal);
+        return new Goal(goal);
     }
 
     /**
