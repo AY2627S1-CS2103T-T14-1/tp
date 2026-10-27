@@ -87,6 +87,7 @@ public class EditCommandParserTest {
         assertParseFailure(parser, "1 g/!!!", Goal.MESSAGE_CONSTRAINTS); // invalid goal
         assertParseFailure(parser, "1 n/", Name.MESSAGE_CONSTRAINTS); // empty name
         assertParseFailure(parser, "1 p/", Phone.MESSAGE_CONSTRAINTS); // empty phone
+        assertParseFailure(parser, "1 p/1234567890123456", Phone.MESSAGE_CONSTRAINTS); // 16 digits
         assertParseFailure(parser, "1 e/", Email.MESSAGE_CONSTRAINTS); // empty email
 
         // invalid phone followed by valid email
