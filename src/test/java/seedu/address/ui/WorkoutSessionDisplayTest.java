@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
@@ -26,6 +27,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
@@ -245,9 +247,13 @@ public class WorkoutSessionDisplayTest {
                 for (String style : List.of(".history-date", ".history-time")) {
                     assertEquals(3, root.lookupAll(style).size());
                     for (Node node : root.lookupAll(style)) {
-                        Label text = (Label) node;
-                        assertTrue(text.getWidth() > 0);
-                        assertFalse(text.isTextTruncated(), text.getText() + " at context width " + width);
+                        Label label = (Label) node;
+                        Text renderedText = assertInstanceOf(Text.class, label.lookup(".text"));
+                        String context = label.getText() + " at context width " + width;
+                        assertTrue(label.getWidth() > 0, context);
+                        assertEquals(label.getText(), renderedText.getText(), context);
+                        assertTrue(renderedText.getLayoutBounds().getWidth() <= label.getWidth() + 1, context);
+                        assertTrue(renderedText.getLayoutBounds().getHeight() <= label.getHeight() + 1, context);
                     }
                 }
             }

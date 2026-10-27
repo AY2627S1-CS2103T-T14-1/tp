@@ -52,8 +52,8 @@ public class MainAppLoadTest {
         MainApp app = new MainApp();
         app.storage = storage;
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> app.initModelManager(storage, new UserPrefs()));
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                app.initModelManager(storage, new UserPrefs()));
         app.stop();
 
         assertTrue(exception.getMessage().contains("protect the existing file"));
