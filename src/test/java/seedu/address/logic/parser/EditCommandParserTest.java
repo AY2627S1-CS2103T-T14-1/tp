@@ -51,6 +51,14 @@ public class EditCommandParserTest {
     private EditCommandParser parser = new EditCommandParser();
 
     @Test
+    public void parse_documentedNameCharacters_success() {
+        for (String name : new String[] {"Anne-Marie Tan", "D'Angelo Lim", "Dr. Ahmad Rahman", "\u674e\u5c0f\u9f99"}) {
+            EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName(name).build();
+            assertParseSuccess(parser, "1 n/" + name, new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        }
+    }
+
+    @Test
     public void parse_missingParts_failure() {
         // no index specified
         assertParseFailure(parser, NAME_DESC_AMY, EditCommand.MESSAGE_INDEX_REQUIRED);

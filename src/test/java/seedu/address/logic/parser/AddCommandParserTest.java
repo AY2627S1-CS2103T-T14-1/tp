@@ -54,6 +54,14 @@ public class AddCommandParserTest {
     private AddCommandParser parser = new AddCommandParser();
 
     @Test
+    public void parse_issue244HyphenatedName_success() {
+        Person expected = new PersonBuilder().withName("Anne-Marie Tan").withPhone("92345678")
+                .withEmail("annemarie@example.com").withAddress("123 Test Road").withTags().build();
+        assertParseSuccess(parser, " n/Anne-Marie Tan p/92345678 e/annemarie@example.com a/123 Test Road",
+                new AddCommand(expected));
+    }
+
+    @Test
     public void parse_allFieldsPresent_success() {
         Person expectedPerson = new PersonBuilder(BOB).withTags(VALID_TAG_FRIEND).build();
 

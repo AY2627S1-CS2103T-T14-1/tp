@@ -90,9 +90,11 @@ A client can have any number of tags, including zero.
 
 * `g/GOAL` is optional. A goal must contain 1 to 100 characters after trimming and include at least one letter or digit.
 * A supplied goal is saved with the client and shown on the client card.
+* Names accept Unicode letters, digits (`0`–`9`), spaces, apostrophes (`'`), hyphens (`-`), and full stops (`.`), with at least one letter or digit. For example, `Anne-Marie Tan`, `D'Angelo Lim`, and `Dr. Ahmad Rahman` are accepted. Leading and trailing whitespace is trimmed; internal spaces and letter case are preserved.
 
 Examples:
 * `add n/Priya Nair p/91234567 e/priya@example.com a/123 Clementi Road g/Build strength`
+* `add n/Anne-Marie Tan p/92345678 e/annemarie@example.com a/123 Test Road`
 * `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
 
 ### Listing all persons: `list`
@@ -156,6 +158,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 * Existing values will be updated to the input values.
 * `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags.
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
+* Names use the same permitted characters as `add`, including hyphens, apostrophes, full stops, and Unicode letters. Renaming preserves the entered case and internal spacing after trimming outer whitespace.
 * When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative.
 * An edit that would duplicate another client's name is rejected. Changing only the letter case of the same client's name is allowed.
 * If the values are identical to the client's current details, Fittix reports `No changes made: the new values are the same as the current details.`
