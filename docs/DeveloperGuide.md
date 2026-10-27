@@ -266,6 +266,25 @@ Each `Person` has an optional immutable `HealthProfile` with one current trainer
 
 `HealthCommandParser` requires exactly one `h/` prefix and a displayed-list index. `HealthCommand` rejects a no-op update, replaces the client through `Person#withHealthProfile`, and preserves all unrelated client information. `find h/KEYWORDS` uses `HealthProfileContainsKeywordsPredicate` with the existing case-insensitive OR search behavior. The selected-client details panel displays the profile only when present. Health considerations are informational only; the application does not diagnose conditions or evaluate medical suitability.
 
+### Search clients (`find`)
+
+`find` has two forms: `find KEYWORD...`, a name search, and `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`. Use case UC03 describes only the name form; the user-facing behaviour of all criteria is in the User Guide.
+
+`FindCommandParser` tokenizes the input with the six supported prefixes. With no prefix, the whole trimmed input becomes a name search. With at least one prefix, it rejects a non-empty preamble (a bare keyword cannot be mixed with prefixes), a prefix used more than once, an empty value, and a `p/` value without a digit. It creates one predicate per supplied prefix and wraps them all in a `ClientMatchesAnyPredicate`, which uses `anyMatch`, so a client is shown when it satisfies any one criterion (OR).
+
+| Prefix | Predicate | Matching rule |
+| --- | --- | --- |
+| `n/` | `NameContainsKeywordsPredicate` | any whitespace-separated keyword is a case-insensitive substring of the name |
+| `p/` | `PhoneMatchesPredicate` | one query; spaces and hyphens are removed from the query and the stored phone, then the phone must contain the query |
+| `e/` | `EmailContainsKeywordsPredicate` | any keyword is a case-insensitive substring of the email |
+| `g/` | `GoalContainsKeywordsPredicate` | any keyword is a case-insensitive substring of the goal; clients without a goal never match |
+| `dr/` | `DietaryRestrictionsContainsKeywordsPredicate` | any keyword is a case-insensitive substring of any current restriction |
+| `h/` | `HealthProfileContainsKeywordsPredicate` | any keyword is a case-insensitive substring of the health note; clients without one never match |
+
+Case-insensitive matching lowercases both sides with `Locale.ROOT`, except the name predicate, which uses `StringUtil#containsIgnoreCase`. `FindCommand` passes the combined predicate to `Model#updateFilteredPersonList` and reports `Found N client(s).` or the zero-result message. It does not modify stored data.
+
+OR was chosen so that each additional criterion widens the result and so that each feature can contribute its own predicate without changing the others. To add a criterion, define a prefix in `CliSyntax`, add it to `FindCommandParser#SUPPORTED_PREFIXES`, write a `Predicate<Person>` in `model.person`, and add a branch to `FindCommandParser#createFindCommand`. Automated coverage is in `FindCommandParserTest`, `FindCommandTest`, `ClientMatchesAnyPredicateTest` and one test class per predicate.
+
 ### Workout session logging
 
 Each `Person` owns an immutable list of `WorkoutSession` objects. Each session contains a required `LocalDate`, an optional `LocalTime`, and an ordered list of 1 to 30 `WorkoutLogEntry` objects.
