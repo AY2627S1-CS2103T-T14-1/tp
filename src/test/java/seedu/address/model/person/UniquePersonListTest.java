@@ -101,6 +101,14 @@ public class UniquePersonListTest {
     }
 
     @Test
+    public void add_sameNameDifferentPhone_success() {
+        Person sameNameDifferentPhone = new PersonBuilder(ALICE).withPhone(BOB.getPhone().value).build();
+        uniquePersonList.add(ALICE);
+        uniquePersonList.add(sameNameDifferentPhone);
+        assertTrue(uniquePersonList.contains(sameNameDifferentPhone));
+    }
+
+    @Test
     public void setPerson_editedPersonHasNonUniqueIdentity_throwsDuplicatePersonException() {
         uniquePersonList.add(ALICE);
         uniquePersonList.add(BOB);

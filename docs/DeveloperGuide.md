@@ -328,7 +328,7 @@ Aggregate invariants:
 * Baseline replacement retains entries and must validate its candidate date against **all** retained entries. Never silently drop or re-date history.
 * Same-date `bodylog` replaces the complete entry, including clearing notes when omitted. An exact duplicate is rejected before replacement. `bodydelete` cannot remove the baseline.
 
-`Person.withBodyProgress(updated)` copies every unrelated field. Existing client reconstruction paths and `PersonBuilder` retain the tracker. Full person equality/hashCode include it; client identity does not depend on measurements. Deleting/clearing clients removes their owned aggregates; catalog operations preserve them.
+`Person.withBodyProgress(updated)` copies every unrelated field. Existing client reconstruction paths and `PersonBuilder` retain the tracker. Full person equality/hashCode include it; client identity (`Person#isSamePerson`, used by `add`, `edit`, `UniquePersonList` and storage loading) is the name plus the phone number, so two clients may share only a name or only a phone, and it does not depend on measurements. Deleting/clearing clients removes their owned aggregates; catalog operations preserve them.
 
 #### Commands, parsing and UI requests
 
