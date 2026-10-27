@@ -980,6 +980,26 @@ Use a disposable copy of the data file. Start with at least two clients; run `li
 
 An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it forces the atomic replacement to throw, verifies the specified failure message, confirms that both the model and original JSON bytes are unchanged, and checks that the temporary file is removed.
 
+### Dietary restrictions
+
+Use a disposable copy of the data file. Start with at least two clients; run `list` and note the displayed index and name of one client.
+
+1. Record dietary restrictions: `restriction 1 r/Peanut allergy r/Halal meals`.<br>
+   Expected: `Recorded dietary restrictions for NAME.` and the client detail pane shows both restrictions in the order entered.
+1. Replace with different restrictions: `restriction 1 r/No shellfish`.<br>
+   Expected: `Recorded dietary restrictions for NAME.`; old restrictions are replaced and only `No shellfish` appears.
+1. Clear restrictions: `restriction 1 r/`.<br>
+   Expected: `Cleared dietary restrictions for NAME.` and the restrictions section clears.
+1. Duplicate detection: `restriction 1 r/No dairy r/NO DAIRY`.<br>
+   Expected: Rejection with error: `Each dietary restriction must contain 1 to 100 printable characters and include at least one letter or digit. At most 10 restrictions are allowed, without duplicates.` No changes are made.
+1. Invalid entries: Try `restriction 1 r/   `, `restriction 1 r/ r/Peanut`, and `restriction 0 r/Halal`.<br>
+   Expected: Respectively rejected with restriction constraints, invalid clear format, and invalid index errors.
+1. Search restrictions: Set `restriction 1 r/Peanut allergy` and run `find dr/peanut`.<br>
+   Expected: Client is displayed in search results. Searching by Greek characters (e.g. `find dr/Σ` on a restriction with `ΧΩΡΙΣ`) also matches case-insensitively.
+1. Separation from diet goals: Set `diet 1 t/2000 kcal` and verify that modifying dietary restrictions does not modify diet goals, and modifying diet goals does not modify dietary restrictions.
+1. Persistence across restart: Restart the application.<br>
+   Expected: The saved dietary restrictions remain intact for the client.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files
