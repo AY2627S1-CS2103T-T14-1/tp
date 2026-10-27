@@ -154,7 +154,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 * Edits the client at the specified `INDEX`. The index refers to the index number shown in the displayed client list. The index must be a positive whole number; leading zeros are accepted.
 * At least one field must be provided.
 * Existing values will be updated to the input values.
-* `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags. A value that is only spaces counts as empty.
+* `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags.
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
 * When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative.
 * An edit that would duplicate another client's name is rejected. Changing only the letter case of the same client's name is allowed.
@@ -239,7 +239,7 @@ Stores one current trainer-visible note about a client's injuries or physical li
 
 Format: `health INDEX h/NOTE`
 
-* A nonblank note creates or replaces the current profile. `health INDEX h/` clears it. A value that is only spaces counts as empty and also clears it.
+* A nonblank note creates or replaces the current profile. `health INDEX h/` clears it.
 * Notes must contain 1 to 500 printable characters and at least one letter or digit.
 * Fittix records information only; it does not diagnose, recommend treatment, or decide whether a workout is medically safe.
 
