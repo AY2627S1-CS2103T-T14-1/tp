@@ -2151,7 +2151,7 @@ pay 2 d/2026-10-19 a/75.50 r/October membership payment
 | `PERSON_INDEX` | A positive integer identifying a client in the currently displayed client list. An index outside that list is invalid. |
 | `a/AMOUNT` | A positive amount with at most two decimal places, without a currency symbol or thousands separators. For example, `150`, `150.5`, and `150.50` are valid; `0`, `-5`, `1.234`, and `S$150` are invalid. Store and display the amount to two decimal places without floating-point rounding. |
 | `d/YYYY-MM-DD` | A real Gregorian calendar date in exactly `YYYY-MM-DD` format, with a four-digit year from 0001 to 9999. Past, current, and future dates are accepted. |
-| `r/REMARKS` | Optional nonblank text of 1–300 printable characters after trimming leading and trailing whitespace. Preserve internal spacing, punctuation, and case. Reject line breaks and control characters. An omitted `r/` means no remarks; an empty `r/` is invalid. |
+| `r/REMARKS` | Optional nonblank text of 1–300 printable characters after trimming leading and trailing whitespace. Preserve internal spacing, punctuation, and case. Reject line breaks and control characters. Non-breaking spaces (for example U+00A0) are not accepted, so a remark made up of only such characters is treated as blank and rejected. An omitted `r/` means no remarks; an empty `r/` is invalid. |
 
 Reject missing, repeated, unknown, or empty prefixed parameters and extra unprefixed text. A failed command creates no payment record.
 
@@ -2177,7 +2177,7 @@ Each successful `pay` command adds a separate record. Multiple payments for the 
 
 **Invalid date:** Payment date must be a valid date in YYYY-MM-DD format.
 
-**Invalid remarks:** Remarks must contain 1 to 300 printable characters without line breaks when `r/` is supplied.
+**Invalid remarks:** Remarks must contain 1 to 300 printable characters without line breaks when `r/` is supplied. Non-breaking spaces are not accepted, so a remark of only such characters is rejected as blank.
 
 **Invalid command format:** Required values are missing, a prefix repeats, an unknown prefix is supplied, or extra unprefixed text is present. Show the command format from Section 3.
 

@@ -138,6 +138,9 @@ public final class PaymentRecord {
 
     private static boolean isPrintable(int codePoint) {
         int type = Character.getType(codePoint);
+        if (type == Character.SPACE_SEPARATOR && codePoint != ' ') {
+            return false;
+        }
         return !Character.isISOControl(codePoint)
                 && type != Character.FORMAT
                 && type != Character.LINE_SEPARATOR

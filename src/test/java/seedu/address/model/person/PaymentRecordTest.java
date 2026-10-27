@@ -106,6 +106,15 @@ public class PaymentRecordTest {
     }
 
     @Test
+    public void remarksValidation_rejectsNonBreakingSpaceOnly() {
+        assertFalse(PaymentRecord.isValidRemarks("\u00A0"));
+        assertFalse(PaymentRecord.isValidRemarks("   \u00A0   "));
+        assertFalse(PaymentRecord.isValidRemarks("fee\u00A0paid"));
+        assertTrue(PaymentRecord.isValidRemarks("  Initial fee  "));
+        assertTrue(PaymentRecord.isValidRemarks("paid, and/or"));
+    }
+
+    @Test
     public void equalsAndHashCode_useAllValues() {
         PaymentRecord record = new PaymentRecord(new BigDecimal("150"), DATE, Optional.of("Initial fee"));
         PaymentRecord sameValues = PaymentRecord.fromText("150.00", "2026-10-20", Optional.of("Initial fee"));
