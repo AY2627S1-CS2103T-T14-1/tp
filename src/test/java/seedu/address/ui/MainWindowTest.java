@@ -201,7 +201,7 @@ public class MainWindowTest {
     }
 
     @Test
-    public void keyboard_ignoresModifiedEmptyControlAndLateKeys() throws Exception {
+    public void keyboard_ignoresModifiedBlankAndControlKeysButTypesIntoOpenTerminal() throws Exception {
         runOnFxThread(() -> {
             MainWindow window = newWindow(new ModelManager(), "keyboard");
             Scene scene = window.getPrimaryStage().getScene();
@@ -213,6 +213,7 @@ public class MainWindowTest {
             typeKey(scene, "h", false, true, false);
             typeKey(scene, "h", false, false, true);
             typeKey(scene, "", false, false, false);
+            typeKey(scene, " ", false, false, false);
             typeKey(scene, "\u0007", false, false, false);
             pressEscape(scene);
             assertEquals(1, workspace.getItems().size());
@@ -220,7 +221,7 @@ public class MainWindowTest {
             window.openTerminal();
             typeKey(scene, "x", false, false, false);
             scene.getRoot().applyCss();
-            assertEquals("", ((TextField) scene.lookup("#commandTextField")).getText());
+            assertEquals("x", ((TextField) scene.lookup("#commandTextField")).getText());
             assertEquals(2, workspace.getItems().size());
             return null;
         });

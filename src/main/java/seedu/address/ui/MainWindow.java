@@ -160,18 +160,18 @@ public class MainWindow extends UiPart<Stage> {
             }
         });
         primaryStage.getScene().addEventFilter(KeyEvent.KEY_TYPED, event -> {
-            if (isTerminalOpen() || commandBox == null || event.isControlDown()
-                    || event.isMetaDown() || event.isAltDown()
+            if (commandBox == null || event.isControlDown() || event.isMetaDown() || event.isAltDown()
                     || primaryStage.getScene().getFocusOwner() instanceof TextInputControl) {
                 return;
             }
+            // Blank keys keep their normal meaning, such as Space activating a focused button.
             String character = event.getCharacter();
-            if (character == null || character.isEmpty() || character.codePoints()
+            if (character == null || character.isBlank() || character.codePoints()
                     .anyMatch(Character::isISOControl)) {
                 return;
             }
             openTerminal();
-            commandBox.insertText(character);
+            commandBox.appendTypedText(character);
             event.consume();
         });
     }

@@ -142,10 +142,14 @@ public class CommandBox extends UiPart<Region> {
         commandTextField.requestFocus();
     }
 
-    /** Inserts the first printable key used to open the terminal. */
-    public void insertText(String text) {
+    /**
+     * Appends a key typed outside the field, leaving an unselected caret after it so typing continues.
+     * Focus moves first because the text field selects its contents when it gains keyboard focus.
+     */
+    public void appendTypedText(String text) {
+        commandTextField.requestFocus();
         commandTextField.appendText(text);
-        commandTextField.positionCaret(commandTextField.getText().length());
+        commandTextField.positionCaret(commandTextField.getLength());
     }
 
     /** Returns the command field for UI tests. */
