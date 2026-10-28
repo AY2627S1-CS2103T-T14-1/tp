@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.util.Objects;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -48,7 +49,7 @@ public final class WorkoutLogEntry {
         checkArgument(isValidSets(sets), MESSAGE_CONSTRAINTS_SETS);
         checkArgument(isValidReps(reps), MESSAGE_CONSTRAINTS_REPS);
 
-        this.name = name;
+        this.name = Normalizer.normalize(name, Normalizer.Form.NFC);
         this.weightKg = weightKg.stripTrailingZeros();
         this.sets = sets;
         this.reps = reps;
@@ -59,11 +60,12 @@ public final class WorkoutLogEntry {
      */
     public static boolean isValidName(String name) {
         requireNonNull(name);
-        int length = name.codePointCount(0, name.length());
+        String normalizedName = Normalizer.normalize(name, Normalizer.Form.NFC);
+        int length = normalizedName.codePointCount(0, normalizedName.length());
         return length >= 1
                 && length <= 50
-                && name.matches(NAME_VALIDATION_REGEX)
-                && name.codePoints().anyMatch(Character::isLetter);
+                && normalizedName.matches(NAME_VALIDATION_REGEX)
+                && normalizedName.codePoints().anyMatch(Character::isLetter);
     }
 
     /**
