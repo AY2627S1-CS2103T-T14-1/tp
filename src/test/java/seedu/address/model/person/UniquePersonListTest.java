@@ -10,6 +10,7 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -106,6 +107,14 @@ public class UniquePersonListTest {
         uniquePersonList.add(ALICE);
         uniquePersonList.add(sameNameDifferentPhone);
         assertTrue(uniquePersonList.contains(sameNameDifferentPhone));
+    }
+
+    @Test
+    public void add_caseOnlyNameDifferenceSamePhone_throwsDuplicatePersonException() {
+        uniquePersonList.add(ALICE);
+        Person caseVariant = new PersonBuilder(ALICE).withName(ALICE.getName().fullName.toUpperCase(Locale.ROOT))
+                .build();
+        assertThrows(DuplicatePersonException.class, () -> uniquePersonList.add(caseVariant));
     }
 
     @Test

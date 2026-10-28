@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -316,7 +317,7 @@ public class Person {
     }
 
     /**
-     * Returns true if both persons have the same name and the same phone number.
+     * Returns true if both persons have the same case-insensitive name and the same phone number.
      * A shared name or a shared phone number alone does not make two persons the same.
      * This defines a weaker notion of equality between two persons.
      */
@@ -326,8 +327,12 @@ public class Person {
         }
 
         return otherPerson != null
-                && otherPerson.getName().equals(getName())
+                && normalisedName(otherPerson).equals(normalisedName(this))
                 && otherPerson.getPhone().equals(getPhone());
+    }
+
+    private static String normalisedName(Person person) {
+        return person.getName().fullName.toLowerCase(Locale.ROOT);
     }
 
     /**
