@@ -160,8 +160,10 @@ public class ClientContextPanel extends UiPart<Region> {
 
         ColumnConstraints dateColumn = new ColumnConstraints(48, 48, 48);
         ColumnConstraints detailColumn = new ColumnConstraints();
+        detailColumn.setMinWidth(0);
         detailColumn.setHgrow(Priority.ALWAYS);
         ColumnConstraints timeColumn = new ColumnConstraints();
+        timeColumn.setMinWidth(Region.USE_PREF_SIZE);
         row.getColumnConstraints().addAll(dateColumn, detailColumn, timeColumn);
 
         LocalDateTime dateTime = session.getDateTime();
