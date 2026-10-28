@@ -281,7 +281,7 @@ Each `Person` has an optional immutable `HealthProfile` with one current trainer
 | `dr/` | `DietaryRestrictionsContainsKeywordsPredicate` | any keyword is a case-insensitive substring of any current restriction |
 | `h/` | `HealthProfileContainsKeywordsPredicate` | any keyword is a case-insensitive substring of the health note; clients without one never match |
 
-Case-insensitive matching lowercases both sides with `Locale.ROOT`, except the name predicate, which uses `StringUtil#containsIgnoreCase`. `FindCommand` passes the combined predicate to `Model#updateFilteredPersonList` and reports `Found N client(s).` or the zero-result message. It does not modify stored data.
+Case-insensitive matching lowercases both sides with `Locale.ROOT`, except the name predicate, which uses `StringUtil#containsIgnoreCase`. The health predicate also folds the Greek final sigma (`ς`) to the ordinary sigma (`σ`) after lowercasing, so sigma variants match each other. `FindCommand` passes the combined predicate to `Model#updateFilteredPersonList` and reports `Found N client(s).` or the zero-result message. It does not modify stored data.
 
 OR was chosen so that each additional criterion widens the result and so that each feature can contribute its own predicate without changing the others. To add a criterion, define a prefix in `CliSyntax`, add it to `FindCommandParser#SUPPORTED_PREFIXES`, write a `Predicate<Person>` in `model.person`, and add a branch to `FindCommandParser#createFindCommand`. Automated coverage is in `FindCommandParserTest`, `FindCommandTest`, `ClientMatchesAnyPredicateTest` and one test class per predicate.
 
