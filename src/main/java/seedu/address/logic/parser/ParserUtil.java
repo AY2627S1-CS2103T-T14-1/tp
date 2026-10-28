@@ -30,6 +30,9 @@ import seedu.address.model.tag.Tag;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
+    public static final int MAX_ADD_ADDRESS_LENGTH = 200;
+    public static final String MESSAGE_ADD_ADDRESS_CONSTRAINTS =
+            "Address must contain 1 to 200 printable characters without line breaks.";
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
@@ -87,6 +90,21 @@ public class ParserUtil {
             throw new ParseException(Address.MESSAGE_CONSTRAINTS);
         }
         return new Address(trimmedAddress);
+    }
+
+    /**
+     * Parses an address supplied to {@code add}, limiting its trimmed value to 200 Unicode code points.
+     * The existing address parser remains unrestricted in length for edit and legacy-data compatibility.
+     *
+     * @throws ParseException if the address is invalid or exceeds the add-command length limit.
+     */
+    public static Address parseAddressForAdd(String address) throws ParseException {
+        Address parsedAddress = parseAddress(address);
+        String value = parsedAddress.value;
+        if (value.codePointCount(0, value.length()) > MAX_ADD_ADDRESS_LENGTH) {
+            throw new ParseException(MESSAGE_ADD_ADDRESS_CONSTRAINTS);
+        }
+        return parsedAddress;
     }
 
     /**

@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
@@ -52,6 +53,22 @@ public class AddCommandParserTest {
     private static final String INVALID_GOAL_DESC = " g/!!!";
 
     private AddCommandParser parser = new AddCommandParser();
+
+    @Test
+    public void parse_addressAtLengthLimit_success() {
+        String address = "A".repeat(200);
+        Person expected = new PersonBuilder(BOB).withAddress(address).withTags().build();
+        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + " a/  " + address + "  ",
+                new AddCommand(expected));
+    }
+
+    @Test
+    public void parse_issue262OversizedAddress_failure() {
+        String address = "123 Test Road ".repeat(14) + "Block";
+        assertEquals(201, address.length());
+        assertParseFailure(parser, " n/Long Address Test p/92345673 e/longaddress@example.com a/" + address,
+                "Address must contain 1 to 200 printable characters without line breaks.");
+    }
 
     @Test
     public void parse_allFieldsPresent_success() {
