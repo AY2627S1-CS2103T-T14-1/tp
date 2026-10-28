@@ -311,7 +311,7 @@ The client card shows a single membership tag reading `Plan_name Member: N sessi
 
 ### Body progress tracker
 
-Implemented for v1.4. The [feature contract](featureSpecs.md#feature-13-body-progress-tracker) and [User Guide](UserGuide.md#body-progress-tracker) define user-visible behavior. The tracker supports baseline measurements, dated weight/notes, complete history, latest-to-baseline comparison, and correction/deletion.
+Implemented for v1.4. The [feature contract](featureSpecs.md#feature-10-body-progress-tracker) and [User Guide](UserGuide.md#body-progress-tracker) define user-visible behavior. The tracker supports baseline measurements, dated weight/notes, complete history, latest-to-baseline comparison, and correction/deletion.
 
 #### Ownership and invariants
 
@@ -378,7 +378,7 @@ Load then sort valid entries by date. On save, emit the canonical date order. Ro
 
 #### Atomic mutation, rollback and integration
 
-For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` `BodyMutationCommand` identifies the three mutations for this message mapping; read-only queries should not be classified as mutations merely to reuse it. Existing application-wide autosave behavior need not change for this feature, but history/comparison must leave all domain data unchanged.
+For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` `BodyMutationCommand` identifies the three mutations for this message mapping. `LogicManager` returns successful non-mutating `BodyCommand` results without saving or changing undo/redo history. Thus history/comparison remain available with read-only storage and do not create a data file merely to show an empty tracker. They still return typed view requests for the UI. Mutations continue through the atomic save and undo boundary.
 
 <img src="images/BodyProgressSaveSequence.png" alt="Body mutation sequence with validation, atomic save and rollback on IOException" width="820" />
 
