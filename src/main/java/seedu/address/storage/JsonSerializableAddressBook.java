@@ -87,13 +87,23 @@ class JsonSerializableAddressBook {
                 throw new IllegalValueException(MESSAGE_NULL_PERSON);
             }
             Person person = jsonAdaptedPerson.toModelType(clock);
-            if (addressBook.hasPerson(person)) {
+            validateMembershipAssignment(addressBook, person);
+            if (addressBook.hasPerson(person) && !isLegacyNameVariant(addressBook, person)) {
                 throw new IllegalValueException(MESSAGE_DUPLICATE_PERSON);
             }
-            validateMembershipAssignment(addressBook, person);
-            addressBook.addPerson(person);
+            if (addressBook.hasPerson(person)) {
+                addressBook.addLegacyPerson(person);
+            } else {
+                addressBook.addPerson(person);
+            }
         }
         return addressBook;
+    }
+
+    /** Returns whether the matching identity differs only in a legacy unnormalized name representation. */
+    private boolean isLegacyNameVariant(AddressBook addressBook, Person person) {
+        return addressBook.getPersonList().stream()
+                .anyMatch(existing -> existing.isSamePerson(person) && !existing.getName().equals(person.getName()));
     }
 
     /**

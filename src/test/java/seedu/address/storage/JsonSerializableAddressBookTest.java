@@ -76,12 +76,16 @@ public class JsonSerializableAddressBookTest {
     }
 
     @Test
-    public void toModelType_caseOnlyDuplicatePersons_throwsIllegalValueException() throws Exception {
+    public void toModelType_caseOnlyDuplicatePersons_loadsAndRoundTrips() throws Exception {
         JsonSerializableAddressBook dataFromFile = JsonUtil.readJsonFile(
                 TEST_DATA_FOLDER.resolve("caseOnlyDuplicatePersonAddressBook.json"),
                 JsonSerializableAddressBook.class).get();
-        assertThrows(IllegalValueException.class, JsonSerializableAddressBook.MESSAGE_DUPLICATE_PERSON,
-                dataFromFile::toModelType);
+        AddressBook addressBook = dataFromFile.toModelType();
+        assertEquals(2, addressBook.getPersonList().size());
+
+        JsonSerializableAddressBook reserialized = JsonUtil.fromJsonString(
+                JsonUtil.toJsonString(new JsonSerializableAddressBook(addressBook)), JsonSerializableAddressBook.class);
+        assertEquals(2, reserialized.toModelType().getPersonList().size());
     }
 
     @Test

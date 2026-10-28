@@ -113,6 +113,21 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_listAfterLoadingLegacyNameVariants_preservesClients() throws Exception {
+        Path dataFile = temporaryFolder.resolve("addressBook.json");
+        Files.copy(Path.of("src", "test", "data", "JsonSerializableAddressBookTest",
+                "caseOnlyDuplicatePersonAddressBook.json"), dataFile);
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(dataFile);
+        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
+        model = new ModelManager(addressBookStorage.readAddressBook().orElseThrow(), new UserPrefs());
+        logic = new LogicManager(model, new StorageManager(addressBookStorage, userPrefsStorage));
+
+        logic.execute("list");
+
+        assertEquals(2, addressBookStorage.readAddressBook().orElseThrow().getPersonList().size());
+    }
+
+    @Test
     public void execute_addExercise_success() throws Exception {
         Person person = new PersonBuilder(AMY).build();
         model.addPerson(person);

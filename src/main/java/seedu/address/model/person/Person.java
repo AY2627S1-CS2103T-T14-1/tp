@@ -317,7 +317,7 @@ public class Person {
     }
 
     /**
-     * Returns true if both persons have the same name, ignoring letter case, and the same phone number.
+     * Returns true if both persons have the same normalized name and the same phone number.
      * A shared name or a shared phone number alone does not make two persons the same.
      * This defines a weaker notion of equality between two persons.
      */
@@ -332,7 +332,7 @@ public class Person {
     }
 
     private static String normalisedName(Person person) {
-        return person.getName().fullName.toLowerCase(Locale.ROOT);
+        return person.getName().fullName.strip().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
     /**

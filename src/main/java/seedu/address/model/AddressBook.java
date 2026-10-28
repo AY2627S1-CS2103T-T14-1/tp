@@ -54,7 +54,7 @@ public class AddressBook implements ReadOnlyAddressBook {
     public void resetData(ReadOnlyAddressBook newData) {
         requireNonNull(newData);
 
-        setPersons(newData.getPersonList());
+        persons.setPersonsAllowingLegacyVariants(newData.getPersonList());
         setMembershipPlans(newData.getMembershipPlanList());
     }
 
@@ -81,6 +81,14 @@ public class AddressBook implements ReadOnlyAddressBook {
      */
     public void addPerson(Person p) {
         persons.add(p);
+    }
+
+    /**
+     * Preserves a case or whitespace name variant written by an older release during data loading.
+     * New clients must be added through {@link #addPerson(Person)}.
+     */
+    public void addLegacyPerson(Person p) {
+        persons.addLegacyPerson(p);
     }
 
     /**

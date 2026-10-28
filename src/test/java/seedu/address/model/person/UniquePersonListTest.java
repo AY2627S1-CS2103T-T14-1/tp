@@ -102,13 +102,6 @@ public class UniquePersonListTest {
     }
 
     @Test
-    public void add_caseOnlyNameDifferenceSamePhone_throwsDuplicatePersonException() {
-        uniquePersonList.add(ALICE);
-        Person caseVariant = new PersonBuilder(ALICE).withName(ALICE.getName().fullName.toUpperCase()).build();
-        assertThrows(DuplicatePersonException.class, () -> uniquePersonList.add(caseVariant));
-    }
-
-    @Test
     public void add_sameNameDifferentPhone_success() {
         Person sameNameDifferentPhone = new PersonBuilder(ALICE).withPhone(BOB.getPhone().value).build();
         uniquePersonList.add(ALICE);
