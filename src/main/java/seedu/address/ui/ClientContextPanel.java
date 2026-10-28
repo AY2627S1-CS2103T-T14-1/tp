@@ -34,41 +34,53 @@ public class ClientContextPanel extends UiPart<Region> {
     @FXML
     private VBox selectedContent;
     @FXML
-    private VBox emptyContent;
-    @FXML
-    private Label dietCommandHint;
+    private Region emptyContent;
     @FXML
     private VBox dietContent;
     @FXML
     private Label dietTarget;
     @FXML
+    private Label dietUnit;
+    @FXML
+    private VBox macroSection;
+    @FXML
+    private HBox macroSplit;
+    @FXML
+    private Region macroProtein;
+    @FXML
+    private Region macroCarbs;
+    @FXML
+    private Region macroFat;
+    @FXML
+    private Label proteinGrams;
+    @FXML
+    private Label carbsGrams;
+    @FXML
+    private Label fatGrams;
+    @FXML
+    private Label proteinShare;
+    @FXML
+    private Label carbsShare;
+    @FXML
+    private Label fatShare;
+    @FXML
     private VBox dietNotesBox;
     @FXML
     private Label dietNotes;
     @FXML
-    private VBox dietEmpty;
-    @FXML
-    private Label dietEmptyCommand;
+    private Region dietEmpty;
     @FXML
     private VBox dietaryRestrictionsBox;
     @FXML
     private Label dietaryRestrictions;
     @FXML
-    private Label sessionCommandHint;
-    @FXML
     private VBox sessionRows;
     @FXML
-    private VBox sessionsEmpty;
-    @FXML
-    private Label sessionsEmptyCommand;
-    @FXML
-    private Label historyCommandHint;
+    private Region sessionsEmpty;
     @FXML
     private VBox historyRows;
     @FXML
-    private VBox historyEmpty;
-    @FXML
-    private Label historyEmptyCommand;
+    private Region historyEmpty;
 
     /** Creates an initially empty client context panel. */
     public ClientContextPanel() {
@@ -85,30 +97,61 @@ public class ClientContextPanel extends UiPart<Region> {
             return;
         }
 
-        dietCommandHint.setText("diet " + displayedIndex);
-        sessionCommandHint.setText("schedule " + displayedIndex);
-        historyCommandHint.setText("history " + displayedIndex);
-        showDiet(person, displayedIndex);
+        showDiet(person);
         showDietaryRestrictions(person);
-        showSessions(person, displayedIndex);
-        showHistory(person, displayedIndex);
+        showSessions(person);
+        showHistory(person);
     }
 
-    private void showDiet(Person person, int displayedIndex) {
+    private void showDiet(Person person) {
         boolean hasDiet = person.getDietPlan().isPresent();
         setShown(dietContent, hasDiet);
         setShown(dietEmpty, !hasDiet);
-        dietEmptyCommand.setText("diet " + displayedIndex + " t/1800 kcal per day n/Prioritise vegetables");
         if (!hasDiet) {
             return;
         }
 
         DietPlan plan = person.getDietPlan().orElseThrow();
-        dietTarget.setText(plan.getTarget());
+        boolean structured = plan.getCalories().isPresent();
+        dietTarget.setText(structured ? String.valueOf(plan.getCalories().orElseThrow()) : plan.getTarget());
+        if (structured && !dietTarget.getStyleClass().contains("metric")) {
+            dietTarget.getStyleClass().add("metric");
+        } else if (!structured) {
+            dietTarget.getStyleClass().remove("metric");
+        }
+        setShown(dietUnit, structured);
+        setShown(macroSection, structured);
+        if (structured) {
+            int calories = plan.getCalories().orElseThrow();
+            int proteinPct = showMacro(plan.getProteinGrams(), calories, 4, proteinGrams, proteinShare, macroProtein);
+            int carbsPct = showMacro(plan.getCarbsGrams(), calories, 4, carbsGrams, carbsShare, macroCarbs);
+            int fatPct = showMacro(plan.getFatGrams(), calories, 9, fatGrams, fatShare, macroFat);
+            int proteinWidth = Math.min(100, proteinPct);
+            int carbsWidth = Math.min(100 - proteinWidth, carbsPct);
+            int fatWidth = Math.min(100 - proteinWidth - carbsWidth, fatPct);
+            bindMacroWidth(macroProtein, proteinWidth);
+            bindMacroWidth(macroCarbs, carbsWidth);
+            bindMacroWidth(macroFat, fatWidth);
+        }
         plan.getNotes().ifPresentOrElse(notes -> {
             dietNotes.setText(notes);
             setShown(dietNotesBox, true);
         }, () -> setShown(dietNotesBox, false));
+    }
+
+    private int showMacro(java.util.Optional<Integer> grams, int calories, int kcalPerGram,
+            Label value, Label share, Region bar) {
+        boolean present = grams.isPresent() && grams.orElseThrow() > 0;
+        int percentage = present ? (int) Math.round(grams.orElseThrow() * kcalPerGram * 100.0 / calories) : 0;
+        value.setText(present ? grams.orElseThrow() + " g" : "—");
+        share.setText(present ? percentage + "% of kcal" : "");
+        setShown(bar, present);
+        return percentage;
+    }
+
+    private void bindMacroWidth(Region bar, int percentage) {
+        bar.prefWidthProperty().unbind();
+        bar.prefWidthProperty().bind(macroSplit.widthProperty().subtract(4).multiply(percentage / 100.0));
     }
 
     private void showDietaryRestrictions(Person person) {
@@ -118,14 +161,12 @@ public class ClientContextPanel extends UiPart<Region> {
         setShown(dietaryRestrictionsBox, hasRestrictions);
     }
 
-    private void showSessions(Person person, int displayedIndex) {
+    private void showSessions(Person person) {
         List<TrainingSession> sessions = person.getTrainingSessions().stream()
                 .sorted(Comparator.comparing(TrainingSession::getDateTime)).toList();
         sessionRows.getChildren().clear();
         setShown(sessionRows, !sessions.isEmpty());
         setShown(sessionsEmpty, sessions.isEmpty());
-        sessionsEmptyCommand.setText("schedule " + displayedIndex
-                + " d/2099-03-15 tm/14:30 l/Main gym");
         if (sessions.isEmpty()) {
             return;
         }
@@ -179,6 +220,7 @@ public class ClientContextPanel extends UiPart<Region> {
         Label status = new Label(statusText);
         status.getStyleClass().add("session-status");
         VBox details = new VBox(3, location, status);
+        details.setMinWidth(0);
 
         Label time = new Label(dateTime.format(TIME_FORMAT));
         time.getStyleClass().addAll("session-time", "mono");
@@ -188,7 +230,7 @@ public class ClientContextPanel extends UiPart<Region> {
         return row;
     }
 
-    private void showHistory(Person person, int displayedIndex) {
+    private void showHistory(Person person) {
         Comparator<WorkoutSession> newestFirst =
                 Comparator.comparing(WorkoutSession::getDate, Comparator.reverseOrder())
                 .thenComparing(session -> session.getTime().isPresent())
@@ -197,8 +239,6 @@ public class ClientContextPanel extends UiPart<Region> {
         historyRows.getChildren().clear();
         setShown(historyRows, !sessions.isEmpty());
         setShown(historyEmpty, sessions.isEmpty());
-        historyEmptyCommand.setText("log " + displayedIndex
-                + " d/2020-01-15 t/18:00 ex/Back squat|60|3|10");
         for (int i = 0; i < sessions.size(); i++) {
             historyRows.getChildren().add(createHistoryRow(sessions.get(i), i + 1));
         }
@@ -212,18 +252,23 @@ public class ClientContextPanel extends UiPart<Region> {
 
         Label date = new Label(historyIndex + ". " + session.getDate().format(HISTORY_DATE_FORMAT));
         date.getStyleClass().add("history-date");
+        date.setWrapText(true);
+        date.setMinWidth(0);
+        date.setMaxWidth(Double.MAX_VALUE);
         Label time = new Label(session.getTime().map(value -> value.format(TIME_FORMAT)).orElse("Time not specified"));
         time.getStyleClass().addAll("history-time", "mono");
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox heading = new HBox(8, date, spacer, time);
-        heading.setAlignment(Pos.BASELINE_LEFT);
+        time.setWrapText(true);
+        time.setMinWidth(0);
+        time.setMaxWidth(Double.MAX_VALUE);
 
-        VBox details = new VBox(3, heading);
+        VBox details = new VBox(3, date, time);
+        details.setMinWidth(0);
         for (WorkoutLogEntry entry : session.getEntries()) {
             Label exercise = new Label(formatLogEntry(entry));
             exercise.getStyleClass().addAll("history-exercise", "mono");
             exercise.setWrapText(true);
+            exercise.setMinWidth(0);
+            exercise.setMaxWidth(Double.MAX_VALUE);
             details.getChildren().add(exercise);
         }
         HBox.setHgrow(details, Priority.ALWAYS);

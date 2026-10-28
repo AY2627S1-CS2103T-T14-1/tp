@@ -34,6 +34,7 @@ public class HelpWindow extends UiPart<Stage> {
      */
     public HelpWindow(Stage root) {
         super(FXML, root);
+        root.getIcons().setAll(FittixIcon.createImage());
         helpMessage.setText(HELP_MESSAGE);
     }
 

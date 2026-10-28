@@ -3,17 +3,18 @@ package seedu.address.ui;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import seedu.address.model.person.Person;
 
-/** Compact client list and selection owner for the redesigned workspace. */
+/** Client list with one card per visible person and no nested scrollbar. */
 public class PersonListPanel extends UiPart<Region> {
 
     private static final String FXML = "PersonListPanel.fxml";
@@ -21,55 +22,48 @@ public class PersonListPanel extends UiPart<Region> {
     private final ObservableList<Person> displayedPeople;
     private final ObservableList<? extends Person> sourcePeople;
     private final ReadOnlyIntegerWrapper totalCount = new ReadOnlyIntegerWrapper();
+    private final ReadOnlyObjectWrapper<Person> selectedPerson = new ReadOnlyObjectWrapper<>();
     private int lastSelectedSourceIndex = -1;
-    private String filterQuery;
 
     @FXML
-    private ListView<Person> personListView;
+    private VBox personRows;
     @FXML
     private Label shownCount;
-    @FXML
-    private Label emptyTitle;
-    @FXML
-    private Label emptyBody;
-    @FXML
-    private Label emptyCommand;
 
-    /** Creates a client list backed by the logic component's filtered list. */
+    /** Creates a list backed by the logic component's filtered list. */
     public PersonListPanel(ObservableList<Person> personList) {
         super(FXML);
         displayedPeople = personList;
         sourcePeople = getSourceList(personList);
-
-        personListView.setItems(displayedPeople);
-        personListView.setCellFactory(unused -> new PersonListViewCell());
-        personListView.getSelectionModel().selectedItemProperty().addListener((unused, previous, selected) -> {
-            if (selected != null) {
-                lastSelectedSourceIndex = sourcePeople.indexOf(selected);
+        personRows.setFocusTraversable(true);
+        personRows.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.UP || event.getCode() == KeyCode.DOWN) {
+                int delta = event.getCode() == KeyCode.UP ? -1 : 1;
+                selectDisplayedIndex(Math.max(0, Math.min(displayedPeople.size() - 1, getSelectedIndex() + delta)));
+                event.consume();
             }
         });
-
         displayedPeople.addListener((ListChangeListener<Person>) change -> {
             updateCounts();
             restoreSelection();
-            updateEmptyState();
+            rebuildCards();
         });
         sourcePeople.addListener((ListChangeListener<Person>) change -> {
             updateCounts();
-            updateEmptyState();
+            restoreSelection();
+            rebuildCards();
         });
-
         updateCounts();
-        updateEmptyState();
-        personListView.getSelectionModel().selectFirst();
+        restoreSelection();
+        rebuildCards();
     }
 
     @SuppressWarnings("unchecked")
-    private static ObservableList<? extends Person> getSourceList(ObservableList<Person> personList) {
-        if (personList instanceof FilteredList<?> filteredList) {
-            return (ObservableList<? extends Person>) filteredList.getSource();
+    private static ObservableList<? extends Person> getSourceList(ObservableList<Person> people) {
+        if (people instanceof FilteredList<?> filtered) {
+            return (ObservableList<? extends Person>) filtered.getSource();
         }
-        return personList;
+        return people;
     }
 
     private void updateCounts() {
@@ -78,75 +72,74 @@ public class PersonListPanel extends UiPart<Region> {
     }
 
     private void restoreSelection() {
-        Person selected = personListView.getSelectionModel().getSelectedItem();
-        if (selected != null && displayedPeople.contains(selected)) {
+        Person selected = selectedPerson.get();
+        int visibleIndex = displayedPeople.indexOf(selected);
+        if (visibleIndex >= 0) {
+            selectedPerson.set(displayedPeople.get(visibleIndex));
             return;
         }
         if (displayedPeople.isEmpty()) {
-            personListView.getSelectionModel().clearSelection();
+            selectedPerson.set(null);
             return;
         }
         if (lastSelectedSourceIndex >= 0 && lastSelectedSourceIndex < sourcePeople.size()) {
-            Person replacement = sourcePeople.get(lastSelectedSourceIndex);
-            int displayedIndex = displayedPeople.indexOf(replacement);
-            if (displayedIndex >= 0) {
-                personListView.getSelectionModel().select(displayedIndex);
+            int replacementIndex = displayedPeople.indexOf(sourcePeople.get(lastSelectedSourceIndex));
+            if (replacementIndex >= 0) {
+                selectedPerson.set(displayedPeople.get(replacementIndex));
                 return;
             }
         }
-        personListView.getSelectionModel().selectFirst();
+        selectedPerson.set(displayedPeople.getFirst());
     }
 
-    /** Sets the active find query, or {@code null} when all clients are shown. */
-    public void setFilterQuery(String filterQuery) {
-        this.filterQuery = filterQuery == null || filterQuery.isBlank() ? null : filterQuery.trim();
-        updateEmptyState();
-    }
-
-    private void updateEmptyState() {
-        if (sourcePeople.isEmpty()) {
-            emptyTitle.setText("No clients yet");
-            emptyBody.setText("Add a client to start building plans, sessions and workout history.");
-            emptyCommand.setText("add n/NAME p/PHONE e/EMAIL a/ADDRESS");
-        } else {
-            emptyTitle.setText("No clients match");
-            String suffix = filterQuery == null ? "." : " “" + filterQuery + "”.";
-            emptyBody.setText("Nothing matched" + suffix + " Indexes refer to the visible list.");
-            emptyCommand.setText("list");
+    private void rebuildCards() {
+        personRows.getChildren().clear();
+        for (int index = 0; index < displayedPeople.size(); index++) {
+            Person person = displayedPeople.get(index);
+            Region card = new PersonCard(person, index + 1).getRoot();
+            if (index == getSelectedIndex()) {
+                card.getStyleClass().add("selected");
+            }
+            card.setOnMouseClicked(event -> {
+                selectPerson(person);
+                personRows.requestFocus();
+            });
+            personRows.getChildren().add(card);
         }
+    }
+
+    /** Retained for callers that update the active find query. */
+    public void setFilterQuery(String filterQuery) {
+        rebuildCards();
     }
 
     /** Selects a zero-based index in the currently displayed list. */
     public void selectDisplayedIndex(int index) {
         if (index >= 0 && index < displayedPeople.size()) {
-            personListView.getSelectionModel().select(index);
-            personListView.scrollTo(index);
+            selectedPerson.set(displayedPeople.get(index));
+            lastSelectedSourceIndex = sourcePeople.indexOf(displayedPeople.get(index));
+            rebuildCards();
         }
     }
 
-    /** Selects the newly appended final client. */
     public void selectLast() {
         selectDisplayedIndex(displayedPeople.size() - 1);
     }
 
-    /** Selects {@code person} when it is present in the displayed list. */
     public void selectPerson(Person person) {
-        int index = displayedPeople.indexOf(person);
-        if (index >= 0) {
-            selectDisplayedIndex(index);
-        }
+        selectDisplayedIndex(displayedPeople.indexOf(person));
     }
 
     public Person getSelectedPerson() {
-        return personListView.getSelectionModel().getSelectedItem();
+        return selectedPerson.get();
     }
 
     public int getSelectedIndex() {
-        return personListView.getSelectionModel().getSelectedIndex();
+        return displayedPeople.indexOf(selectedPerson.get());
     }
 
     public ReadOnlyObjectProperty<Person> selectedPersonProperty() {
-        return personListView.getSelectionModel().selectedItemProperty();
+        return selectedPerson.getReadOnlyProperty();
     }
 
     public ReadOnlyIntegerProperty totalCountProperty() {
@@ -155,20 +148,5 @@ public class PersonListPanel extends UiPart<Region> {
 
     public int getDisplayedCount() {
         return displayedPeople.size();
-    }
-
-    /** Renders each list entry as a compact client card. */
-    private class PersonListViewCell extends ListCell<Person> {
-        @Override
-        protected void updateItem(Person person, boolean empty) {
-            super.updateItem(person, empty);
-            if (empty || person == null) {
-                setGraphic(null);
-                setText(null);
-            } else {
-                setGraphic(new PersonCard(person, getIndex() + 1).getRoot());
-                setText(null);
-            }
-        }
     }
 }

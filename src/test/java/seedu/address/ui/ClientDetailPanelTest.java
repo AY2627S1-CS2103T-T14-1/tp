@@ -74,12 +74,12 @@ public class ClientDetailPanelTest {
             assertEquals("3", label(panel, "profileIndex").getText());
             assertEquals("Alex Yeoh", label(panel, "clientName").getText());
             assertEquals("87438807", label(panel, "phone").getText());
-            assertEquals("alex@example.com", label(panel, "email").getText());
+            assertEquals("alex@example.com", label(panel, "email").getText().replace("\u200b", ""));
             assertEquals("30 Geylang Street", label(panel, "address").getText());
             assertEquals("Build strength", label(panel, "goal").getText());
             assertEquals("Prefers morning sessions", label(panel, "remark").getText());
             assertTrue(region(panel, "remarkBox").isManaged());
-            assertEquals("edit 3 …  ·  delete 3", label(panel, "profileCommandHint").getText());
+            assertTrue(label(panel, "clientName").isWrapText());
             return null;
         });
     }
@@ -120,15 +120,14 @@ public class ClientDetailPanelTest {
     }
 
     @Test
-    public void emptyPlan_showsCompatibleAddExerciseCommand() throws Exception {
+    public void emptyPlan_keepsBlankCardBody() throws Exception {
         runOnFxThread(() -> {
             ClientDetailPanel panel = new ClientDetailPanel();
             panel.showPerson(new PersonBuilder().build(), 2);
 
             assertTrue(region(panel, "workoutEmpty").isManaged());
             assertFalse(region(panel, "workoutRows").isManaged());
-            assertEquals("addex 2 n/Back Squat s/4 r/8 w/80 d/MON",
-                    label(panel, "workoutEmptyCommand").getText());
+            assertEquals("", label(panel, "planSummary").getText());
             assertEquals("—", label(panel, "goal").getText());
             assertFalse(region(panel, "remarkBox").isManaged());
             return null;
@@ -175,8 +174,7 @@ public class ClientDetailPanelTest {
             assertEquals(0, vbox(panel, "paymentRows").getChildren().size());
             assertFalse(region(panel, "paymentRows").isManaged());
             assertTrue(region(panel, "paymentEmpty").isManaged());
-            assertEquals("No payments recorded.", label(panel, "paymentEmpty").getText());
-            assertEquals("None", label(panel, "paymentSummary").getText());
+            assertEquals("", label(panel, "paymentSummary").getText());
             return null;
         });
     }

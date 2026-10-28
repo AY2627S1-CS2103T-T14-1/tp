@@ -25,6 +25,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
@@ -80,9 +81,33 @@ public class WorkoutSessionDisplayTest {
             assertEquals("1800 kcal per day", label(panel, "dietTarget").getText());
             assertEquals("Prioritise vegetables", label(panel, "dietNotes").getText());
             assertTrue(region(panel, "dietNotesBox").isManaged());
-            assertEquals("diet 2", label(panel, "dietCommandHint").getText());
+            assertFalse(region(panel, "macroSection").isManaged());
 
             panel.showPerson(new PersonBuilder().withDietPlan(new DietPlan("High protein")).build(), 1);
+            assertFalse(region(panel, "dietNotesBox").isManaged());
+            return null;
+        });
+    }
+
+    @Test
+    public void structuredDiet_showsCalorieSplitAndClearsMissingMacros() throws Exception {
+        runOnFxThread(() -> {
+            ClientContextPanel panel = new ClientContextPanel();
+            DietPlan plan = DietPlan.structured(2100, Optional.of(160), Optional.of(210),
+                    Optional.of(65), Optional.of("High protein"));
+            panel.showPerson(new PersonBuilder().withDietPlan(plan).build(), 1);
+            assertEquals("2100", label(panel, "dietTarget").getText());
+            assertEquals("160 g", label(panel, "proteinGrams").getText());
+            assertEquals("30% of kcal", label(panel, "proteinShare").getText());
+            assertEquals("40% of kcal", label(panel, "carbsShare").getText());
+            assertEquals("28% of kcal", label(panel, "fatShare").getText());
+            assertTrue(region(panel, "macroSection").isManaged());
+
+            panel.showPerson(new PersonBuilder().withDietPlan(DietPlan.structured(2400,
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty())).build(), 1);
+            assertEquals("—", label(panel, "proteinGrams").getText());
+            assertEquals("", label(panel, "proteinShare").getText());
+            assertFalse(region(panel, "macroProtein").isManaged());
             assertFalse(region(panel, "dietNotesBox").isManaged());
             return null;
         });
@@ -192,7 +217,7 @@ public class WorkoutSessionDisplayTest {
                     labelTexts(rows.getChildren().get(0)));
             assertEquals(List.of("✓", "2. Tue 14 Jan 2020", "Time not specified",
                     "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(1)));
-            assertEquals("history 4", label(panel, "historyCommandHint").getText());
+            assertTrue(rows.getChildren().get(0).lookup(".history-date") instanceof Label);
             return null;
         });
     }
@@ -218,6 +243,41 @@ public class WorkoutSessionDisplayTest {
                 assertEquals(List.of("✓", "3. Wed 15 Jan 2020", "00:00",
                         "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(2)));
             }
+            return null;
+        });
+    }
+
+    @Test
+    public void completedWorkouts_fullYearAndUnspecifiedTimeRenderInNarrowColumn() throws Exception {
+        runOnFxThread(() -> {
+            Person person = new PersonBuilder().withWorkoutSessions(List.of(
+                    new WorkoutSession(LocalDate.of(2020, 1, 15), Optional.empty(), List.of(SQUAT)),
+                    new WorkoutSession(LocalDate.of(2014, 1, 15), Optional.empty(), List.of(SQUAT)),
+                    new WorkoutSession(LocalDate.of(2020, 1, 14), Optional.of(LocalTime.of(18, 0)),
+                            List.of(BENCH)))).build();
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(person, 1);
+            Region root = panel.getRoot();
+            Scene scene = new Scene(root, 340, 900);
+            scene.getStylesheets().add(getClass().getResource("/view/FittixTheme.css").toExternalForm());
+            root.applyCss();
+            root.layout();
+
+            VBox rows = (VBox) root.lookup("#historyRows");
+            assertEquals(3, rows.getChildren().size());
+            for (String style : List.of("history-date", "history-time")) {
+                for (Node node : root.lookupAll("." + style)) {
+                    Label label = (Label) node;
+                    Text rendered = (Text) label.lookup(".text");
+                    assertEquals(label.getText(), rendered.getText());
+                    assertTrue(rendered.getLayoutBounds().getWidth() <= label.getWidth());
+                    assertTrue(rendered.getLayoutBounds().getHeight() <= label.getHeight());
+                }
+            }
+            assertEquals(List.of("✓", "1. Wed 15 Jan 2020", "Time not specified",
+                    "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(0)));
+            assertEquals(List.of("✓", "3. Wed 15 Jan 2014", "Time not specified",
+                    "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(2)));
             return null;
         });
     }

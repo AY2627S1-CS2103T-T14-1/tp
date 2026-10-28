@@ -16,8 +16,8 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -43,13 +43,12 @@ public class PersonListPanelTest {
     }
 
     @Test
-    public void emptyList_showsAddClientState() throws Exception {
+    public void emptyList_keepsBlankCardBody() throws Exception {
         runOnFxThread(() -> {
             PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList());
 
             assertEquals("0", label(panel, "shownCount").getText());
-            assertEquals("No clients yet", label(panel, "emptyTitle").getText());
-            assertEquals("add n/NAME p/PHONE e/EMAIL a/ADDRESS", label(panel, "emptyCommand").getText());
+            assertEquals(0, ((VBox) panel.getRoot().lookup("#personRows")).getChildren().size());
             assertNull(panel.getSelectedPerson());
             return null;
         });
@@ -87,8 +86,7 @@ public class PersonListPanelTest {
 
             panel.setFilterQuery("Nobody");
             displayed.setPredicate(person -> false);
-            assertEquals("No clients match", label(panel, "emptyTitle").getText());
-            assertEquals("list", label(panel, "emptyCommand").getText());
+            assertEquals(0, ((VBox) panel.getRoot().lookup("#personRows")).getChildren().size());
             assertNull(panel.getSelectedPerson());
             return null;
         });
@@ -112,13 +110,7 @@ public class PersonListPanelTest {
 
     private static Label label(PersonListPanel panel, String id) {
         prepareForLookup(panel);
-        Label result = (Label) panel.getRoot().lookup("#" + id);
-        if (result == null) {
-            @SuppressWarnings("unchecked")
-            ListView<Person> list = (ListView<Person>) panel.getRoot().lookup("#personListView");
-            result = (Label) list.getPlaceholder().lookup("#" + id);
-        }
-        return result;
+        return (Label) panel.getRoot().lookup("#" + id);
     }
 
     private static void prepareForLookup(PersonListPanel panel) {

@@ -1,8 +1,11 @@
 package seedu.address.storage;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import seedu.address.commons.exceptions.IllegalValueException;
@@ -16,14 +19,29 @@ class JsonAdaptedDietPlan {
 
     private final JsonNode target;
     private final JsonNode notes;
+    private final JsonNode calories;
+    private final JsonNode proteinGrams;
+    private final JsonNode carbsGrams;
+    private final JsonNode fatGrams;
 
     /**
      * Creates an adapter from stored JSON fields. Missing or null notes represent absent notes.
      */
-    @JsonCreator
     public JsonAdaptedDietPlan(@JsonProperty("target") JsonNode target, @JsonProperty("notes") JsonNode notes) {
+        this(target, notes, null, null, null, null);
+    }
+
+    /** Creates an adapter including optional structured nutrition values. */
+    @JsonCreator
+    public JsonAdaptedDietPlan(@JsonProperty("target") JsonNode target, @JsonProperty("notes") JsonNode notes,
+            @JsonProperty("calories") JsonNode calories, @JsonProperty("proteinGrams") JsonNode proteinGrams,
+            @JsonProperty("carbsGrams") JsonNode carbsGrams, @JsonProperty("fatGrams") JsonNode fatGrams) {
         this.target = target;
         this.notes = notes;
+        this.calories = calories;
+        this.proteinGrams = proteinGrams;
+        this.carbsGrams = carbsGrams;
+        this.fatGrams = fatGrams;
     }
 
     /**
@@ -32,6 +50,10 @@ class JsonAdaptedDietPlan {
     public JsonAdaptedDietPlan(DietPlan source) {
         target = TextNode.valueOf(source.getTarget());
         notes = source.getNotes().map(TextNode::valueOf).orElse(null);
+        calories = source.getCalories().map(IntNode::valueOf).orElse(null);
+        proteinGrams = source.getProteinGrams().map(IntNode::valueOf).orElse(null);
+        carbsGrams = source.getCarbsGrams().map(IntNode::valueOf).orElse(null);
+        fatGrams = source.getFatGrams().map(IntNode::valueOf).orElse(null);
     }
 
     /**
@@ -46,12 +68,41 @@ class JsonAdaptedDietPlan {
         if (!target.isTextual() || !DietPlan.isValidTarget(target.textValue())) {
             throw new IllegalValueException(DietPlan.MESSAGE_CONSTRAINTS_TARGET);
         }
-        if (notes == null || notes.isNull()) {
+        Optional<String> modelNotes = Optional.empty();
+        if (notes != null && !notes.isNull()) {
+            if (!notes.isTextual() || !DietPlan.isValidNotes(notes.textValue())) {
+                throw new IllegalValueException(DietPlan.MESSAGE_CONSTRAINTS_NOTES);
+            }
+            modelNotes = Optional.of(notes.textValue());
+        }
+        if (calories != null && !calories.isNull()) {
+            int calorieValue = checkedInteger(calories, true);
+            Optional<Integer> protein = checkedOptionalMacro(proteinGrams);
+            Optional<Integer> carbs = checkedOptionalMacro(carbsGrams);
+            Optional<Integer> fat = checkedOptionalMacro(fatGrams);
+            return DietPlan.structured(calorieValue, protein, carbs, fat, modelNotes);
+        }
+        if (proteinGrams != null && !proteinGrams.isNull() || carbsGrams != null && !carbsGrams.isNull()
+                || fatGrams != null && !fatGrams.isNull()) {
+            throw new IllegalValueException("Structured diet macros require calories.");
+        }
+        if (modelNotes.isEmpty()) {
             return new DietPlan(target.textValue());
         }
-        if (!notes.isTextual() || !DietPlan.isValidNotes(notes.textValue())) {
-            throw new IllegalValueException(DietPlan.MESSAGE_CONSTRAINTS_NOTES);
+        return new DietPlan(target.textValue(), modelNotes.orElseThrow());
+    }
+
+    private static Optional<Integer> checkedOptionalMacro(JsonNode value) throws IllegalValueException {
+        return value == null || value.isNull() ? Optional.empty() : Optional.of(checkedInteger(value, false));
+    }
+
+    private static int checkedInteger(JsonNode value, boolean positive) throws IllegalValueException {
+        if (!value.isIntegralNumber() || !value.canConvertToInt()
+                || (positive ? value.intValue() <= 0 : value.intValue() < 0)) {
+            throw new IllegalValueException(positive
+                    ? "Calorie target must be a positive whole number."
+                    : "Macros must be whole non-negative numbers of grams.");
         }
-        return new DietPlan(target.textValue(), notes.textValue());
+        return value.intValue();
     }
 }

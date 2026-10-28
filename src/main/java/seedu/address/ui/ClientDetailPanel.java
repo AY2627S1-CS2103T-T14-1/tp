@@ -7,12 +7,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.OverrunStyle;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -38,9 +36,6 @@ public class ClientDetailPanel extends UiPart<Region> {
     @FXML
     private StackPane bodyProgressPlaceholder;
     @FXML
-    private ScrollPane detailsScroll;
-
-    @FXML
     private VBox selectedContent;
     @FXML
     private VBox emptyContent;
@@ -50,8 +45,6 @@ public class ClientDetailPanel extends UiPart<Region> {
     private Label clientName;
     @FXML
     private FlowPane profileTags;
-    @FXML
-    private Label profileCommandHint;
     @FXML
     private Label phone;
     @FXML
@@ -73,21 +66,20 @@ public class ClientDetailPanel extends UiPart<Region> {
     @FXML
     private VBox workoutRows;
     @FXML
-    private VBox workoutEmpty;
-    @FXML
-    private Label workoutEmptyCommand;
+    private Region workoutEmpty;
     @FXML
     private Label paymentSummary;
     @FXML
     private VBox paymentRows;
     @FXML
-    private Label paymentEmpty;
+    private Region paymentEmpty;
 
     /** Creates an initially empty client detail panel. */
     public ClientDetailPanel() {
         super(FXML);
         bodyProgressPanel = new BodyProgressPanel();
         bodyProgressPlaceholder.getChildren().add(bodyProgressPanel.getRoot());
+        clientName.maxWidthProperty().bind(selectedContent.widthProperty().subtract(40));
         showPerson(null, -1);
     }
 
@@ -97,7 +89,6 @@ public class ClientDetailPanel extends UiPart<Region> {
         bodyProgressPanel.showPerson(person);
         boolean hasPerson = person != null;
         setShown(selectedContent, hasPerson);
-        setShown(detailsScroll, hasPerson);
         setShown(emptyContent, !hasPerson);
         if (!hasPerson) {
             return;
@@ -105,9 +96,8 @@ public class ClientDetailPanel extends UiPart<Region> {
 
         profileIndex.setText(String.valueOf(displayedIndex));
         clientName.setText(person.getName().fullName);
-        profileCommandHint.setText("edit " + displayedIndex + " …  ·  delete " + displayedIndex);
         phone.setText(person.getPhone().value);
-        email.setText(person.getEmail().value);
+        email.setText(person.getEmail().value.replace("@", "@\u200b").replace(".", ".\u200b"));
         address.setText(person.getAddress().value);
         goal.setText(person.getGoal().map(value -> value.value).orElse("—"));
 
@@ -131,24 +121,20 @@ public class ClientDetailPanel extends UiPart<Region> {
 
     /** Reveals the requested tracker section after MainWindow selects its resolved client. */
     public void revealBodyProgress(BodyProgressViewRequest request) {
-        Platform.runLater(() -> {
-            if (!request.person().equals(displayedPerson)) {
-                return;
-            }
-            selectedContent.applyCss();
-            selectedContent.layout();
-            double overflow = selectedContent.getLayoutBounds().getHeight()
-                    - detailsScroll.getViewportBounds().getHeight();
-            detailsScroll.setVvalue(overflow <= 0 ? 0
-                    : Math.min(1, Math.max(0, bodyProgressPlaceholder.getBoundsInParent().getMinY() / overflow)));
-        });
-        bodyProgressPanel.reveal(request);
+        if (request.person().equals(displayedPerson)) {
+            bodyProgressPanel.reveal(request);
+        }
+    }
+
+    /** The requested body-progress heading within the shared workspace scroll pane. */
+    public Node getBodyProgressNode(BodyProgressViewRequest request) {
+        return bodyProgressPanel.getRevealTarget(request);
     }
 
     private void showPayments(Person person) {
         List<PaymentRecord> payments = new ArrayList<>(person.getPaymentRecords());
         payments.sort(Comparator.comparing(PaymentRecord::getDate));
-        paymentSummary.setText(payments.isEmpty() ? "None"
+        paymentSummary.setText(payments.isEmpty() ? ""
                 : payments.size() + (payments.size() == 1 ? " record" : " records"));
 
         paymentRows.getChildren().clear();
@@ -196,14 +182,13 @@ public class ClientDetailPanel extends UiPart<Region> {
         List<Exercise> exercises = person.getWorkoutPlan().getExercises();
         long trainingDays = exercises.stream().map(Exercise::getDay)
                 .map(Weekday::fromPrefix).flatMap(java.util.Optional::stream).distinct().count();
-        planSummary.setText(exercises.isEmpty() ? "Empty" : exercises.size() + " exercise"
+        planSummary.setText(exercises.isEmpty() ? "" : exercises.size() + " exercise"
                 + (exercises.size() == 1 ? "" : "s") + " · " + trainingDays + " training day"
                 + (trainingDays == 1 ? "" : "s"));
 
         workoutRows.getChildren().clear();
         setShown(workoutRows, !exercises.isEmpty());
         setShown(workoutEmpty, exercises.isEmpty());
-        workoutEmptyCommand.setText("addex " + displayedIndex + " n/Back Squat s/4 r/8 w/80 d/MON");
         if (exercises.isEmpty()) {
             return;
         }
@@ -262,7 +247,7 @@ public class ClientDetailPanel extends UiPart<Region> {
         row.add(dayInfo, 0, 0);
 
         if (exercises.isEmpty()) {
-            Label rest = new Label("Rest — no exercises assigned");
+            Label rest = new Label("Rest");
             rest.getStyleClass().add("rest-label");
             row.add(rest, 1, 0);
         } else {
@@ -289,7 +274,8 @@ public class ClientDetailPanel extends UiPart<Region> {
         index.getStyleClass().addAll("exercise-index", "mono");
         Label name = new Label(exercise.getName());
         name.getStyleClass().add("exercise-name");
-        name.setTextOverrun(OverrunStyle.ELLIPSIS);
+        name.setWrapText(true);
+        name.setMinWidth(0);
         name.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(name, Priority.ALWAYS);
         HBox title = new HBox(8, index, name);

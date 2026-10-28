@@ -24,6 +24,10 @@ public final class DietPlan {
 
     private final String target;
     private final Optional<String> notes;
+    private final Optional<Integer> calories;
+    private final Optional<Integer> proteinGrams;
+    private final Optional<Integer> carbsGrams;
+    private final Optional<Integer> fatGrams;
 
     /**
      * Creates a plan without notes.
@@ -40,11 +44,31 @@ public final class DietPlan {
     }
 
     private DietPlan(String target, Optional<String> notes) {
+        this(target, notes, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    }
+
+    private DietPlan(String target, Optional<String> notes, Optional<Integer> calories,
+            Optional<Integer> proteinGrams, Optional<Integer> carbsGrams, Optional<Integer> fatGrams) {
         requireNonNull(target);
         checkArgument(isValidTarget(target), MESSAGE_CONSTRAINTS_TARGET);
         notes.ifPresent(value -> checkArgument(isValidNotes(value), MESSAGE_CONSTRAINTS_NOTES));
+        calories.ifPresent(value -> checkArgument(value > 0, "Calories must be positive."));
+        proteinGrams.ifPresent(value -> checkArgument(value >= 0, "Protein grams cannot be negative."));
+        carbsGrams.ifPresent(value -> checkArgument(value >= 0, "Carb grams cannot be negative."));
+        fatGrams.ifPresent(value -> checkArgument(value >= 0, "Fat grams cannot be negative."));
         this.target = trimText(target);
         this.notes = notes.map(DietPlan::trimText);
+        this.calories = calories;
+        this.proteinGrams = proteinGrams;
+        this.carbsGrams = carbsGrams;
+        this.fatGrams = fatGrams;
+    }
+
+    /** Creates a structured calorie target while retaining a readable target string. */
+    public static DietPlan structured(int calories, Optional<Integer> proteinGrams,
+            Optional<Integer> carbsGrams, Optional<Integer> fatGrams, Optional<String> notes) {
+        return new DietPlan(calories + " kcal per day", notes, Optional.of(calories),
+                proteinGrams, carbsGrams, fatGrams);
     }
 
     /**
@@ -93,12 +117,32 @@ public final class DietPlan {
         return notes;
     }
 
+    public Optional<Integer> getCalories() {
+        return calories;
+    }
+
+    public Optional<Integer> getProteinGrams() {
+        return proteinGrams;
+    }
+
+    public Optional<Integer> getCarbsGrams() {
+        return carbsGrams;
+    }
+
+    public Optional<Integer> getFatGrams() {
+        return fatGrams;
+    }
+
     /**
      * Returns whether targets and optional notes match ignoring case, for duplicate-plan detection.
      * Value equality remains case-sensitive to preserve the stored display text.
      */
     public boolean isSameDietPlan(DietPlan other) {
         return other != null && target.equalsIgnoreCase(other.target)
+                && calories.equals(other.calories)
+                && proteinGrams.equals(other.proteinGrams)
+                && carbsGrams.equals(other.carbsGrams)
+                && fatGrams.equals(other.fatGrams)
                 && notes.map(value -> other.notes.map(value::equalsIgnoreCase).orElse(false))
                         .orElse(other.notes.isEmpty());
     }
@@ -109,16 +153,23 @@ public final class DietPlan {
             return true;
         }
         return other instanceof DietPlan otherPlan
-                && target.equals(otherPlan.target) && notes.equals(otherPlan.notes);
+                && target.equals(otherPlan.target) && notes.equals(otherPlan.notes)
+                && calories.equals(otherPlan.calories) && proteinGrams.equals(otherPlan.proteinGrams)
+                && carbsGrams.equals(otherPlan.carbsGrams) && fatGrams.equals(otherPlan.fatGrams);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(target, notes);
+        return Objects.hash(target, notes, calories, proteinGrams, carbsGrams, fatGrams);
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).add("target", target).add("notes", notes).toString();
+        ToStringBuilder result = new ToStringBuilder(this).add("target", target).add("notes", notes);
+        if (calories.isPresent()) {
+            result.add("calories", calories).add("proteinGrams", proteinGrams)
+                    .add("carbsGrams", carbsGrams).add("fatGrams", fatGrams);
+        }
+        return result.toString();
     }
 }

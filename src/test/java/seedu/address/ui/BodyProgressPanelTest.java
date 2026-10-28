@@ -28,7 +28,6 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Region;
@@ -112,8 +111,9 @@ class BodyProgressPanelTest {
             return value;
         });
         onFx(() -> {
-            ScrollPane scroll = (ScrollPane) panel.getRoot().lookup("#bodyScroll");
-            assertTrue(scroll.getVvalue() > 0);
+            assertEquals(panel.getRevealTarget(new BodyProgressViewRequest(
+                    person("74.20", note), BodyProgressViewRequest.Section.COMPARISON)),
+                    panel.getRoot().lookup("#comparisonHeading"));
             return null;
         });
     }
@@ -140,6 +140,7 @@ class BodyProgressPanelTest {
             Stage stage = new Stage();
             MainWindow window = new MainWindow(stage, logic, storage.getAddressBookFilePath());
             window.fillInnerParts();
+            window.openTerminal();
             stage.setWidth(1280);
             stage.setHeight(800);
             stage.show();

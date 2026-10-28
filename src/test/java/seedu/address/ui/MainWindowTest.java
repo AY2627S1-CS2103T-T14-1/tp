@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,7 +19,11 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import seedu.address.logic.Logic;
@@ -71,9 +76,11 @@ public class MainWindowTest {
             Stage stage = new Stage();
             MainWindow window = new MainWindow(stage, logic, addressBookStorage.getAddressBookFilePath());
             window.fillInnerParts();
+            window.openTerminal();
 
             Scene scene = stage.getScene();
             assertNotNull(scene);
+            scene.getRoot().applyCss();
             TextField commandField = (TextField) scene.lookup("#commandTextField");
             commandField.setText("pay 2 a/150 d/2026-10-20");
             commandField.fireEvent(new ActionEvent());
@@ -107,6 +114,7 @@ public class MainWindowTest {
             Stage stage = new Stage();
             MainWindow window = new MainWindow(stage, logic, addressBookStorage.getAddressBookFilePath());
             window.fillInnerParts();
+            window.openTerminal();
             Scene scene = stage.getScene();
 
             execute(scene, "find Alice");
@@ -121,10 +129,10 @@ public class MainWindowTest {
 
             execute(scene, "undo");
             assertEquals(2, window.getPersonListPanel().getDisplayedCount());
-            assertEquals("All clients", ((Label) scene.lookup("#filterStateText")).getText());
+            assertEquals("", ((Label) scene.lookup("#filterStateText")).getText());
             assertEquals(alice, window.getPersonListPanel().getSelectedPerson());
             assertEquals(0, ((VBox) scene.lookup("#paymentRows")).getChildren().size());
-            assertEquals("None", ((Label) scene.lookup("#paymentSummary")).getText());
+            assertEquals("", ((Label) scene.lookup("#paymentSummary")).getText());
 
             execute(scene, "redo");
             assertEquals(alice.withAddedPayment(payment),
@@ -133,7 +141,39 @@ public class MainWindowTest {
             scene.getRoot().layout();
             assertEquals(1, ((VBox) scene.lookup("#paymentRows")).getChildren().size());
             assertEquals("1 record", ((Label) scene.lookup("#paymentSummary")).getText());
-            assertTrue(((Label) scene.lookup("#filterStateText")).getText().equals("All clients"));
+            assertEquals("", ((Label) scene.lookup("#filterStateText")).getText());
+            return null;
+        });
+    }
+
+    @Test
+    public void terminal_opensFromTypingAndClosesWithEscape() throws Exception {
+        runOnFxThread(() -> {
+            Model model = new ModelManager();
+            JsonAddressBookStorage data = new JsonAddressBookStorage(
+                    temporaryFolder.resolve("terminalAddressBook.json"));
+            Logic logic = new LogicManager(model, new StorageManager(data,
+                    new JsonUserPrefsStorage(temporaryFolder.resolve("terminalPrefs.json"))));
+            Stage stage = new Stage();
+            MainWindow window = new MainWindow(stage, logic, data.getAddressBookFilePath());
+            window.fillInnerParts();
+            Scene scene = stage.getScene();
+            SplitPane workspace = (SplitPane) scene.lookup("#workspace");
+            HBox closed = (HBox) scene.lookup("#terminalClosedBar");
+            assertEquals(1, workspace.getItems().size());
+            assertTrue(closed.isManaged());
+
+            scene.getRoot().fireEvent(new KeyEvent(KeyEvent.KEY_TYPED, "h", "h", KeyCode.UNDEFINED,
+                    false, false, false, false));
+            assertEquals(2, workspace.getItems().size());
+            assertFalse(closed.isManaged());
+            scene.getRoot().applyCss();
+            TextField command = (TextField) scene.lookup("#commandTextField");
+            assertEquals("h", command.getText());
+            command.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ESCAPE,
+                    false, false, false, false));
+            assertEquals(1, workspace.getItems().size());
+            assertTrue(closed.isManaged());
             return null;
         });
     }

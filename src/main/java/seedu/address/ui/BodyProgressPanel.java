@@ -2,10 +2,9 @@ package seedu.address.ui;
 
 import java.math.BigDecimal;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.logic.commands.BodyProgressViewRequest;
@@ -19,8 +18,6 @@ public class BodyProgressPanel extends UiPart<Region> {
     private static final String FXML = "BodyProgressPanel.fxml";
     private Person displayedPerson;
 
-    @FXML
-    private ScrollPane bodyScroll;
     @FXML
     private VBox bodyContent;
     @FXML
@@ -83,18 +80,13 @@ public class BodyProgressPanel extends UiPart<Region> {
 
     /** Reveals the requested section after layout, provided the same resolved client is still displayed. */
     public void reveal(BodyProgressViewRequest request) {
-        Platform.runLater(() -> {
-            if (!request.person().equals(displayedPerson)) {
-                return;
-            }
-            bodyContent.applyCss();
-            bodyContent.layout();
-            Label target = request.section() == BodyProgressViewRequest.Section.HISTORY
-                    ? historyHeading : comparisonHeading;
-            double overflow = bodyContent.getLayoutBounds().getHeight() - bodyScroll.getViewportBounds().getHeight();
-            bodyScroll.setVvalue(overflow <= 0 ? 0
-                    : Math.min(1, Math.max(0, target.getBoundsInParent().getMinY() / overflow)));
-        });
+        // The surrounding workspace owns scrolling; its caller reveals the requested section.
+    }
+
+    /** Returns the heading requested by a body-progress command. */
+    public Node getRevealTarget(BodyProgressViewRequest request) {
+        return request.section() == BodyProgressViewRequest.Section.HISTORY
+                ? historyHeading : comparisonHeading;
     }
 
     private static Label wrappedLabel(String text) {

@@ -22,7 +22,6 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class CommandBox extends UiPart<Region> {
 
     private static final String FXML = "CommandBox.fxml";
-    private static final PseudoClass FOCUSED_FIELD = PseudoClass.getPseudoClass("focused-field");
     private static final PseudoClass ERROR = PseudoClass.getPseudoClass("error");
 
     private final CommandExecutor commandExecutor;
@@ -37,6 +36,8 @@ public class CommandBox extends UiPart<Region> {
     private Label hintLabel;
     @FXML
     private FlowPane hintContainer;
+    @FXML
+    private HBox hintRow;
 
     /** Creates a command box backed by {@code commandExecutor}. */
     public CommandBox(CommandExecutor commandExecutor) {
@@ -44,8 +45,6 @@ public class CommandBox extends UiPart<Region> {
         this.commandExecutor = commandExecutor;
         historyIndex = 0;
 
-        commandTextField.focusedProperty().addListener((unused, oldValue, focused) ->
-                commandBar.pseudoClassStateChanged(FOCUSED_FIELD, focused));
         commandTextField.textProperty().addListener((unused, oldValue, newValue) -> {
             setErrorState(false);
             updateHints(newValue);
@@ -111,21 +110,23 @@ public class CommandBox extends UiPart<Region> {
         hintContainer.getChildren().clear();
         String trimmed = commandText.trim();
         if (trimmed.isEmpty()) {
-            hintLabel.setText("Try");
-            CommandCatalog.defaultSuggestions().forEach(suggestion ->
-                    addHint(suggestion.label(), suggestion.command(), suggestion.label()));
+            hintRow.setVisible(false);
+            hintRow.setManaged(false);
             return;
         }
+        hintRow.setVisible(true);
+        hintRow.setManaged(true);
 
         String commandWord = trimmed.split("\\s+", 2)[0];
         List<CommandCatalog.Entry> matches = CommandCatalog.matching(commandWord);
         hintLabel.setText(matches.isEmpty() ? "No matching command" : "Usage");
-        matches.forEach(entry -> addHint(firstLine(entry.usage()), entry.word() + " ", entry.usage()));
+        matches.forEach(entry -> addHint(entry.usage(), entry.word() + " ", entry.usage()));
     }
 
     private void addHint(String label, String command, String tooltip) {
         Button hint = new Button(label);
         hint.getStyleClass().add("hint-chip");
+        hint.setWrapText(true);
         hint.setFocusTraversable(false);
         hint.setTooltip(new Tooltip(tooltip));
         hint.setOnAction(event -> {
@@ -136,14 +137,15 @@ public class CommandBox extends UiPart<Region> {
         hintContainer.getChildren().add(hint);
     }
 
-    private static String firstLine(String text) {
-        int newline = text.indexOf('\n');
-        return newline < 0 ? text : text.substring(0, newline);
-    }
-
     /** Focuses the command text field. */
     public void requestFocus() {
         commandTextField.requestFocus();
+    }
+
+    /** Inserts the first printable key used to open the terminal. */
+    public void insertText(String text) {
+        commandTextField.appendText(text);
+        commandTextField.positionCaret(commandTextField.getText().length());
     }
 
     /** Returns the command field for UI tests. */

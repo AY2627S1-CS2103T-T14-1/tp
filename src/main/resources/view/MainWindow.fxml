@@ -3,11 +3,10 @@
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Scene?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.image.Image?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -18,71 +17,73 @@
 
 <fx:root type="javafx.stage.Stage" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
          title="Fittix" minWidth="1280" minHeight="800" onCloseRequest="#handleExit">
-  <icons>
-    <Image url="@/images/address_book_32.png" />
-  </icons>
   <scene>
     <Scene>
-      <stylesheets>
-        <URL value="@FittixTheme.css" />
-      </stylesheets>
+      <stylesheets><URL value="@FittixTheme.css" /></stylesheets>
       <BorderPane styleClass="window">
         <top>
-          <HBox alignment="CENTER_LEFT" spacing="14" prefHeight="72" minHeight="72" styleClass="app-header">
-            <padding>
-              <Insets top="0" right="24" bottom="0" left="24" />
-            </padding>
+          <HBox alignment="CENTER_LEFT" spacing="16" prefHeight="64" minHeight="64" styleClass="app-header">
+            <padding><Insets top="0" right="24" bottom="0" left="24" /></padding>
             <HBox alignment="CENTER_LEFT" spacing="10" styleClass="brand">
-              <Label text="F" alignment="CENTER" minWidth="30" minHeight="30" prefWidth="30" prefHeight="30"
-                     styleClass="brand-mark" />
+              <StackPane fx:id="brandIcon" minWidth="30" minHeight="30" prefWidth="30" prefHeight="30" />
               <Label text="Fittix" styleClass="brand-name" />
             </HBox>
-            <MenuBar styleClass="menu-pills">
-              <Menu mnemonicParsing="false" text="File">
-                <MenuItem mnemonicParsing="false" onAction="#handleExit" text="Exit" />
-              </Menu>
-              <Menu mnemonicParsing="false" text="Help">
-                <MenuItem fx:id="helpMenuItem" mnemonicParsing="false" onAction="#handleHelp" text="Help" />
-              </Menu>
-            </MenuBar>
-            <Region HBox.hgrow="ALWAYS" />
-            <HBox fx:id="filterPill" alignment="CENTER_LEFT" spacing="9" styleClass="filter-pill">
+            <Button text="Help" mnemonicParsing="false" onAction="#handleHelp" styleClass="pill,help-pill" />
+            <HBox fx:id="filterPill" alignment="CENTER_LEFT" spacing="9" onMouseClicked="#handleClearFilter"
+                  styleClass="filter-pill" visible="false" managed="false">
               <Label text="" minWidth="8" minHeight="8" maxWidth="8" maxHeight="8" styleClass="filter-dot" />
               <Label fx:id="filterStateText" styleClass="filter-state" />
               <Label fx:id="filterCountText" styleClass="muted" />
+              <Label text="×" styleClass="filter-close" />
             </HBox>
-            <Label fx:id="currentDate" styleClass="date-pill" />
+            <Region HBox.hgrow="ALWAYS" />
+            <HBox fx:id="dateToggle" alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleDateToggle"
+                  styleClass="date-toggle">
+              <Label fx:id="currentDate" styleClass="date-text" />
+              <Label fx:id="currentTime" visible="false" managed="false" styleClass="clock,mono" />
+            </HBox>
           </HBox>
         </top>
-
         <center>
-          <GridPane hgap="16" styleClass="body">
-            <padding>
-              <Insets top="0" right="24" bottom="14" left="24" />
-            </padding>
-            <columnConstraints>
-              <ColumnConstraints minWidth="300" prefWidth="300" maxWidth="300" />
-              <ColumnConstraints hgrow="ALWAYS" minWidth="0" />
-              <ColumnConstraints minWidth="340" prefWidth="340" maxWidth="340" />
-            </columnConstraints>
-            <StackPane fx:id="personListPanelPlaceholder" GridPane.columnIndex="0" />
-            <StackPane fx:id="clientDetailPanelPlaceholder" GridPane.columnIndex="1" />
-            <StackPane fx:id="clientContextPanelPlaceholder" GridPane.columnIndex="2" />
-          </GridPane>
+          <SplitPane fx:id="workspace" orientation="VERTICAL" styleClass="workspace">
+            <items>
+              <ScrollPane fx:id="contentScroll" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                          minHeight="0" styleClass="content-scroll">
+                <GridPane hgap="16" styleClass="body">
+                  <padding><Insets top="12" right="24" bottom="24" left="24" /></padding>
+                  <columnConstraints>
+                    <ColumnConstraints minWidth="300" prefWidth="300" maxWidth="300" />
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="0" />
+                    <ColumnConstraints minWidth="340" prefWidth="340" maxWidth="340" />
+                  </columnConstraints>
+                  <StackPane fx:id="personListPanelPlaceholder" GridPane.columnIndex="0" GridPane.valignment="TOP" />
+                  <StackPane fx:id="clientDetailPanelPlaceholder" GridPane.columnIndex="1" GridPane.valignment="TOP" />
+                  <StackPane fx:id="clientContextPanelPlaceholder" GridPane.columnIndex="2" GridPane.valignment="TOP" />
+                </GridPane>
+              </ScrollPane>
+              <VBox fx:id="terminalPanel" minHeight="170" maxHeight="640" styleClass="terminal">
+                <HBox alignment="CENTER_LEFT" prefHeight="44" minHeight="44" styleClass="terminal-header">
+                  <Label text="TERMINAL" styleClass="terminal-tab" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label text="Esc to close" styleClass="terminal-escape,mono" />
+                  <Button text="×" mnemonicParsing="false" onAction="#handleCloseTerminal" styleClass="icon-btn" />
+                </HBox>
+                <StackPane fx:id="resultDisplayPlaceholder" VBox.vgrow="ALWAYS" />
+                <StackPane fx:id="commandBoxPlaceholder" />
+              </VBox>
+            </items>
+          </SplitPane>
         </center>
-
         <bottom>
-          <VBox spacing="10" styleClass="command-zone">
-            <padding>
-              <Insets top="0" right="24" bottom="0" left="24" />
-            </padding>
-            <StackPane fx:id="resultDisplayPlaceholder" />
-            <StackPane fx:id="commandBoxPlaceholder" />
-            <StackPane fx:id="statusbarPlaceholder">
-              <VBox.margin>
-                <Insets left="-24" right="-24" />
-              </VBox.margin>
-            </StackPane>
+          <VBox>
+            <HBox fx:id="terminalClosedBar" alignment="CENTER_LEFT" spacing="12" prefHeight="44" minHeight="44"
+                  onMouseClicked="#handleOpenTerminal" styleClass="terminal-closed-bar">
+              <Label text="›" styleClass="closed-prompt,mono" />
+              <Label text="Start typing to run a command" styleClass="closed-message" />
+              <Region HBox.hgrow="ALWAYS" />
+              <Button text="Terminal ▲" mnemonicParsing="false" onAction="#handleOpenTerminal" styleClass="terminal-btn" />
+            </HBox>
+            <StackPane fx:id="statusbarPlaceholder" />
           </VBox>
         </bottom>
       </BorderPane>

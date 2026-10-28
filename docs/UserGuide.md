@@ -24,7 +24,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Fittix v1.4 running with sample client data](images/FittixActualV14.jpg)
 
-1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
+1. In the redesigned workspace, type any letter to open the terminal, then enter a command and press Enter. Press Esc to close the terminal; use its top divider to resize it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
    * `list` : Lists all contacts.
@@ -181,7 +181,7 @@ Examples:
 
 ### Recording a client's diet goals: `diet`
 
-Records a client's current nutrition target and optional coaching notes. Together, these are the client's **diet goals**; only one current target record is stored per client. Select a client in the list to read their target and notes in the **DIET** section of the right-hand context panel. The section shows **No diet target recorded.** when that client has no diet goals. Long text wraps, and the panel can be scrolled.
+Records a client's current nutrition target and optional coaching notes. Together, these are the client's **diet goals**; only one current target record is stored per client. Select a client in the list to read their target and notes in the **DIET** section of the right-hand context panel. An empty section keeps its heading and leaves its body blank. Long text wraps, and the workspace can be scrolled.
 
 The `diet` command's feedback still calls this record a "diet plan". The messages below quote the application's exact wording.
 
@@ -191,7 +191,7 @@ Format: `diet INDEX t/TARGET [n/NOTES]`
 * `TARGET` is required. After trimming outer whitespace, it must contain 1 to 200 printable characters and at least one letter or digit. Numbers, units, punctuation, internal spaces, and letter case are preserved. Line breaks and control characters are rejected.
 * `NOTES` is optional. If `n/` is supplied, its value must contain 1 to 300 printable characters after trimming. A blank `n/` is invalid; omit `n/` when no notes are needed. Internal spacing and case are preserved, and line breaks and control characters are rejected.
 * `t/` and `n/` may appear in either order, but each may appear only once. They are recognised at the start of an argument or after whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. Dietary restrictions are managed separately with the `restriction` command.
-* Different diet goals **replace the complete current target and notes**. Omitting `n/` during replacement clears any old notes. Earlier versions are not kept. Diet goals with the same trimmed target and notes, ignoring case, are rejected without changing the saved record.
+* Different free-text diet goals **replace the complete current target and notes**. Omitting `n/` during a free-text replacement clears any old notes. Earlier versions are not kept. Diet goals with the same trimmed target and notes, ignoring case, are rejected without changing the saved record.
 
 Examples:
 
@@ -200,6 +200,16 @@ Examples:
 * `diet 2 t/2000 kcal/day n/Include fruit` replaces the target and notes; the slash in `kcal/day` is ordinary text.
 * `diet 2 t/2000 kcal/day` replaces the target again and removes its notes.
 * `diet 3 t/2000 kcal per day n/Prioritise lean protein` records coaching notes. Use `restriction` for separate dietary restrictions.
+
+You can also enter a numeric calorie target and optional macronutrients:
+
+`diet INDEX cal/KCAL [pro/G] [carb/G] [fat/G] [n/NOTES]`
+
+* `KCAL` must be a positive whole number. Macro amounts are whole non-negative grams. An empty macro prefix clears that macro; omitted macros are also cleared when the numeric diet is replaced. Prefixes can appear in any order, and the last value wins if one is repeated.
+* Omitting `n/` in the numeric format retains the existing notes. Supplying `n/` with no value clears them. The diet card shows each nonzero macro's calorie share using 4 kcal/g for protein and carbohydrates and 9 kcal/g for fat; uncovered calories remain grey.
+* Existing free-text diet records remain readable and editable with `t/TARGET`. The numeric split appears only for records entered in the numeric format.
+
+For example, `diet 2 cal/2400 pro/170 carb/250 fat/70 n/Lean bulk` records a structured target; `diet 2 cal/2400` keeps only the calorie target and any previous notes.
 
 On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan for NAME.`. Common errors include:
 
@@ -215,6 +225,9 @@ On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan 
 | Invalid supplied notes | `Diet-plan notes must contain 1 to 300 printable characters.` |
 | Same current diet goals | `This is already the current diet plan for NAME.` |
 | Saving fails | `The diet plan could not be saved. The previous plan remains unchanged.` |
+| Missing or invalid numeric calorie target | `Calorie target must be a whole number (cal/2000).` |
+| Invalid macro amount | `Macros must be whole numbers of grams.` |
+| Numeric format index outside the displayed list | `The client index provided is invalid.` |
 
 Invalid commands and failed saves leave the previous diet goals unchanged. Deleting a client permanently removes that client's diet goals along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
 
@@ -832,7 +845,7 @@ Action | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Delete exercise** | `delex PERSON_INDEX EXERCISE_INDEX`<br> e.g., `delex 1 2`
 **Assign/change exercise day** | `dayex PERSON_INDEX EXERCISE_INDEX DAY`<br> e.g., `dayex 1 2 Tuesday`
-**Diet goals** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
+**Diet goals** | `diet INDEX t/TARGET [n/NOTES]` or `diet INDEX cal/KCAL [pro/G] [carb/G] [fat/G] [n/NOTES]`<br> e.g., `diet 2 cal/2400 pro/170 carb/250 fat/70`
 **Dietary restrictions** | `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`<br> e.g., `restriction 2 r/Peanut allergy r/Halal meals`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
 **Record payment** | `pay PERSON_INDEX a/AMOUNT d/YYYY-MM-DD [r/REMARKS]`<br> e.g., `pay 1 a/150 d/2026-10-20`
