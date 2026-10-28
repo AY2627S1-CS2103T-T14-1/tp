@@ -778,12 +778,26 @@
     -fx-background-insets: 0;
 }
 .workspace > .split-pane-divider {
-    -fx-padding: 0 0 4 0;
+    -fx-padding: 0 0 10 0;
     -fx-background-color: #2a2a2d;
+    -fx-cursor: v-resize;
+}
+.workspace > .split-pane-divider > .vertical-grabber {
+    -fx-min-width: 48;
+    -fx-pref-width: 48;
+    -fx-max-width: 48;
+    -fx-min-height: 4;
+    -fx-pref-height: 4;
+    -fx-max-height: 4;
+    -fx-background-color: #d4f25a;
+    -fx-background-radius: 999;
     -fx-cursor: v-resize;
 }
 .workspace > .split-pane-divider:hover {
     -fx-background-color: rgba(212, 242, 90, 0.35);
+}
+.workspace > .split-pane-divider:hover > .vertical-grabber {
+    -fx-background-color: #e3ff7a;
 }
 .card, .profile-card, .context-card, .payments-card, .workout-card {
     -fx-padding: 20;

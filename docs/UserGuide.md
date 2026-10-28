@@ -24,7 +24,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Fittix v1.4 running with sample client data](images/FittixActualV14.jpg)
 
-1. In the redesigned workspace, type any letter to open the terminal, then enter a command and press Enter. Press Esc to close the terminal; use its top divider to resize it. For example, type **`help`** and press Enter to open the help window.<br>
+1. In the redesigned workspace, type any letter to open the terminal, then enter a command and press Enter. Press Esc to close the terminal; drag the lime grip at the centre of its top divider to resize it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
    * `list` : Lists all contacts.

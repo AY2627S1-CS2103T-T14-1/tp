@@ -3,6 +3,7 @@ package seedu.address.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
@@ -24,7 +26,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
@@ -168,12 +172,21 @@ public class MainWindowTest {
             assertEquals(2, workspace.getItems().size());
             assertFalse(closed.isManaged());
             scene.getRoot().applyCss();
+            Node divider = workspace.lookup(".split-pane-divider");
+            assertNotNull(divider);
+            Region grip = (Region) divider.lookup(".vertical-grabber");
+            assertNotNull(grip);
+            assertEquals(48, grip.getPrefWidth());
+            assertEquals(4, grip.getPrefHeight());
+            assertEquals(Color.web("#d4f25a"), grip.getBackground().getFills().getFirst().getFill());
             TextField command = (TextField) scene.lookup("#commandTextField");
             assertEquals("h", command.getText());
             command.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ESCAPE,
                     false, false, false, false));
             assertEquals(1, workspace.getItems().size());
             assertTrue(closed.isManaged());
+            scene.getRoot().applyCss();
+            assertNull(workspace.lookup(".vertical-grabber"));
             return null;
         });
     }
