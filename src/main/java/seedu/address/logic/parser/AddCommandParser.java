@@ -51,7 +51,7 @@ public class AddCommandParser implements Parser<AddCommand> {
         Set<Tag> tagList = ParserUtil.parseTags(argMultimap.getAllValues(PREFIX_TAG));
 
         Goal goal = argMultimap.getValue(PREFIX_GOAL).isPresent()
-                ? ParserUtil.parseGoal(argMultimap.getValue(PREFIX_GOAL).get()) : null;
+                ? ParserUtil.parseGoal(argMultimap.getRawValue(PREFIX_GOAL).get()) : null;
         Person person = new Person(name, phone, email, address, new Remark(""), tagList, new WorkoutPlan(),
                 java.util.Optional.empty(), goal);
 
