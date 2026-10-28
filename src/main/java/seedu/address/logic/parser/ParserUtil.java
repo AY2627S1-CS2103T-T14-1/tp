@@ -138,6 +138,9 @@ public class ParserUtil {
         for (String tagName : tags) {
             tagSet.add(parseTag(tagName));
         }
+        if (tagSet.size() > Tag.MAX_TAGS) {
+            throw new ParseException(Tag.MESSAGE_TOO_MANY_TAGS);
+        }
         return tagSet;
     }
 

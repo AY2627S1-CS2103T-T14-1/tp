@@ -85,7 +85,7 @@ Adds a client to Fittix.
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…​`
 
 <div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-A client can have any number of tags, including zero.
+A client can have up to 10 distinct tags, including zero. Adding or editing with more than 10 distinct tags is rejected.
 </div>
 
 * `g/GOAL` is optional. A goal must contain 1 to 100 characters after trimming and include at least one letter or digit.
@@ -156,7 +156,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 * Existing values will be updated to the input values.
 * `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags. A value that is only spaces counts as empty.
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
-* When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative.
+* When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative. A client can have at most 10 distinct tags.
 * An edit that would duplicate another client's name is rejected. Changing only the letter case of the same client's name is allowed.
 * If the values are identical to the client's current details, Fittix reports `No changes made: the new values are the same as the current details.`
 * On success, Fittix reports `Edited client: NAME; Phone: PHONE.`
