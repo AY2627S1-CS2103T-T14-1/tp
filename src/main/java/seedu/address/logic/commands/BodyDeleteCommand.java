@@ -11,7 +11,7 @@ import seedu.address.model.person.BodyMeasurements;
 import seedu.address.model.person.BodyProgress;
 import seedu.address.model.person.Person;
 
-/** Permanently removes one progress entry without removing the baseline. */
+/** Removes one progress entry without removing the baseline; shared undo can restore it. */
 public final class BodyDeleteCommand extends BodyMutationCommand {
     public static final String COMMAND_WORD = "bodydelete";
     public static final String MESSAGE_USAGE = "bodydelete INDEX d/DATE";

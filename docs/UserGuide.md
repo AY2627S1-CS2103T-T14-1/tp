@@ -684,7 +684,7 @@ Format: `bodydelete INDEX d/DATE`
 
 Example: `bodydelete 1 d/2020-01-15`
 
-Deletes only the progress entry on that date for that client. **Deletion is permanent in the v1.4 tracker, with no confirmation step.** The baseline and all other entries remain. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
+Deletes only the progress entry on that date for that client, with no confirmation step. The baseline and all other entries remain. Shared `undo` can restore the deletion while it is retained in the current session's 50-change history; that history is unavailable after restarting. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
 
 Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest entry makes the next greatest date the latest. Deleting the last entry keeps the baseline and restores the no-progress view. `bodydelete` cannot delete a baseline; use `bodybase` to correct it.
 
@@ -715,7 +715,9 @@ Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest ent
 
 Invalid mutations and failed saves leave all previous data unchanged. Successful changes select the affected client and refresh their details after saving. Baseline, weights and notes survive restarting the app; data files created before this feature load with no body tracker. A wrong local clock can cause date validation/loading failures, so check it before entering or opening dated records.
 
-Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` permanently removes their body records with the client. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
+`bodyhistory` and `bodycompare` read the client's in-memory measurements without writing the data file. They remain available when the data file or folder is not writable; commands that change measurements still require a successful save.
+
+Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` removes their body records with the client; shared `undo` can restore the complete change while it is retained in the current session's history. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
 
 ### Recording a client payment: `pay`
 
