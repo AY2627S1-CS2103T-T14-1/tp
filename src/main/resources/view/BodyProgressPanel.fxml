@@ -1,17 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="8" styleClass="card"
+<VBox spacing="12" styleClass="card,body-progress-card"
       xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <Label text="Body progress" styleClass="section-title" />
-  <VBox fx:id="bodyContent" spacing="10" minWidth="0">
-    <Label fx:id="baseline" styleClass="profile-value" wrapText="true" minHeight="-Infinity" />
-    <Label fx:id="historyHeading" styleClass="caps-label" />
-    <VBox fx:id="historyRows" spacing="8" minWidth="0" />
-    <Label fx:id="comparisonHeading" text="Latest comparison" styleClass="caps-label" />
-    <Label fx:id="comparison" styleClass="profile-value" wrapText="true" minHeight="-Infinity" />
+  <FlowPane fx:id="bodyHeader" hgap="10" vgap="5" styleClass="context-heading">
+    <Region minWidth="10" minHeight="10" maxWidth="10" maxHeight="10" styleClass="body-marker" />
+    <Label text="BODY" styleClass="caps-label" />
+    <Label text="Progress" styleClass="context-title" />
+  </FlowPane>
+  <VBox fx:id="bodyContent" spacing="12" minWidth="0">
+    <GridPane fx:id="bodyMetrics" hgap="8" styleClass="body-metrics">
+      <columnConstraints>
+        <ColumnConstraints percentWidth="33.333" />
+        <ColumnConstraints percentWidth="33.333" />
+        <ColumnConstraints percentWidth="33.334" />
+      </columnConstraints>
+      <VBox spacing="3" minWidth="0">
+        <Label text="Weight" styleClass="body-metric-label" />
+        <Label fx:id="weightValue" wrapText="true" styleClass="body-metric-value" />
+        <Label fx:id="weightDelta" wrapText="true" styleClass="body-metric-delta,mono" />
+        <Label fx:id="weightFrom" wrapText="true" styleClass="body-metric-from" />
+      </VBox>
+      <VBox spacing="3" minWidth="0" GridPane.columnIndex="1">
+        <Label text="Height" styleClass="body-metric-label" />
+        <Label fx:id="heightValue" wrapText="true" styleClass="body-metric-value" />
+        <Label fx:id="heightFrom" wrapText="true" styleClass="body-metric-from" />
+      </VBox>
+      <VBox spacing="3" minWidth="0" GridPane.columnIndex="2">
+        <Label text="Check-ins" styleClass="body-metric-label" />
+        <Label fx:id="checkinCount" styleClass="body-metric-value,mono" />
+        <Label fx:id="checkinFrom" wrapText="true" styleClass="body-metric-from" />
+      </VBox>
+    </GridPane>
+    <Label fx:id="baseline" wrapText="true" minWidth="0" maxWidth="Infinity"
+           minHeight="-Infinity" styleClass="body-summary" />
+    <VBox fx:id="historySection" spacing="5" minWidth="0">
+      <Label fx:id="historyHeading" styleClass="caps-label" />
+      <VBox fx:id="historyRows" spacing="0" minWidth="0" />
+    </VBox>
+    <VBox fx:id="comparisonSection" spacing="5" minWidth="0">
+      <Label fx:id="comparisonHeading" text="Latest comparison" styleClass="caps-label" />
+      <Label fx:id="comparison" wrapText="true" minWidth="0" maxWidth="Infinity"
+             minHeight="-Infinity" styleClass="profile-value" />
+    </VBox>
   </VBox>
 </VBox>

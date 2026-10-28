@@ -50,24 +50,12 @@
       </VBox>
     </VBox>
 
-    <VBox spacing="0" styleClass="card,payments-card">
-      <HBox alignment="CENTER_LEFT" spacing="8" styleClass="payments-header">
-        <Label text="Payments" styleClass="section-title" />
-        <Label fx:id="paymentSummary" styleClass="muted" />
-      </HBox>
-      <VBox fx:id="paymentRows" spacing="0" styleClass="payments-list" />
-      <Region fx:id="paymentEmpty" minHeight="48" />
-    </VBox>
-
-    <StackPane fx:id="bodyProgressPlaceholder" />
-
     <VBox spacing="8" styleClass="card,workout-card" VBox.vgrow="ALWAYS">
       <HBox alignment="CENTER_LEFT" spacing="8" styleClass="workout-header">
         <Label text="Workout plan" styleClass="section-title" />
         <Label fx:id="planSummary" wrapText="true" styleClass="muted" />
       </HBox>
       <VBox fx:id="workoutRows" />
-      <Region fx:id="workoutEmpty" minHeight="160" VBox.vgrow="ALWAYS" />
     </VBox>
   </VBox>
   <VBox fx:id="emptyContent" minHeight="320" styleClass="card,detail-empty" />

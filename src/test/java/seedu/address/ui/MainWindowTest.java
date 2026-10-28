@@ -98,7 +98,7 @@ public class MainWindowTest {
             scene.getRoot().layout();
             VBox paymentRows = (VBox) scene.lookup("#paymentRows");
             assertEquals(1, paymentRows.getChildren().size());
-            assertEquals("1 record", ((Label) scene.lookup("#paymentSummary")).getText());
+            assertFalse(((Label) scene.lookup("#paymentEmpty")).isManaged());
             return null;
         });
     }
@@ -129,14 +129,14 @@ public class MainWindowTest {
             execute(scene, "pay 1 a/150 d/2026-10-20");
             scene.getRoot().applyCss();
             scene.getRoot().layout();
-            assertEquals("1 record", ((Label) scene.lookup("#paymentSummary")).getText());
+            assertEquals(1, ((VBox) scene.lookup("#paymentRows")).getChildren().size());
 
             execute(scene, "undo");
             assertEquals(2, window.getPersonListPanel().getDisplayedCount());
             assertEquals("", ((Label) scene.lookup("#filterStateText")).getText());
             assertEquals(alice, window.getPersonListPanel().getSelectedPerson());
             assertEquals(0, ((VBox) scene.lookup("#paymentRows")).getChildren().size());
-            assertEquals("", ((Label) scene.lookup("#paymentSummary")).getText());
+            assertTrue(((Label) scene.lookup("#paymentEmpty")).isManaged());
 
             execute(scene, "redo");
             assertEquals(alice.withAddedPayment(payment),
@@ -144,7 +144,7 @@ public class MainWindowTest {
             scene.getRoot().applyCss();
             scene.getRoot().layout();
             assertEquals(1, ((VBox) scene.lookup("#paymentRows")).getChildren().size());
-            assertEquals("1 record", ((Label) scene.lookup("#paymentSummary")).getText());
+            assertFalse(((Label) scene.lookup("#paymentEmpty")).isManaged());
             assertEquals("", ((Label) scene.lookup("#filterStateText")).getText());
             return null;
         });

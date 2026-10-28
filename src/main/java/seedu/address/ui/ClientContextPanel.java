@@ -4,19 +4,24 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import seedu.address.logic.commands.BodyProgressViewRequest;
 import seedu.address.model.person.DietPlan;
+import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutLogEntry;
@@ -40,35 +45,9 @@ public class ClientContextPanel extends UiPart<Region> {
     @FXML
     private Label dietTarget;
     @FXML
-    private Label dietUnit;
-    @FXML
-    private VBox macroSection;
-    @FXML
-    private HBox macroSplit;
-    @FXML
-    private Region macroProtein;
-    @FXML
-    private Region macroCarbs;
-    @FXML
-    private Region macroFat;
-    @FXML
-    private Label proteinGrams;
-    @FXML
-    private Label carbsGrams;
-    @FXML
-    private Label fatGrams;
-    @FXML
-    private Label proteinShare;
-    @FXML
-    private Label carbsShare;
-    @FXML
-    private Label fatShare;
-    @FXML
     private VBox dietNotesBox;
     @FXML
     private Label dietNotes;
-    @FXML
-    private Region dietEmpty;
     @FXML
     private VBox dietaryRestrictionsBox;
     @FXML
@@ -76,20 +55,29 @@ public class ClientContextPanel extends UiPart<Region> {
     @FXML
     private VBox sessionRows;
     @FXML
-    private Region sessionsEmpty;
-    @FXML
     private VBox historyRows;
     @FXML
-    private Region historyEmpty;
+    private StackPane bodyProgressPlaceholder;
+    @FXML
+    private VBox paymentRows;
+    @FXML
+    private Label paymentEmpty;
+
+    private final BodyProgressPanel bodyProgressPanel;
+    private Person displayedPerson;
 
     /** Creates an initially empty client context panel. */
     public ClientContextPanel() {
         super(FXML);
+        bodyProgressPanel = new BodyProgressPanel();
+        bodyProgressPlaceholder.getChildren().add(bodyProgressPanel.getRoot());
         showPerson(null, -1);
     }
 
     /** Displays context records for {@code person}. */
     public void showPerson(Person person, int displayedIndex) {
+        displayedPerson = person;
+        bodyProgressPanel.showPerson(person);
         boolean hasPerson = person != null;
         setShown(selectedContent, hasPerson);
         setShown(emptyContent, !hasPerson);
@@ -101,57 +89,34 @@ public class ClientContextPanel extends UiPart<Region> {
         showDietaryRestrictions(person);
         showSessions(person);
         showHistory(person);
+        showPayments(person);
+    }
+
+    /** Reveals the requested tracker section after MainWindow selects its resolved client. */
+    public void revealBodyProgress(BodyProgressViewRequest request) {
+        if (request.person().equals(displayedPerson)) {
+            bodyProgressPanel.reveal(request);
+        }
+    }
+
+    /** The requested body-progress heading within the shared workspace scroll pane. */
+    public Node getBodyProgressNode(BodyProgressViewRequest request) {
+        return bodyProgressPanel.getRevealTarget(request);
     }
 
     private void showDiet(Person person) {
         boolean hasDiet = person.getDietPlan().isPresent();
         setShown(dietContent, hasDiet);
-        setShown(dietEmpty, !hasDiet);
         if (!hasDiet) {
             return;
         }
 
         DietPlan plan = person.getDietPlan().orElseThrow();
-        boolean structured = plan.getCalories().isPresent();
-        dietTarget.setText(structured ? String.valueOf(plan.getCalories().orElseThrow()) : plan.getTarget());
-        if (structured && !dietTarget.getStyleClass().contains("metric")) {
-            dietTarget.getStyleClass().add("metric");
-        } else if (!structured) {
-            dietTarget.getStyleClass().remove("metric");
-        }
-        setShown(dietUnit, structured);
-        setShown(macroSection, structured);
-        if (structured) {
-            int calories = plan.getCalories().orElseThrow();
-            int proteinPct = showMacro(plan.getProteinGrams(), calories, 4, proteinGrams, proteinShare, macroProtein);
-            int carbsPct = showMacro(plan.getCarbsGrams(), calories, 4, carbsGrams, carbsShare, macroCarbs);
-            int fatPct = showMacro(plan.getFatGrams(), calories, 9, fatGrams, fatShare, macroFat);
-            int proteinWidth = Math.min(100, proteinPct);
-            int carbsWidth = Math.min(100 - proteinWidth, carbsPct);
-            int fatWidth = Math.min(100 - proteinWidth - carbsWidth, fatPct);
-            bindMacroWidth(macroProtein, proteinWidth);
-            bindMacroWidth(macroCarbs, carbsWidth);
-            bindMacroWidth(macroFat, fatWidth);
-        }
+        dietTarget.setText(plan.getTarget());
         plan.getNotes().ifPresentOrElse(notes -> {
             dietNotes.setText(notes);
             setShown(dietNotesBox, true);
         }, () -> setShown(dietNotesBox, false));
-    }
-
-    private int showMacro(java.util.Optional<Integer> grams, int calories, int kcalPerGram,
-            Label value, Label share, Region bar) {
-        boolean present = grams.isPresent() && grams.orElseThrow() > 0;
-        int percentage = present ? (int) Math.round(grams.orElseThrow() * kcalPerGram * 100.0 / calories) : 0;
-        value.setText(present ? grams.orElseThrow() + " g" : "—");
-        share.setText(present ? percentage + "% of kcal" : "");
-        setShown(bar, present);
-        return percentage;
-    }
-
-    private void bindMacroWidth(Region bar, int percentage) {
-        bar.prefWidthProperty().unbind();
-        bar.prefWidthProperty().bind(macroSplit.widthProperty().subtract(4).multiply(percentage / 100.0));
     }
 
     private void showDietaryRestrictions(Person person) {
@@ -166,7 +131,6 @@ public class ClientContextPanel extends UiPart<Region> {
                 .sorted(Comparator.comparing(TrainingSession::getDateTime)).toList();
         sessionRows.getChildren().clear();
         setShown(sessionRows, !sessions.isEmpty());
-        setShown(sessionsEmpty, sessions.isEmpty());
         if (sessions.isEmpty()) {
             return;
         }
@@ -238,10 +202,58 @@ public class ClientContextPanel extends UiPart<Region> {
         List<WorkoutSession> sessions = person.getWorkoutSessions().stream().sorted(newestFirst).toList();
         historyRows.getChildren().clear();
         setShown(historyRows, !sessions.isEmpty());
-        setShown(historyEmpty, sessions.isEmpty());
         for (int i = 0; i < sessions.size(); i++) {
             historyRows.getChildren().add(createHistoryRow(sessions.get(i), i + 1));
         }
+    }
+
+    private void showPayments(Person person) {
+        List<PaymentRecord> payments = new ArrayList<>(person.getPaymentRecords());
+        payments.sort(Comparator.comparing(PaymentRecord::getDate));
+        paymentRows.getChildren().clear();
+        setShown(paymentRows, !payments.isEmpty());
+        setShown(paymentEmpty, payments.isEmpty());
+        for (PaymentRecord payment : payments) {
+            paymentRows.getChildren().add(createPaymentRow(payment));
+        }
+    }
+
+    private GridPane createPaymentRow(PaymentRecord payment) {
+        GridPane row = new GridPane();
+        row.getStyleClass().add("payment-row");
+        row.setHgap(8);
+        row.setAlignment(Pos.CENTER_LEFT);
+        ColumnConstraints detailColumn = new ColumnConstraints();
+        detailColumn.setHgrow(Priority.ALWAYS);
+        detailColumn.setMinWidth(0);
+        ColumnConstraints amountColumn = new ColumnConstraints();
+        amountColumn.setMinWidth(0);
+        ColumnConstraints statusColumn = new ColumnConstraints();
+        row.getColumnConstraints().addAll(detailColumn, amountColumn, statusColumn);
+
+        Label note = new Label(payment.getRemarks().orElse("Payment"));
+        note.getStyleClass().add("payment-note");
+        note.setWrapText(true);
+        note.setMinWidth(0);
+        note.setMaxWidth(Double.MAX_VALUE);
+        Label date = new Label(payment.getDate().toString());
+        date.getStyleClass().add("payment-date");
+        date.setWrapText(true);
+        date.setMinWidth(0);
+        VBox detail = new VBox(2, note, date);
+        detail.setMinWidth(0);
+        row.add(detail, 0, 0);
+
+        Label amount = new Label(payment.getFormattedAmount());
+        amount.getStyleClass().addAll("payment-amount", "mono");
+        amount.setWrapText(true);
+        amount.setMinWidth(0);
+        amount.setMaxWidth(90);
+        row.add(amount, 1, 0);
+        Label status = new Label("PAID");
+        status.getStyleClass().add("payment-status");
+        row.add(status, 2, 0);
+        return row;
     }
 
     private HBox createHistoryRow(WorkoutSession session, int historyIndex) {

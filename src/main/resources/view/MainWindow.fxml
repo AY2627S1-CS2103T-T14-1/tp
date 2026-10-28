@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -47,7 +48,8 @@
         <center>
           <SplitPane fx:id="workspace" orientation="VERTICAL" styleClass="workspace">
             <items>
-              <ScrollPane fx:id="contentScroll" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+              <ScrollPane fx:id="contentScroll" fitToWidth="true" fitToHeight="true"
+                          hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
                           minHeight="0" styleClass="content-scroll">
                 <GridPane hgap="16" styleClass="body">
                   <padding><Insets top="12" right="24" bottom="24" left="24" /></padding>
@@ -56,9 +58,10 @@
                     <ColumnConstraints hgrow="ALWAYS" minWidth="0" />
                     <ColumnConstraints minWidth="340" prefWidth="340" maxWidth="340" />
                   </columnConstraints>
-                  <StackPane fx:id="personListPanelPlaceholder" GridPane.columnIndex="0" GridPane.valignment="TOP" />
-                  <StackPane fx:id="clientDetailPanelPlaceholder" GridPane.columnIndex="1" GridPane.valignment="TOP" />
-                  <StackPane fx:id="clientContextPanelPlaceholder" GridPane.columnIndex="2" GridPane.valignment="TOP" />
+                  <rowConstraints><RowConstraints vgrow="ALWAYS" /></rowConstraints>
+                  <StackPane fx:id="personListPanelPlaceholder" GridPane.columnIndex="0" GridPane.vgrow="ALWAYS" />
+                  <StackPane fx:id="clientDetailPanelPlaceholder" GridPane.columnIndex="1" GridPane.vgrow="ALWAYS" />
+                  <StackPane fx:id="clientContextPanelPlaceholder" GridPane.columnIndex="2" GridPane.vgrow="ALWAYS" />
                 </GridPane>
               </ScrollPane>
               <VBox fx:id="terminalPanel" minHeight="170" maxHeight="640" styleClass="terminal">

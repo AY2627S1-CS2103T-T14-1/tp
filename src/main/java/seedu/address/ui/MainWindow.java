@@ -410,8 +410,8 @@ public class MainWindow extends UiPart<Stage> {
         result.getBodyProgressViewRequest().ifPresent(request -> personListPanel.selectPerson(request.person()));
         refreshSelectedClient();
         result.getBodyProgressViewRequest().ifPresent(request -> {
-            clientDetailPanel.revealBodyProgress(request);
-            revealInContent(clientDetailPanel.getBodyProgressNode(request));
+            clientContextPanel.revealBodyProgress(request);
+            revealInContent(clientContextPanel.getBodyProgressNode(request));
         });
         refreshFilterPill();
     }

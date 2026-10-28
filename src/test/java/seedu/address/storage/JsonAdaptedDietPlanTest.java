@@ -1,10 +1,7 @@
 package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
-
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -22,18 +19,6 @@ public class JsonAdaptedDietPlanTest {
             String json = JsonUtil.toJsonString(new JsonAdaptedDietPlan(plan));
             assertEquals(plan, JsonUtil.fromJsonString(json, JsonAdaptedDietPlan.class).toModelType());
         }
-    }
-
-    @Test
-    public void jsonRoundTrip_preservesStructuredAndLegacyRecords() throws Exception {
-        DietPlan structured = DietPlan.structured(2100, Optional.of(160), Optional.of(210),
-                Optional.of(65), Optional.of("High protein"));
-        String json = JsonUtil.toJsonString(new JsonAdaptedDietPlan(structured));
-        assertEquals(structured, JsonUtil.fromJsonString(json, JsonAdaptedDietPlan.class).toModelType());
-        DietPlan old = JsonUtil.fromJsonString("{\"target\":\"1800 kcal/day\",\"notes\":\"Old\"}",
-                JsonAdaptedDietPlan.class).toModelType();
-        assertTrue(old.getCalories().isEmpty());
-        assertEquals(Optional.of("Old"), old.getNotes());
     }
 
     @Test

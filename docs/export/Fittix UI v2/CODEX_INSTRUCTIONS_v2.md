@@ -196,14 +196,23 @@ Format: `diet INDEX cal/KCAL [pro/G] [carb/G] [fat/G] [n/NOTES]`. Prefixes can c
 Order of checks: index format → index range → calorie → macros. Re-running `diet` replaces the targets; macros left out are cleared; notes are kept if `n/` is omitted.
 Add parser unit tests for every row above.
 
-## 10. Updated acceptance checklist
+## 10. Column balance (fixes empty space under the shorter column)
+1. **Rebalance:** the centre column holds **only ProfileCard + WorkoutPlanCard**. Every summary card goes in the right column, in this order: Diet → Sessions → History → **Body progress → Payments**. If Body progress or Payments currently sit in the centre column, move them.
+2. **Stretch the last card:** in each column, the last child gets `VBox.setVgrow(node, Priority.ALWAYS)` (WorkoutPlanCard in the centre, PaymentsCard on the right; the ClientList card fills its column). The GridPane row is as tall as the tallest column, so all three columns end on the same line.
+3. **Header-only empty cards:** this replaces §6's blank Region. An empty card renders **only its header row** (≈64 px with padding 20). Remove the min-height Regions. The exception is the stretching last card, which may grow taller than its content.
+- **Body progress card** (right column, ink outline-square marker, "BODY · Progress"): three columns (Weight, Body fat, Waist), each showing the latest value 19/700, the change from baseline (mono 12, "−2.4kg"; "±0" when unchanged; blank when there are no check-ins), and "from X" or "baseline" (11, subtle). Footer (dashed top border): "Baseline Tue 1 Sep · latest Tue 13 Oct · 2 check-ins". With no baseline it shows the header only. Don't show "Use bodybase first" or any other instruction text.
+- **Payments card** (grey dot marker, "PAYMENTS · Billing"): rows split by dashed lines: note 13.5/700 + "Paid/Due DATE" 11.5 muted | amount mono 13/600 | status pill (DUE: #f3d34a with #141414 text; PAID: #26262a with #c4c4c8 text).
+- The field names in the mockup are placeholders. Map them to whatever the real Body progress and Payment models store.
+
+## 11. Updated acceptance checklist
 - [ ] Launch: terminal closed, content fills the window, header has no File menu and no count pill.
 - [ ] Typing any letter with nothing focused opens the terminal with that letter in the field.
 - [ ] Esc and × close it; the Terminal button and a click on the closed bar open it; there is no Ctrl+` shortcut.
 - [ ] Dragging the divider resizes it (170–640 px); the height persists across open/close and app restarts.
 - [ ] With the terminal open, the content scrolls; cards keep their size.
 - [ ] A long email or address (try a 40+ character email) shows in full in the profile.
-- [ ] Empty plan, diet, sessions and history show a header only with a blank body; no command text anywhere in cards.
+- [ ] Empty cards show their header only; no command text anywhere in cards.
+- [ ] With a long plan and empty side cards, all three columns still end on the same line (last card stretches); no bare canvas below a column.
 - [ ] The date toggles to the full date plus a seconds clock; the timer stops when collapsed.
 - [ ] The diet split bar matches the formula; the leftover stays grey; no notes box when notes are empty.
 - [ ] All diet test cases in §9 pass.

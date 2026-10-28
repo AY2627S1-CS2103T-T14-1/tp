@@ -81,33 +81,8 @@ public class WorkoutSessionDisplayTest {
             assertEquals("1800 kcal per day", label(panel, "dietTarget").getText());
             assertEquals("Prioritise vegetables", label(panel, "dietNotes").getText());
             assertTrue(region(panel, "dietNotesBox").isManaged());
-            assertFalse(region(panel, "macroSection").isManaged());
 
             panel.showPerson(new PersonBuilder().withDietPlan(new DietPlan("High protein")).build(), 1);
-            assertFalse(region(panel, "dietNotesBox").isManaged());
-            return null;
-        });
-    }
-
-    @Test
-    public void structuredDiet_showsCalorieSplitAndClearsMissingMacros() throws Exception {
-        runOnFxThread(() -> {
-            ClientContextPanel panel = new ClientContextPanel();
-            DietPlan plan = DietPlan.structured(2100, Optional.of(160), Optional.of(210),
-                    Optional.of(65), Optional.of("High protein"));
-            panel.showPerson(new PersonBuilder().withDietPlan(plan).build(), 1);
-            assertEquals("2100", label(panel, "dietTarget").getText());
-            assertEquals("160 g", label(panel, "proteinGrams").getText());
-            assertEquals("30% of kcal", label(panel, "proteinShare").getText());
-            assertEquals("40% of kcal", label(panel, "carbsShare").getText());
-            assertEquals("28% of kcal", label(panel, "fatShare").getText());
-            assertTrue(region(panel, "macroSection").isManaged());
-
-            panel.showPerson(new PersonBuilder().withDietPlan(DietPlan.structured(2400,
-                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty())).build(), 1);
-            assertEquals("—", label(panel, "proteinGrams").getText());
-            assertEquals("", label(panel, "proteinShare").getText());
-            assertFalse(region(panel, "macroProtein").isManaged());
             assertFalse(region(panel, "dietNotesBox").isManaged());
             return null;
         });
@@ -121,7 +96,7 @@ public class WorkoutSessionDisplayTest {
                     .withDietaryRestrictions("Peanut allergy", "Halal meals").build();
             panel.showPerson(restricted, 2);
 
-            assertTrue(region(panel, "dietEmpty").isManaged());
+            assertFalse(region(panel, "dietContent").isManaged());
             assertTrue(region(panel, "dietaryRestrictionsBox").isManaged());
             assertEquals("Peanut allergy; Halal meals", label(panel, "dietaryRestrictions").getText());
 
@@ -293,9 +268,9 @@ public class WorkoutSessionDisplayTest {
 
             assertEquals(0, vbox(panel, "sessionRows").getChildren().size());
             assertEquals(0, vbox(panel, "historyRows").getChildren().size());
-            assertTrue(region(panel, "dietEmpty").isManaged());
-            assertTrue(region(panel, "sessionsEmpty").isManaged());
-            assertTrue(region(panel, "historyEmpty").isManaged());
+            assertFalse(region(panel, "dietContent").isManaged());
+            assertFalse(region(panel, "sessionRows").isManaged());
+            assertFalse(region(panel, "historyRows").isManaged());
             return null;
         });
     }

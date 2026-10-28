@@ -314,43 +314,9 @@
     -fx-padding: 10 12;
 }
 
-.payments-card {
-    -fx-padding: 0;
-}
-
-.payments-header {
-    -fx-padding: 18 22 12 22;
-}
-
-.payments-list {
-    -fx-padding: 0 22 18 22;
-}
-
 .payment-row {
     -fx-border-color: #2c2c30 transparent transparent transparent;
     -fx-border-style: segments(4, 4) none none none;
-    -fx-padding: 10 0;
-}
-
-.payment-date {
-    -fx-font-size: 12.5px;
-    -fx-text-fill: #d6d6d9;
-}
-
-.payment-amount {
-    -fx-font-size: 13px;
-    -fx-font-weight: 600;
-    -fx-text-fill: #d4f25a;
-}
-
-.payment-remarks {
-    -fx-font-size: 12.5px;
-    -fx-text-fill: #a3a3a8;
-}
-
-.payment-empty {
-    -fx-padding: 0 22 20 22;
-    -fx-font-size: 13px;
 }
 
 .workout-card {
@@ -831,7 +797,7 @@
 .profile-field {
     -fx-padding: 0;
 }
-.payments-header, .payments-list, .workout-header {
+.workout-header {
     -fx-padding: 0;
 }
 .workout-card {
@@ -966,32 +932,69 @@
 .hint-chip:hover {
     -fx-text-fill: #d4f25a;
 }
-.diet-target.metric {
-    -fx-font-size: 34px;
-    -fx-font-weight: 700;
-}
-.macro-split {
-    -fx-background-color: #2a2a2d;
-    -fx-background-radius: 4;
-}
-.macro-protein { -fx-background-color: #f0a54b; }
-.macro-carbs { -fx-background-color: #f7d3a0; }
-.macro-fat { -fx-background-color: #a8692a; }
-.macro-label {
-    -fx-text-fill: #a3a3a8;
-    -fx-font-size: 11.5px;
-}
-.macro-value {
-    -fx-font-size: 14px;
-    -fx-font-weight: 600;
-}
-.macro-share {
-    -fx-text-fill: #85858b;
-    -fx-font-size: 11px;
-}
 .history-header-icon {
     -fx-background-color: transparent;
     -fx-border-color: #d4f25a;
     -fx-border-width: 2;
     -fx-border-radius: 999;
+}
+.body-marker {
+    -fx-background-color: transparent;
+    -fx-border-color: #f4f4f2;
+    -fx-border-width: 2;
+    -fx-border-radius: 3;
+}
+.body-metric-label {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #a3a3a8;
+}
+.body-metric-value {
+    -fx-font-size: 19px;
+    -fx-font-weight: 700;
+}
+.body-metric-delta {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+.body-metric-from, .body-summary {
+    -fx-font-size: 11px;
+    -fx-text-fill: #85858b;
+}
+.body-summary {
+    -fx-border-color: #2c2c30 transparent transparent transparent;
+    -fx-border-style: segments(4, 4) none none none;
+    -fx-padding: 10 0 0 0;
+}
+.body-history-row {
+    -fx-border-color: #2c2c30 transparent transparent transparent;
+    -fx-border-style: segments(4, 4) none none none;
+    -fx-padding: 8 0;
+}
+.payment-marker {
+    -fx-background-color: #c4c4c8;
+    -fx-background-radius: 999;
+}
+.payment-row {
+    -fx-padding: 10 0;
+}
+.payment-note {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: 700;
+}
+.payment-date {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #a3a3a8;
+}
+.payment-amount {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #f4f4f2;
+}
+.payment-status {
+    -fx-background-color: #26262a;
+    -fx-background-radius: 999;
+    -fx-padding: 3 9;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #c4c4c8;
 }

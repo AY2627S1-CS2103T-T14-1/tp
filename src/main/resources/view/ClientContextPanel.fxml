@@ -18,47 +18,16 @@
         <Label text="Targets &amp; notes" wrapText="true" styleClass="context-title" />
       </FlowPane>
       <VBox fx:id="dietContent" spacing="12">
-        <HBox alignment="BASELINE_LEFT" spacing="8">
+        <VBox spacing="5">
+          <Label text="TARGET" styleClass="caps-label" />
           <Label fx:id="dietTarget" wrapText="true" minWidth="0" maxWidth="Infinity"
-                 HBox.hgrow="ALWAYS" styleClass="diet-target" />
-          <Label fx:id="dietUnit" text="kcal / day" styleClass="muted" />
-        </HBox>
-        <VBox fx:id="macroSection" spacing="8">
-          <Label text="SPLIT OF DAILY CALORIES" styleClass="caps-label" />
-          <HBox fx:id="macroSplit" spacing="2" prefHeight="8" minHeight="8" maxHeight="8" styleClass="macro-split">
-            <Region fx:id="macroProtein" styleClass="macro-protein" />
-            <Region fx:id="macroCarbs" styleClass="macro-carbs" />
-            <Region fx:id="macroFat" styleClass="macro-fat" />
-          </HBox>
-          <GridPane hgap="10" styleClass="macro-values">
-            <columnConstraints>
-              <ColumnConstraints percentWidth="33.333" />
-              <ColumnConstraints percentWidth="33.333" />
-              <ColumnConstraints percentWidth="33.334" />
-            </columnConstraints>
-            <VBox spacing="3">
-              <Label text="Protein" styleClass="macro-label" />
-              <Label fx:id="proteinGrams" styleClass="macro-value,mono" />
-              <Label fx:id="proteinShare" styleClass="macro-share" />
-            </VBox>
-            <VBox spacing="3" GridPane.columnIndex="1">
-              <Label text="Carbs" styleClass="macro-label" />
-              <Label fx:id="carbsGrams" styleClass="macro-value,mono" />
-              <Label fx:id="carbsShare" styleClass="macro-share" />
-            </VBox>
-            <VBox spacing="3" GridPane.columnIndex="2">
-              <Label text="Fat" styleClass="macro-label" />
-              <Label fx:id="fatGrams" styleClass="macro-value,mono" />
-              <Label fx:id="fatShare" styleClass="macro-share" />
-            </VBox>
-          </GridPane>
+                 styleClass="context-body" />
         </VBox>
         <VBox fx:id="dietNotesBox" spacing="5" styleClass="diet-notes">
           <Label text="NOTES" styleClass="caps-label" />
           <Label fx:id="dietNotes" wrapText="true" styleClass="context-body" />
         </VBox>
       </VBox>
-      <Region fx:id="dietEmpty" minHeight="48" />
       <VBox fx:id="dietaryRestrictionsBox" spacing="5" styleClass="diet-notes" visible="false" managed="false">
         <Label text="DIETARY RESTRICTIONS" styleClass="caps-label" />
         <Label fx:id="dietaryRestrictions" wrapText="true" styleClass="context-body" />
@@ -72,7 +41,6 @@
         <Label text="Sessions" styleClass="context-title" />
       </FlowPane>
       <VBox fx:id="sessionRows" spacing="8" />
-      <Region fx:id="sessionsEmpty" minHeight="48" />
     </VBox>
 
     <VBox spacing="12" styleClass="card,context-card">
@@ -82,7 +50,16 @@
         <Label text="Completed workouts" wrapText="true" styleClass="context-title" />
       </FlowPane>
       <VBox fx:id="historyRows" />
-      <Region fx:id="historyEmpty" minHeight="48" />
+    </VBox>
+    <StackPane fx:id="bodyProgressPlaceholder" />
+    <VBox spacing="12" styleClass="card,payments-card" VBox.vgrow="ALWAYS">
+      <FlowPane hgap="10" vgap="5" styleClass="context-heading">
+        <Region minWidth="10" minHeight="10" maxWidth="10" maxHeight="10" styleClass="payment-marker" />
+        <Label text="PAYMENTS" styleClass="caps-label" />
+        <Label text="Billing" styleClass="context-title" />
+      </FlowPane>
+      <VBox fx:id="paymentRows" spacing="0" minWidth="0" />
+      <Label fx:id="paymentEmpty" text="No payments recorded." styleClass="muted" />
     </VBox>
   </VBox>
   <Region fx:id="emptyContent" />
