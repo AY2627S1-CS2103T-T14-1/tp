@@ -16,6 +16,10 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.model.person.Person;
@@ -106,6 +110,81 @@ public class PersonListPanelTest {
             assertEquals("1", label(panel, "shownCount").getText());
             return null;
         });
+    }
+
+    @Test
+    public void removalOfSelectedClient_selectsClientNowAtSamePosition() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").build();
+            Person third = new PersonBuilder().withName("Daniel Tan").build();
+            ObservableList<Person> people = FXCollections.observableArrayList(first, second, third);
+            PersonListPanel panel = new PersonListPanel(people);
+            panel.selectDisplayedIndex(1);
+
+            people.remove(second);
+
+            assertEquals(third, panel.getSelectedPerson());
+            return null;
+        });
+    }
+
+    @Test
+    public void selectLast_selectsFinalClient() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").build();
+            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
+
+            panel.selectLast();
+
+            assertEquals(second, panel.getSelectedPerson());
+            return null;
+        });
+    }
+
+    @Test
+    public void arrowKeys_moveSelectionAndStopAtEnds() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").build();
+            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
+            VBox rows = (VBox) panel.getRoot().lookup("#personRows");
+
+            press(rows, KeyCode.UP);
+            assertEquals(first, panel.getSelectedPerson());
+            press(rows, KeyCode.DOWN);
+            assertEquals(second, panel.getSelectedPerson());
+            press(rows, KeyCode.DOWN);
+            assertEquals(second, panel.getSelectedPerson());
+            press(rows, KeyCode.UP);
+            assertEquals(first, panel.getSelectedPerson());
+            press(rows, KeyCode.A);
+            assertEquals(first, panel.getSelectedPerson());
+            return null;
+        });
+    }
+
+    @Test
+    public void clickingCard_selectsThatClient() throws Exception {
+        runOnFxThread(() -> {
+            Person first = new PersonBuilder().withName("Alice Lee").build();
+            Person second = new PersonBuilder().withName("Priya Nair").build();
+            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(first, second));
+            VBox rows = (VBox) panel.getRoot().lookup("#personRows");
+
+            rows.getChildren().get(1).fireEvent(new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0,
+                    MouseButton.PRIMARY, 1, false, false, false, false, true, false, false, true, false, false,
+                    null));
+
+            assertEquals(second, panel.getSelectedPerson());
+            assertEquals(1, panel.getSelectedIndex());
+            return null;
+        });
+    }
+
+    private static void press(VBox rows, KeyCode code) {
+        rows.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false));
     }
 
     private static Label label(PersonListPanel panel, String id) {

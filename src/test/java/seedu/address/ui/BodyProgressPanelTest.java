@@ -121,6 +121,25 @@ class BodyProgressPanelTest {
     }
 
     @Test
+    void revealTarget_withoutBaselineIsSummary_withBaselineFollowsRequestedSection() throws Exception {
+        onFx(() -> {
+            BodyProgressPanel panel = new BodyProgressPanel();
+            Person unrecorded = new PersonBuilder().withName("Daniel Tan").build();
+            panel.showPerson(unrecorded);
+            assertEquals(label(panel.getRoot(), "baseline"), panel.getRevealTarget(
+                    new BodyProgressViewRequest(unrecorded, BodyProgressViewRequest.Section.HISTORY)));
+
+            Person recorded = person("74.20", "Measured before breakfast");
+            panel.showPerson(recorded);
+            assertEquals(panel.getRoot().lookup("#historyHeading"), panel.getRevealTarget(
+                    new BodyProgressViewRequest(recorded, BodyProgressViewRequest.Section.HISTORY)));
+            assertEquals(panel.getRoot().lookup("#comparisonHeading"), panel.getRevealTarget(
+                    new BodyProgressViewRequest(recorded, BodyProgressViewRequest.Section.COMPARISON)));
+            return null;
+        });
+    }
+
+    @Test
     void narrowContextColumn_showsCompleteSummaryAndComparison() throws Exception {
         onFx(() -> {
             BodyProgressPanel panel = new BodyProgressPanel();

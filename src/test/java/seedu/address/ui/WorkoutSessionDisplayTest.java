@@ -27,6 +27,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import seedu.address.logic.commands.BodyProgressViewRequest;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
@@ -224,6 +225,36 @@ public class WorkoutSessionDisplayTest {
             assertEquals(List.of("✓", "2. Tue 14 Jan 2020", "Time not specified",
                     "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(1)));
             assertTrue(rows.getChildren().get(0).lookup(".history-date") instanceof Label);
+            return null;
+        });
+    }
+
+    @Test
+    public void completedWorkouts_zeroWeightEntry_showsBodyweight() throws Exception {
+        runOnFxThread(() -> {
+            WorkoutLogEntry pushUp = new WorkoutLogEntry("Push up", BigDecimal.ZERO, 3, 12);
+            Person person = new PersonBuilder().withWorkoutSessions(List.of(
+                    new WorkoutSession(LocalDate.of(2020, 1, 15), Optional.empty(), List.of(pushUp)))).build();
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(person, 1);
+
+            assertEquals(List.of("✓", "1. Wed 15 Jan 2020", "Time not specified", "Push up · 3 × 12 · BW"),
+                    labelTexts(vbox(panel, "historyRows").getChildren().getFirst()));
+            return null;
+        });
+    }
+
+    @Test
+    public void revealBodyProgress_requestForAnotherClient_isIgnored() throws Exception {
+        runOnFxThread(() -> {
+            Person displayed = new PersonBuilder().withName("Alice Lee").build();
+            Person other = new PersonBuilder().withName("Priya Nair").build();
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(displayed, 1);
+
+            panel.revealBodyProgress(new BodyProgressViewRequest(other, BodyProgressViewRequest.Section.HISTORY));
+            panel.revealBodyProgress(new BodyProgressViewRequest(displayed,
+                    BodyProgressViewRequest.Section.HISTORY));
             return null;
         });
     }
