@@ -269,6 +269,29 @@ public class MainWindow extends UiPart<Stage> {
         dateTooltip.setText(hint);
     }
 
+    /** Scrolls the workspace only as far as needed to show the whole of {@code node}. */
+    private void scrollIntoView(Node node) {
+        Parent root = primaryStage.getScene().getRoot();
+        root.applyCss();
+        root.layout();
+        Node content = contentScroll.getContent();
+        Bounds bounds = content.sceneToLocal(node.localToScene(node.getBoundsInLocal()));
+        double viewportHeight = contentScroll.getViewportBounds().getHeight();
+        double overflow = content.getBoundsInLocal().getHeight() - viewportHeight;
+        if (viewportHeight <= 0 || overflow <= 0) {
+            return;
+        }
+        double top = contentScroll.getVvalue() * overflow;
+        if (bounds.getMinY() < top) {
+            top = bounds.getMinY();
+        } else if (bounds.getMaxY() > top + viewportHeight) {
+            top = bounds.getMaxY() - viewportHeight;
+        } else {
+            return;
+        }
+        contentScroll.setVvalue(Math.max(0, Math.min(1, top / overflow)));
+    }
+
     private void revealInContent(Node node) {
         Platform.runLater(() -> {
             Bounds bounds = contentScroll.getContent().sceneToLocal(node.localToScene(node.getBoundsInLocal()));
@@ -300,6 +323,7 @@ public class MainWindow extends UiPart<Stage> {
 
         personListPanel.selectedPersonProperty().addListener((unused, previous, selected) ->
                 refreshSelectedClient());
+        personListPanel.setOnSelectionChanged(this::scrollIntoView);
         logic.getFilteredPersonList().addListener((javafx.collections.ListChangeListener<Person>) change -> {
             refreshSelectedClient();
             refreshHeaderCounts();

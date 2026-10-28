@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import java.util.function.Consumer;
+
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -8,6 +10,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Region;
@@ -24,6 +27,7 @@ public class PersonListPanel extends UiPart<Region> {
     private final ReadOnlyIntegerWrapper totalCount = new ReadOnlyIntegerWrapper();
     private final ReadOnlyObjectWrapper<Person> selectedPerson = new ReadOnlyObjectWrapper<>();
     private int lastSelectedSourceIndex = -1;
+    private Consumer<Node> selectionChangeHandler = card -> { };
 
     @FXML
     private VBox personRows;
@@ -116,9 +120,29 @@ public class PersonListPanel extends UiPart<Region> {
     /** Selects a zero-based index in the currently displayed list. */
     public void selectDisplayedIndex(int index) {
         if (index >= 0 && index < displayedPeople.size()) {
+            int previousIndex = getSelectedIndex();
             selectedPerson.set(displayedPeople.get(index));
             lastSelectedSourceIndex = sourcePeople.indexOf(displayedPeople.get(index));
-            rebuildCards();
+            markSelectedCard();
+            if (index != previousIndex && index < personRows.getChildren().size()) {
+                selectionChangeHandler.accept(personRows.getChildren().get(index));
+            }
+        }
+    }
+
+    /** Runs {@code handler} with the selected card whenever selection moves to a different client. */
+    public void setOnSelectionChanged(Consumer<Node> handler) {
+        selectionChangeHandler = handler;
+    }
+
+    private void markSelectedCard() {
+        int selectedIndex = getSelectedIndex();
+        for (int index = 0; index < personRows.getChildren().size(); index++) {
+            Node card = personRows.getChildren().get(index);
+            card.getStyleClass().remove("selected");
+            if (index == selectedIndex) {
+                card.getStyleClass().add("selected");
+            }
         }
     }
 

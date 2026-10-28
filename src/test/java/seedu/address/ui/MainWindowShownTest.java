@@ -14,10 +14,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -233,6 +235,97 @@ public class MainWindowShownTest {
         assertEquals(300, runOnFxThread(this::terminalHeight), 1.0);
     }
 
+    @Test
+    public void arrowKeySelection_scrollsSelectedClientIntoView() throws Exception {
+        Model model = new ModelManager();
+        for (int i = 1; i <= 60; i++) {
+            model.addPerson(new PersonBuilder().withName("Client " + i)
+                    .withPhone(String.valueOf(80000000 + i)).withEmail("client" + i + "@example.com").build());
+        }
+        showWindow(model);
+
+        runOnFxThread(() -> {
+            click(personRows().getChildren().getFirst());
+            for (int i = 0; i < 30; i++) {
+                press(KeyCode.DOWN);
+            }
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            assertEquals(30, window.getPersonListPanel().getSelectedIndex());
+            assertSelectedCardVisible();
+            return null;
+        });
+
+        runOnFxThread(() -> {
+            for (int i = 0; i < 25; i++) {
+                press(KeyCode.UP);
+            }
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            assertEquals(5, window.getPersonListPanel().getSelectedIndex());
+            assertSelectedCardVisible();
+            return null;
+        });
+
+        runOnFxThread(() -> {
+            window.getPersonListPanel().selectLast();
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            assertSelectedCardVisible();
+            return null;
+        });
+    }
+
+    @Test
+    public void addCommand_scrollsNewClientBelowViewportIntoView() throws Exception {
+        Model model = new ModelManager();
+        for (int i = 1; i <= 40; i++) {
+            model.addPerson(new PersonBuilder().withName("Client " + i)
+                    .withPhone(String.valueOf(80000000 + i)).withEmail("client" + i + "@example.com").build());
+        }
+        showWindow(model);
+
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            commandField().setText("add n/Zed Tan p/91234567 e/zed@example.com a/1 Test Street");
+            press(KeyCode.ENTER);
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            assertEquals(40, window.getPersonListPanel().getSelectedIndex());
+            assertSelectedCardVisible();
+            return null;
+        });
+    }
+
+    @Test
+    public void clickingVisibleClient_doesNotScroll() throws Exception {
+        Model model = new ModelManager();
+        for (int i = 1; i <= 30; i++) {
+            model.addPerson(new PersonBuilder().withName("Client " + i)
+                    .withPhone(String.valueOf(80000000 + i)).withEmail("client" + i + "@example.com").build());
+        }
+        showWindow(model);
+
+        runOnFxThread(() -> {
+            click(personRows().getChildren().get(2));
+            return null;
+        });
+        waitForFx();
+        assertEquals(0.0, runOnFxThread(() -> ((ScrollPane) scene().lookup("#contentScroll")).getVvalue()));
+    }
+
     private void showWindow(Model model) throws Exception {
         window = runOnFxThread(() -> {
             JsonAddressBookStorage data = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
@@ -281,6 +374,17 @@ public class MainWindowShownTest {
 
     private CommandFeedback lastFeedback() {
         return (CommandFeedback) ((ListView<?>) scene().lookup("#resultList")).getItems().getLast();
+    }
+
+    private void assertSelectedCardVisible() {
+        ScrollPane content = (ScrollPane) scene().lookup("#contentScroll");
+        Node selected = personRows().getChildren().stream()
+                .filter(card -> card.getStyleClass().contains("selected")).findFirst().orElseThrow();
+        Bounds card = selected.localToScene(selected.getBoundsInLocal());
+        Bounds viewport = content.localToScene(content.getBoundsInLocal());
+        assertTrue(card.getMinY() >= viewport.getMinY() - 1 && card.getMaxY() <= viewport.getMaxY() + 1,
+                "selected card " + card.getMinY() + ".." + card.getMaxY() + " outside viewport "
+                        + viewport.getMinY() + ".." + viewport.getMaxY());
     }
 
     /** Sends each character to the focus owner, as native key input is delivered. */
