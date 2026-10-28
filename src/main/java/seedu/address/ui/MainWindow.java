@@ -13,6 +13,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
@@ -130,6 +131,7 @@ public class MainWindow extends UiPart<Stage> {
         setWindowDefaultSize(logic.getGuiSettings());
         terminalHeight = clampTerminalHeight(logic.getGuiSettings().getTerminalHeight());
         workspace.getItems().remove(terminalPanel);
+        SplitPane.setResizableWithParent(terminalPanel, false);
         brandIcon.getChildren().add(FittixIcon.createNode());
         setAccelerators();
         dateTooltip = new Tooltip();
@@ -189,15 +191,30 @@ public class MainWindow extends UiPart<Stage> {
             workspace.getItems().add(terminalPanel);
             terminalClosedBar.setVisible(false);
             terminalClosedBar.setManaged(false);
-            Platform.runLater(() -> {
-                if (isTerminalOpen() && workspace.getHeight() > 0) {
-                    workspace.setDividerPositions(1 - terminalHeight / workspace.getHeight());
-                }
-                commandBox.requestFocus();
-            });
-        } else {
-            commandBox.requestFocus();
+            restoreTerminalHeight();
         }
+        commandBox.requestFocus();
+    }
+
+    /**
+     * Sizes the newly opened terminal to the remembered height. The window is laid out first so the
+     * workspace has its open-state height, then the divider is corrected by the measured difference,
+     * which accounts for the divider's own size and fractional display scaling.
+     */
+    private void restoreTerminalHeight() {
+        Parent root = primaryStage.getScene().getRoot();
+        root.applyCss();
+        root.layout();
+        double workspaceHeight = workspace.getHeight();
+        if (workspaceHeight <= 0) {
+            return;
+        }
+        double position = 1 - terminalHeight / workspaceHeight;
+        workspace.setDividerPositions(position);
+        root.layout();
+        double error = terminalPanel.getHeight() - terminalHeight;
+        workspace.setDividerPositions(position + error / workspaceHeight);
+        root.layout();
     }
 
     private void closeTerminal() {

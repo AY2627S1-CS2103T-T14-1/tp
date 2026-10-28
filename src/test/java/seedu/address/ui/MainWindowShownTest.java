@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
@@ -23,12 +24,17 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
+import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -129,6 +135,104 @@ public class MainWindowShownTest {
         });
     }
 
+    @Test
+    public void terminalHeight_isKeptAcrossRenderedCloseAndReopen() throws Exception {
+        showWindow(new ModelManager());
+
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            workspace().setDividerPositions(0.45);
+            return null;
+        });
+        waitForFx();
+        double dragged = runOnFxThread(this::terminalHeight);
+        assertTrue(dragged >= 170 && dragged <= 640, "dragged height " + dragged);
+
+        runOnFxThread(() -> {
+            terminalCloseButton().fire();
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        assertEquals(dragged, runOnFxThread(this::terminalHeight), 1.0);
+    }
+
+    @Test
+    public void terminalHeight_isRestoredFromSavedSettings() throws Exception {
+        Model model = new ModelManager();
+        model.setGuiSettings(new GuiSettings(1280, 800, 0, 0, 434));
+        showWindow(model);
+
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        assertEquals(434, runOnFxThread(this::terminalHeight), 1.0);
+    }
+
+    @Test
+    public void terminalHeight_survivesExitSavedPreferencesAndRelaunch() throws Exception {
+        Model model = new ModelManager();
+        showWindow(model);
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            workspace().setDividerPositions(0.42);
+            return null;
+        });
+        waitForFx();
+        double dragged = runOnFxThread(this::terminalHeight);
+        runOnFxThread(() -> {
+            window.getPrimaryStage().fireEvent(
+                    new WindowEvent(window.getPrimaryStage(), WindowEvent.WINDOW_CLOSE_REQUEST));
+            return null;
+        });
+
+        JsonUserPrefsStorage prefs = new JsonUserPrefsStorage(temporaryFolder.resolve("savedPrefs.json"));
+        prefs.saveUserPrefs(model.getUserPrefs());
+        UserPrefs relaunchPrefs = prefs.readUserPrefs().orElseThrow();
+        assertEquals(dragged, relaunchPrefs.getGuiSettings().getTerminalHeight(), 1.0);
+
+        showWindow(new ModelManager(new AddressBook(), relaunchPrefs));
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        assertEquals(dragged, runOnFxThread(this::terminalHeight), 1.0);
+    }
+
+    @Test
+    public void terminalHeight_isKeptWhenWindowResizes() throws Exception {
+        Model model = new ModelManager();
+        model.setGuiSettings(new GuiSettings(1280, 800, 0, 0, 300));
+        showWindow(model);
+
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            window.getPrimaryStage().setHeight(window.getPrimaryStage().getHeight() - 60);
+            return null;
+        });
+        waitForFx();
+        assertEquals(300, runOnFxThread(this::terminalHeight), 1.0);
+    }
+
     private void showWindow(Model model) throws Exception {
         window = runOnFxThread(() -> {
             JsonAddressBookStorage data = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
@@ -164,6 +268,15 @@ public class MainWindowShownTest {
 
     private VBox personRows() {
         return (VBox) scene().lookup("#personRows");
+    }
+
+    private Button terminalCloseButton() {
+        scene().getRoot().applyCss();
+        return (Button) scene().lookup(".icon-btn");
+    }
+
+    private double terminalHeight() {
+        return ((Region) scene().lookup("#terminalPanel")).getHeight();
     }
 
     private CommandFeedback lastFeedback() {

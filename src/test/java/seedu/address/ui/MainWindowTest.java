@@ -219,6 +219,7 @@ public class MainWindowTest {
             assertEquals(1, workspace.getItems().size());
 
             window.openTerminal();
+            scene.lookup("#personRows").requestFocus();
             typeKey(scene, "x", false, false, false);
             scene.getRoot().applyCss();
             assertEquals("x", ((TextField) scene.lookup("#commandTextField")).getText());
