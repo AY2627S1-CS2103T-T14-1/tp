@@ -49,15 +49,6 @@ public class UniquePersonList implements Iterable<Person> {
     }
 
     /**
-     * Adds a client loaded from data written before name comparison was normalized.
-     * The caller must first establish that it is a legacy case or whitespace variant.
-     */
-    public void addLegacyPerson(Person toAdd) {
-        requireNonNull(toAdd);
-        internalList.add(toAdd);
-    }
-
-    /**
      * Replaces the person {@code target} in the list with {@code editedPerson}.
      * {@code target} must exist in the list.
      * The person identity of {@code editedPerson} must not be the same as another existing person in the list.
@@ -106,15 +97,6 @@ public class UniquePersonList implements Iterable<Person> {
         internalList.setAll(persons);
     }
 
-    /** Replaces the list while preserving case or whitespace variants from legacy saved data. */
-    public void setPersonsAllowingLegacyVariants(List<Person> persons) {
-        requireAllNonNull(persons);
-        if (!personsAreUniqueOrLegacyVariants(persons)) {
-            throw new DuplicatePersonException();
-        }
-        internalList.setAll(persons);
-    }
-
     /**
      * Returns the backing list as an unmodifiable {@code ObservableList}.
      */
@@ -158,19 +140,6 @@ public class UniquePersonList implements Iterable<Person> {
         for (int i = 0; i < persons.size() - 1; i++) {
             for (int j = i + 1; j < persons.size(); j++) {
                 if (persons.get(i).isSamePerson(persons.get(j))) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean personsAreUniqueOrLegacyVariants(List<Person> persons) {
-        for (int i = 0; i < persons.size() - 1; i++) {
-            for (int j = i + 1; j < persons.size(); j++) {
-                Person first = persons.get(i);
-                Person second = persons.get(j);
-                if (first.isSamePerson(second) && first.getName().equals(second.getName())) {
                     return false;
                 }
             }

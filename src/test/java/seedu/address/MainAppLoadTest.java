@@ -89,6 +89,19 @@ public class MainAppLoadTest {
         }
     }
 
+    @Test
+    public void initModelManager_savedCaseOnlyDuplicateClients_stopsAndPreservesOriginalBytes() throws Exception {
+        StorageManager storage = storage();
+        Path dataFile = storage.getAddressBookFilePath();
+        // A roster saved before names were compared without regard to case can hold such duplicates.
+        Files.copy(Path.of("src", "test", "data", "JsonSerializableAddressBookTest",
+                "caseOnlyDuplicatePersonAddressBook.json"), dataFile);
+        byte[] legacyBytes = Files.readAllBytes(dataFile);
+
+        assertThrows(IllegalStateException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
+        assertArrayEquals(legacyBytes, Files.readAllBytes(dataFile));
+    }
+
     private StorageManager storage() {
         return new StorageManager(new JsonAddressBookStorage(folder.resolve("clients.json")),
                 new JsonUserPrefsStorage(folder.resolve("preferences.json")));
