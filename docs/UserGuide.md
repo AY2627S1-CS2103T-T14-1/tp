@@ -355,9 +355,9 @@ Examples:
 
 #### Reading the workout plan
 
-Each person card shows `Workout Plan (N):`, where `N` is the total number of exercises. Exercises appear under full weekday headings in Monday-to-Sunday order. All exercises without an assigned day appear together under **Day not specified**, after the weekday groups. All seven weekday groups (Monday through Sunday) are always shown; a group with no exercises displays `Rest — no exercises assigned`.
+The client list card shows a one-line plan summary: `No plan` when the client has no exercises, or `N exercises` where `N` is the total number of exercises. The detailed view for the selected client shows the full plan. For a non-empty plan, it shows all seven weekday groups (Monday through Sunday) in order; a weekday with no exercises displays `Rest — no exercises assigned`. All exercises without an assigned day appear together under **Day not specified**, after the weekday groups. An empty plan shows `No workout plan yet` instead of any weekday rows.
 
-Each exercise row uses `NUMBER. NAME SETSxREPS @WEIGHTkg`. Numbering runs continuously from `1` across the entire plan; it does not restart for each day. For example:
+Each exercise row uses `NUMBER. NAME SETSxREPS @WEIGHTkg`. Numbering runs continuously from `1` across the entire plan; it does not restart for each day. The example below illustrates this layout and numbering. It combines the detailed view's weekday rows (which include the `Rest` lines) with a plain-text listing, so treat it as a logical layout rather than exact screen or command-feedback text — command feedback shows only the weekdays that have exercises and omits the `Rest` lines:
 
 ```text
 Workout Plan (4):
@@ -389,7 +389,7 @@ Day not specified
 
 Adding an exercise, changing its day, or deleting an exercise can change the numbers shown. Always use the **current displayed exercise number** for `dayex` and `delex`. Exercises already in the same day group keep their relative order when the plan is sorted.
 
-An empty plan shows `No workout plan yet` on the person card. Command feedback also shows the plan in weekday order with the same exercise numbers.
+Command feedback shows the plan in weekday order with the same exercise numbers, but groups only the weekdays that have exercises and omits the `Rest` rows.
 
 ### Removing an exercise from a client's workout plan: `delex`
 
