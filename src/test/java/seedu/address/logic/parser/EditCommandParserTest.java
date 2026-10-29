@@ -93,8 +93,11 @@ public class EditCommandParserTest {
         assertParseFailure(parser, "1" + INVALID_ADDRESS_DESC, Address.MESSAGE_CONSTRAINTS); // invalid address
         assertParseFailure(parser, "1" + INVALID_TAG_DESC, Tag.MESSAGE_CONSTRAINTS); // invalid tag
         assertParseFailure(parser, "1 g/!!!", Goal.MESSAGE_CONSTRAINTS); // invalid goal
+        assertParseFailure(parser, "1 g/\fRun", Goal.MESSAGE_CONSTRAINTS); // leading control character
+        assertParseFailure(parser, "1 g/\f", Goal.MESSAGE_CONSTRAINTS); // must not clear the goal
         assertParseFailure(parser, "1 n/", Name.MESSAGE_CONSTRAINTS); // empty name
         assertParseFailure(parser, "1 p/", Phone.MESSAGE_CONSTRAINTS); // empty phone
+        assertParseFailure(parser, "1 p/1234567890123456", Phone.MESSAGE_CONSTRAINTS); // 16 digits
         assertParseFailure(parser, "1 e/", Email.MESSAGE_CONSTRAINTS); // empty email
 
         // invalid phone followed by valid email

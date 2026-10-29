@@ -161,7 +161,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
 * Names use the same permitted characters as `add`, including hyphens, apostrophes, full stops, and Unicode letters. Renaming preserves the entered case and internal spacing after trimming outer whitespace.
 * When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative. A client can have at most 10 distinct tags.
-* An edit that would duplicate another client's name is rejected. Changing only the letter case of the same client's name is allowed.
+* An edit that would give the client both the same name (after trimming, collapsing internal whitespace, and ignoring letter case) and the same phone number as another client is rejected. Sharing only a name or only a phone number is allowed. Changing only the letter case of the same client's name is allowed.
 * If the values are identical to the client's current details, Fittix reports `No changes made: the new values are the same as the current details.`
 * On success, Fittix reports `Edited client: NAME; Phone: PHONE.`
 
@@ -736,7 +736,7 @@ Examples:
 * `a/AMOUNT` is required. It must be greater than zero and have at most two decimal places, without a currency symbol, sign, or thousands separator. `150`, `150.5`, and `150.50` are accepted; `0`, `-5`, `1.234`, and `S$150` are rejected. Amounts are stored and displayed with exactly two decimal places without floating-point rounding.
 * `d/YYYY-MM-DD` is required. It must be a real Gregorian date in exactly four-digit-year, two-digit-month, two-digit-day form, with the year between 0001 and 9999. Past, current, and future dates are accepted.
 * `r/REMARKS` is optional. After trimming outer whitespace it must contain 1 to 300 printable characters. Internal spacing, punctuation, and case are preserved. A blank `r/` is invalid, as are line breaks and control characters. Omit `r/` when no remarks are needed.
-* `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. A token such as `x/` inside remarks is treated as an unknown prefix; ordinary punctuation such as `and/or` and `1/2` remains valid.
+* `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. A token of letters followed by `/` inside remarks, such as `x/100` or `abc/100`, is treated as an unknown prefix and rejected; ordinary punctuation such as `and/or` and `1/2` remains valid.
 
 On success, Fittix saves the record, selects the client, and reports `Recorded payment for NAME: AMOUNT on YYYY-MM-DD.` The client's **Payments** section shows every saved record oldest first, keeping entry order for records on the same date. Each record shows its date, its amount to two decimal places, and remarks when present. Long remarks wrap and the card scrolls; they are never truncated. A client with no payments shows `No payments recorded.`
 
