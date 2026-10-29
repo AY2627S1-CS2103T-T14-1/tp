@@ -277,15 +277,15 @@ edit 2 g/
 | Parameter         | Rule and current behaviour                                                                                              |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | Client index      | A positive whole number identifying a client in the displayed list.                                                     |
-| Name `n/`         | Must contain only alphanumeric characters and spaces and must not be blank.                                             |
-| Phone `p/`        | Must contain only digits and be at least 3 digits long.                                                                 |
+| Name `n/`         | Unicode letters, ASCII digits, spaces, apostrophes, hyphens, and full stops are accepted. At least one letter or digit is required. Trim outer whitespace; preserve internal spaces and case. |
+| Phone `p/`        | Must contain only digits, 3 to 15 digits long.                                                                          |
 | Email `e/`        | Must follow the application's local-part and domain email format.                                                       |
 | Address `a/`      | May contain any value but must not be blank.                                                                            |
 | Goal `g/`         | A nonblank value replaces the goal. An empty `g/` clears it. Nonblank goals follow the fitness-goal rules in Feature 7. |
 | Tags `t/`         | Each tag must be alphanumeric. Supplied tags replace the complete tag set; a single empty `t/` clears all tags.         |
 | Repeated prefixes | `n/`, `p/`, `e/`, `a/`, and `g/` may each appear once. Repeat `t/` to supply multiple tags.                             |
 
-**Source validation distinction:** This source describes implemented edit validation (alphanumeric names and phones of at least 3 digits), whereas Feature 1A specifies broader name characters and normalized 7–15-digit phones. These different contracts are retained explicitly; the sources do not establish a common add/edit validator.
+**Source validation distinction:** The implemented shared name validator supports the documented punctuation and Unicode letters while retaining existing numeric and long names. Feature 1A additionally specifies a 1–70-character limit, letter-based names, collapsed whitespace, and normalized 7–15-digit phones; those broader validation changes are not introduced by the name-character fix. Edit retains the character rules above and phones of 3 to 15 digits.
 
 ### 6. Output
 
@@ -1170,6 +1170,8 @@ The final example remains valid free-text coaching content. Record searchable re
 
 **Parsing rule:** Parameter prefixes such as `t/` and `n/` are recognized only at the beginning of an argument or after whitespace. A slash within a value, such as `kcal/day`, is treated as ordinary text.
 
+At those boundaries, reserve single-letter prefixes and markers made by repeating or mixing `t` and `n` in either case. Only exact lowercase `t/` and `n/` are supported. Other reserved markers, including `nn/`, `tt/`, `nt/`, and `tn/`, produce the invalid-format error without changing the existing target or notes. This also applies inside notes. Other slash-separated words, such as `protein/carbs` and `kcal/day`, remain ordinary text.
+
 ### 5. Parameters
 
 #### Client index
@@ -1660,7 +1662,7 @@ No baseline: use the same missing-baseline message as history. Baseline only: `N
 
 #### Corrections: `bodydelete`
 
-Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion has no confirmation step. Once Feature 13 is integrated, deletion will participate in shared session-scoped undo/redo; after restart, that history will be unavailable. Until that integration is merged, deletion cannot be undone through an application command.
+Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion has no confirmation step. It participates in the integrated shared session-scoped undo/redo (Feature 13), with up to 50 retained changes; after restart, that history is unavailable.
 
 Success: `Deleted body progress for NAME on DATE.` Deleting the last entry retains the baseline and produces empty history/comparison states. There is no command to delete only the baseline; it can be corrected by replacement.
 
@@ -1670,7 +1672,7 @@ Body data belongs to a client. Contact edits, diet/workout changes, remarks, sch
 
 Save baseline and entries with the client. Older files with a missing/null body-progress field load as an empty tracker. Persist exact measurement values, optional notes and dates; restore chronological order on load. Reject malformed data (including null list elements, wrong field types, invalid dates/numbers, duplicate entry dates, entries without a baseline, or entries on/before its date) through the normal data-loading error path, not unchecked exceptions or silent omission. Loading also rejects future measurement dates against the local date; tests must control the clock.
 
-Every mutation validates its full candidate before replacing the client. A save failure restores the previous in-memory client and saved file, including all other feature data, and reports `The body progress change could not be saved. No changes were made.` This includes baseline creation/replacement, entry creation/replacement and deletion. History/comparison do not modify measurements or other domain data. No partial write or later successful command may persist a previously rejected mutation.
+Every mutation validates its full candidate before replacing the client. A save failure restores the previous in-memory client and saved file, including all other feature data, and reports `The body progress change could not be saved. No changes were made.` This includes baseline creation/replacement, entry creation/replacement and deletion. History/comparison do not modify measurements or other domain data, do not write or create the data file, and remain available with read-only storage. They preserve shared undo/redo history. No partial write or later successful command may persist a previously rejected mutation.
 
 ### 7. Duplicate handling
 
@@ -1708,7 +1710,7 @@ all four assigned capabilities and the correction/deletion paths above; strict v
 
 #### Nice to have or later
 
-circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. Shared application-wide undo/redo is specified under Feature 13 and depends on that feature's integration. These are not needed to complete this v1.4 feature.
+circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. Shared application-wide undo/redo is already integrated and specified under Feature 13; a separate tracker-specific history is not needed to complete this feature.
 
 ## Feature 11: Membership plan
 

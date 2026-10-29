@@ -155,8 +155,10 @@ public class ClientContextPanel extends UiPart<Region> {
 
         ColumnConstraints dateColumn = new ColumnConstraints(48, 48, 48);
         ColumnConstraints detailColumn = new ColumnConstraints();
+        detailColumn.setMinWidth(0);
         detailColumn.setHgrow(Priority.ALWAYS);
         ColumnConstraints timeColumn = new ColumnConstraints();
+        timeColumn.setMinWidth(Region.USE_PREF_SIZE);
         row.getColumnConstraints().addAll(dateColumn, detailColumn, timeColumn);
 
         LocalDateTime dateTime = session.getDateTime();
@@ -212,14 +214,17 @@ public class ClientContextPanel extends UiPart<Region> {
 
         Label date = new Label(historyIndex + ". " + session.getDate().format(HISTORY_DATE_FORMAT));
         date.getStyleClass().add("history-date");
+        date.setWrapText(true);
+        date.setMinWidth(0);
+        date.setMaxWidth(Double.MAX_VALUE);
         Label time = new Label(session.getTime().map(value -> value.format(TIME_FORMAT)).orElse("Time not specified"));
         time.getStyleClass().addAll("history-time", "mono");
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox heading = new HBox(8, date, spacer, time);
-        heading.setAlignment(Pos.BASELINE_LEFT);
+        time.setWrapText(true);
+        time.setMinWidth(0);
+        time.setMaxWidth(Double.MAX_VALUE);
 
-        VBox details = new VBox(3, heading);
+        VBox details = new VBox(3, date, time);
+        details.setMinWidth(0);
         for (WorkoutLogEntry entry : session.getEntries()) {
             Label exercise = new Label(formatLogEntry(entry));
             exercise.getStyleClass().addAll("history-exercise", "mono");

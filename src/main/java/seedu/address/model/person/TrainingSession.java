@@ -32,13 +32,29 @@ public final class TrainingSession {
 
     /** Constructs a dated training appointment or client meeting. */
     public TrainingSession(LocalDateTime dateTime, String location, Kind kind) {
+        this(dateTime, location, kind, false);
+    }
+
+    private TrainingSession(LocalDateTime dateTime, String location, Kind kind, boolean fromSavedData) {
         this.dateTime = requireNonNull(dateTime);
         requireNonNull(location);
         this.kind = requireNonNull(kind);
-        if (location.isBlank()) {
+        boolean isBlank = fromSavedData ? location.isBlank()
+                : location.codePoints().allMatch(character -> Character.isWhitespace(character)
+                        || Character.isSpaceChar(character));
+        if (isBlank) {
             throw new IllegalArgumentException("Location cannot be blank");
         }
         this.location = location;
+    }
+
+    /**
+     * Restores an appointment written by an older version of the app. Earlier versions
+     * allowed locations made only of Unicode space characters, so those existing
+     * appointments must remain readable even though new commands reject them.
+     */
+    public static TrainingSession fromSavedData(LocalDateTime dateTime, String location, Kind kind) {
+        return new TrainingSession(dateTime, location, kind, true);
     }
 
     public LocalDateTime getDateTime() {

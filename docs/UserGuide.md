@@ -85,14 +85,17 @@ Adds a client to Fittix.
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…​`
 
 <div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-A client can have any number of tags, including zero.
+A client can have up to 10 distinct tags, including zero. Adding or editing with more than 10 distinct tags is rejected.
 </div>
 
 * `g/GOAL` is optional. A goal must contain 1 to 100 characters after trimming and include at least one letter or digit.
 * A supplied goal is saved with the client and shown on the client card.
+* Names accept Unicode letters, digits (`0`–`9`), spaces, apostrophes (`'`), hyphens (`-`), and full stops (`.`), with at least one letter or digit. For example, `Anne-Marie Tan`, `D'Angelo Lim`, and `Dr. Ahmad Rahman` are accepted. Leading and trailing whitespace is trimmed; internal spaces and letter case are preserved.
+* The address supplied to `add` must be nonblank and contain at most 200 characters after trimming leading and trailing whitespace. Internal spacing and case are preserved. The limit counts Unicode code points, so a supplementary Unicode character counts as one character. Existing saved addresses remain readable and are not truncated.
 
 Examples:
 * `add n/Priya Nair p/91234567 e/priya@example.com a/123 Clementi Road g/Build strength`
+* `add n/Anne-Marie Tan p/92345678 e/annemarie@example.com a/123 Test Road`
 * `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
 
 ### Listing all persons: `list`
@@ -156,8 +159,9 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 * Existing values will be updated to the input values.
 * `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags. A value that is only spaces counts as empty.
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
-* When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative.
-* An edit that would duplicate another client's name is rejected. Changing only the letter case of the same client's name is allowed.
+* Names use the same permitted characters as `add`, including hyphens, apostrophes, full stops, and Unicode letters. Renaming preserves the entered case and internal spacing after trimming outer whitespace.
+* When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative. A client can have at most 10 distinct tags.
+* An edit that would give the client both the same name (after trimming, collapsing internal whitespace, and ignoring letter case) and the same phone number as another client is rejected. Sharing only a name or only a phone number is allowed. Changing only the letter case of the same client's name is allowed.
 * If the values are identical to the client's current details, Fittix reports `No changes made: the new values are the same as the current details.`
 * On success, Fittix reports `Edited client: NAME; Phone: PHONE.`
 
@@ -190,8 +194,11 @@ Format: `diet INDEX t/TARGET [n/NOTES]`
 * `INDEX` is the positive whole-number index shown in the **current** client list. For example, after `find Priya`, `diet 1 ...` updates the first displayed search result. Leading zeros are accepted; `0`, negative numbers, signs, decimals, and indices outside the displayed list are rejected.
 * `TARGET` is required. After trimming outer whitespace, it must contain 1 to 200 printable characters and at least one letter or digit. Numbers, units, punctuation, internal spaces, and letter case are preserved. Line breaks and control characters are rejected.
 * `NOTES` is optional. If `n/` is supplied, its value must contain 1 to 300 printable characters after trimming. A blank `n/` is invalid; omit `n/` when no notes are needed. Internal spacing and case are preserved, and line breaks and control characters are rejected.
-* `t/` and `n/` may appear in either order, but each may appear only once. They are recognised at the start of an argument or after whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. Dietary restrictions are managed separately with the `restriction` command.
+* The command word `diet` and prefixes `t/` and `n/` are lowercase and case-sensitive. The prefixes may appear in either order, but each may appear only once. They are recognised at the start of an argument or after horizontal whitespace. A slash inside a word, such as `kcal/day`, remains part of that value. Dietary restrictions are managed separately with the `restriction` command.
+* At those boundaries, single-letter prefixes other than `t/` and `n/` are invalid. Mistyped markers made by repeating or mixing `t` and `n` (in either case), such as `nn/`, `tt/`, `nt/`, and `tn/`, are also rejected, including inside notes. Fittix reports `Invalid command format. Use: diet INDEX t/TARGET [n/NOTES]` and keeps the existing target and notes unchanged. Correct the marker and retry.
 * Different diet goals **replace the complete current target and notes**. Omitting `n/` during replacement clears any old notes. Earlier versions are not kept. Diet goals with the same trimmed target and notes, ignoring case, are rejected without changing the saved record.
+
+The target and notes limits count Unicode code points after trimming, rather than screen width. A supplementary character such as `😀` counts as one; a combined symbol can contain several code points.
 
 Examples:
 
@@ -216,7 +223,7 @@ On success, Fittix reports `Created diet plan for NAME.` or `Replaced diet plan 
 | Same current diet goals | `This is already the current diet plan for NAME.` |
 | Saving fails | `The diet plan could not be saved. The previous plan remains unchanged.` |
 
-Invalid commands and failed saves leave the previous diet goals unchanged. Deleting a client permanently removes that client's diet goals along with the client record. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
+Invalid commands and failed saves leave the previous diet goals unchanged. Deleting a client removes their diet goals with the client record. Shared [undo](#undo-redo) can recover a replacement or client deletion while its change remains in the current session's 50-step history; recovery through that history is unavailable after restart or once the step is discarded. Fittix records the trainer's text; it does not assess medical suitability, safety, or nutritional completeness.
 
 ### Recording dietary restrictions: `restriction`
 
@@ -486,7 +493,7 @@ Exercise values must satisfy these rules:
 
 | Value | Accepted input |
 | --- | --- |
-| `EXERCISE` | 1 to 50 characters, including at least one letter. Only letters, digits, spaces, hyphens, apostrophes, and parentheses are allowed. |
+| `EXERCISE` | 1 to 50 characters after Unicode NFC normalization, including at least one letter. Only letters, digits, spaces, hyphens, apostrophes, and parentheses are allowed. Canonically equivalent accented spellings are stored in the same normalized form. |
 | `WEIGHT` | A number from 0 to 1000, inclusive, in kilograms, with at most 2 decimal places. Enter the number without a unit, for example `40.25`. |
 | `SETS` | A whole number from 1 to 100, inclusive. |
 | `REPS` | A whole number from 1 to 1000, inclusive. |
@@ -655,22 +662,20 @@ Selects that client and reveals their body-progress history in the **Body progre
 
 Successful feedback is `Showing body progress history for NAME: N entries.` With only a baseline, it displays the baseline and `No body progress entries recorded.` With no baseline, it selects the requested client and shows `No body baseline recorded for NAME. Use bodybase first.` These empty views do not change data.
 
+`bodyhistory` and `bodycompare` only read the loaded records: they do not write the client data file or add, remove or clear undo/redo steps. Viewing remains available when the client data file cannot be written, provided the app has loaded it successfully.
+
 #### Comparing the latest weight with the baseline: `bodycompare`
 
 Format: `bodycompare INDEX`
 
 Example: `bodycompare 1`
 
-Selects that client and reveals the comparison section. "Latest" means the greatest measurement date, regardless of recording/edit order. Fittix shows both dates and weights, the baseline height for context, and `latest weight - baseline weight`:
+Selects that client and reveals the comparison section. "Latest" means the greatest measurement date, regardless of recording/edit order. Fittix shows both dates and weights, the baseline height for context, and `latest weight - baseline weight`. For the example baseline and two progress entries above, the comparison reads:
 
 ```text
-Priya Nair — BODY PROGRESS
 Baseline: 2020-01-01 | 75.50 kg | 175.00 cm
-Progress history (2):
-2020-01-08 | 74.80 kg | Measured before breakfast
-2020-01-15 | 74.20 kg | —
-Latest comparison: 2020-01-15
-75.50 kg -> 74.20 kg | Change: -1.30 kg
+Latest: 2020-01-15 | 74.20 kg
+Change: -1.30 kg
 ```
 
 A gain uses `+`, a loss uses `-`, and no change is `0.00 kg`. Fittix does not decide whether a change is healthy or desirable. It does not compare height or calculate BMI or percentage change.
@@ -683,7 +688,7 @@ Format: `bodydelete INDEX d/DATE`
 
 Example: `bodydelete 1 d/2020-01-15`
 
-Deletes only the progress entry on that date for that client. **Deletion is permanent in the v1.4 tracker, with no confirmation step.** The baseline and all other entries remain. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
+Deletes only the progress entry on that date for that client. **There is no confirmation step.** Shared [undo](#undo-redo) can restore the deleted entry while this change remains in the current session's 50-step history. Recovery through that history is unavailable after restart or once the step is discarded. The baseline and all other entries remain. To correct a wrong date, record the correct entry with `bodylog` and delete the old date. To correct weight/notes on the same date, use `bodylog` directly.
 
 Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest entry makes the next greatest date the latest. Deleting the last entry keeps the baseline and restores the no-progress view. `bodydelete` cannot delete a baseline; use `bodybase` to correct it.
 
@@ -692,7 +697,7 @@ Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest ent
 * Dates must be real dates in `yyyy-MM-dd`, years 0001–9999, and today or earlier in the computer's local time zone. `bodylog` additionally requires a date strictly after the baseline.
 * Weight must be greater than 0 and at most **500 kg**. Height must be greater than 0 and at most **300 cm**. Both allow up to two decimal places. These are input limits, not medical thresholds.
 * Enter measurements without units, signs, commas or exponent notation: `75`, `75.5`, `75.50` are accepted; `+75`, `.5`, `75.`, `75.500`, `75kg`, `1e2`, `NaN` and `Infinity` are rejected. Measurements display with two decimal places.
-* Supplied notes must contain 1–300 printable characters after outer horizontal whitespace is removed. Internal spacing and case are preserved. Line breaks and nonprintable characters are rejected.
+* Supplied notes must contain 1–300 printable Unicode code points after outer horizontal whitespace is removed. A supplementary character such as `😀` counts as one; a combined symbol can contain several code points. Internal spacing and case are preserved. Line breaks and nonprintable characters are rejected.
 * A separated prefix token such as `w/`, `n/` or `ex/` is reserved, including inside notes. Repeated/unsupported prefixes are rejected. Slashes inside words, such as `km/day`, are ordinary text.
 
 | Situation | Message |
@@ -704,6 +709,7 @@ Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest ent
 | Invalid weight | `Weight must be greater than 0 and at most 500 kg, with at most 2 decimal places.` |
 | Invalid height | `Height must be greater than 0 and at most 300 cm, with at most 2 decimal places.` |
 | Invalid notes | `Progress notes must contain 1 to 300 printable characters without line breaks.` |
+| Recording progress before a baseline exists | `No body baseline recorded for NAME. Use bodybase first.` |
 | Progress date on/before baseline | `Progress date must be later than the baseline date.` |
 | Baseline correction conflicts with existing entries | `Baseline date must be earlier than every recorded progress date. No changes were made.` |
 | Identical baseline | `This is already the current body baseline for NAME.` |
@@ -714,7 +720,7 @@ Fittix reports `Deleted body progress for NAME on DATE.` Deleting the latest ent
 
 Invalid mutations and failed saves leave all previous data unchanged. Successful changes select the affected client and refresh their details after saving. Baseline, weights and notes survive restarting the app; data files created before this feature load with no body tracker. A wrong local clock can cause date validation/loading failures, so check it before entering or opening dated records.
 
-Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` permanently removes their body records with the client. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
+Body commands preserve contacts, other plans, schedules, logged workouts and membership balances. Deleting a client or using `clear` removes body records with the client. Shared [undo](#undo-redo) can restore these records while the change remains in the current session's 50-step history; restarting or discarding the step removes that recovery route. `clearmem` affects membership plans only. Charts, additional measurements and a dedicated tracker undo/redo command are outside this feature's v1.4 scope.
 
 ### Recording a client payment: `pay`
 
@@ -731,7 +737,7 @@ Examples:
 * `a/AMOUNT` is required. It must be greater than zero and have at most two decimal places, without a currency symbol, sign, or thousands separator. `150`, `150.5`, and `150.50` are accepted; `0`, `-5`, `1.234`, and `S$150` are rejected. Amounts are stored and displayed with exactly two decimal places without floating-point rounding.
 * `d/YYYY-MM-DD` is required. It must be a real Gregorian date in exactly four-digit-year, two-digit-month, two-digit-day form, with the year between 0001 and 9999. Past, current, and future dates are accepted.
 * `r/REMARKS` is optional. After trimming outer whitespace it must contain 1 to 300 printable characters. Internal spacing, punctuation, and case are preserved. A blank `r/` is invalid, as are line breaks and control characters. Omit `r/` when no remarks are needed.
-* `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. A token such as `x/` inside remarks is treated as an unknown prefix; ordinary punctuation such as `and/or` and `1/2` remains valid.
+* `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. A token of letters followed by `/` inside remarks, such as `x/100` or `abc/100`, is treated as an unknown prefix and rejected; ordinary punctuation such as `and/or` and `1/2` remains valid.
 
 On success, Fittix saves the record, selects the client, and reports `Recorded payment for NAME: AMOUNT on YYYY-MM-DD.` The client's **Payments** section shows every saved record oldest first, keeping entry order for records on the same date. Each record shows its date, its amount to two decimal places, and remarks when present. Long remarks wrap and the card scrolls; they are never truncated. A client with no payments shows `No payments recorded.`
 
@@ -749,6 +755,8 @@ Common errors:
 | Saving fails | `Payment could not be saved. No payment was recorded.` |
 
 A failed command adds no payment to saved or in-memory data and creates no undo step.
+
+<a id="undo-redo"></a>
 
 ### Undoing and redoing changes: `undo`, `redo`
 
@@ -785,18 +793,24 @@ Format: `exit`
 
 ### Saving the data
 
-AddressBook automatically saves data after every command. You do not need to save manually.
+Fittix automatically saves successful data changes. You do not need to save manually. The read-only `bodyhistory` and `bodycompare` commands display loaded records without writing the client data file.
 
 Workout exercises, their sets, reps, weight, and assigned weekdays are restored when you reopen the app. Exercises saved without a day, including older entries labelled `day not specified` or `Day not specified`, appear together under the single **Day not specified** heading.
 
 Membership plans and each client's plan name, remaining sessions, and expiry date are restored the same way. An assignment whose expiry date has passed is still shown so you can act on it.
+
+### If saved client data cannot be loaded
+
+Fittix stops startup if an existing client data file cannot be read or validated. It does not open an empty roster that could overwrite the original file. The terminal error identifies the file and explains that startup stopped to protect it.
+
+Before changing anything, back up the file. Check the computer's date and time zone: a workout recorded as today in one time zone can appear future-dated in another. Correct the settings or restore a known valid backup, then restart. A missing data file still starts with sample clients. Use a separate empty folder if you need a fresh test session; keep the original file intact for recovery.
 
 ### Editing the data file
 
 AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
-If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
+If your changes make the data file invalid, Fittix stops startup and leaves that file untouched. Restore a valid backup or correct the invalid data before restarting. Always back up the file before editing it.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 

@@ -23,7 +23,10 @@ public class PayCommandParser implements Parser<PayCommand> {
     private static final String AMOUNT_PREFIX = PREFIX_ADDRESS.getPrefix();
     private static final String DATE_PREFIX = PREFIX_DATE.getPrefix();
     private static final String REMARKS_PREFIX = PREFIX_REMARK.getPrefix();
-    private static final Pattern UNKNOWN_PREFIX_TOKEN = Pattern.compile("[A-Za-z]{1,2}/.*");
+    // Mistyped prefixed-parameter tokens such as x/100 or abc/100. Letter values after the
+    // slash, e.g. and/or or kcal/day, remain ordinary remark text.
+    private static final Pattern UNKNOWN_PREFIX_TOKEN =
+            Pattern.compile("[A-Za-z]{1,2}/.*|[A-Za-z]{3,}/[^A-Za-z]*");
 
     @Override
     public PayCommand parse(String args) throws ParseException {

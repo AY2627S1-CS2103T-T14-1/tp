@@ -56,6 +56,28 @@ public class AddCommandTest {
     }
 
     @Test
+    public void execute_caseOnlyNameDifferenceSamePhone_throwsCommandException() {
+        Person existing = new PersonBuilder().withName("fiko").withPhone("00112233").build();
+        Person caseVariant = new PersonBuilder().withName("Fiko").withPhone("00112233").build();
+        ModelStub modelStub = new ModelStubWithPerson(existing);
+
+        assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PERSON, () ->
+                new AddCommand(caseVariant).execute(modelStub));
+    }
+
+    @Test
+    public void execute_sameNameDifferentPhone_acceptedByModel() throws Exception {
+        Person existing = new PersonBuilder().withName("Alice").withPhone("91234567").build();
+        Person sameNameDifferentPhone = new PersonBuilder().withName("Alice").withPhone("98765432").build();
+        ModelStubAcceptingPersonAdded modelStub = new ModelStubAcceptingPersonAdded();
+        modelStub.addPerson(existing);
+
+        new AddCommand(sameNameDifferentPhone).execute(modelStub);
+
+        assertEquals(List.of(existing, sameNameDifferentPhone), modelStub.personsAdded);
+    }
+
+    @Test
     public void equals() {
         Person alice = new PersonBuilder().withName("Alice").build();
         Person bob = new PersonBuilder().withName("Bob").build();
@@ -142,6 +164,11 @@ public class AddCommandTest {
 
         @Override
         public ObservableList<Person> getFilteredPersonList() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Predicate<Person> getFilteredPersonListPredicate() {
             throw new AssertionError("This method should not be called.");
         }
 

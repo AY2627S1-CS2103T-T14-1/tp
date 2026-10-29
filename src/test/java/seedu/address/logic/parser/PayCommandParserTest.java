@@ -209,10 +209,18 @@ public class PayCommandParserTest {
     }
 
     @Test
-    public void parse_threeLetterSlashTokenInsideRemarks_remainsValid() {
-        String remarks = "see xyz/2 for reference";
-        assertParseSuccess(parser, "1 a/1 d/2026-10-20 r/" + remarks,
-                new PayCommand(INDEX_FIRST_PERSON, payment("1", "2026-10-20", remarks)));
+    public void parse_threeLetterParameterShapedTokenInRemarks_failure() {
+        assertParseFailure(parser, "1 a/1 d/2026-10-20 r/see xyz/2 for reference", formatError);
+        assertParseFailure(parser, "1 a/1 d/2026-10-20 r/paid abc/100", formatError);
+        assertParseFailure(parser, "1 a/150 d/2026-10-20 r/paid abc/100", formatError);
+        assertParseFailure(parser, "1 a/1 d/2026-10-20 r/paid x/100", formatError);
+        assertParseFailure(parser, "1 a/1 d/2026-10-20 r/paid abc/100.50", formatError);
+    }
+
+    @Test
+    public void parse_ordinarySlashPunctuationInRemarks_success() {
+        assertParseSuccess(parser, "1 a/150 d/2026-10-20 r/paid and/or fees",
+                new PayCommand(INDEX_FIRST_PERSON, payment("150", "2026-10-20", "paid and/or fees")));
     }
 
     private static PaymentRecord payment(String amount, String date, String remarks) {
