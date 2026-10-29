@@ -1046,6 +1046,29 @@ Confirm Priya is index 1 with no diet goals, and Daniel is index 2 with `Daniel 
 
 An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it forces the atomic replacement to throw, verifies the specified failure message, confirms that both the model and original JSON bytes are unchanged, and checks that the temporary file is removed.
 
+### Dietary restrictions
+
+Use a fresh, disposable roster. Add `Priya Nair` and `Daniel Tan` in that order, with different phone numbers and emails, then run `list`. Priya must be displayed at index 1 and Daniel at index 2. The commands below are sequential; `NAME` in feedback is `Priya Nair`.
+
+1. Record dietary restrictions: `restriction 1 r/Peanut allergy r/Halal meals`.<br>
+   Expected: `Recorded dietary restrictions for NAME.` and the client detail pane shows both restrictions in the order entered.
+1. Replace with different restrictions: `restriction 1 r/No shellfish`.<br>
+   Expected: `Recorded dietary restrictions for NAME.`; old restrictions are replaced and only `No shellfish` appears.
+1. Clear restrictions: `restriction 1 r/`.<br>
+   Expected: `Cleared dietary restrictions for NAME.` and the restrictions section clears. Record `restriction 1 r/Peanut allergy`, then enter `restriction 1 r/` followed by three spaces. This whitespace-only value also clears the nonempty list with the same success message. Repeat it on the empty list: expect `No changes made: dietary restrictions are already current.`
+1. Duplicate detection: `restriction 1 r/No dairy r/NO DAIRY`.<br>
+   Expected: Rejection with error: `Each dietary restriction must contain 1 to 100 printable characters and include at least one letter or digit. At most 10 restrictions are allowed, without duplicates.` No changes are made.
+1. Invalid entries: Try `restriction 1 r/!!!`, `restriction 1 r/ r/Peanut`, and `restriction 0 r/Halal`.<br>
+   Expected: Respectively rejected with restriction constraints, invalid clear format, and invalid index errors. The list remains empty.
+1. Search restrictions: Set `restriction 1 r/Peanut allergy` and run `find dr/peanut`.<br>
+   Expected: Only Priya is displayed, at filtered index 1. Daniel is unchanged. Before changing restrictions again, run `list`, then `find n/Priya`. Priya remains at index 1 under this name filter even when her restriction text changes.
+1. Separation from diet goals: Set `diet 1 t/2000 kcal`, then `restriction 1 r/No dairy`.<br>
+   Expected: Priya's diet target remains `2000 kcal`. Run `diet 1 t/2100 kcal`: restrictions remain `No dairy`.
+1. Persistence across restart: Restart the application, run `list`, then `find n/Priya`.<br>
+   Expected: Only Priya is displayed at index 1, with `No dairy` and `2100 kcal` intact. Run `list` and select Daniel at index 2: he still has no restrictions or diet goals.
+1. Greek case-insensitive search (requires the Unicode search fix from #267 or #295): Run `list`, set `restriction 1 r/ΧΩΡΙΣ`, then run `find dr/Σ`, `find dr/σ`, and `find dr/ς` in turn.<br>
+   Expected: Each search displays only Priya at index 1. Search scans the full roster each time. Restart, run `list`, then `find n/Priya` and check that `ΧΩΡΙΣ` and the `2100 kcal` diet target remain intact. Run this check on the combined release build before accepting the complete release test.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files
