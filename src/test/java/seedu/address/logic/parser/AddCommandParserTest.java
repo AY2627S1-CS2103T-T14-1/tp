@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
@@ -59,6 +60,22 @@ public class AddCommandParserTest {
                 .withEmail("annemarie@example.com").withAddress("123 Test Road").withTags().build();
         assertParseSuccess(parser, " n/Anne-Marie Tan p/92345678 e/annemarie@example.com a/123 Test Road",
                 new AddCommand(expected));
+    }
+
+    @Test
+    public void parse_addressAtLengthLimit_success() {
+        String address = "A".repeat(200);
+        Person expected = new PersonBuilder(BOB).withAddress(address).withTags().build();
+        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + " a/  " + address + "  ",
+                new AddCommand(expected));
+    }
+
+    @Test
+    public void parse_issue262OversizedAddress_failure() {
+        String address = "123 Test Road ".repeat(14) + "Block";
+        assertEquals(201, address.length());
+        assertParseFailure(parser, " n/Long Address Test p/92345673 e/longaddress@example.com a/" + address,
+                "Address must contain 1 to 200 printable characters without line breaks.");
     }
 
     @Test
@@ -206,6 +223,11 @@ public class AddCommandParserTest {
         // invalid tag
         assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB
                 + INVALID_TAG_DESC + VALID_TAG_FRIEND, Tag.MESSAGE_CONSTRAINTS);
+
+        // more than 10 distinct tags
+        assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB
+                + " t/one t/two t/three t/four t/five t/six t/seven t/eight t/nine t/ten t/eleven",
+                Tag.MESSAGE_TOO_MANY_TAGS);
 
         // two invalid values, only first invalid value reported
         assertParseFailure(parser, INVALID_NAME_DESC + PHONE_DESC_BOB + EMAIL_DESC_BOB + INVALID_ADDRESS_DESC,

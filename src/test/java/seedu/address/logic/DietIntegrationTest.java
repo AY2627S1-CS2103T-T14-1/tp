@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.DietCommand;
+import seedu.address.logic.commands.RedoCommand;
+import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
@@ -77,6 +79,57 @@ public class DietIntegrationTest {
                 logic.execute("diet 1 t/1800 KCAL n/lean PROTEIN"));
         assertArrayEquals(previousFile, Files.readAllBytes(file));
         assertEquals(original, model.getFilteredPersonList().get(0));
+    }
+
+    @Test
+    public void execute_mistypedDietPrefix_preservesModelFilterFileAndReloadedNotes() throws Exception {
+        ModelManager model = new ModelManager();
+        Person otherClient = new PersonBuilder().withName("Bob Tan").build();
+        model.addPerson(otherClient);
+        model.addPerson(new PersonBuilder().build());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("book.json"));
+        LogicManager logic = logic(model, storage);
+        logic.execute("diet 2 t/1800 kcal n/Keep existing notes");
+        logic.execute("find Amy");
+        AddressBook previousModel = new AddressBook(model.getAddressBook());
+        byte[] previousFile = Files.readAllBytes(storage.getAddressBookFilePath());
+        Person original = model.getFilteredPersonList().getFirst();
+
+        for (String command : new String[] {"diet 1 t/2000 kcal nn/Include vegetables",
+            "diet 1 t/2000 kcal tt/2200 kcal", "diet 1 n/Keep notes nt/More notes t/2000 kcal"}) {
+            assertThrows(ParseException.class, DietCommand.MESSAGE_INVALID_FORMAT, () -> logic.execute(command));
+            assertEquals(previousModel, model.getAddressBook());
+            assertEquals(Arrays.asList(original), model.getFilteredPersonList());
+            assertArrayEquals(previousFile, Files.readAllBytes(storage.getAddressBookFilePath()));
+            assertEquals(previousModel, new AddressBook(storage.readAddressBook().orElseThrow()));
+        }
+
+        // Rejection must not add an undo step: undo still removes the original diet change.
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute("undo").getFeedbackToUser());
+        assertTrue(model.getAddressBook().getPersonList().get(1).getDietPlan().isEmpty());
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute("redo").getFeedbackToUser());
+        assertEquals(previousModel, model.getAddressBook());
+        assertEquals(previousModel, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
+    public void execute_mistypedDietPrefixAfterUndo_preservesRedoHistory() throws Exception {
+        ModelManager model = new ModelManager();
+        model.addPerson(new PersonBuilder().build());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("book.json"));
+        LogicManager logic = logic(model, storage);
+        logic.execute("diet 1 t/1800 kcal n/Keep existing notes");
+        logic.execute("diet 1 t/2000 kcal n/Include vegetables");
+        logic.execute("undo");
+        byte[] previousFile = Files.readAllBytes(storage.getAddressBookFilePath());
+
+        assertThrows(ParseException.class, DietCommand.MESSAGE_INVALID_FORMAT, () ->
+                logic.execute("diet 1 t/2200 kcal nn/More vegetables"));
+
+        assertArrayEquals(previousFile, Files.readAllBytes(storage.getAddressBookFilePath()));
+        assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute("redo").getFeedbackToUser());
+        assertEquals(new DietPlan("2000 kcal", "Include vegetables"),
+                storage.readAddressBook().orElseThrow().getPersonList().getFirst().getDietPlan().orElseThrow());
     }
 
     @Test

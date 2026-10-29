@@ -30,6 +30,7 @@ import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.BodyProgress;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
@@ -187,6 +188,64 @@ class BodyProgressIntegrationTest {
                     .filter(person -> person.getName().fullName.equals("Amy Bee"))
                     .findFirst().orElseThrow();
             assertEquals(List.of(payment), savedAmy.getPaymentRecords(), command);
+        }
+    }
+
+    @Test
+    void queries_unwritableStoragePreservesFileFilterAndRedoHistory() throws Exception {
+        ModelManager model = model();
+        Path file = directory.resolve("read-only-body.json");
+        boolean[] failSave = {false};
+        int[] saveAttempts = {0};
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file, CLOCK) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                saveAttempts[0]++;
+                if (failSave[0]) {
+                    throw new IOException("Read-only destination");
+                }
+                super.saveAddressBook(addressBook);
+            }
+        };
+        LogicManager logic = logic(model, storage);
+        logic.execute(BASE);
+        logic.execute("bodylog 1 d/2020-01-08 w/74.80 n/Original");
+        logic.execute("undo");
+        model.updateFilteredPersonList(new NameContainsKeywordsPredicate(List.of("Amy")));
+        AddressBook before = new AddressBook(model.getAddressBook());
+        byte[] bytes = Files.readAllBytes(file);
+        saveAttempts[0] = 0;
+        failSave[0] = true;
+
+        for (String command : List.of("bodyhistory 1", "bodycompare 1")) {
+            CommandResult result = logic.execute(command);
+            assertEquals(selected(model), result.getBodyProgressViewRequest().orElseThrow().person());
+            assertEquals(before, model.getAddressBook());
+            assertEquals(1, model.getFilteredPersonList().size());
+            assertArrayEquals(bytes, Files.readAllBytes(file));
+        }
+        assertEquals(0, saveAttempts[0]);
+
+        failSave[0] = false;
+        logic.execute("redo");
+        Person amy = model.getAddressBook().getPersonList().get(1);
+        assertEquals(1, amy.getBodyProgress().getEntries().size());
+        assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
+    }
+
+    @Test
+    void queries_missingBaselineDoNotCreateDataFile() throws Exception {
+        ModelManager model = model();
+        Path file = directory.resolve("unsaved-body.json");
+        LogicManager logic = logic(model, new JsonAddressBookStorage(file, CLOCK));
+        AddressBook before = new AddressBook(model.getAddressBook());
+
+        for (String command : List.of("bodyhistory 1", "bodycompare 1")) {
+            CommandResult result = logic.execute(command);
+            assertTrue(result.getFeedbackToUser().startsWith("No body baseline recorded"));
+            assertEquals(selected(model), result.getBodyProgressViewRequest().orElseThrow().person());
+            assertFalse(Files.exists(file));
+            assertEquals(before, model.getAddressBook());
         }
     }
 

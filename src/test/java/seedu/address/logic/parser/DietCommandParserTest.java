@@ -51,6 +51,29 @@ public class DietCommandParserTest {
     }
 
     @Test
+    public void parse_mistypedDietPrefix_rejectsInputInEitherFieldAndOrder() {
+        for (String prefix : new String[] {"nn/", "tt/", "nt/", "tn/", "NN/", "nN/", "TT/", "tT/", "nnn/"}) {
+            for (String separator : new String[] {" ", "  ", "\t", "\u00a0", "\u2003"}) {
+                assertParseFailure(parser, "1 t/2000 kcal" + separator + prefix + "Include vegetables",
+                        DietCommand.MESSAGE_INVALID_FORMAT);
+                assertParseFailure(parser, "1 n/Keep notes" + separator + prefix + "More notes t/2000 kcal",
+                        DietCommand.MESSAGE_INVALID_FORMAT);
+                assertParseFailure(parser, "1 " + prefix + "Include vegetables t/2000 kcal",
+                        DietCommand.MESSAGE_INVALID_FORMAT);
+            }
+        }
+    }
+
+    @Test
+    public void parse_slashesInFreeText_preservesUnitsAlternativesAndLinks() throws Exception {
+        String target = "2000 kcal/day, 1.6g/kg/day; protein/carbs/fat";
+        String notes = "fruit/vegetables; see https://example.com/nutrition; written/notes";
+        DietCommand expected = new DietCommand(Index.fromOneBased(1), new DietPlan(target, notes));
+        assertEquals(expected, parser.parse("1 t/" + target + " n/" + notes));
+        assertEquals(expected, parser.parse("1 n/" + notes + " t/" + target));
+    }
+
+    @Test
     public void parse_blankLongOrNonPrintableFields_rejectsInput() {
         for (String target : new String[] {"", " ", "!!!", "a".repeat(201), "1800\n kcal", "1800\t kcal"}) {
             assertParseFailure(parser, "1 t/" + target, DietPlan.MESSAGE_CONSTRAINTS_TARGET);
