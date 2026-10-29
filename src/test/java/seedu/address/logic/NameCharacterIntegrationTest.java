@@ -84,16 +84,18 @@ public class NameCharacterIntegrationTest {
     }
 
     @Test
-    public void execute_duplicateNames_retainsExistingCaseSensitiveComparison() throws Exception {
+    public void execute_duplicateNames_retainsCurrentNameAndPhoneIdentity() throws Exception {
         logic.execute(addCommand("Anne-Marie Tan"));
         AddressBook before = new AddressBook(model.getAddressBook());
         String saved = Files.readString(dataFile);
-        assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PERSON, () ->
-                logic.execute(addCommand("Anne-Marie Tan")));
-        assertEquals(before, model.getAddressBook());
-        assertEquals(saved, Files.readString(dataFile));
+        for (String name : List.of("Anne-Marie Tan", "anne-marie tan", "  ANNE-MARIE   TAN  ")) {
+            assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PERSON, () ->
+                    logic.execute(addCommand(name)));
+            assertEquals(before, model.getAddressBook());
+            assertEquals(saved, Files.readString(dataFile));
+        }
 
-        logic.execute(addCommand("anne-marie tan"));
+        logic.execute("add n/anne-marie tan p/92345679 e/other@example.com a/456 Test Road");
         assertEquals(2, model.getAddressBook().getPersonList().size());
         assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
     }
