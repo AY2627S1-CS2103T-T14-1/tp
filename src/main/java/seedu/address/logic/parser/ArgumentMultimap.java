@@ -21,6 +21,8 @@ public class ArgumentMultimap {
 
     /** Prefixes mapped to their respective arguments */
     private final Map<Prefix, List<String>> argMultimap = new HashMap<>();
+    /** Prefixes mapped to their arguments before whitespace is trimmed. */
+    private final Map<Prefix, List<String>> rawArgMultimap = new HashMap<>();
 
     /**
      * Associates the specified argument value with {@code prefix} key in this map.
@@ -30,9 +32,21 @@ public class ArgumentMultimap {
      * @param argValue Argument value to be associated with the specified prefix key
      */
     public void put(Prefix prefix, String argValue) {
+        put(prefix, argValue, argValue);
+    }
+
+    /**
+     * Associates a trimmed and original argument value with {@code prefix}.
+     * The original value is available to parsers that must validate otherwise-trimmed characters.
+     */
+    public void put(Prefix prefix, String argValue, String rawArgValue) {
         List<String> argValues = getAllValues(prefix);
         argValues.add(argValue);
         argMultimap.put(prefix, argValues);
+
+        List<String> rawArgValues = getAllRawValues(prefix);
+        rawArgValues.add(rawArgValue);
+        rawArgMultimap.put(prefix, rawArgValues);
     }
 
     /**
@@ -40,6 +54,12 @@ public class ArgumentMultimap {
      */
     public Optional<String> getValue(Prefix prefix) {
         List<String> values = getAllValues(prefix);
+        return values.isEmpty() ? Optional.empty() : Optional.of(values.getLast());
+    }
+
+    /** Returns the last untrimmed value of {@code prefix}. */
+    public Optional<String> getRawValue(Prefix prefix) {
+        List<String> values = getAllRawValues(prefix);
         return values.isEmpty() ? Optional.empty() : Optional.of(values.getLast());
     }
 
@@ -53,6 +73,14 @@ public class ArgumentMultimap {
             return new ArrayList<>();
         }
         return new ArrayList<>(argMultimap.get(prefix));
+    }
+
+    /** Returns all untrimmed values of {@code prefix}. */
+    private List<String> getAllRawValues(Prefix prefix) {
+        if (!rawArgMultimap.containsKey(prefix)) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(rawArgMultimap.get(prefix));
     }
 
     /**

@@ -19,4 +19,15 @@ public class HealthProfileContainsKeywordsPredicateTest {
         assertFalse(new HealthProfileContainsKeywordsPredicate(List.of("ankle"))
                 .test(new PersonBuilder().build()));
     }
+
+    @Test
+    public void test_matchesGreekCharactersWithSigmaVariants() {
+        // "ΠΟΝΟΣ" ends with capital sigma 'Σ', which lowercases to final sigma 'ς' at word end,
+        // while standalone query "Σ" lowercases to 'σ'. Predicate should match both.
+        Person client = new PersonBuilder().withHealthProfile("ΠΟΝΟΣ").build();
+        assertTrue(new HealthProfileContainsKeywordsPredicate(List.of("Σ")).test(client));
+        assertTrue(new HealthProfileContainsKeywordsPredicate(List.of("ς")).test(client));
+        assertTrue(new HealthProfileContainsKeywordsPredicate(List.of("πονος")).test(client));
+        assertTrue(new HealthProfileContainsKeywordsPredicate(List.of("ΠΟΝΟΣ")).test(client));
+    }
 }

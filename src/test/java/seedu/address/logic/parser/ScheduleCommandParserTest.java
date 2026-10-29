@@ -29,6 +29,7 @@ public class ScheduleCommandParserTest {
         assertParseFailure(parser, "1 d/2099-02-30 tm/14:30 l/Gym", message);
         assertParseFailure(parser, "1 d/2099-03-15 tm/25:30 l/Gym", message);
         assertParseFailure(parser, "1 d/2099-03-15 tm/14:30 l/", message);
+        assertParseFailure(parser, "1 d/2099-03-15 tm/14:30 l/\u00a0\u00a0\u00a0", message);
         assertParseFailure(parser, "1 d/2099-03-15 tm/14:30", message);
         assertParseFailure(parser, "1 d/2000-01-01 tm/14:30 l/Gym", "Training sessions must be in the future.");
     }
