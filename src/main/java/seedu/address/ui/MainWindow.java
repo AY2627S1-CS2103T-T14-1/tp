@@ -445,8 +445,10 @@ public class MainWindow extends UiPart<Stage> {
         }
 
         personListPanel.setFilterQuery(filterQuery);
-        if (FindCommand.COMMAND_WORD.equals(commandWord) || !Objects.equals(previousFilterQuery, filterQuery)) {
-            // A new filter may select a different client without changing its index, so reveal it explicitly.
+        if (FindCommand.COMMAND_WORD.equals(commandWord) || INDEX_COMMANDS.contains(commandWord)
+                || !Objects.equals(previousFilterQuery, filterQuery)) {
+            // A new filter, or a command naming a client by index, may leave the selected index unchanged
+            // while its card is scrolled away, so reveal the selection explicitly.
             personListPanel.revealSelection();
         }
         if (AddCommand.COMMAND_WORD.equals(commandWord)) {

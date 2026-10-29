@@ -424,6 +424,44 @@ public class MainWindowShownTest {
     }
 
     @Test
+    public void indexedCommandOnSelectedClientAfterScrollingAway_scrollsItBackIntoView() throws Exception {
+        showWindow(modelWithClients(30));
+
+        runOnFxThread(() -> {
+            window.openTerminal();
+            click(personRows().getChildren().getFirst());
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            contentScroll().setVvalue(1);
+            return null;
+        });
+        waitForFx();
+        runCommand("diet 1 t/2000 kcal");
+        runOnFxThread(() -> {
+            assertEquals(CommandFeedback.Kind.SUCCESS, lastFeedback().kind());
+            assertEquals(0, window.getPersonListPanel().getSelectedIndex());
+            assertSelectedCardVisible();
+            return null;
+        });
+    }
+
+    @Test
+    public void indexedCommandOnVisibleClient_doesNotScroll() throws Exception {
+        showWindow(modelWithClients(30));
+
+        runOnFxThread(() -> {
+            window.openTerminal();
+            click(personRows().getChildren().getFirst());
+            return null;
+        });
+        waitForFx();
+        runCommand("diet 1 t/2000 kcal");
+        assertEquals(0.0, runOnFxThread(() -> contentScroll().getVvalue()));
+    }
+
+    @Test
     public void clickingVisibleClient_doesNotScroll() throws Exception {
         Model model = new ModelManager();
         for (int i = 1; i <= 30; i++) {
@@ -438,6 +476,26 @@ public class MainWindowShownTest {
         });
         waitForFx();
         assertEquals(0.0, runOnFxThread(() -> ((ScrollPane) scene().lookup("#contentScroll")).getVvalue()));
+    }
+
+    private static Model modelWithClients(int count) {
+        Model model = new ModelManager();
+        for (int i = 1; i <= count; i++) {
+            model.addPerson(new PersonBuilder().withName("Client " + i)
+                    .withPhone(String.valueOf(80000000 + i)).withEmail("client" + i + "@example.com").build());
+        }
+        return model;
+    }
+
+    /** Types {@code command} into the open terminal and presses Enter, then lets layout settle. */
+    private void runCommand(String command) throws Exception {
+        runOnFxThread(() -> {
+            commandField().setText(command);
+            commandField().requestFocus();
+            press(KeyCode.ENTER);
+            return null;
+        });
+        waitForFx();
     }
 
     private void showWindow(Model model) throws Exception {
