@@ -210,6 +210,8 @@ public class PayCommandParserTest {
 
     @Test
     public void parse_threeLetterParameterShapedTokenInRemarks_failure() {
+        assertParseFailure(parser, "1 a/1 d/2026-10-20 r/abc/100", formatError);
+        assertParseFailure(parser, "1 a/1 d/2026-10-20 r/xy/100", formatError);
         assertParseFailure(parser, "1 a/1 d/2026-10-20 r/see xyz/2 for reference", formatError);
         assertParseFailure(parser, "1 a/1 d/2026-10-20 r/paid abc/100", formatError);
         assertParseFailure(parser, "1 a/150 d/2026-10-20 r/paid abc/100", formatError);

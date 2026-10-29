@@ -28,7 +28,7 @@ public class DietaryRestrictionsCommandParser implements Parser<DietaryRestricti
         if (values.size() == 1 && values.getFirst().isEmpty()) {
             return new DietaryRestrictionsCommand(index, new DietaryRestrictions());
         }
-        if (values.stream().anyMatch(String::isEmpty)) {
+        if (values.stream().anyMatch(value -> value.isEmpty() || ParserUtil.containsUnknownPrefixToken(value))) {
             throw invalidFormat();
         }
         try {

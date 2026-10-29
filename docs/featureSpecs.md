@@ -799,24 +799,43 @@ To use a default, omit the whole field. An empty field such as `s/` or `d/` is i
 
 #### Reading the workout plan
 
-Each person card shows `Workout Plan (N):`, where `N` is the total number of exercises. Exercises appear under full weekday headings in Monday-to-Sunday order. All exercises without an assigned day appear together under **Day not specified**, after the weekday groups. Only groups containing exercises are shown, with space between groups.
+The client list card summarises the plan as `No plan`, `1 exercise`, or `N exercises`. The selected client's **Workout plan** card shows the detailed plan. For a non-empty plan, it shows all seven weekday groups (Monday through Sunday), including `Rest` for days with no exercises. Exercises without an assigned day appear under **Day not specified** after the weekday groups. For an empty plan, the card shows only its **Workout plan** heading; no summary or weekday rows are shown.
 
-Each exercise row uses `NUMBER. NAME SETSxREPS @WEIGHTkg`. Numbering runs continuously from `1` across the entire plan; it does not restart for each day. For example:
+Each exercise tile shows its number and name, sets × repetitions (for example, `3 × 10`), and either a weight such as `60 kg` or `BW` for bodyweight (0 kg). Numbering runs continuously from `1` across the entire plan; it does not restart for each day. The following schematic illustrates the day order, tile fields, and exercise numbering; it is not literal screen or command-feedback text:
 
 ```text
-Workout Plan (4):
+Workout plan (4 exercises · 2 training days)
+Exercise number | Name | Sets × reps | Weight
+
 Monday
-1. Squat 4x8 @80kg
+1 | Squat | 4 × 8 | 80 kg
+
+Tuesday
+Rest
 
 Wednesday
-2. Bench Press 3x10 @60kg
+2 | Bench Press | 3 × 10 | 60 kg
+
+Thursday
+Rest
+
+Friday
+Rest
+
+Saturday
+Rest
+
+Sunday
+Rest
 
 Day not specified
-3. Stretch 1x1 @0kg
-4. Shoulder Press 1x8 @25.5kg
+3 | Stretch | 1 × 1 | BW
+4 | Shoulder Press | 1 × 8 | 25.5 kg
 ```
 
-An empty plan shows `No workout plan yet` on the person card. Command feedback also shows the plan in weekday order with the same exercise numbers.
+Adding an exercise, changing its day, or deleting an exercise can change the numbers shown. Always use the **current displayed exercise number** for `dayex` and `delex`. Exercises already in the same day group keep their relative order when the plan is sorted.
+
+Command feedback uses the same exercise numbers and weekday order as the card, but includes only groups containing exercises and omits the `Rest` rows. Its text format is separate from the GUI tiles; for example, a bodyweight exercise is shown as `Stretch 1x1 @0kg` in feedback and as `BW` in its tile. For an empty plan, feedback shows `Workout Plan: Empty`, while the workout card shows only its heading.
 
 Workout exercises, their sets, reps, weight, and assigned weekdays are restored when you reopen the app. Exercises saved without a day, including older entries labelled `day not specified` or `Day not specified`, appear together under the single **Day not specified** heading.
 
@@ -1532,6 +1551,8 @@ The command replaces the complete current list rather than appending to it. Dupl
 **Missing restriction prefix:** The command is rejected using the `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` usage message.
 
 **Invalid clear form:** An empty `r/` cannot be repeated or combined with a nonblank restriction.
+
+**Unknown prefix:** The command is rejected using the restriction command usage message when any restriction contains a word made of one or two letters followed by a slash, such as `x/unknown` or `R/`, or a longer alphabetic marker followed by a slash and only nonletters, such as `abc/100`. This stops a mistyped parameter from being saved as part of a restriction. Longer words such as `and/or` or `Dairy/eggs`, and slashes after digits such as `1/2`, are ordinary text. The existing restrictions are unchanged.
 
 **Invalid client index or format:** The command is rejected using the restriction command usage message when the index cannot be parsed.
 

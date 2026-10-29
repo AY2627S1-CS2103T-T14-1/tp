@@ -61,6 +61,7 @@ public class MainWindowDietTest {
                     new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json")));
             MainWindow window = new MainWindow(new Stage(), new LogicManager(model, storage), data);
             window.fillInnerParts();
+            window.openTerminal();
             try {
                 window.getPrimaryStage().getScene().getRoot().applyCss();
                 window.getPrimaryStage().getScene().getRoot().layout();

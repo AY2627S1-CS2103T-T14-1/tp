@@ -104,19 +104,21 @@ public class ResultDisplay extends UiPart<Region> {
             String kindClass = feedback.kind().name().toLowerCase();
             Label icon = new Label(iconFor(feedback.kind()));
             icon.getStyleClass().addAll("result-icon", kindClass);
-            icon.setMinSize(20, 20);
-            icon.setPrefSize(20, 20);
+            icon.setMinSize(22, 22);
+            icon.setPrefSize(22, 22);
             icon.setAlignment(Pos.CENTER);
 
             Label command = new Label("› " + feedback.command());
             command.getStyleClass().addAll("result-command", "mono");
             command.setMaxWidth(Double.MAX_VALUE);
+            command.setWrapText(true);
 
             Label message = new Label(feedback.message());
             message.getStyleClass().addAll("result-message", kindClass);
             message.setWrapText(true);
 
             VBox text = new VBox(2, command, message);
+            text.setMinWidth(0);
             feedback.details().forEach(detail -> {
                 Label detailLabel = new Label(detail);
                 detailLabel.getStyleClass().addAll("result-detail", "mono");

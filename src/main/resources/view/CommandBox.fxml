@@ -8,21 +8,21 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="8" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <HBox fx:id="commandBar" alignment="CENTER_LEFT" prefHeight="58" minHeight="58" spacing="12"
+<VBox spacing="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <HBox fx:id="commandBar" alignment="CENTER_LEFT" prefHeight="44" minHeight="44" spacing="12"
         styleClass="command-bar">
     <padding>
-      <Insets top="0" right="7" bottom="0" left="22" />
+      <Insets top="0" right="24" bottom="0" left="24" />
     </padding>
     <Label text="›" styleClass="command-prompt,mono" />
     <TextField fx:id="commandTextField" HBox.hgrow="ALWAYS" onAction="#handleCommandEntered"
                onKeyPressed="#handleHistoryKey"
                promptText="Enter command — type “help” to see all commands" />
-    <Label text="↑ ↓ history" styleClass="history-hint,mono" />
-    <Button mnemonicParsing="false" onAction="#handleCommandEntered" text="Run ↵" styleClass="btn-primary" />
+    <Label text="↵ run · ↑↓ history" styleClass="history-hint,mono" />
   </HBox>
-  <HBox alignment="CENTER_LEFT" spacing="8" minHeight="28">
+  <HBox fx:id="hintRow" alignment="CENTER_LEFT" spacing="8" visible="false" managed="false"
+        styleClass="hint-row">
     <Label fx:id="hintLabel" styleClass="hint-label" />
-    <FlowPane fx:id="hintContainer" hgap="8" vgap="4" prefWrapLength="1100" HBox.hgrow="ALWAYS" />
+    <FlowPane fx:id="hintContainer" hgap="8" vgap="4" HBox.hgrow="ALWAYS" />
   </HBox>
 </VBox>
