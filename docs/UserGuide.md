@@ -355,7 +355,7 @@ Examples:
 
 #### Reading the workout plan
 
-Each person card shows `Workout Plan (N):`, where `N` is the total number of exercises. Exercises appear under full weekday headings in Monday-to-Sunday order. All exercises without an assigned day appear together under **Day not specified**, after the weekday groups. Only groups containing exercises are shown, with space between groups.
+Each person card shows `Workout Plan (N):`, where `N` is the total number of exercises. Exercises appear under full weekday headings in Monday-to-Sunday order. All exercises without an assigned day appear together under **Day not specified**, after the weekday groups. All seven weekday groups (Monday through Sunday) are always shown; a group with no exercises displays `Rest — no exercises assigned`.
 
 Each exercise row uses `NUMBER. NAME SETSxREPS @WEIGHTkg`. Numbering runs continuously from `1` across the entire plan; it does not restart for each day. For example:
 
@@ -364,8 +364,23 @@ Workout Plan (4):
 Monday
 1. Squat 4x8 @80kg
 
+Tuesday
+Rest — no exercises assigned
+
 Wednesday
 2. Bench Press 3x10 @60kg
+
+Thursday
+Rest — no exercises assigned
+
+Friday
+Rest — no exercises assigned
+
+Saturday
+Rest — no exercises assigned
+
+Sunday
+Rest — no exercises assigned
 
 Day not specified
 3. Stretch 1x1 @0kg
