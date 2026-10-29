@@ -54,8 +54,20 @@ body:has(.fittix-guide) {
   code { background: #292c32; color: #e9eaf0; }
   pre, pre code { background: #1b1d21; color: #e9eaf0; }
   pre { border: 1px solid #303238; }
+  .highlight, .highlighter-rouge .highlight { background: #1b1d21; color: #e9eaf0; }
+  .highlight {
+    .c, .cm, .cp, .c1, .cs, .gh, .go, .gp, .gu, .w, .bp { color: #aeb4c0; }
+    .err, .gr, .gt { color: #ff9b9b; background: transparent; }
+    .k, .kc, .kd, .kp, .kr, .ow { color: #d8f24a; }
+    .kt, .nc, .nf, .ne, .nt { color: #9ecbff; }
+    .m, .mf, .mh, .mi, .mo, .il, .ni, .ss { color: #d9b3ff; }
+    .s, .sb, .sc, .sd, .s2, .se, .sh, .si, .sx, .sr, .s1 { color: #ffd091; }
+    .na, .nb, .no, .nv, .vc, .vg, .vi { color: #8de0c9; }
+    .gd, .gd .x { color: #ffb6b6; background: #442329; }
+    .gi, .gi .x { color: #b7f7c4; background: #1e4031; }
+  }
   blockquote { color: #bec2cc; border-left-color: #d8f24a; }
-  table { border-color: #303238; }
+  table { border-color: #303238; color: #e9eaf0; }
   th, td { border-color: #303238; }
   th { background: #25272c; }
   tr:nth-child(even) { background: #1b1d21; }

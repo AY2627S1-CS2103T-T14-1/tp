@@ -194,7 +194,7 @@ add n/Daniel Tan p/97001002 e/daniel@example.com a/Test Road
 list
 ```
 
-Confirm Priya is index 1 and Daniel is index 2 before continuing. If the local clock is later than the example date, substitute a later future date in every command.
+Confirm Priya is index 1 and Daniel is index 2 before continuing. The example date, 2099-03-15, is fixed well in the future; if it ever becomes a past date, replace it with a later date in every command below.
 
 1. Run `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`, then `meeting 2 d/2099-03-15 tm/15:30 l/Cafe`.<br>
    Expected: Priya has a training session; Daniel has a meeting. Both are saved.
