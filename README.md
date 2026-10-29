@@ -13,7 +13,7 @@ Fittix brings together:
 * Membership plans, remaining sessions, and payment records
 * Undo and redo for changes to saved client and membership data
 
-![Fittix workspace with demonstration client records](docs/images/FittixWorkspace.png)
+![Fittix workspace with demonstration client records](docs/images/Ui.png)
 
 The screenshot shows the current development workspace using demonstration client records.
 

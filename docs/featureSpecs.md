@@ -284,6 +284,7 @@ edit 2 g/
 | Goal `g/`         | A nonblank value replaces the goal. An empty `g/` clears it. Nonblank goals follow the fitness-goal rules in Feature 7. |
 | Tags `t/`         | Each tag must be alphanumeric. Supplied tags replace the complete tag set; a single empty `t/` clears all tags.         |
 | Repeated prefixes | `n/`, `p/`, `e/`, `a/`, and `g/` may each appear once. Repeat `t/` to supply multiple tags.                             |
+| Near-miss prefix  | A `<letters>/` token within one edit of exactly one valid prefix (for example `ad/` for `a/`) is rejected with a suggestion of the intended prefix. Ordinary text containing a slash is accepted when the slash is followed by a word of five characters or fewer (for example `c/o`, `and/or`, `on/off`, `up/down`, `in/out`, `am/pm`, or a unit ratio such as `kg/week`, `km/h`); trailing punctuation such as a comma or full stop (for example `on/off,`) is ignored for this check. This is the inherent lexical limit: a slash followed by a longer word or a non-alphabetic value is not one of these forms, so a near miss such as the typo `ad/` in `ad/orchard Road` or `ad/18 Clementi Road` is rejected. |
 
 **Source validation distinction:** The implemented shared name validator supports the documented punctuation and Unicode letters while retaining existing numeric and long names. Feature 1A additionally specifies a 1–70-character limit, letter-based names, collapsed whitespace, and normalized 7–15-digit phones; those broader validation changes are not introduced by the name-character fix. Edit retains the character rules above and phones of 3 to 15 digits.
 
@@ -316,6 +317,8 @@ The edit is rejected if the resulting client would duplicate another client unde
 **No editable field:** `At least one field to edit must be provided.`
 
 **Repeated single-value prefix:** `The n/, p/, e/, a/ and g/ prefixes may each be used only once. Repeat t/ for multiple tags.`
+
+**Near-miss parameter prefix:** `Parameter 'ad/' is not a valid parameter prefix. Recognized parameter prefixes are: n/ (name), p/ (phone), e/ (email), a/ (address), g/ (goal) and t/ (tag). Did you mean 'a/ (address)'?` Only an unambiguous near miss of a single valid prefix is rejected; ordinary text containing a slash (for example `c/o`, `and/or`, `km/h`, `w/`) is accepted. Typo detection is case-sensitive: an uppercase single-letter marker such as `E/` is not flagged, while a mixed-case token such as `aD/18` can still be an unambiguous near miss of `a/`. A slash joining two short words (for example `on/off`, `up/down`, `in/out`, `am/pm`, `c/o`, or `and/or`), or a unit ratio such as `kg/week`, is ordinary text and is accepted when the word after the slash is five characters or fewer — even with trailing punctuation like a comma or full stop. Any other near miss, such as a typo whose slash is followed by a longer word or a value (for example `ad/` in `ad/orchard Road` or `ad/18 Clementi Road`), is still reported as a likely typo of `a/`.
 
 **Duplicate client:** `This person already exists in the address book.`
 
@@ -1827,9 +1830,9 @@ Command words and the `mem` or `membership` argument of `view` are case-sensitiv
 
 | Aspect              | Rule, message and rationale                                                                                                                                                                                                                                                                                                                                       |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Accepted value      | 1 to 50 characters after trimming. Letters, digits, spaces, apostrophes, hyphens, and full stops are accepted; at least one letter or digit is required. This keeps plan names readable in the client card.                                                                                                                                                       |
+| Accepted value      | 1 to 50 characters after trimming. ASCII letters, digits, spaces, apostrophes, hyphens, and full stops are accepted; at least one letter or digit is required. Letters are ASCII-only, so accented or other non-ASCII letters (for example `É`) are not accepted. This keeps plan names readable in the client card.                                                                                                                                                       |
 | Whitespace and case | Remove leading/trailing spaces and collapse consecutive internal whitespace. The stored name preserves the entered case; the catalog and client-card views render it with the first character upper-cased, so a plan stored as `gold` reads as `Gold`. Compare names case-insensitively. The name passed to `amem` and `delmem` follows the same comparison rule. |
-| Error               | Membership plan name must contain 1 to 50 characters and may contain only letters, digits, spaces, apostrophes, hyphens, and full stops.                                                                                                                                                                                                                          |
+| Error               | Membership plan name must contain 1 to 50 characters and may contain only ASCII letters, digits, spaces, apostrophes, hyphens, and full stops.                                                                                                                                                                                                                    |
 
 For a plan name containing spaces, `amem` treats the final non-prefixed argument as PERSON_INDEX and the preceding text as MEMBERSHIP_NAME. If supplied, `e/` must follow PERSON_INDEX. For example: `amem Gold Plus 1 e/2026-12-30`.
 
@@ -2174,7 +2177,7 @@ pay 2 d/2026-10-19 a/75.50 r/October membership payment
 | `PERSON_INDEX` | A positive integer identifying a client in the currently displayed client list. An index outside that list is invalid. |
 | `a/AMOUNT` | A positive amount with at most two decimal places, without a currency symbol or thousands separators. For example, `150`, `150.5`, and `150.50` are valid; `0`, `-5`, `1.234`, and `S$150` are invalid. Store and display the amount to two decimal places without floating-point rounding. |
 | `d/YYYY-MM-DD` | A real Gregorian calendar date in exactly `YYYY-MM-DD` format, with a four-digit year from 0001 to 9999. Past, current, and future dates are accepted. |
-| `r/REMARKS` | Optional nonblank text of 1–300 printable characters after trimming leading and trailing whitespace. Preserve internal spacing, punctuation, and case. Reject line breaks and control characters. An omitted `r/` means no remarks; an empty `r/` is invalid. |
+| `r/REMARKS` | Optional nonblank text of 1–300 printable characters after trimming leading and trailing whitespace. Preserve internal spacing, punctuation, and case. Reject line breaks and control characters. Non-breaking spaces (for example U+00A0) are treated as ordinary spaces, so a remark made up of only such characters becomes blank and is rejected. An omitted `r/` means no remarks; an empty `r/` is invalid. |
 
 Reject missing, repeated, unknown, or empty prefixed parameters and extra unprefixed text. A failed command creates no payment record.
 
@@ -2200,7 +2203,7 @@ Each successful `pay` command adds a separate record. Multiple payments for the 
 
 **Invalid date:** Payment date must be a valid date in YYYY-MM-DD format.
 
-**Invalid remarks:** Remarks must contain 1 to 300 printable characters without line breaks when `r/` is supplied.
+**Invalid remarks:** Remarks must contain 1 to 300 printable characters without line breaks when `r/` is supplied. Non-breaking spaces (for example U+00A0) are treated as ordinary spaces, so a remark of only such characters is rejected as blank.
 
 **Invalid command format:** Required values are missing, a prefix repeats, an unknown prefix is supplied, or extra unprefixed text is present. Show the command format from Section 3.
 

@@ -41,7 +41,8 @@ public final class PaymentRecord {
 
     /**
      * Constructs a payment record from already-parsed values.
-     * The amount is normalized to two decimal places; remarks are trimmed.
+     * The amount is normalized to two decimal places; remarks are trimmed and Unicode spaces are
+     * normalized to regular spaces.
      */
     public PaymentRecord(BigDecimal amount, LocalDate date, Optional<String> remarks) {
         requireNonNull(amount);
@@ -53,7 +54,7 @@ public final class PaymentRecord {
 
         this.amount = amount.setScale(AMOUNT_SCALE, RoundingMode.UNNECESSARY);
         this.date = date;
-        this.remarks = remarks.map(String::strip);
+        this.remarks = remarks.map(PaymentRecord::canonicalizeRemarks);
     }
 
     /**
@@ -104,15 +105,17 @@ public final class PaymentRecord {
     }
 
     /**
-     * Returns true if {@code test}, after trimming, has 1 to 300 printable characters.
-     * Internal spacing, punctuation and case are preserved.
+     * Returns true if {@code test}, after trimming and normalizing Unicode spaces to regular
+     * spaces, has 1 to 300 printable characters. Internal spacing, punctuation and case are
+     * preserved; a remark made up only of Unicode spaces (for example non-breaking spaces) is
+     * blank and therefore invalid.
      */
     public static boolean isValidRemarks(String test) {
         if (test == null) {
             return false;
         }
-        String trimmed = test.strip();
-        int length = trimmed.codePointCount(0, trimmed.length());
+        String canonical = canonicalizeRemarks(test);
+        int length = canonical.codePointCount(0, canonical.length());
         return length >= 1
                 && length <= MAX_REMARKS_LENGTH
                 && test.codePoints().allMatch(PaymentRecord::isPrintable);
@@ -130,10 +133,59 @@ public final class PaymentRecord {
         return LocalDate.parse(test, DATE_FORMATTER);
     }
 
-    /** Trims supplied remarks after validating their length and printability. */
+    /**
+     * Validates the remarks and returns their canonical form: trimmed, with Unicode space
+     * separators normalized to regular spaces.
+     */
     public static String parseRemarks(String test) {
         checkArgument(isValidRemarks(test), MESSAGE_REMARKS_CONSTRAINTS);
-        return test.strip();
+        return canonicalizeRemarks(test);
+    }
+
+    /**
+     * Validates and canonicalizes remarks for loading persisted payment data written by a previous
+     * version. Unicode space separators (for example non-breaking spaces) are normalized to regular
+     * spaces and outer whitespace is trimmed, so pasted text such as {@code fee\u00A0paid} loads as
+     * {@code fee paid}.
+     *
+     * <p>Unlike {@link #parseRemarks}, blankness is judged with {@link String#strip()} semantics, so a
+     * remark made solely of non-breaking (or other {@code SPACE_SEPARATOR}) characters is still treated
+     * as the non-blank value a previous version could save. Such a value normalizes to an empty string,
+     * which the caller converts to an absent remark; this keeps startup working for data saved before
+     * non-breaking spaces were normalized. Genuinely invalid remarks (line breaks, control characters,
+     * or those outside 1 to 300 characters) still throw. This is the loader-only compatibility path:
+     * {@link #fromText} keeps rejecting blank remarks so new commands enforce
+     * {@link #MESSAGE_REMARKS_CONSTRAINTS}.
+     *
+     * @return the normalized form of {@code test}, or an empty string if it is blank after normalizing
+     *         Unicode spaces
+     * @throws IllegalArgumentException if {@code test} is not a valid remark under the saving version
+     */
+    public static String canonicalizeForLoading(String test) {
+        if (test == null) {
+            return "";
+        }
+        String trimmed = test.strip();
+        checkArgument(test.codePoints().allMatch(PaymentRecord::isPrintable), MESSAGE_REMARKS_CONSTRAINTS);
+        int length = trimmed.codePointCount(0, trimmed.length());
+        checkArgument(length >= 1 && length <= MAX_REMARKS_LENGTH, MESSAGE_REMARKS_CONSTRAINTS);
+        return canonicalizeRemarks(test);
+    }
+
+    /**
+     * Returns the canonical form of the remarks: Unicode space separators (for example
+     * non-breaking spaces) are replaced with regular spaces and outer whitespace is trimmed, so
+     * pasted text such as {@code fee\u00A0paid} is treated the same as {@code fee paid}.
+     */
+    private static String canonicalizeRemarks(String remarks) {
+        return normalizeSpaces(remarks).strip();
+    }
+
+    private static String normalizeSpaces(String remarks) {
+        StringBuilder normalized = new StringBuilder(remarks.length());
+        remarks.codePoints().forEach(codePoint -> normalized.appendCodePoint(
+                Character.getType(codePoint) == Character.SPACE_SEPARATOR ? ' ' : codePoint));
+        return normalized.toString();
     }
 
     private static boolean isPrintable(int codePoint) {

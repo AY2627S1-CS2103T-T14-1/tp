@@ -129,6 +129,24 @@ public class JsonAdaptedPaymentRecordTest {
     }
 
     @Test
+    public void toModelType_nonBreakingSpaceOnlyRemarks_loadsCompatibleAsNoRemarks() throws Exception {
+        // A previous version could save a remark made only of non-breaking spaces (strip() leaves them
+        // intact and isPrintable accepts them), so the loader tolerates such a record and normalizes it
+        // to an absent remark instead of failing startup.
+        JsonAdaptedPaymentRecord adapted = new JsonAdaptedPaymentRecord(VALID_AMOUNT, VALID_DATE, "\u00A0");
+        PaymentRecord restored = adapted.toModelType();
+        assertEquals(Optional.empty(), restored.getRemarks());
+    }
+
+    @Test
+    public void toModelType_internalNonBreakingSpaceRemarks_normalizesOnLoad() throws Exception {
+        // A non-breaking space inside a remark is normalized to a regular space when the record loads,
+        // so "fee\u00A0paid" is the same as "fee paid" and does not fail startup.
+        JsonAdaptedPaymentRecord adapted = new JsonAdaptedPaymentRecord(VALID_AMOUNT, VALID_DATE, "fee\u00A0paid");
+        assertEquals(Optional.of("fee paid"), adapted.toModelType().getRemarks());
+    }
+
+    @Test
     public void toModelType_validDate_keepsIsoDate() throws Exception {
         JsonAdaptedPaymentRecord adapted = new JsonAdaptedPaymentRecord(VALID_AMOUNT, VALID_DATE, null);
         assertEquals(LocalDate.of(2026, 1, 15), adapted.toModelType().getDate());

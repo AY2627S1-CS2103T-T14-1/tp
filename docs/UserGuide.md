@@ -162,6 +162,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
 * Names use the same permitted characters as `add`, including hyphens, apostrophes, full stops, and Unicode letters. Renaming preserves the entered case and internal spacing after trimming outer whitespace.
 * When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative. A client can have at most 10 distinct tags.
+* A token that is a near miss of a parameter prefix is rejected, with a suggestion of the intended prefix. Only an unambiguous near miss is flagged (for example `ad/` is reported as a likely typo of `a/`), so ordinary text that contains a slash, such as `c/o`, `and/or`, `km/h`, or `w/`, is accepted. Typo detection is case-sensitive: an uppercase single-letter marker such as `E/` is not flagged, while a mixed-case token such as `aD/18` can still be an unambiguous near miss of `a/`. A slash joining two short words (for example `on/off`, `up/down`, `in/out`, `am/pm`, `c/o`, or `and/or`) or a common unit ratio (for example `kg/week`) is ordinary text and is accepted — even with trailing punctuation like a comma or full stop — but only when the word after the slash is short (five characters or fewer). Any other near miss, such as a typo whose slash is followed by a longer word or a value (for example `ad/` in `ad/orchard Road` or `ad/18 Clementi Road`), is still reported as a likely typo of `a/`.
 * An edit that would give the client both the same name (after trimming, collapsing internal whitespace, and ignoring letter case) and the same phone number as another client is rejected. Sharing only a name or only a phone number is allowed. Changing only the letter case of the same client's name is allowed.
 * If the values are identical to the client's current details, Fittix reports `No changes made: the new values are the same as the current details.`
 * On success, Fittix reports `Edited client: NAME; Phone: PHONE.`
@@ -176,6 +177,7 @@ Common errors:
 | Repeated `n/`, `p/`, `e/`, `a/`, or `g/` | `The n/, p/, e/, a/ and g/ prefixes may each be used only once. Repeat t/ for multiple tags.` |
 | No fields supplied | `At least one field to edit must be provided.` |
 | Duplicate client | `This person already exists in the address book.` |
+| Near-miss parameter prefix (for example `ad/`) | `Parameter 'ad/' is not a valid parameter prefix. … Did you mean 'a/ (address)'?` |
 
 Examples:
 * `edit 1 p/91234567 e/johndoe@example.com` edits the phone number and email address of the first client.
@@ -575,7 +577,7 @@ Format: `addmem n/NAME p/PRICE s/NUMBER_OF_SESSIONS`
 
 Example: `addmem n/Gold Plus p/150.50 s/30`
 
-Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. The stored name keeps the case you entered, but the plan list and client card render its first character in upper case, so a plan entered as `gold` is shown as `Gold`. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
+Plan names must be unique, ignoring case and extra whitespace. A name can contain 1 to 50 characters after trimming: ASCII letters, digits, spaces, apostrophes, hyphens, and full stops, with at least one letter or digit. Leading and trailing spaces are removed, and repeated internal spaces are collapsed. Letters are ASCII-only, so accented or other non-ASCII letters (for example `É`) are not accepted. The stored name keeps the case you entered, but the plan list and client card render its first character in upper case, so a plan entered as `gold` is shown as `Gold`. The price must be greater than zero, with at most two decimal places, without a currency symbol or thousands separators. Starting sessions must be a whole number from 1 to 1000.
 
 Format: `view mem` or `view membership`
 
@@ -755,7 +757,7 @@ Examples:
 * `PERSON_INDEX` is a positive whole-number index in the **current** client list, including search results. An index outside that list is invalid.
 * `a/AMOUNT` is required. It must be greater than zero and have at most two decimal places, without a currency symbol, sign, or thousands separator. `150`, `150.5`, and `150.50` are accepted; `0`, `-5`, `1.234`, and `S$150` are rejected. Amounts are stored and displayed with exactly two decimal places without floating-point rounding.
 * `d/YYYY-MM-DD` is required. It must be a real Gregorian date in exactly four-digit-year, two-digit-month, two-digit-day form, with the year between 0001 and 9999. Past, current, and future dates are accepted.
-* `r/REMARKS` is optional. After trimming outer whitespace it must contain 1 to 300 printable characters. Internal spacing, punctuation, and case are preserved. A blank `r/` is invalid, as are line breaks and control characters. Omit `r/` when no remarks are needed.
+* `r/REMARKS` is optional. After trimming outer whitespace it must contain 1 to 300 printable characters. Internal spacing, punctuation, and case are preserved. A blank `r/` is invalid, as are line breaks and control characters. Non-breaking spaces (for example U+00A0) are treated as ordinary spaces, so a remark made up of only such characters is rejected as blank. Omit `r/` when no remarks are needed.
 * `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. Parameter-shaped tokens such as `x/100` or `abc/100` inside remarks are rejected as unknown prefixes; ordinary slash-separated text such as `and/or` and `1/2` remains valid.
 
 On success, Fittix saves the record, selects the client, and reports `Recorded payment for NAME: AMOUNT on YYYY-MM-DD.` The client's **Payments** section shows every saved record oldest first, keeping entry order for records on the same date. Each record shows its date, its amount to two decimal places, and remarks when present. Long remarks wrap and the card scrolls; they are never truncated. A client with no payments shows `No payments recorded.`
