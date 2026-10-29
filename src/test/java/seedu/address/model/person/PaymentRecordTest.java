@@ -71,6 +71,13 @@ public class PaymentRecordTest {
     }
 
     @Test
+    public void constructor_normalizesNonBreakingSpaceInRemarks() {
+        PaymentRecord record = new PaymentRecord(BigDecimal.ONE, DATE, Optional.of("fee\u00A0paid"));
+
+        assertEquals(Optional.of("fee paid"), record.getRemarks());
+    }
+
+    @Test
     public void dateValidation_acceptsLeapDayAndYearBoundaries() {
         assertTrue(PaymentRecord.isValidDate("2024-02-29"));
         assertTrue(PaymentRecord.isValidDate("0001-01-01"));
@@ -106,10 +113,17 @@ public class PaymentRecordTest {
     }
 
     @Test
-    public void remarksValidation_rejectsNonBreakingSpaceOnly() {
+    public void remarksValidation_treatsNonBreakingSpaceAsSpace() {
+        // A remark made up only of Unicode spaces is blank and rejected.
         assertFalse(PaymentRecord.isValidRemarks("\u00A0"));
         assertFalse(PaymentRecord.isValidRemarks("   \u00A0   "));
-        assertFalse(PaymentRecord.isValidRemarks("fee\u00A0paid"));
+        assertThrows(IllegalArgumentException.class, PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS, () ->
+                PaymentRecord.parseRemarks("\u00A0"));
+
+        // An internal non-breaking space is normalized to a regular space, as in pasted text.
+        assertTrue(PaymentRecord.isValidRemarks("fee\u00A0paid"));
+        assertEquals("fee paid", PaymentRecord.parseRemarks("fee\u00A0paid"));
+
         assertTrue(PaymentRecord.isValidRemarks("  Initial fee  "));
         assertTrue(PaymentRecord.isValidRemarks("paid, and/or"));
     }
