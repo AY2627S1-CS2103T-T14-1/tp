@@ -232,13 +232,15 @@ The workout plan feature lets a trainer keep a per-client list of prescribed exe
 - `storage.JsonAdaptedPerson` persists the plan as JSON array `exercises`. The `@JsonCreator` constructor treats a missing/`null` `exercises` field as empty (backward compatible with old files). `toModelType` rejects `null` entries with `Workout plan must not contain null exercises`, converts each entry via `JsonAdaptedExercise#toModelType`, and builds `new WorkoutPlan(personExercises)` (which re-sorts by weekday). Any invalid exercise therefore fails the whole person load, which `JsonSerializableAddressBook` propagates as `IllegalValueException`; startup then stops before creating the command-processing logic, preserving the original file instead of opening an empty roster that could overwrite it.
 - Save path: `JsonAdaptedPerson(Person source)` copies `source.getWorkoutPlan().getExercises()` into adapted exercises (including each exercise's canonical `day`), so every `addex`/`delex`/`dayex`/`clearplan` is persisted on the next `StorageManager` save (automatic after each mutating command).
 
-#### UI: person card rendering
+#### UI: selected-client workout card
 
-- `ui.PersonCard#displayWorkoutPlan` renders the plan inside `workoutPlanContainer`, reusing `Messages#getExercisesInDisplayOrder`, `#getExerciseDayHeading` and `#formatExercise` so the card and command feedback always agree.
-  - Header is `Workout Plan:` when empty, otherwise `Workout Plan (N):` where `N` is the plan size.
-  - An empty plan shows placeholder label `No workout plan yet`.
-  - Non-empty plan groups exercises under bold full-weekday headings in Monday-to-Sunday order with `Day not specified` last; only non-empty groups are shown, separated by an 8px spacer. Within each group, one `Label` per exercise is numbered with the continuous 1-based display index (`1. ...`, `2. ...`) using the `Name SetsxReps @Weightkg` format (e.g. `Bench Press 4x10 @60kg`). These numbers are exactly the `EXERCISE_INDEX` values accepted by `delex` and `dayex`, so the card doubles as the index reference; `addex`/`dayex`/`delex` re-sort and renumber, so callers must always use the current card numbering.
-  - Labels wrap (`setWrapText(true)`, max width 350) so long lists grow vertically without breaking the card layout. The card observes the filtered person list, so it refreshes automatically after each command.
+`ClientDetailPanel#showWorkoutPlan` renders the selected client's plan in `workoutRows`, using `Messages#getExercisesInDisplayOrder` for the continuous 1-based numbers shared with command feedback. `PersonCard` renders the client-list summary; it does not render the workout plan.
+
+- The card heading is `Workout plan`. A nonempty plan also shows the exercise count and number of assigned training days in `planSummary`. An empty plan leaves the summary blank and hides `workoutRows`, so only the heading remains visible.
+- `createDayRow` renders all seven weekdays in Monday-to-Sunday order, with short day codes and full weekday subtitles. Days without exercises show `Rest`. Unscheduled exercises appear in a final `Day not specified` row created by `createUnspecifiedRow`.
+- `createExerciseTile` shows the current exercise number, a wrapping name, sets × reps, and weight. Zero weight displays as `BW`; other weights display in kg. Each day lays out up to three tiles per row. The current weekday is highlighted.
+- `delex` and `dayex` use the current displayed exercise numbers. Adding, moving or deleting exercises can re-sort and renumber the plan, so trainers must check the updated numbers before the next indexed command.
+- `MainWindow` refreshes the selected-client panel after model/list changes. The card grows vertically within the shared workspace scroll pane; it has no internal scrollbar or fixed 350-pixel label width.
 
 <a id="diet-plan-management"></a>
 
@@ -1059,7 +1061,7 @@ An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it
       Expected: That person fails validation (`Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`, `Exercise name should not be blank`, `Exercise's <field> field is missing!`, or `Workout plan must not contain null exercises`), so startup stops and the original file remains unchanged. No command-processing logic is created for an empty replacement roster.
 
    1. Missing `exercises` field (backward compatibility): open `addressbook.json`, delete the `"exercises": [...]` array from one person, save, then relaunch.<br>
-      Expected: That person loads with an empty workout plan; the card shows `No workout plan yet` and `Messages.format` shows `Workout Plan: Empty`.
+      Expected: That person loads with an empty workout plan; the selected client's workout card shows only its `Workout plan` heading and `Messages.format` shows `Workout Plan: Empty`.
 
    1. Missing `day` field on an exercise (backward compatibility): open `addressbook.json`, delete the `"day"` key from one exercise object, save, then relaunch.<br>
       Expected: That exercise loads as unscheduled and appears under `Day not specified`; a stored `"day": "Day not specified"` (any casing, from older saves) normalizes the same way.
@@ -1117,7 +1119,7 @@ An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it
 1. Clearing a workout plan (`clearplan`)
    1. Prerequisites: 1st person has at least one exercise; 2nd person has an empty plan.
    1. Test case: `clearplan 1`<br>
-      Expected: All exercises are removed. The status message shows `Cleared workout plan for Person: ` with `Workout Plan: Empty`, and the card shows `Workout Plan:` + `No workout plan yet`.
+      Expected: All exercises are removed. The status message shows `Cleared workout plan for Person: ` with `Workout Plan: Empty`, and the selected client's workout card shows only its `Workout plan` heading.
    1. Test case: `clearplan 1` again (already empty), or `clearplan 2` on the empty-plan person.<br>
       Expected: No change. Shows `Workout plan is already empty for Person: ` with that person.
    1. Other incorrect commands to try: `clearplan`, `clearplan 0`, `clearplan x`, `clearplan 1 2`.<br>

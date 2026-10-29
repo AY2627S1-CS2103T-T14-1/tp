@@ -379,7 +379,7 @@ Day not specified
 
 Adding an exercise, changing its day, or deleting an exercise can change the numbers shown. Always use the **current displayed exercise number** for `dayex` and `delex`. Exercises already in the same day group keep their relative order when the plan is sorted.
 
-An empty plan shows `No workout plan yet` on the person card. Command feedback also shows the plan in weekday order with the same exercise numbers.
+An empty plan leaves only the **Workout plan** heading visible in the selected client's workout card. For a nonempty plan, command feedback lists exercises in weekday order with the same exercise numbers as the card.
 
 ### Removing an exercise from a client's workout plan: `delex`
 

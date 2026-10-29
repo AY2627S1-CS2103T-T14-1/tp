@@ -813,7 +813,7 @@ Day not specified
 4. Shoulder Press 1x8 @25.5kg
 ```
 
-An empty plan shows `No workout plan yet` on the person card. Command feedback also shows the plan in weekday order with the same exercise numbers.
+An empty plan leaves only the **Workout plan** heading visible in the selected client's workout card. For a nonempty plan, command feedback lists exercises in weekday order with the same exercise numbers as the card.
 
 Workout exercises, their sets, reps, weight, and assigned weekdays are restored when you reopen the app. Exercises saved without a day, including older entries labelled `day not specified` or `Day not specified`, appear together under the single **Day not specified** heading.
 
