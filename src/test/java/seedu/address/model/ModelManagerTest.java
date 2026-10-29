@@ -9,11 +9,13 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.Person;
 import seedu.address.testutil.AddressBookBuilder;
 
 public class ModelManagerTest {
@@ -108,5 +110,18 @@ public class ModelManagerTest {
         UserPrefs differentUserPrefs = new UserPrefs();
         differentUserPrefs.setGuiSettings(new GuiSettings(1, 2, 3, 4));
         assertFalse(modelManager.equals(new ModelManager(addressBook, differentUserPrefs)));
+    }
+
+    @Test
+    public void getFilteredPersonListPredicate_restoresTheCurrentFilter() {
+        ModelManager modelManager = new ModelManager(
+                new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build(), new UserPrefs());
+        assertTrue(modelManager.getFilteredPersonListPredicate().test(ALICE));
+
+        modelManager.updateFilteredPersonList(new NameContainsKeywordsPredicate(List.of("Benson")));
+        Predicate<Person> saved = modelManager.getFilteredPersonListPredicate();
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+        modelManager.updateFilteredPersonList(saved);
+        assertEquals(List.of(BENSON), modelManager.getFilteredPersonList());
     }
 }
