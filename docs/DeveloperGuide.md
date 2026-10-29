@@ -328,6 +328,34 @@ Parsers require each mandatory prefix exactly once, reject repeated or unknown p
 
 The client card shows a single membership tag reading `Plan_name Member: N sessions left`, with `[expires YYYY-MM-DD]` appended when an expiry exists and the plan name's first letter upper-cased. The tag joins the client's other tags in the card's tag area, directly under the name, and wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. The plan-list output of `view mem`/`view membership` prefixes each price with `S$` and upper-cases the first letter of each plan name. Command messages and error behavior follow the [Feature 11 specification](featureSpecs.md#feature-11-membership-plan).
 
+### Payment records
+
+Implemented for v1.4. The [feature contract](featureSpecs.md#feature-14-payment-records) defines user-visible behavior. `pay` appends one immutable payment to a client's history; it does not change a membership assignment, plan price, or session balance.
+
+#### Model and persistence
+
+- `model.person.PaymentRecord` is an immutable payment containing a `BigDecimal amount` (normalized to two decimal places), a `LocalDate date`, and an optional `remarks`. It exposes `fromText` and the `parse*`/`isValid*` helpers for raw input and validation, reused by parsing and storage.
+  - `amount` is positive with no precision beyond two decimals; `AMOUNT_SCALE` is 2. It is stored and displayed via `BigDecimal.toPlainString()`, so there is no floating-point rounding and `75`, `75.5`, and `75.50` are equivalent. `AMOUNT_PATTERN` (`\d+(\.\d{1,2})?`) rejects signs, currency symbols, thousands separators, and over-precise or malformed text.
+  - `date` must match `uuuu-MM-dd` with a `ResolverStyle.STRICT` formatter and year 0001–9999. Past, current, and future dates are all accepted.
+  - `remarks` is optional; when present it trims outer horizontal whitespace, counts Unicode code points (1–300, `MAX_REMARKS_LENGTH`), and rejects ISO control, format, line/paragraph separator, surrogate, private-use, and unassigned code points. Internal spacing and case are preserved.
+- `Person` owns an insertion-ordered `List<PaymentRecord>` (`paymentRecords`). `withAddedPayment` copies the list and appends the new record. Every other client-update command (`diet`, `edit`, `editlog`, `remark`, and the workout-plan, workout-logging, membership, and body-progress commands) constructs a new `Person` passing `person.getPaymentRecords()` through, so payments are preserved across unrelated edits. Deleting a client removes their payments with the client.
+- JSON stores `paymentRecords` on each person. `JsonAdaptedPerson` initializes the field to an empty list, so a missing/null `paymentRecords` field in older files loads an empty payment history. `toModelType` rejects null entries (`Payment records must not contain null entries.`) and converts each entry via `JsonAdaptedPaymentRecord#toModelType`, preserving entry order and never deduplicating, so repeated payments stay distinct.
+- `storage.JsonAdaptedPaymentRecord` is the Jackson form with required `amount` and `date` strings and a `@JsonInclude(JsonInclude.Include.NON_NULL)` `remarks` string. `toModelType` throws `IllegalValueException` with `Payment record's %s field is missing!` for a null `amount`/`date`, and maps invalid stored values to the `PaymentRecord` constraint messages.
+
+#### Commands and UI
+
+- `logic.commands.PayCommand` (`COMMAND_WORD = pay`):
+  - `MESSAGE_USAGE = pay: Records a payment for the client identified by the index number used in the displayed client list.\nParameters: INDEX (must be a positive integer) a/AMOUNT d/YYYY-MM-DD [r/REMARKS]\nExample: pay 1 a/150 d/2026-10-20`.
+  - Success `MESSAGE_SUCCESS = Recorded payment for %1$s: %2$s on %3$s.`, formatted with `updated.getName()`, `paymentRecord.getFormattedAmount()`, and `paymentRecord.getDate()`.
+  - `MESSAGE_SAVE_FAILURE = Payment could not be saved. No payment was recorded.`
+  - `execute` resolves the index against `getFilteredPersonList()`, rejects an out-of-range index with `Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX`, builds `target.withAddedPayment(paymentRecord)`, and saves via `model#setPerson`, preserving the client's other fields and the current filter.
+- `logic.parser.PayCommandParser` reads the displayed index, then the prefixed `a/` (`CliSyntax.PREFIX_ADDRESS`), `d/` (`CliSyntax.PREFIX_DATE`), and optional `r/` (`CliSyntax.PREFIX_REMARK`) values. The command word and prefixes are matched case-sensitively. `AddressBookParser` routes `pay` with a `DOTALL` pattern (AddressBookParser.java:62) and the parser keeps raw arguments until validation so an embedded line break survives to be rejected (`containsLineBreak`); any line break produces `Invalid command format!` + `MESSAGE_USAGE`. It rejects a blank index or argument area, a repeated/unknown/empty prefix, an unknown `word/`-style token inside a value (e.g. `x/`), and extra unprefixed text. `a/` and `d/` are required and must be single tokens (internal whitespace is rejected), while a single empty `r/` is rejected. Validated values are built into a `PaymentRecord` via `PaymentRecord.fromText` before a `PayCommand` is returned.
+- `LogicManager` maps an `IOException` from a `PayCommand` to `PayCommand.MESSAGE_SAVE_FAILURE` (LogicManager.java:159), so a failed write restores the previous payment data in memory and on disk, exactly like `diet`, membership, and body mutations.
+- `ui.CommandCatalog` registers `PayCommand` for usage hints and the help window.
+- `ui.ClientDetailPanel#showPayments` renders the client's payments: it sorts a copy by date (oldest first) with entry order within a date, shows `None` for an empty history or `N record(s)`, and adds one fixed-width `payment-row` per record with a monospace date, a right-aligned monospace amount, and an optional wrapable remarks label. Selection changes rebuild the rows, so switching clients never leaves a stale payment row.
+
+Automated coverage includes model validation and immutability, JSON round trips and legacy absence, parser boundary cases, filtered-list targeting, preservation by other client-update commands, selected-client display, and the save-failure path. Manual scenarios are below.
+
 ### Body progress tracker
 
 Implemented for v1.4. The [feature contract](featureSpecs.md#feature-10-body-progress-tracker) and [User Guide](UserGuide.md#body-progress-tracker) define user-visible behavior. The tracker supports baseline measurements, dated weight/notes, complete history, latest-to-baseline comparison, and correction/deletion.
@@ -1130,7 +1158,30 @@ Use a disposable address book with at least two clients.
 7. Run `clearmem`.<br>
    Expected: With no plan assigned, the status message shows `Cleared all membership plans.` The catalog is now empty (`view mem` shows `No membership plans available.`), while both clients and their other data are unchanged.
 8. Run `addmem n/Platinum p/200 s/40`, then `clear`, then `view mem`.<br>
-   Expected: `clear` deletes all clients, but the Platinum plan is still listed, confirming that clearing clients does not delete membership plans.
+    Expected: `clear` deletes all clients, but the Platinum plan is still listed, confirming that clearing clients does not delete membership plans.
+
+### Payment records acceptance checks
+
+Use a disposable address book with at least two clients. If needed, add a uniquely named client and run `find` so the target is displayed at index 1.
+
+1. Run `pay 1 a/150 d/2026-10-20`.<br>
+   Expected: `Recorded payment for NAME: 150.00 on 2026-10-20.` The Payments section shows one record, the card summary reads `1 record`, and the plan balance and price are unchanged.
+2. Run `pay 1 d/2026-10-19 a/75.50 r/October membership payment`.<br>
+   Expected: The record is added. The section lists both records oldest first (`2026-10-19` before `2026-10-20`); the amount is right-aligned and two decimals, and the remarks wrap.
+3. Repeat the command from step 1.<br>
+   Expected: A second identical record is added and the summary reads `2 records`. Repeated records are allowed and stay in entry order for the same date.
+4. Try `pay 1 a/0 d/2026-10-20`, `pay 1 a/-5 d/2026-10-20`, `pay 1 a/1.234 d/2026-10-20`, `pay 1 a/S$150 d/2026-10-20`, `pay 1 a/150 d/2026-13-40`, `pay 1 a/150 d/2026-10-20 x/extra`, and `pay 1 a/150 a/200 d/2026-10-20`.<br>
+   Expected: Each is rejected with the relevant amount or date error, or with `Invalid command format!` for the unknown-prefix, extra-text, and repeated-prefix cases. No record is added and the summary is unchanged.
+5. Try `pay 0 a/150 d/2026-10-20` and `pay 99 a/150 d/2026-10-20`.<br>
+   Expected: `The person index provided is invalid.` for an index outside the displayed list.
+6. Run `pay 1 a/150 d/2026-10-20 r/`.<br>
+   Expected: `Invalid command format!` followed by the `pay` usage; the empty `r/` is rejected.
+7. Close and restart the app, then find and select the same client.<br>
+   Expected: Both records remain, oldest first, with the same amounts and remarks.
+8. Run an unrelated command such as `diet 1 t/1800 kcal` or `amem Gold 1`, then restart.<br>
+   Expected: Payment records are preserved alongside the other change.
+9. Delete the client with `delete`, then restart.<br>
+   Expected: The client and their payments are gone.
 
 ### Body progress tracker acceptance checks
 
