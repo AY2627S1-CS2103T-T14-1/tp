@@ -143,6 +143,36 @@ public final class PaymentRecord {
     }
 
     /**
+     * Validates and canonicalizes remarks for loading persisted payment data written by a previous
+     * version. Unicode space separators (for example non-breaking spaces) are normalized to regular
+     * spaces and outer whitespace is trimmed, so pasted text such as {@code fee\u00A0paid} loads as
+     * {@code fee paid}.
+     *
+     * <p>Unlike {@link #parseRemarks}, blankness is judged with {@link String#strip()} semantics, so a
+     * remark made solely of non-breaking (or other {@code SPACE_SEPARATOR}) characters is still treated
+     * as the non-blank value a previous version could save. Such a value normalizes to an empty string,
+     * which the caller converts to an absent remark; this keeps startup working for data saved before
+     * non-breaking spaces were normalized. Genuinely invalid remarks (line breaks, control characters,
+     * or those outside 1 to 300 characters) still throw. This is the loader-only compatibility path:
+     * {@link #fromText} keeps rejecting blank remarks so new commands enforce
+     * {@link #MESSAGE_REMARKS_CONSTRAINTS}.
+     *
+     * @return the normalized form of {@code test}, or an empty string if it is blank after normalizing
+     *         Unicode spaces
+     * @throws IllegalArgumentException if {@code test} is not a valid remark under the saving version
+     */
+    public static String canonicalizeForLoading(String test) {
+        if (test == null) {
+            return "";
+        }
+        String trimmed = test.strip();
+        checkArgument(test.codePoints().allMatch(PaymentRecord::isPrintable), MESSAGE_REMARKS_CONSTRAINTS);
+        int length = trimmed.codePointCount(0, trimmed.length());
+        checkArgument(length >= 1 && length <= MAX_REMARKS_LENGTH, MESSAGE_REMARKS_CONSTRAINTS);
+        return canonicalizeRemarks(test);
+    }
+
+    /**
      * Returns the canonical form of the remarks: Unicode space separators (for example
      * non-breaking spaces) are replaced with regular spaces and outer whitespace is trimmed, so
      * pasted text such as {@code fee\u00A0paid} is treated the same as {@code fee paid}.

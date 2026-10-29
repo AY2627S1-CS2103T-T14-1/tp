@@ -11,7 +11,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -41,17 +40,13 @@ public class EditCommandParser implements Parser<EditCommand> {
     private static final int MAX_SUGGESTION_DISTANCE = 1;
 
     /**
-     * Slash-joined enumeration compounds that are always ordinary text rather than a mistyped
-     * prefix. The {@code edit} near-miss check would otherwise report each of these as a typo of a
-     * single-letter prefix (for example {@code on/off} as {@code n/}); listing them lets normal
-     * phrases such as {@code Track on/off trends} be saved while still rejecting a genuine typo
-     * such as {@code ad/} in {@code ad/orchard Road}.
+     * The maximum length of the word after a slash for {@code <letters>/} to be treated as ordinary
+     * text (a slash joining two short words such as {@code on/off}, or a unit ratio such as
+     * {@code kg/week}) rather than a mistyped prefix. Longer or non-alphabetic values (for example the
+     * {@code orchard} in {@code ad/orchard Road} or the {@code 18} in {@code ad/18 Clementi Road}) are
+     * still examined for a near miss.
      */
-    private static final Set<String> SLASH_COMPOUNDS = Set.of(
-            "a/b", "b/a", "c/o", "x/y", "y/x",
-            "on/off", "off/on", "in/out", "out/in",
-            "up/down", "down/up", "am/pm", "pm/am",
-            "and/or", "or/and");
+    private static final int MAX_COMPOUND_WORD_LENGTH = 5;
 
     /**
      * Parses the given {@code String} of arguments in the context of the EditCommand
@@ -129,8 +124,13 @@ public class EditCommandParser implements Parser<EditCommand> {
      * <p>Because the argument tokenizer only recognizes the {@code edit} prefixes, such a mistyped
      * token is otherwise silently absorbed into the value of the nearest recognized prefix (for
      * example the fitness goal) instead of being reported. Only unambiguous near misses are
-     * rejected, so ordinary text that merely contains a slash (for example {@code c/o},
-     * {@code and/or}, {@code km/h} or {@code w/}) is left untouched.
+     * rejected, so ordinary text that contains a slash joining two short words (for example
+     * {@code c/o}, {@code and/or}, {@code on/off} or {@code km/h}) or a unit ratio (for example
+     * {@code kg/week}) is left untouched. This is decided by the word after the slash: when it is
+     * alphabetic and at most {@value #MAX_COMPOUND_WORD_LENGTH} letters long (ignoring any trailing
+     * punctuation, so {@code on/off,} still matches) the token is ordinary text; a longer or
+     * non-alphabetic value, such as the typo {@code ad/} in {@code ad/orchard Road} or
+     * {@code ad/18 Clementi Road}, is still reported.
      *
      * @throws ParseException if a near-miss prefix-shaped token is found inside any recognized
      *                        prefix's value
@@ -166,16 +166,15 @@ public class EditCommandParser implements Parser<EditCommand> {
             if (EDIT_PREFIXES.contains(new Prefix(letters + "/"))) {
                 continue;
             }
-            // A slash joining a known enumeration compound (for example "on/off", "up/down",
-            // "in/out", "am/pm", "and/or") is ordinary text, not a mistyped prefix, so it must not
-            // be flagged. Only the leading letters of the word after the slash are compared, so a
-            // trailing comma or full stop (for example "on/off,") still matches. A genuine typo such
-            // as "ad/" attaches a value rather than a fixed compound (for example "ad/18 Clementi
-            // Road" or "ad/orchard Road"), which is not in SLASH_COMPOUNDS and is flagged below.
+            // A slash that joins two short words (for example "on/off", "up/down", "in/out", "am/pm")
+            // or a unit ratio (for example "kg/week", "cal/day") is ordinary text, not a mistyped
+            // prefix, so it must not be flagged. Only the leading letters of the word after the slash
+            // are compared, so trailing punctuation (for example "on/off," or "in/out.") still matches.
+            // A longer or non-alphabetic value (for example the typo "ad/" in "ad/18 Clementi Road" or
+            // "ad/orchard Road") is not one of these and is still examined for a near miss below.
             String afterSlash = token.substring(slashIndex + 1);
-            String secondWord = afterSlash.split("[^A-Za-z]+", 2)[0];
-            if (secondWord.length() > 0
-                    && SLASH_COMPOUNDS.contains((letters + "/" + secondWord).toLowerCase(Locale.ROOT))) {
+            int nextWordLength = afterSlash.split("[^A-Za-z]+", 2)[0].length();
+            if (nextWordLength > 0 && nextWordLength <= MAX_COMPOUND_WORD_LENGTH) {
                 continue;
             }
             if (uniqueClosestPrefix(letters) != null) {

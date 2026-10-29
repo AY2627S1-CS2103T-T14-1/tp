@@ -337,6 +337,10 @@ public class EditCommandParserTest {
         String punctuated = targetIndex.getOneBased() + " g/Track on/off, in/out.";
         assertParseSuccess(parser, punctuated, new EditCommand(targetIndex,
                 new EditPersonDescriptorBuilder().withGoal("Track on/off, in/out.").build()));
+
+        String unit = targetIndex.getOneBased() + " g/Lose 0.5 kg/week";
+        assertParseSuccess(parser, unit, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Lose 0.5 kg/week").build()));
     }
 
     @Test
