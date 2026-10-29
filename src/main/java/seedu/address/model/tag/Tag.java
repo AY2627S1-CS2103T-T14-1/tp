@@ -11,6 +11,8 @@ public class Tag {
 
     public static final String MESSAGE_CONSTRAINTS = "Tag names should be alphanumeric";
     public static final String VALIDATION_REGEX = "\\p{Alnum}+";
+    public static final int MAX_TAGS = 10;
+    public static final String MESSAGE_TOO_MANY_TAGS = "At most " + MAX_TAGS + " distinct tags are allowed.";
 
     public final String tagName;
 

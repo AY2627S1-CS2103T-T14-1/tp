@@ -1662,7 +1662,7 @@ No baseline: use the same missing-baseline message as history. Baseline only: `N
 
 #### Corrections: `bodydelete`
 
-Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion has no confirmation step. Once Feature 13 is integrated, deletion will participate in shared session-scoped undo/redo; after restart, that history will be unavailable. Until that integration is merged, deletion cannot be undone through an application command.
+Identify a progress entry by date within the indexed client; other clients are unaffected. A missing baseline uses the shared missing-baseline error. A valid date with no progress entry reports `No body progress entry exists for NAME on DATE.` Specifying the baseline date reports `The baseline cannot be deleted with bodydelete. Use bodybase to correct it.` Deletion has no confirmation step. It participates in the integrated shared session-scoped undo/redo (Feature 13), with up to 50 retained changes; after restart, that history is unavailable.
 
 Success: `Deleted body progress for NAME on DATE.` Deleting the last entry retains the baseline and produces empty history/comparison states. There is no command to delete only the baseline; it can be corrected by replacement.
 
@@ -1672,7 +1672,7 @@ Body data belongs to a client. Contact edits, diet/workout changes, remarks, sch
 
 Save baseline and entries with the client. Older files with a missing/null body-progress field load as an empty tracker. Persist exact measurement values, optional notes and dates; restore chronological order on load. Reject malformed data (including null list elements, wrong field types, invalid dates/numbers, duplicate entry dates, entries without a baseline, or entries on/before its date) through the normal data-loading error path, not unchecked exceptions or silent omission. Loading also rejects future measurement dates against the local date; tests must control the clock.
 
-Every mutation validates its full candidate before replacing the client. A save failure restores the previous in-memory client and saved file, including all other feature data, and reports `The body progress change could not be saved. No changes were made.` This includes baseline creation/replacement, entry creation/replacement and deletion. History/comparison do not modify measurements or other domain data. No partial write or later successful command may persist a previously rejected mutation.
+Every mutation validates its full candidate before replacing the client. A save failure restores the previous in-memory client and saved file, including all other feature data, and reports `The body progress change could not be saved. No changes were made.` This includes baseline creation/replacement, entry creation/replacement and deletion. History/comparison do not modify measurements or other domain data, do not write or create the data file, and remain available with read-only storage. They preserve shared undo/redo history. No partial write or later successful command may persist a previously rejected mutation.
 
 ### 7. Duplicate handling
 
@@ -1710,7 +1710,7 @@ all four assigned capabilities and the correction/deletion paths above; strict v
 
 #### Nice to have or later
 
-circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. Shared application-wide undo/redo is specified under Feature 13 and depends on that feature's integration. These are not needed to complete this v1.4 feature.
+circumference/body-fat measurements, repeated height, charts, BMI/health interpretations, photographs, reminders, imports/exports, multiple measurements on one day, baseline version history and a dedicated tracker undo/redo command. Shared application-wide undo/redo is already integrated and specified under Feature 13; a separate tracker-specific history is not needed to complete this feature.
 
 ## Feature 11: Membership plan
 
