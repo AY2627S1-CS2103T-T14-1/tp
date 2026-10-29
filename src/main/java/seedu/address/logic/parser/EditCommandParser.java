@@ -83,8 +83,8 @@ public class EditCommandParser implements Parser<EditCommand> {
             editPersonDescriptor.setAddress(ParserUtil.parseAddress(argMultimap.getValue(PREFIX_ADDRESS).get()));
         }
         if (argMultimap.getValue(PREFIX_GOAL).isPresent()) {
-            String goal = argMultimap.getValue(PREFIX_GOAL).get();
-            if (goal.trim().isEmpty()) {
+            String goal = argMultimap.getRawValue(PREFIX_GOAL).get();
+            if (goal.isEmpty() || goal.chars().allMatch(character -> character == ' ')) {
                 editPersonDescriptor.clearGoal();
             } else {
                 editPersonDescriptor.setGoal(ParserUtil.parseGoal(goal));
