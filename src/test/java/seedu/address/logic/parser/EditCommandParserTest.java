@@ -347,8 +347,8 @@ public class EditCommandParserTest {
     public void parse_mistypedPrefixWithLowercaseValue_rejected() {
         // A mistyped prefix is still reported even when the value it attaches to begins with a
         // lowercase word. "ad/" in "ad/orchard Road" is a genuine typo of "a/" (address) and is
-        // rejected; the slash-compound exemption only applies to the fixed enumeration forms, never
-        // to "ad/orchard". This mirrors the uppercase-value case "ad/18 Clementi Road".
+        // rejected because "orchard" exceeds the short-word exemption. A numeric value such as
+        // "ad/18 Clementi Road" is also examined for a near miss.
         Index targetIndex = INDEX_FIRST_PERSON;
         String userInput = targetIndex.getOneBased() + " g/Run ad/orchard Road";
 
