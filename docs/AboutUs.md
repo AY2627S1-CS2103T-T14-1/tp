@@ -5,7 +5,7 @@ title: About Us
 
 We are a team based in the [School of Computing, National University of Singapore](https://www.comp.nus.edu.sg).
 
-You can reach us at the email `seer[at]comp.nus.edu.sg`
+For bug reports and suggestions, use the [Fittix issue tracker](https://github.com/AY2627S1-CS2103T-T14-1/tp/issues).
 
 ## Project team
 
@@ -26,7 +26,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/itzkhoadao)]
 
 * Role: Developer
-* Responsibilities: Diet goals
+* Responsibilities: Diet goals and body progress tracking
 
 ### Pham Doan Gia Hien
 
@@ -41,7 +41,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 <img src="images/fikoww.png" width="200px">
 
-[[github](http://github.com/fikoww)]
+[[github](https://github.com/fikoww)]
 
 * Role: Developer
 * Responsibilities: Workout session logging
@@ -51,7 +51,6 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 <img src="images/zkw2004.png" width="200px">
 
 [[github](https://github.com/zkw2004)]
-[[portfolio](team/johndoe.md)]
 
 * Role: Developer
 * Responsibilities: UI
