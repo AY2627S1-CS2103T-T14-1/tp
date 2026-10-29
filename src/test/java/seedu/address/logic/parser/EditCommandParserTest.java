@@ -271,7 +271,7 @@ public class EditCommandParserTest {
 
     @Test
     public void parse_distantUnknownPrefixInsideGoal_notFlagged() {
-        // A letter-prefixed token that is not a near miss of any recognised prefix is ordinary text.
+        // A letter-prefixed token that is not a near miss of any recognized prefix is ordinary text.
         Index targetIndex = INDEX_FIRST_PERSON;
         String userInput = targetIndex.getOneBased() + " g/Build strength rr/5";
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
