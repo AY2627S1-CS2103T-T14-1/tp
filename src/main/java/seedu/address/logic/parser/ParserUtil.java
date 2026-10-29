@@ -9,6 +9,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
@@ -33,6 +34,23 @@ public class ParserUtil {
     public static final int MAX_ADD_ADDRESS_LENGTH = 200;
     public static final String MESSAGE_ADD_ADDRESS_CONSTRAINTS =
             "Address must contain 1 to 200 printable characters without line breaks.";
+    private static final Pattern UNKNOWN_PREFIX_TOKEN = Pattern.compile("[A-Za-z]{1,2}/.*");
+
+    /**
+     * Returns true if any whitespace-separated word in {@code value} looks like a parameter prefix: one or two
+     * letters followed by a slash, such as {@code x/} or {@code xy/unknown}. Such a word means an unsupported or
+     * mistyped prefix was absorbed into the value. Longer words such as {@code and/or}, and slashes after digits
+     * such as {@code 1/2}, are treated as ordinary text.
+     */
+    public static boolean containsUnknownPrefixToken(String value) {
+        requireNonNull(value);
+        for (String token : value.split("\\s+")) {
+            if (!token.isEmpty() && UNKNOWN_PREFIX_TOKEN.matcher(token).matches()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be

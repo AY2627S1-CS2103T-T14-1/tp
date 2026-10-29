@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -42,6 +43,19 @@ public class ParserUtilTest {
     private static final String VALID_EXERCISE_WEIGHT = "60";
 
     private static final String WHITESPACE = " \t\r\n";
+
+    @Test
+    public void containsUnknownPrefixToken() {
+        assertTrue(ParserUtil.containsUnknownPrefixToken("No dairy x/unknown"));
+        assertTrue(ParserUtil.containsUnknownPrefixToken("xy/"));
+        assertTrue(ParserUtil.containsUnknownPrefixToken("a\tR/b"));
+
+        assertFalse(ParserUtil.containsUnknownPrefixToken(""));
+        assertFalse(ParserUtil.containsUnknownPrefixToken("Peanut allergy"));
+        assertFalse(ParserUtil.containsUnknownPrefixToken("Dairy/eggs and/or nuts"));
+        assertFalse(ParserUtil.containsUnknownPrefixToken("1/2 portion"));
+        assertFalse(ParserUtil.containsUnknownPrefixToken("ends with x /"));
+    }
 
     @Test
     public void parseIndex_invalidInput_throwsParseException() {

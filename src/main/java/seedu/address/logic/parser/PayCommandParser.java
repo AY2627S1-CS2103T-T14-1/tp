@@ -8,7 +8,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_REMARK;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.PayCommand;
@@ -23,7 +22,6 @@ public class PayCommandParser implements Parser<PayCommand> {
     private static final String AMOUNT_PREFIX = PREFIX_ADDRESS.getPrefix();
     private static final String DATE_PREFIX = PREFIX_DATE.getPrefix();
     private static final String REMARKS_PREFIX = PREFIX_REMARK.getPrefix();
-    private static final Pattern UNKNOWN_PREFIX_TOKEN = Pattern.compile("[A-Za-z]{1,2}/.*");
 
     @Override
     public PayCommand parse(String args) throws ParseException {
@@ -78,7 +76,7 @@ public class PayCommandParser implements Parser<PayCommand> {
             int valueStart = position + prefix.length();
             int nextPrefix = findNextPrefixStart(argumentArea, valueStart);
             String value = argumentArea.substring(valueStart, nextPrefix).strip();
-            if (values.containsKey(prefix) || value.isEmpty() || containsUnknownPrefixToken(value)) {
+            if (values.containsKey(prefix) || value.isEmpty() || ParserUtil.containsUnknownPrefixToken(value)) {
                 throw invalidFormat();
             }
             if (!prefix.equals(REMARKS_PREFIX) && containsWhitespace(value)) {
@@ -114,15 +112,6 @@ public class PayCommandParser implements Parser<PayCommand> {
             }
         }
         return text.length();
-    }
-
-    private static boolean containsUnknownPrefixToken(String value) {
-        for (String token : value.split("\\s+")) {
-            if (!token.isEmpty() && UNKNOWN_PREFIX_TOKEN.matcher(token).matches()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static boolean containsWhitespace(String value) {

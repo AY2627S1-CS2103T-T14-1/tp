@@ -1530,6 +1530,8 @@ The command replaces the complete current list rather than appending to it. Dupl
 
 **Invalid clear form:** An empty `r/` cannot be repeated or combined with a nonblank restriction.
 
+**Unknown prefix:** The command is rejected using the restriction command usage message when any restriction contains a word made of one or two letters followed by a slash, such as `x/unknown` or `R/`. This stops a mistyped parameter from being saved as part of a restriction. Longer words such as `and/or` or `Dairy/eggs`, and slashes after digits such as `1/2`, are ordinary text. The existing restrictions are unchanged.
+
 **Invalid client index or format:** The command is rejected using the restriction command usage message when the index cannot be parsed.
 
 **Index outside the displayed list:** `The person index provided is invalid.`
