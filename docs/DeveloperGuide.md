@@ -13,6 +13,8 @@ guide: true
 
 - Fittix is built on the [AddressBook-Level3 project](https://github.com/se-edu/addressbook-level3); the original architecture, setup guide, and some diagrams were adapted for this project.
 - The desktop interface uses [JavaFX](https://openjfx.io/), and the documentation site uses [Jekyll](https://jekyllrb.com/) with the [Minima theme](https://github.com/jekyll/minima).
+- The interface bundles the [Manrope](https://github.com/sharanda/manrope) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) fonts under the SIL Open Font License; their licence files are in `src/main/resources/fonts/`.
+- Architecture and design diagrams were created with [PlantUML](https://plantuml.com/).
 
 ---
 
