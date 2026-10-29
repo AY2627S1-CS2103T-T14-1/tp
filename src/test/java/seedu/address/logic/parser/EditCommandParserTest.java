@@ -333,6 +333,24 @@ public class EditCommandParserTest {
         String upDown = targetIndex.getOneBased() + " g/Track up/down trends";
         assertParseSuccess(parser, upDown, new EditCommand(targetIndex,
                 new EditPersonDescriptorBuilder().withGoal("Track up/down trends").build()));
+
+        String punctuated = targetIndex.getOneBased() + " g/Track on/off, in/out.";
+        assertParseSuccess(parser, punctuated, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Track on/off, in/out.").build()));
+    }
+
+    @Test
+    public void parse_mistypedPrefixWithLowercaseValue_rejected() {
+        // A mistyped prefix is still reported even when the value it attaches to begins with a
+        // lowercase word. "ad/" in "ad/orchard Road" is a genuine typo of "a/" (address) and is
+        // rejected; the slash-compound exemption only applies to the fixed enumeration forms, never
+        // to "ad/orchard". This mirrors the uppercase-value case "ad/18 Clementi Road".
+        Index targetIndex = INDEX_FIRST_PERSON;
+        String userInput = targetIndex.getOneBased() + " g/Run ad/orchard Road";
+
+        String expectedMessage = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "ad/")
+                + " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN, "a/ (address)");
+        assertParseFailure(parser, userInput, expectedMessage);
     }
 
     @Test

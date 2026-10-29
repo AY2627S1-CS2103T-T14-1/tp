@@ -11,6 +11,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -38,6 +39,19 @@ public class EditCommandParser implements Parser<EditCommand> {
             PREFIX_TAG, "tag");
 
     private static final int MAX_SUGGESTION_DISTANCE = 1;
+
+    /**
+     * Slash-joined enumeration compounds that are always ordinary text rather than a mistyped
+     * prefix. The {@code edit} near-miss check would otherwise report each of these as a typo of a
+     * single-letter prefix (for example {@code on/off} as {@code n/}); listing them lets normal
+     * phrases such as {@code Track on/off trends} be saved while still rejecting a genuine typo
+     * such as {@code ad/} in {@code ad/orchard Road}.
+     */
+    private static final Set<String> SLASH_COMPOUNDS = Set.of(
+            "a/b", "b/a", "c/o", "x/y", "y/x",
+            "on/off", "off/on", "in/out", "out/in",
+            "up/down", "down/up", "am/pm", "pm/am",
+            "and/or", "or/and");
 
     /**
      * Parses the given {@code String} of arguments in the context of the EditCommand
@@ -152,11 +166,16 @@ public class EditCommandParser implements Parser<EditCommand> {
             if (EDIT_PREFIXES.contains(new Prefix(letters + "/"))) {
                 continue;
             }
-            // A slash that joins two ordinary words (for example "on/off", "up/down", "in/out",
-            // "am/pm") is normal text, not a mistyped prefix, so it must not be flagged. A genuine
-            // typo such as "ad/" only attaches a value after the slash (for example "ad/18 Clementi
-            // Road"), so a purely alphabetic remainder distinguishes the two.
-            if (token.substring(slashIndex + 1).matches("[a-z]+")) {
+            // A slash joining a known enumeration compound (for example "on/off", "up/down",
+            // "in/out", "am/pm", "and/or") is ordinary text, not a mistyped prefix, so it must not
+            // be flagged. Only the leading letters of the word after the slash are compared, so a
+            // trailing comma or full stop (for example "on/off,") still matches. A genuine typo such
+            // as "ad/" attaches a value rather than a fixed compound (for example "ad/18 Clementi
+            // Road" or "ad/orchard Road"), which is not in SLASH_COMPOUNDS and is flagged below.
+            String afterSlash = token.substring(slashIndex + 1);
+            String secondWord = afterSlash.split("[^A-Za-z]+", 2)[0];
+            if (secondWord.length() > 0
+                    && SLASH_COMPOUNDS.contains((letters + "/" + secondWord).toLowerCase(Locale.ROOT))) {
                 continue;
             }
             if (uniqueClosestPrefix(letters) != null) {
