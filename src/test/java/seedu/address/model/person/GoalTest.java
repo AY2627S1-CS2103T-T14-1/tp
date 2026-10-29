@@ -24,6 +24,15 @@ public class GoalTest {
     }
 
     @Test
+    public void constructor_leadingOrTrailingControlCharacter_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new Goal("\fabc"));
+        assertThrows(IllegalArgumentException.class, () -> new Goal("\u000Babc"));
+        assertThrows(IllegalArgumentException.class, () -> new Goal("abc\f"));
+        assertThrows(IllegalArgumentException.class, () -> new Goal("\tabc"));
+        assertFalse(Goal.isValidGoal("\f\u000B Run \f"));
+    }
+
+    @Test
     public void constructor_validGoal_success() {
         new Goal("Fat loss");
         new Goal("5");
