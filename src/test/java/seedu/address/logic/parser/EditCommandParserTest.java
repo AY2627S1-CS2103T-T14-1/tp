@@ -267,4 +267,113 @@ public class EditCommandParserTest {
         assertParseFailure(parser, index + ADDRESS_DESC_AMY + ADDRESS_DESC_BOB,
                 EditCommand.MESSAGE_REPEATED_PREFIX);
     }
+
+    @Test
+    public void parse_mistypedPrefixAbsorbedIntoGoal_rejected() {
+        // Reproduces issue #253: a mistyped "ad/" address token is swallowed by the goal value.
+        String userInput = INDEX_FIRST_PERSON.getOneBased() + " g/Run 10 km ad/18 Clementi Road";
+
+        String expectedMessage = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "ad/")
+                + " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN, "a/ (address)");
+        assertParseFailure(parser, userInput, expectedMessage);
+    }
+
+    @Test
+    public void parse_distantUnknownPrefixInsideGoal_notFlagged() {
+        // A letter-prefixed token that is not a near miss of any recognized prefix is ordinary text.
+        Index targetIndex = INDEX_FIRST_PERSON;
+        String userInput = targetIndex.getOneBased() + " g/Build strength rr/5";
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withGoal("Build strength rr/5").build();
+        assertParseSuccess(parser, userInput, new EditCommand(targetIndex, descriptor));
+    }
+
+    @Test
+    public void parse_slashInOrdinaryText_notFlagged() {
+        // Ordinary text containing a slash must not be mistaken for a mistyped prefix.
+        Index targetIndex = INDEX_FIRST_PERSON;
+
+        String address = targetIndex.getOneBased() + " a/Blk 30 c/o John Tan";
+        assertParseSuccess(parser, address, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withAddress("Blk 30 c/o John Tan").build()));
+
+        String andOr = targetIndex.getOneBased() + " g/Run 5km and/or swim";
+        assertParseSuccess(parser, andOr, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Run 5km and/or swim").build()));
+
+        String unit = targetIndex.getOneBased() + " g/Cycle at 25 km/h";
+        assertParseSuccess(parser, unit, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Cycle at 25 km/h").build()));
+
+        String with = targetIndex.getOneBased() + " g/Lose 5kg w/ diet";
+        assertParseSuccess(parser, with, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Lose 5kg w/ diet").build()));
+    }
+
+    @Test
+    public void parse_twoLetterSlashTokenNearSingleLetterPrefix_accepted() {
+        // A two-letter <letters>/<letters> token such as on/off, in/out, am/pm or up/down joins two
+        // ordinary words with a slash. It looks like a near miss of a single-letter prefix but is
+        // ordinary goal text, not a mistyped prefix, so it must be accepted. The genuine typo
+        // "ad/" in "ad/18 Clementi Road" is still rejected (see parse_mistypedPrefixAbsorbedIntoGoal).
+        Index targetIndex = INDEX_FIRST_PERSON;
+
+        String onOff = targetIndex.getOneBased() + " g/Track on/off trends";
+        assertParseSuccess(parser, onOff, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Track on/off trends").build()));
+
+        String inOut = targetIndex.getOneBased() + " g/Track in/out values";
+        assertParseSuccess(parser, inOut, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Track in/out values").build()));
+
+        String ampm = targetIndex.getOneBased() + " g/Take pill am/pm schedule";
+        assertParseSuccess(parser, ampm, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Take pill am/pm schedule").build()));
+
+        String upDown = targetIndex.getOneBased() + " g/Track up/down trends";
+        assertParseSuccess(parser, upDown, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Track up/down trends").build()));
+
+        String punctuated = targetIndex.getOneBased() + " g/Track on/off, in/out.";
+        assertParseSuccess(parser, punctuated, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Track on/off, in/out.").build()));
+
+        String unit = targetIndex.getOneBased() + " g/Lose 0.5 kg/week";
+        assertParseSuccess(parser, unit, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Lose 0.5 kg/week").build()));
+    }
+
+    @Test
+    public void parse_mistypedPrefixWithLowercaseValue_rejected() {
+        // A mistyped prefix is still reported even when the value it attaches to begins with a
+        // lowercase word. "ad/" in "ad/orchard Road" is a genuine typo of "a/" (address) and is
+        // rejected because "orchard" exceeds the short-word exemption. A numeric value such as
+        // "ad/18 Clementi Road" is also examined for a near miss.
+        Index targetIndex = INDEX_FIRST_PERSON;
+        String userInput = targetIndex.getOneBased() + " g/Run ad/orchard Road";
+
+        String expectedMessage = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "ad/")
+                + " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN, "a/ (address)");
+        assertParseFailure(parser, userInput, expectedMessage);
+    }
+
+    @Test
+    public void parse_multiWordGoalWithoutPrefixShape_success() {
+        // A normal multi-word goal must still parse successfully.
+        Index targetIndex = INDEX_FIRST_PERSON;
+        String userInput = targetIndex.getOneBased() + " g/Run 10 km three times a week";
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withGoal("Run 10 km three times a week").build();
+        assertParseSuccess(parser, userInput, new EditCommand(targetIndex, descriptor));
+    }
+
+    @Test
+    public void parse_addressWithNumberSlashNotFlagged_success() {
+        // An address value containing a digit/slash token is not treated as a parameter prefix.
+        Index targetIndex = INDEX_FIRST_PERSON;
+        String userInput = targetIndex.getOneBased() + " a/Blk 45/10 Geylor Road";
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withAddress("Blk 45/10 Geylor Road").build();
+        assertParseSuccess(parser, userInput, new EditCommand(targetIndex, descriptor));
+    }
 }

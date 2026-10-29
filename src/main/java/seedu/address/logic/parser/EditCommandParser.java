@@ -10,6 +10,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -23,6 +25,28 @@ import seedu.address.model.tag.Tag;
  * Parses input arguments and creates a new EditCommand object
  */
 public class EditCommandParser implements Parser<EditCommand> {
+
+    private static final List<Prefix> EDIT_PREFIXES = List.of(
+            PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS, PREFIX_GOAL, PREFIX_TAG);
+
+    private static final Map<Prefix, String> PREFIX_DESCRIPTIONS = Map.of(
+            PREFIX_NAME, "name",
+            PREFIX_PHONE, "phone",
+            PREFIX_EMAIL, "email",
+            PREFIX_ADDRESS, "address",
+            PREFIX_GOAL, "goal",
+            PREFIX_TAG, "tag");
+
+    private static final int MAX_SUGGESTION_DISTANCE = 1;
+
+    /**
+     * The maximum length of the word after a slash for {@code <letters>/} to be treated as ordinary
+     * text (a slash joining two short words such as {@code on/off}, or a unit ratio such as
+     * {@code kg/week}) rather than a mistyped prefix. Longer or non-alphabetic values (for example the
+     * {@code orchard} in {@code ad/orchard Road} or the {@code 18} in {@code ad/18 Clementi Road}) are
+     * still examined for a near miss.
+     */
+    private static final int MAX_COMPOUND_WORD_LENGTH = 5;
 
     /**
      * Parses the given {@code String} of arguments in the context of the EditCommand
@@ -50,6 +74,8 @@ public class EditCommandParser implements Parser<EditCommand> {
         if (hasRepeatedPrefix(argMultimap)) {
             throw new ParseException(EditCommand.MESSAGE_REPEATED_PREFIX);
         }
+
+        rejectUnknownPrefix(argMultimap);
 
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
 
@@ -88,6 +114,134 @@ public class EditCommandParser implements Parser<EditCommand> {
                 || argMultimap.getAllValues(PREFIX_EMAIL).size() > 1
                 || argMultimap.getAllValues(PREFIX_ADDRESS).size() > 1
                 || argMultimap.getAllValues(PREFIX_GOAL).size() > 1;
+    }
+
+    /**
+     * Rejects a token that is a near miss of a recognized {@code edit} prefix: a
+     * {@code <letters>/} token within {@value #MAX_SUGGESTION_DISTANCE} edits of exactly one
+     * recognized prefix (for example {@code ad/} for {@code a/}).
+     *
+     * <p>Because the argument tokenizer only recognizes the {@code edit} prefixes, such a mistyped
+     * token is otherwise silently absorbed into the value of the nearest recognized prefix (for
+     * example the fitness goal) instead of being reported. Only unambiguous near misses are
+     * rejected, so ordinary text that contains a slash joining two short words (for example
+     * {@code c/o}, {@code and/or}, {@code on/off} or {@code km/h}) or a unit ratio (for example
+     * {@code kg/week}) is left untouched. This is decided by the word after the slash: when it is
+     * alphabetic and at most {@value #MAX_COMPOUND_WORD_LENGTH} letters long (ignoring any trailing
+     * punctuation, so {@code on/off,} still matches) the token is ordinary text; a longer or
+     * non-alphabetic value, such as the typo {@code ad/} in {@code ad/orchard Road} or
+     * {@code ad/18 Clementi Road}, is still reported.
+     *
+     * @throws ParseException if a near-miss prefix-shaped token is found inside any recognized
+     *                        prefix's value
+     */
+    private static void rejectUnknownPrefix(ArgumentMultimap argMultimap) throws ParseException {
+        for (Prefix prefix : EDIT_PREFIXES) {
+            for (String value : argMultimap.getAllValues(prefix)) {
+                String unknown = findUnrecognizedPrefixToken(value);
+                if (unknown != null) {
+                    throw new ParseException(buildUnrecognizedMessage(unknown));
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the letters of the first token in {@code value} that is a near miss of a recognized
+     * {@code edit} prefix, or {@code null} if there is none.
+     */
+    private static String findUnrecognizedPrefixToken(String value) {
+        for (String token : value.trim().split("\\s+")) {
+            if (token.isEmpty()) {
+                continue;
+            }
+            int slashIndex = token.indexOf('/');
+            if (slashIndex <= 0) {
+                continue;
+            }
+            String letters = token.substring(0, slashIndex);
+            if (!letters.matches("[A-Za-z]+")) {
+                continue;
+            }
+            if (EDIT_PREFIXES.contains(new Prefix(letters + "/"))) {
+                continue;
+            }
+            // A slash that joins two short words (for example "on/off", "up/down", "in/out", "am/pm")
+            // or a unit ratio (for example "kg/week", "cal/day") is ordinary text, not a mistyped
+            // prefix, so it must not be flagged. Only the leading letters of the word after the slash
+            // are compared, so trailing punctuation (for example "on/off," or "in/out.") still matches.
+            // A longer or non-alphabetic value (for example the typo "ad/" in "ad/18 Clementi Road" or
+            // "ad/orchard Road") is not one of these and is still examined for a near miss below.
+            String afterSlash = token.substring(slashIndex + 1);
+            int nextWordLength = afterSlash.split("[^A-Za-z]+", 2)[0].length();
+            if (nextWordLength > 0 && nextWordLength <= MAX_COMPOUND_WORD_LENGTH) {
+                continue;
+            }
+            if (uniqueClosestPrefix(letters) != null) {
+                return letters;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Builds the message for a near-miss prefix-shaped token, naming the intended prefix.
+     */
+    private static String buildUnrecognizedMessage(String letters) {
+        String message = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, letters + "/");
+        Prefix closest = uniqueClosestPrefix(letters);
+        if (closest != null) {
+            message += " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN,
+                    closest.getPrefix() + " (" + PREFIX_DESCRIPTIONS.get(closest) + ")");
+        }
+        return message;
+    }
+
+    /**
+     * Returns the unique closest recognized prefix to {@code letters} when it is within
+     * {@value #MAX_SUGGESTION_DISTANCE} edits and no other recognized prefix ties that distance,
+     * or {@code null} otherwise. Requiring a unique winner keeps the suggestion deterministic and
+     * avoids flagging tokens (such as a single letter) that sit equally close to several prefixes.
+     */
+    private static Prefix uniqueClosestPrefix(String letters) {
+        Prefix bestPrefix = null;
+        int bestDistance = Integer.MAX_VALUE;
+        int bestCount = 0;
+        for (Prefix prefix : EDIT_PREFIXES) {
+            String marker = prefix.getPrefix();
+            marker = marker.substring(0, marker.length() - 1);
+            int distance = levenshteinDistance(letters, marker);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestPrefix = prefix;
+                bestCount = 1;
+            } else if (distance == bestDistance) {
+                bestCount++;
+            }
+        }
+        return bestDistance <= MAX_SUGGESTION_DISTANCE && bestCount == 1 ? bestPrefix : null;
+    }
+
+    /**
+     * Computes the Levenshtein edit distance between {@code a} and {@code b}.
+     */
+    private static int levenshteinDistance(String a, String b) {
+        int[] previous = new int[b.length() + 1];
+        int[] current = new int[b.length() + 1];
+        for (int j = 0; j <= b.length(); j++) {
+            previous[j] = j;
+        }
+        for (int i = 1; i <= a.length(); i++) {
+            current[0] = i;
+            for (int j = 1; j <= b.length(); j++) {
+                int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
+                current[j] = Math.min(Math.min(current[j - 1] + 1, previous[j] + 1), previous[j - 1] + cost);
+            }
+            int[] temp = previous;
+            previous = current;
+            current = temp;
+        }
+        return previous[b.length()];
     }
 
     /**

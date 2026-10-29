@@ -46,6 +46,14 @@ public class MembershipNameTest {
     }
 
     @Test
+    public void isValidMembershipName_rejectsNonAsciiLetters() {
+        assertFalse(MembershipName.isValidMembershipName("\u00C9lite"));
+        assertFalse(MembershipName.isValidMembershipName("caf\u00E9"));
+        assertFalse(MembershipName.isValidMembershipName("\u03B1bc"));
+        assertTrue(MembershipName.isValidMembershipName("Elite"));
+    }
+
+    @Test
     public void isValidMembershipName_allowedCharset() {
         assertTrue(MembershipName.isValidMembershipName("Gold Plus 2"));
         assertTrue(MembershipName.isValidMembershipName("O'Brien"));

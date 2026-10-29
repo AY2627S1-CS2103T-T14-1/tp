@@ -17,16 +17,18 @@ import java.util.Locale;
 public class MembershipName {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Membership plan name must contain 1 to 50 characters and may contain only letters, digits, "
-                    + "spaces, apostrophes, hyphens, and full stops.";
+            "Membership plan name must contain 1 to 50 characters and may contain only ASCII letters, "
+                    + "digits, spaces, apostrophes, hyphens, and full stops.";
 
     public static final int MAX_LENGTH = 50;
 
     /*
-     * Letters, digits, spaces, apostrophes, hyphens and full stops, with at least one letter or digit.
+     * ASCII letters, digits, spaces, apostrophes, hyphens and full stops, with at least one
+     * letter or digit. Unicode letters (for example accented characters) are intentionally not
+     * allowed; using an explicit ASCII class keeps the restriction clear and stable.
      * Length is checked separately so the regex stays readable.
      */
-    public static final String VALIDATION_REGEX = "(?=.*[\\p{Alnum}])[\\p{Alnum} .'\\-]*";
+    public static final String VALIDATION_REGEX = "(?=.*[A-Za-z0-9])[A-Za-z0-9 .'\\-]*";
 
     public final String value;
 

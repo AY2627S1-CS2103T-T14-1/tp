@@ -55,7 +55,14 @@ class JsonAdaptedPaymentRecord {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, "date"));
         }
         try {
-            return PaymentRecord.fromText(amount, date, Optional.ofNullable(remarks));
+            // Load remarks through the loader compatibility path: a value a previous version could
+            // save (for example a non-breaking-space-only remark) is normalized and treated as an
+            // absent remark instead of failing startup. New commands keep rejecting blank remarks.
+            String normalized = PaymentRecord.canonicalizeForLoading(remarks);
+            Optional<String> remarksForLoad = normalized.isEmpty()
+                    ? Optional.empty()
+                    : Optional.of(normalized);
+            return PaymentRecord.fromText(amount, date, remarksForLoad);
         } catch (IllegalArgumentException exception) {
             throw new IllegalValueException(exception.getMessage());
         }

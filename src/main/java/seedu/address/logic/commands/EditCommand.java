@@ -64,6 +64,10 @@ public class EditCommand extends Command {
     public static final String MESSAGE_DUPLICATE_PERSON = "This person already exists in the address book.";
     public static final String MESSAGE_NO_CHANGES =
             "No changes made: the new values are the same as the current details.";
+    public static final String MESSAGE_UNRECOGNIZED_PREFIX =
+            "Parameter '%1$s' is not a valid parameter prefix. Recognized parameter prefixes are: "
+            + "n/ (name), p/ (phone), e/ (email), a/ (address), g/ (goal) and t/ (tag).";
+    public static final String MESSAGE_DID_YOU_MEAN = "Did you mean '%1$s'?";
 
     private final Index index;
     private final EditPersonDescriptor editPersonDescriptor;
