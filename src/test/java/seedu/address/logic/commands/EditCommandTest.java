@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_BOB;
@@ -17,6 +18,7 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -176,6 +178,41 @@ public class EditCommandTest {
         expectedModel.setPerson(model.getFilteredPersonList().get(0), editedPerson);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_nameMatchesOtherClientWithDifferentPhone_success() {
+        Person firstPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Person secondPerson = model.getFilteredPersonList().get(INDEX_SECOND_PERSON.getZeroBased());
+        EditCommand editCommand = new EditCommand(INDEX_SECOND_PERSON,
+                new EditPersonDescriptorBuilder().withName(firstPerson.getName().fullName).build());
+
+        Person editedPerson = new PersonBuilder(secondPerson).withName(firstPerson.getName().fullName).build();
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPerson(secondPerson, editedPerson);
+
+        assertCommandSuccess(editCommand, model, String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS,
+                editedPerson.getName(), editedPerson.getPhone()), expectedModel);
+    }
+
+    @Test
+    public void execute_nameAndPhoneMatchOtherClient_failure() {
+        Person firstPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        EditCommand editCommand = new EditCommand(INDEX_SECOND_PERSON, new EditPersonDescriptorBuilder()
+                .withName(firstPerson.getName().fullName).withPhone(firstPerson.getPhone().value).build());
+
+        assertCommandFailure(editCommand, model, EditCommand.MESSAGE_DUPLICATE_PERSON);
+    }
+
+    @Test
+    public void execute_caseInsensitiveNameAndPhoneMatchOtherClient_failure() {
+        Person firstPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        String caseVariant = firstPerson.getName().fullName.toUpperCase(Locale.ROOT);
+        assertNotEquals(firstPerson.getName().fullName, caseVariant);
+        EditCommand editCommand = new EditCommand(INDEX_SECOND_PERSON, new EditPersonDescriptorBuilder()
+                .withName(caseVariant).withPhone(firstPerson.getPhone().value).build());
+
+        assertCommandFailure(editCommand, model, EditCommand.MESSAGE_DUPLICATE_PERSON);
     }
 
     @Test

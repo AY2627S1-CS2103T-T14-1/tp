@@ -56,6 +56,18 @@ public class AddCommandTest {
     }
 
     @Test
+    public void execute_sameNameDifferentPhone_acceptedByModel() throws Exception {
+        Person existing = new PersonBuilder().withName("Alice").withPhone("91234567").build();
+        Person sameNameDifferentPhone = new PersonBuilder().withName("Alice").withPhone("98765432").build();
+        ModelStubAcceptingPersonAdded modelStub = new ModelStubAcceptingPersonAdded();
+        modelStub.addPerson(existing);
+
+        new AddCommand(sameNameDifferentPhone).execute(modelStub);
+
+        assertEquals(List.of(existing, sameNameDifferentPhone), modelStub.personsAdded);
+    }
+
+    @Test
     public void equals() {
         Person alice = new PersonBuilder().withName("Alice").build();
         Person bob = new PersonBuilder().withName("Bob").build();
