@@ -44,6 +44,8 @@ public class PersonListPanel extends UiPart<Region> {
             if (event.getCode() == KeyCode.UP || event.getCode() == KeyCode.DOWN) {
                 int delta = event.getCode() == KeyCode.UP ? -1 : 1;
                 selectDisplayedIndex(Math.max(0, Math.min(displayedPeople.size() - 1, getSelectedIndex() + delta)));
+                // Reveal even when the selection stays put at either end, in case the card was scrolled away.
+                revealSelection();
                 event.consume();
             }
         });
@@ -130,9 +132,20 @@ public class PersonListPanel extends UiPart<Region> {
         }
     }
 
-    /** Runs {@code handler} with the selected card whenever selection moves to a different client. */
+    /**
+     * Runs {@code handler} with the selected card whenever it should be brought into view: when selection
+     * moves to a different client, and whenever {@link #revealSelection()} is called.
+     */
     public void setOnSelectionChanged(Consumer<Node> handler) {
         selectionChangeHandler = handler;
+    }
+
+    /** Asks for the selected card to be brought into view, even if the selection itself did not change. */
+    public void revealSelection() {
+        int selectedIndex = getSelectedIndex();
+        if (selectedIndex >= 0 && selectedIndex < personRows.getChildren().size()) {
+            selectionChangeHandler.accept(personRows.getChildren().get(selectedIndex));
+        }
     }
 
     private void markSelectedCard() {

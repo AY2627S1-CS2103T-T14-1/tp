@@ -310,6 +310,120 @@ public class MainWindowShownTest {
     }
 
     @Test
+    public void findWhileScrolledDown_scrollsNewlySelectedMatchIntoView() throws Exception {
+        Model model = new ModelManager();
+        model.addPerson(new PersonBuilder().withName("Alice Alpha").withPhone("81000001")
+                .withEmail("alice@example.com").build());
+        model.addPerson(new PersonBuilder().withName("Bob Beta").withPhone("81000002")
+                .withEmail("bob@example.com").build());
+        for (char letter = 'C'; letter <= 'L'; letter++) {
+            model.addPerson(new PersonBuilder().withName("Client " + letter).withPhone("8200000" + (letter - 'C'))
+                    .withEmail("client" + letter + "@example.com").build());
+        }
+        showWindow(model);
+
+        runOnFxThread(() -> {
+            window.openTerminal();
+            click(personRows().getChildren().getFirst());
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            contentScroll().setVvalue(1);
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            commandField().setText("find Client");
+            commandField().requestFocus();
+            press(KeyCode.ENTER);
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            assertEquals("Client C", window.getPersonListPanel().getSelectedPerson().getName().fullName);
+            assertSelectedCardVisible();
+            return null;
+        });
+    }
+
+    @Test
+    public void upAtFirstClientAfterScrollingAway_scrollsItBackIntoView() throws Exception {
+        Model model = new ModelManager();
+        for (int i = 1; i <= 30; i++) {
+            model.addPerson(new PersonBuilder().withName("Client " + i)
+                    .withPhone(String.valueOf(80000000 + i)).withEmail("client" + i + "@example.com").build());
+        }
+        showWindow(model);
+
+        runOnFxThread(() -> {
+            click(personRows().getChildren().getFirst());
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            contentScroll().setVvalue(1);
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            press(KeyCode.UP);
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            assertEquals(0, window.getPersonListPanel().getSelectedIndex());
+            assertSelectedCardVisible();
+            return null;
+        });
+    }
+
+    @Test
+    public void escape_afterClickingClient_closesTerminal() throws Exception {
+        Model model = new ModelManager();
+        model.addPerson(new PersonBuilder().withName("Alice Lee").build());
+        showWindow(model);
+
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            click(personRows().getChildren().getFirst());
+            assertEquals(personRows(), scene().getFocusOwner());
+            press(KeyCode.ESCAPE);
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            assertEquals(1, workspace().getItems().size());
+            return null;
+        });
+    }
+
+    @Test
+    public void escape_withHelpButtonFocused_closesTerminal() throws Exception {
+        showWindow(new ModelManager());
+
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            scene().lookup(".help-pill").requestFocus();
+            press(KeyCode.ESCAPE);
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            assertEquals(1, workspace().getItems().size());
+            return null;
+        });
+    }
+
+    @Test
     public void clickingVisibleClient_doesNotScroll() throws Exception {
         Model model = new ModelManager();
         for (int i = 1; i <= 30; i++) {
@@ -348,6 +462,10 @@ public class MainWindowShownTest {
 
     private Scene scene() {
         return window.getPrimaryStage().getScene();
+    }
+
+    private ScrollPane contentScroll() {
+        return (ScrollPane) scene().lookup("#contentScroll");
     }
 
     private SplitPane workspace() {

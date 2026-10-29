@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -153,12 +154,10 @@ public class MainWindow extends UiPart<Stage> {
 
     private void installKeyboardHandlers() {
         primaryStage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            // Nothing else in the main window uses Esc, so it closes the terminal whatever has focus.
             if (event.getCode() == KeyCode.ESCAPE && isTerminalOpen()) {
-                Node focused = primaryStage.getScene().getFocusOwner();
-                if (focused == null || focused instanceof TextInputControl) {
-                    closeTerminal();
-                    event.consume();
-                }
+                closeTerminal();
+                event.consume();
             }
         });
         primaryStage.getScene().addEventFilter(KeyEvent.KEY_TYPED, event -> {
@@ -432,6 +431,7 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void updateUiAfterSuccessfulCommand(String commandText, String commandWord, CommandResult result) {
+        String previousFilterQuery = filterQuery;
         if (FindCommand.COMMAND_WORD.equals(commandWord)) {
             filterQuery = commandText.substring(commandWord.length()).trim();
         } else if (RESET_FILTER_COMMANDS.contains(commandWord)
@@ -445,6 +445,10 @@ public class MainWindow extends UiPart<Stage> {
         }
 
         personListPanel.setFilterQuery(filterQuery);
+        if (FindCommand.COMMAND_WORD.equals(commandWord) || !Objects.equals(previousFilterQuery, filterQuery)) {
+            // A new filter may select a different client without changing its index, so reveal it explicitly.
+            personListPanel.revealSelection();
+        }
         if (AddCommand.COMMAND_WORD.equals(commandWord)) {
             personListPanel.selectLast();
         }

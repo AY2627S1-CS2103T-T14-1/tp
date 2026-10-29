@@ -82,7 +82,7 @@ BorderPane .window
 ```
 - **Result cells:** larger than v1 so they are easy to read. Status circle 22 px; "› command" mono 13 subtle; message **15/600** (coral #ff8a7f for errors); detail and usage lines mono 13, line height 1.6, muted. Everything wraps (`wrapText`), with no ellipsis.
 - The terminal **starts with an empty log**. Because it is closed until first use, an empty panel is never shown on launch.
-- **Closing:** Esc (when the TextField or nothing has focus), or the × button. On close, remove the terminal VBox from the SplitPane items; the TextField loses focus.
+- **Closing:** Esc (whatever has focus in the main window, such as the command field or a clicked client card), or the × button. On close, remove the terminal VBox from the SplitPane items; the TextField loses focus.
 - **Resizing:** the SplitPane divider is the drag handle. No text or grip graphic. Divider has a 4 px hit area; hover colour lime at about 35% opacity; cursor V_RESIZE. Clamp the terminal height to **170–640 px**. Save the last height in `GuiSettings` (or `UserPrefs`) and restore it each time the terminal opens. Default height: 320.
 
 ### Command bar: minimal (no pill, no Run button)
