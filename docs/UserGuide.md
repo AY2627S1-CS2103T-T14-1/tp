@@ -1,6 +1,7 @@
 ---
 layout: page
 title: User Guide
+guide: true
 ---
 
 Fittix is a **desktop application for gym trainers to manage clients, workout plans, diet goals and training sessions through a Command Line Interface (CLI)**, with a Graphical User Interface (GUI) for viewing client details.
@@ -21,23 +22,23 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 
 1. Open a terminal, `cd` to that folder, and run `java -jar fittix-v1.4.jar` (replace the filename if you downloaded a newer release).<br>
    Fittix saves its `data` folder and `preferences.json` in the terminal's current folder. Always start it from the same home folder to use the same client records.<br>
-   A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
-   ![Fittix v1.4 running with sample client data](images/FittixActualV14.jpg)
+   A GUI similar to the one below should appear in a few seconds. The screenshot illustrates the current workspace with demonstration client records; the initial sample data may differ.<br>
+   ![Fittix workspace with demonstration client records](images/FittixWorkspace.png)
 
 1. In the redesigned workspace, type any letter to open the terminal, then enter a command and press Enter. Press Esc to close the terminal; drag the lime grip at the centre of its top divider to resize it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
-   * `list` : Lists all contacts.
+   * `list` : Lists all clients.
 
-   * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01` : Adds a contact named `John Doe` to the Address Book.
+   * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01` : Adds a client named `John Doe` to Fittix.
 
-   * `delete 3` : Deletes the 3rd contact shown in the current list.
+   * `delete 3` : Deletes the 3rd client shown in the current list.
 
    * `diet 2 t/1800 kcal per day n/Prioritise vegetables` : Records diet goals for the 2nd client shown.
 
    * `log 1 d/2020-01-15 ex/Push-up|0|3|12` : Records a completed workout session for the 1st client shown.
 
-   * `clear` : Deletes all contacts, but keeps membership plans.
+   * `clear` : Deletes all clients, but keeps membership plans.
 
    * `exit` : Exits the app.
 
@@ -98,9 +99,9 @@ Examples:
 * `add n/Anne-Marie Tan p/92345678 e/annemarie@example.com a/123 Test Road`
 * `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
 
-### Listing all persons: `list`
+### Listing all clients: `list`
 
-Shows a list of all persons in the address book.
+Shows a list of all clients in Fittix.
 
 Format: `list`
 
@@ -296,19 +297,19 @@ Common errors:
 
 Fittix reports `Found N client(s).` when there are matches, or `Found 0 client(s). Use list to show all clients.` when there are none.
 
-### Deleting a person: `delete`
+### Deleting a client: `delete`
 
-Deletes the specified person from the address book.
+Deletes the specified client from Fittix.
 
 Format: `delete INDEX`
 
-* Deletes the person at the specified `INDEX`.
-* The index refers to the index number shown in the displayed person list.
+* Deletes the client at the specified `INDEX`.
+* The index refers to the index number shown in the displayed client list.
 * The index **must be a positive integer** 1, 2, 3, …​
 
 Examples:
-* `list` followed by `delete 2` deletes the 2nd person in the address book.
-* `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
+* `list` followed by `delete 2` deletes the 2nd client in the current list.
+* `find Betsy` followed by `delete 1` deletes the 1st client in the search results.
 
 ### Clearing all entries: `clear`
 
@@ -738,7 +739,7 @@ Examples:
 * `a/AMOUNT` is required. It must be greater than zero and have at most two decimal places, without a currency symbol, sign, or thousands separator. `150`, `150.5`, and `150.50` are accepted; `0`, `-5`, `1.234`, and `S$150` are rejected. Amounts are stored and displayed with exactly two decimal places without floating-point rounding.
 * `d/YYYY-MM-DD` is required. It must be a real Gregorian date in exactly four-digit-year, two-digit-month, two-digit-day form, with the year between 0001 and 9999. Past, current, and future dates are accepted.
 * `r/REMARKS` is optional. After trimming outer whitespace it must contain 1 to 300 printable characters. Internal spacing, punctuation, and case are preserved. A blank `r/` is invalid, as are line breaks and control characters. Omit `r/` when no remarks are needed.
-* `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. A token of letters followed by `/` inside remarks, such as `x/100` or `abc/100`, is treated as an unknown prefix and rejected; ordinary punctuation such as `and/or` and `1/2` remains valid.
+* `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. Parameter-shaped tokens such as `x/100` or `abc/100` inside remarks are rejected as unknown prefixes; ordinary slash-separated text such as `and/or` and `1/2` remains valid.
 
 On success, Fittix saves the record, selects the client, and reports `Recorded payment for NAME: AMOUNT on YYYY-MM-DD.` The client's **Payments** section shows every saved record oldest first, keeping entry order for records on the same date. Each record shows its date, its amount to two decimal places, and remarks when present. Long remarks wrap and the card scrolls; they are never truncated. A client with no payments shows `No payments recorded.`
 
@@ -814,12 +815,6 @@ AddressBook data is saved automatically as a JSON file `[JAR file location]/data
 If your changes make the data file invalid, Fittix stops startup and leaves that file untouched. Restore a valid backup or correct the invalid data before restarting. Always back up the file before editing it.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
-
-### Archiving data files `[coming in v2.0]`
-
-_Details coming soon ..._
-
---------------------------------------------------------------------------------------------------------------------
 
 ## FAQ
 
