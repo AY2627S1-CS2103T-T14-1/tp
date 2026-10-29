@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -384,15 +385,25 @@ class JsonAdaptedPerson {
     }
 
     /**
-     * Drops later entries that equal an earlier one after {@link DietaryRestrictions#foldCase(String)}, so
-     * files saved before Unicode-aware duplicate detection (e.g. "X σ" and "X ς") still load. Invalid or null
-     * entries are kept for the model to reject.
+     * Validates the original list using the pre-migration rules, then drops only newly equivalent Unicode
+     * variants. Malformed entries, excessive counts and pre-existing duplicates must still fail loading.
      */
     private static List<String> dropCaseFoldDuplicates(List<String> values) {
+        if (values.size() > DietaryRestrictions.MAX_ENTRIES) {
+            throw new IllegalArgumentException(DietaryRestrictions.MESSAGE_CONSTRAINTS);
+        }
+        Set<String> legacyKeys = new HashSet<>();
+        for (String value : values) {
+            if (value == null || !DietaryRestrictions.isValidRestriction(value)
+                    || !legacyKeys.add(value.strip().toLowerCase(Locale.ROOT))) {
+                throw new IllegalArgumentException(DietaryRestrictions.MESSAGE_CONSTRAINTS);
+            }
+        }
+
         Set<String> seen = new HashSet<>();
         List<String> kept = new ArrayList<>();
         for (String value : values) {
-            if (value == null || seen.add(DietaryRestrictions.foldCase(value.strip()))) {
+            if (seen.add(DietaryRestrictions.foldCase(value.strip()))) {
                 kept.add(value);
             }
         }

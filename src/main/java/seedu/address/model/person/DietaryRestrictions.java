@@ -6,8 +6,9 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
+
+import seedu.address.commons.util.StringUtil;
 
 /** An immutable, ordered list of a client's current dietary restrictions. */
 public final class DietaryRestrictions {
@@ -46,7 +47,7 @@ public final class DietaryRestrictions {
      */
     public static String foldCase(String value) {
         requireNonNull(value);
-        return value.toUpperCase(Locale.ROOT).toLowerCase(Locale.ROOT).replace('\u03C2', '\u03C3');
+        return StringUtil.foldCaseForSearch(value);
     }
 
     /** Returns whether one restriction value is valid. */
