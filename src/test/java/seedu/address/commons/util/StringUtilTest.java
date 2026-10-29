@@ -1,5 +1,6 @@
 package seedu.address.commons.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -166,4 +167,14 @@ public class StringUtilTest {
         assertThrows(NullPointerException.class, () -> StringUtil.getDetails(null));
     }
 
+    //---------------- Tests for foldCaseForSearch --------------------------------------
+
+    @Test
+    public void foldCaseForSearch() {
+        assertEquals("build strength", StringUtil.foldCaseForSearch("Build STRENGTH"));
+        assertEquals("μαραθωνιοσ", StringUtil.foldCaseForSearch("ΜΑΡΑΘΩΝΙΟΣ"));
+        assertEquals("σ", StringUtil.foldCaseForSearch("Σ"));
+        assertEquals("σ", StringUtil.foldCaseForSearch("ς"));
+        assertThrows(NullPointerException.class, () -> StringUtil.foldCaseForSearch(null));
+    }
 }

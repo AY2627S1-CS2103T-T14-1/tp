@@ -1,9 +1,9 @@
 package seedu.address.model.person;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Predicate;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.commons.util.ToStringBuilder;
 
 /**
@@ -24,9 +24,9 @@ public class GoalContainsKeywordsPredicate implements Predicate<Person> {
     @Override
     public boolean test(Person person) {
         return person.getGoal()
-                .map(goal -> goal.value.toLowerCase(Locale.ROOT))
+                .map(goal -> StringUtil.foldCaseForSearch(goal.value))
                 .map(goal -> keywords.stream()
-                        .anyMatch(keyword -> goal.contains(keyword.toLowerCase(Locale.ROOT))))
+                        .anyMatch(keyword -> goal.contains(StringUtil.foldCaseForSearch(keyword))))
                 .orElse(false);
     }
 
