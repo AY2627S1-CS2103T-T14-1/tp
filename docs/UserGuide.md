@@ -22,8 +22,8 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 
 1. Open a terminal, `cd` to that folder, and run `java -jar fittix-v1.4.jar` (replace the filename if you downloaded a newer release).<br>
    Fittix saves its `data` folder and `preferences.json` in the terminal's current folder. Always start it from the same home folder to use the same client records.<br>
-   A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
-   ![Fittix v1.4 running with sample client data](images/FittixActualV14.jpg)
+   A GUI similar to the one below should appear in a few seconds. The screenshot illustrates the current workspace with demonstration client records; the initial sample data may differ.<br>
+   ![Fittix workspace with demonstration client records](images/FittixWorkspace.png)
 
 1. In the redesigned workspace, type any letter to open the terminal, then enter a command and press Enter. Press Esc to close the terminal; drag the lime grip at the centre of its top divider to resize it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
