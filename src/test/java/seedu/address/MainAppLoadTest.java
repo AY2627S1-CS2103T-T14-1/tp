@@ -89,6 +89,22 @@ public class MainAppLoadTest {
         }
     }
 
+    @Test
+    public void initModelManager_savedPhoneLongerThanFifteenDigits_stopsAndPreservesOriginalBytes() throws Exception {
+        StorageManager storage = storage();
+        AddressBook original = new AddressBook();
+        original.addPerson(new PersonBuilder().withPhone("85355255").build());
+        storage.saveAddressBook(original);
+        Path dataFile = storage.getAddressBookFilePath();
+        // A roster saved before the 15-digit limit can still hold a longer phone number.
+        Files.writeString(dataFile, Files.readString(dataFile).replace("\"85355255\"", "\"1234567890123456\""));
+        assertTrue(Files.readString(dataFile).contains("\"1234567890123456\""));
+        byte[] legacyBytes = Files.readAllBytes(dataFile);
+
+        assertThrows(IllegalStateException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
+        assertArrayEquals(legacyBytes, Files.readAllBytes(dataFile));
+    }
+
     private StorageManager storage() {
         return new StorageManager(new JsonAddressBookStorage(folder.resolve("clients.json")),
                 new JsonUserPrefsStorage(folder.resolve("preferences.json")));
