@@ -45,6 +45,7 @@ public class DietaryRestrictionsCommandParserTest {
         assertParseFailure(parser, "1 r/No dairy x/unknown", usage);
         assertParseFailure(parser, "1 r/Peanut allergy r/No dairy xy/unknown", usage);
         assertParseFailure(parser, "1 r/No dairy x/", usage);
+        assertParseFailure(parser, "1 r/No dairy abc/100", usage);
         assertParseFailure(parser, "1 r/No dairy R/Halal", usage);
     }
 

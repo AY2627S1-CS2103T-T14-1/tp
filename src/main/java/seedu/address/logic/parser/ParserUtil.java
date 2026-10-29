@@ -34,13 +34,13 @@ public class ParserUtil {
     public static final int MAX_ADD_ADDRESS_LENGTH = 200;
     public static final String MESSAGE_ADD_ADDRESS_CONSTRAINTS =
             "Address must contain 1 to 200 printable characters without line breaks.";
-    private static final Pattern UNKNOWN_PREFIX_TOKEN = Pattern.compile("[A-Za-z]{1,2}/.*");
+    private static final Pattern UNKNOWN_PREFIX_TOKEN = Pattern.compile("[A-Za-z]{1,2}/.*|[A-Za-z]{3,}/[^A-Za-z]*");
 
     /**
      * Returns true if any whitespace-separated word in {@code value} looks like a parameter prefix: one or two
-     * letters followed by a slash, such as {@code x/} or {@code xy/unknown}. Such a word means an unsupported or
-     * mistyped prefix was absorbed into the value. Longer words such as {@code and/or}, and slashes after digits
-     * such as {@code 1/2}, are treated as ordinary text.
+     * letters followed by a slash, such as {@code x/} or {@code xy/unknown}, or a longer alphabetic marker
+     * followed by a slash and only nonletters, such as {@code abc/100}. This preserves payment validation
+     * while allowing ordinary slash text such as {@code and/or}, {@code Dairy/eggs} and {@code 1/2}.
      */
     public static boolean containsUnknownPrefixToken(String value) {
         requireNonNull(value);
@@ -143,11 +143,10 @@ public class ParserUtil {
     /** Parses a {@code String goal} into a {@code Goal}. */
     public static Goal parseGoal(String goal) throws ParseException {
         requireNonNull(goal);
-        String trimmedGoal = goal.trim();
-        if (!Goal.isValidGoal(trimmedGoal)) {
+        if (!Goal.isValidGoal(goal)) {
             throw new ParseException(Goal.MESSAGE_CONSTRAINTS);
         }
-        return new Goal(trimmedGoal);
+        return new Goal(goal);
     }
 
     /**

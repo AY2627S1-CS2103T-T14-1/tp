@@ -48,6 +48,9 @@ public class ParserUtilTest {
     public void containsUnknownPrefixToken() {
         assertTrue(ParserUtil.containsUnknownPrefixToken("No dairy x/unknown"));
         assertTrue(ParserUtil.containsUnknownPrefixToken("xy/"));
+        assertTrue(ParserUtil.containsUnknownPrefixToken("abc/100"));
+        assertTrue(ParserUtil.containsUnknownPrefixToken("paid abc/100.50"));
+        assertTrue(ParserUtil.containsUnknownPrefixToken("xyz/"));
         assertTrue(ParserUtil.containsUnknownPrefixToken("a\tR/b"));
 
         assertFalse(ParserUtil.containsUnknownPrefixToken(""));
@@ -220,6 +223,7 @@ public class ParserUtilTest {
     public void parseGoal_validAndInvalidValues() throws Exception {
         assertEquals(new Goal("Build strength"), ParserUtil.parseGoal(" Build strength "));
         assertThrows(ParseException.class, Goal.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseGoal("!!!"));
+        assertThrows(ParseException.class, Goal.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseGoal("\fabc"));
     }
 
     @Test
