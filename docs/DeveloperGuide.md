@@ -42,7 +42,7 @@ The following provides a quick overview of the main components and their interac
 
 **Main components of the architecture**
 
-**`Main`** (consisting of classes [`Main`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
+**`Main`** (consisting of classes [`Main`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
 
 - At app launch, it initializes the other components in the correct sequence, and connects them up with each other.
 - At shut down, it shuts down the other components and invokes cleanup methods where necessary.
@@ -97,7 +97,7 @@ The `UI` component uses JavaFX. Layouts are defined in `.fxml` resources under `
 
 ### Logic component
 
-**API** : [`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
+**API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/logic/Logic.java)
 
 Here's a (partial) class diagram of the `Logic` component:
 
@@ -129,7 +129,7 @@ How the parsing works:
 
 ### Model component
 
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+**API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
 
 <img src="images/ModelClassDiagram.png" width="900" />
 
@@ -492,11 +492,14 @@ create marker commands. `LogicManager` handles them through `executeUndo` and `e
 `No changes to redo.` without saving or changing data.
 
 For an ordinary command, `LogicManager` copies the current address book into `backup` before execution.
+After a successful command, unchanged address-book data returns without writing to Storage or changing
+undo/redo history. This includes queries and successful no-op mutations, which therefore work with
+unwritable storage. Effective data changes still pass through the save and rollback boundary.
 For undo/redo, it copies the current data into `current` and restores the top snapshot using
 `Model#setAddressBook`. It saves the resulting address book through `Storage#saveAddressBook` before
 changing either stack:
 
-| Successfully saved operation | Undo stack | Redo stack |
+| Operation | Undo stack | Redo stack |
 | --- | --- | --- |
 | An ordinary command changes address-book data | Push `backup`; discard the oldest snapshot if over the limit | Clear |
 | `undo` | Pop the restored snapshot | Push `current` |
@@ -543,10 +546,6 @@ mutation to implement and validate its own inverse.
 `LogicManagerTest` covers multiple undos/redos, read-only commands, rejected commands, redo invalidation,
 the history limit and save failure. `MainWindowUndoRedoTest` exercises real command entry through
 `find`, undo and redo, checking the visible query, counts and subsequent indexed target.
-
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
 
 ---
 
@@ -626,8 +625,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | gym trainer | record a completed session against a client's package                                | keep the remaining number of sessions accurate                         |
 | `*`      | gym trainer | list clients whose packages are running low                                          | ask them about renewal before their package runs out                   |
 | `*`      | gym trainer | list clients I have not trained recently                                             | identify clients who may be becoming inactive                          |
-
-_{More to be added}_
 
 ### Use cases
 
@@ -1006,34 +1003,25 @@ testers are expected to do more *exploratory* testing.
 ### Launch and shutdown
 
 1. Initial launch
-   1. Download the JAR file and copy it into an empty folder.
-
-   1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+   1. Download the release JAR into a new, empty folder where the app may create files. Use only demonstration data for these checks.
+   1. Open a terminal in that folder and run `java -version`. Confirm that Java 25 is active; Mac users should follow the [Java installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
+   1. Run `java -jar "fittix-v1.jar"`, adapting the filename to the downloaded asset.<br>
+      Expected: The GUI opens with sample clients. Typing a command opens the terminal panel. Saved data and window preferences belong to this working folder.
 
 1. Saving window preferences
-   1. Resize the window to an optimal size. Move the window to a different location. Close the window.
+   1. Resize and move the window, then close the app.
+   1. From the same terminal folder, run `java -jar "fittix-v1.jar"` again.<br>
+      Expected: The saved window size and location are restored. Reuse this folder to access the same client records.
 
-   1. Relaunch the app by double-clicking the JAR file.<br>
-      Expected: The most recent window size and location are retained.
+### Deleting a client
 
-1. _{ more test cases …​ }_
-
-### Deleting a person
-
-1. Deleting a person while all persons are being shown
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
-
-   1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
-
-   1. Test case: `delete 0`<br>
-      Expected: No person is deleted. The status message shows error details.
-
-   1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-      Expected: Similar to previous.
-
-1. _{ more test cases …​ }_
+1. Use a disposable test folder with at least two clients. Run `list` before testing displayed indexes.
+   1. Run `delete 1`.<br>
+      Expected: The first displayed client is deleted; feedback begins `Deleted person:` and includes that client's details.
+   1. Run `delete 0`, `delete`, and `delete abc` separately.<br>
+      Expected: Each command reports an invalid format and the delete usage; no additional client is deleted.
+   1. Run `delete 999999`, with fewer than 999999 clients in the list.<br>
+      Expected: `The person index provided is invalid.` No client is deleted.
 
 <a id="diet-plan-management-1"></a>
 

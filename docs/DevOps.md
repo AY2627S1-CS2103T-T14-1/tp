@@ -19,7 +19,7 @@ The following commands perform common Gradle tasks.
 * **`clean`**: Deletes the files created during the previous build tasks (e.g. files in the `build` folder).<br>
   For example: `./gradlew clean`
 
-* **`shadowJar`**: Uses the Shadow plugin to create the fat JAR file `build/libs/addressbook.jar`.<br>
+* **`shadowJar`**: Uses the Shadow plugin to create a platform-specific development fat JAR under `build/libs`. Use `universalJar` for the multi-platform release package.<br>
   For example: `./gradlew shadowJar`
 
 * **`universalJar`**: Creates the release JAR `build/libs/fittix-v1.jar` for Windows x64, macOS Intel/Apple silicon, and Linux x64/ARM64.<br>
@@ -80,11 +80,11 @@ Any warnings or errors will be printed out to the console.
 
 ## Making a release
 
-Here are the steps to create a new release.
-
-1. Update the version number in [`MainApp.java`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/MainApp.java).
-1. Run `./gradlew clean check universalJarSmokeTest` (`gradlew.bat clean check universalJarSmokeTest` on Windows). On headless Linux, prefix the command with `xvfb-run -a`.
-1. Confirm the GitHub CI checks pass on Windows, macOS and Linux. Manually try the JAR with sample commands before publishing.
-1. Commit the source and packaging scripts, then tag that commit with the release version, for example `v1.3`.
-1. [Create a new release using GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository). Upload **`build/libs/fittix-v1.jar`** from that commit and include the release notes and screenshots. The JAR's filename is kept stable so the user guide's launch command remains valid.
-1. If replacing an earlier release, ensure the release tag points to the commit containing the packaging task and launcher. Changing only the release description or asset does not update the tagged source. Download the uploaded asset and repeat a launch check.
+1. Update the version in [`MainApp.java`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/MainApp.java), the guides and screenshots. Remove unfinished template text and check that feature descriptions match the app. Commit and merge these changes before selecting the release commit.
+1. Use a clean checkout of that final commit. Run `java -version` and confirm Java 25. Run `./gradlew clean check coverage shadowJar universalJarSmokeTest` (`gradlew.bat clean check coverage shadowJar universalJarSmokeTest` on Windows). On headless Linux, prefix the Gradle command with `xvfb-run -a`.
+1. Confirm CI passes on Windows, macOS and Linux. `shadowJar` performs the generic fat-JAR build described by the course guide; Fittix's `universalJarSmokeTest` also builds and tests the **multi-platform release file `build/libs/fittix-v1.jar`**. Use that universal JAR for the release.
+1. In a separate writable folder, launch the JAR using `java -jar "fittix-v1.jar"`. Try sample commands, check saved data, exit, and relaunch from the same folder. Record the final commit and JAR checksum.
+1. Tag the exact tested commit with the release version, for example `v1.5`, and push that tag. The tag, uploaded JAR and online guides must describe the same product version.
+1. [Create the GitHub release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository). Upload **`build/libs/fittix-v1.jar`** from that commit and include release notes and the current screenshot. Keep this filename so the User Guide launch command remains valid. Publish the release as the latest non-draft release so the website's download link selects it.
+1. Download the uploaded asset into another fresh folder. Compare its checksum with the tested JAR and repeat a launch check. Confirm the website, UG and DG are deployed, then close or reschedule remaining milestone work and close the milestone.
+1. If correcting an already published release, preserve the relationship between tag, source and asset. Changing only release text or uploading a different JAR does not update the tagged source.

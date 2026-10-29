@@ -18,7 +18,7 @@ Fittix helps trainers keep client details, workout plans, sessions, and progress
 </div>
 
 <figure class="fittix-preview">
-  <img src="images/FittixWorkspace.png" alt="Fittix workspace with demonstration clients, a weekly workout plan, diet targets, scheduled sessions, and body progress">
+  <img src="images/Ui.png" alt="Fittix workspace with demonstration clients, a weekly workout plan, diet targets, scheduled sessions, and body progress">
   <figcaption>Fittix workspace with demonstration client records</figcaption>
 </figure>
 
