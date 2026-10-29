@@ -185,7 +185,27 @@ Each `Person` stores an immutable list of `TrainingSession` appointments. A sess
 
 `ViewScheduleCommand` sorts one displayed client's appointments by start time; meetings are marked in the result. `DayScheduleCommand` instead scans all clients for the requested date, then orders appointments by start time and client name. Both commands are read-only. `InactiveCommand` also scans the full roster: for `inactive DAYS`, it calculates `today - (DAYS - 1)` and lists clients with no **completed workout log** on or after that date. A scheduled session or meeting does not count as a workout. The inactive list is ordered by client name and includes the latest recorded workout date, if any. `ClientContextPanel` labels meeting rows separately from training sessions, and `CommandCatalog` supplies usage hints for all five scheduling and monitoring commands.
 
-To verify the main path manually, add two clients; use `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`, then `meeting 2 d/2099-03-15 tm/15:30 l/Cafe`. `dayschedule d/2099-03-15` should list both in time order, and `viewschedule 2` should mark the second as a meeting. Scheduling either client at `14:30` again should report a conflict without adding an appointment. `inactive 1` should still list both clients until a completed workout dated today is logged for each of them.
+To check the scheduling and monitoring routes manually, use a separate disposable data folder. The setup below removes its sample clients; never run `clear` in a folder containing real client records. Run each line separately:
+
+```text
+clear
+add n/Priya Nair p/97001001 e/priya@example.com a/Test Road
+add n/Daniel Tan p/97001002 e/daniel@example.com a/Test Road
+list
+```
+
+Confirm Priya is index 1 and Daniel is index 2 before continuing. If the local clock is later than the example date, substitute a later future date in every command.
+
+1. Run `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`, then `meeting 2 d/2099-03-15 tm/15:30 l/Cafe`.<br>
+   Expected: Priya has a training session; Daniel has a meeting. Both are saved.
+2. Run `dayschedule d/2099-03-15`, then `viewschedule 2`.<br>
+   Expected: The day view lists Priya at 14:30 before Daniel at 15:30; Daniel's appointment is marked `(meeting)` in his schedule.
+3. Run `meeting 2 d/2099-03-15 tm/14:30 l/Cafe` and `schedule 1 d/2099-03-15 tm/15:30 l/Main gym`.<br>
+   Expected: Both are rejected because the full roster already contains an appointment at that start time. Neither client's schedule gains a duplicate.
+4. Run `find Daniel`, then `dayschedule d/2099-03-15` and `viewschedule 1`.<br>
+   Expected: The day view still includes Priya despite the filter; index 1 in the filtered list refers to Daniel, whose meeting remains visible.
+5. Run `inactive 1`, then restart and run `list`, `viewschedule 1`, `viewschedule 2`, and `dayschedule d/2099-03-15`.<br>
+   Expected: Both clients are inactive because future appointments are not completed workouts. After restart, both appointments retain their dates, times, locations, and types.
 
 ### Workout plan feature (`addex` / `delex` / `dayex` / `clearplan`)
 
