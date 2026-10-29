@@ -442,7 +442,7 @@ public class LogicManagerTest {
         JsonUserPrefsStorage userPrefsStorage =
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
         logic = new LogicManager(model, new StorageManager(addressBookStorage, userPrefsStorage));
-        logic.execute(ListCommand.COMMAND_WORD);
+        addressBookStorage.saveAddressBook(model.getAddressBook());
         AddressBook snapshot = new AddressBook(model.getAddressBook());
         String saved = Files.readString(addressBookPath);
 
@@ -583,6 +583,26 @@ public class LogicManagerTest {
 
         assertEquals(RedoCommand.MESSAGE_SUCCESS, logic.execute(RedoCommand.COMMAND_WORD).getFeedbackToUser());
         assertEquals(1, paymentsOfFirstPerson().size());
+    }
+
+    @Test
+    public void execute_queriesWithUnwritableStorage_preservesSavedData() throws Exception {
+        model.addPerson(new PersonBuilder(AMY).withRemark("unchanged").build());
+        Path addressBookPath = temporaryFolder.resolve("readOnlyAddressBook.json");
+        ToggleableAddressBookStorage addressBookStorage = new ToggleableAddressBookStorage(addressBookPath);
+        addressBookStorage.saveAddressBook(model.getAddressBook());
+        String saved = Files.readString(addressBookPath);
+        AddressBook snapshot = new AddressBook(model.getAddressBook());
+        logic = new LogicManager(model, new StorageManager(addressBookStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("readOnlyPrefs.json"))));
+        addressBookStorage.setFailing(true);
+
+        for (String command : List.of("list", "help", "history 1", "find Amy", "remark 1 r/unchanged")) {
+            logic.execute(command);
+            assertEquals(snapshot, model.getAddressBook());
+            assertEquals(saved, Files.readString(addressBookPath));
+        }
+        assertEquals(UndoCommand.MESSAGE_FAILURE, logic.execute("undo").getFeedbackToUser());
     }
 
     @Test

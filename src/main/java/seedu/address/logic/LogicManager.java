@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
-import seedu.address.logic.commands.BodyCommand;
 import seedu.address.logic.commands.BodyMutationCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
@@ -80,8 +79,8 @@ public class LogicManager implements Logic {
         Predicate<Person> filterBackup = model.getFilteredPersonListPredicate();
         CommandResult commandResult = command.execute(model);
 
-        // Body history/comparison only request a view; they must also work when storage is read-only.
-        if (command instanceof BodyCommand && !(command instanceof BodyMutationCommand)) {
+        // Queries and commands with no effective data changes must work without writable storage.
+        if (backup.equals(model.getAddressBook())) {
             return commandResult;
         }
 
@@ -93,11 +92,9 @@ public class LogicManager implements Logic {
             throw saveException(command, ioe);
         }
 
-        // Only effective changes become one complete-address-book undo step.
-        if (!backup.equals(model.getAddressBook())) {
-            pushUndoState(backup);
-            redoStack.clear();
-        }
+        // A successfully saved change becomes one complete-address-book undo step.
+        pushUndoState(backup);
+        redoStack.clear();
 
         return commandResult;
     }
