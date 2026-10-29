@@ -27,6 +27,8 @@ public class TrainingSessionTest {
     public void constructor_blankLocation_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new TrainingSession(SESSION_TIME, ""));
         assertThrows(IllegalArgumentException.class, () -> new TrainingSession(SESSION_TIME, "  \t  "));
+        assertThrows(IllegalArgumentException.class, () -> new TrainingSession(SESSION_TIME, "\u00a0\u00a0\u00a0"));
+        assertThrows(IllegalArgumentException.class, () -> new TrainingSession(SESSION_TIME, " \u2003\u00a0"));
     }
 
     @Test
@@ -35,6 +37,7 @@ public class TrainingSessionTest {
 
         assertEquals(LocalDateTime.of(2020, 1, 1, 9, 0), session.getDateTime());
         assertEquals("Gym A / Studio 1", session.getLocation());
+        assertEquals("Gym\u00a0A", new TrainingSession(SESSION_TIME, "Gym\u00a0A").getLocation());
     }
 
     @Test

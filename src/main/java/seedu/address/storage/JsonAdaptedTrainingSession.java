@@ -42,7 +42,7 @@ class JsonAdaptedTrainingSession {
         }
         try {
             Kind modelKind = kind == null ? Kind.TRAINING : Kind.valueOf(kind);
-            return new TrainingSession(LocalDateTime.parse(dateTime), location, modelKind);
+            return TrainingSession.fromSavedData(LocalDateTime.parse(dateTime), location, modelKind);
         } catch (DateTimeParseException | IllegalArgumentException exception) {
             throw new IllegalValueException("Invalid training session date, time or location");
         }
