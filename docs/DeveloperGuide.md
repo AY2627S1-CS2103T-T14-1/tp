@@ -1169,7 +1169,7 @@ Use a disposable address book with at least two clients. If needed, add a unique
 2. Run `pay 1 d/2026-10-19 a/75.50 r/October membership payment`.<br>
    Expected: The record is added. The section lists both records oldest first (`2026-10-19` before `2026-10-20`); the amount is right-aligned and two decimals, and the remarks wrap.
 3. Repeat the command from step 1.<br>
-   Expected: A second identical record is added and the summary reads `2 records`. Repeated records are allowed and stay in entry order for the same date.
+   Expected: A third identical record is added and the summary reads `3 records`. Repeated records are allowed and stay in entry order for the same date.
 4. Try `pay 1 a/0 d/2026-10-20`, `pay 1 a/-5 d/2026-10-20`, `pay 1 a/1.234 d/2026-10-20`, `pay 1 a/S$150 d/2026-10-20`, `pay 1 a/150 d/2026-13-40`, `pay 1 a/150 d/2026-10-20 x/extra`, and `pay 1 a/150 a/200 d/2026-10-20`.<br>
    Expected: Each is rejected with the relevant amount or date error, or with `Invalid command format!` for the unknown-prefix, extra-text, and repeated-prefix cases. No record is added and the summary is unchanged.
 5. Try `pay 0 a/150 d/2026-10-20` and `pay 99 a/150 d/2026-10-20`.<br>
@@ -1177,7 +1177,7 @@ Use a disposable address book with at least two clients. If needed, add a unique
 6. Run `pay 1 a/150 d/2026-10-20 r/`.<br>
    Expected: `Invalid command format!` followed by the `pay` usage; the empty `r/` is rejected.
 7. Close and restart the app, then find and select the same client.<br>
-   Expected: Both records remain, oldest first, with the same amounts and remarks.
+   Expected: All three records remain, oldest first, with the same amounts and remarks.
 8. Run an unrelated command such as `diet 1 t/1800 kcal` or `amem Gold 1`, then restart.<br>
    Expected: Payment records are preserved alongside the other change.
 9. Delete the client with `delete`, then restart.<br>
