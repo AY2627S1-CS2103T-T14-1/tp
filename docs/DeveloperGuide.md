@@ -1173,7 +1173,7 @@ Use a disposable address book with at least two clients. If needed, add a unique
 4. Try `pay 1 a/0 d/2026-10-20`, `pay 1 a/-5 d/2026-10-20`, `pay 1 a/1.234 d/2026-10-20`, `pay 1 a/S$150 d/2026-10-20`, `pay 1 a/150 d/2026-13-40`, `pay 1 a/150 d/2026-10-20 x/extra`, and `pay 1 a/150 a/200 d/2026-10-20`.<br>
    Expected: Each is rejected with the relevant amount or date error, or with `Invalid command format!` for the unknown-prefix, extra-text, and repeated-prefix cases. No record is added and the summary is unchanged.
 5. Try `pay 0 a/150 d/2026-10-20` and `pay 99 a/150 d/2026-10-20`.<br>
-   Expected: `The person index provided is invalid.` for an index outside the displayed list.
+   Expected: `pay 0` has invalid index syntax and is rejected with `Invalid command format!` followed by the `pay` usage; `pay 99` is a valid index outside the displayed list and shows `The person index provided is invalid.`
 6. Run `pay 1 a/150 d/2026-10-20 r/`.<br>
    Expected: `Invalid command format!` followed by the `pay` usage; the empty `r/` is rejected.
 7. Close and restart the app, then find and select the same client.<br>
