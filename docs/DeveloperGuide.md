@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Developer Guide
+guide: true
 ---
 
 - Table of Contents
@@ -10,7 +11,8 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-- _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+- Fittix is built on the [AddressBook-Level3 project](https://github.com/se-edu/addressbook-level3); the original architecture, setup guide, and some diagrams were adapted for this project.
+- The desktop interface uses [JavaFX](https://openjfx.io/), and the documentation site uses [Jekyll](https://jekyllrb.com/) with the [Minima theme](https://github.com/jekyll/minima).
 
 ---
 
@@ -435,7 +437,7 @@ Snapshots, `AddressBook` copy/reset/equality, `Person` builders and the shared u
 
 #### Implementation increments and validation
 
-Implementation commits cover: (1) immutable model/adapters and legacy/invalid-file tests, (2) baseline/log/delete commands and rollback integration, (3) query/UI handoff and readable display. The feature spec, UG and this DG describe the complete runtime companion PR. Merge the runtime PR before this documentation update. These increments together, not just a foundation model, complete the assigned v1.4 scope.
+Implementation commits cover: (1) immutable model/adapters and legacy/invalid-file tests, (2) baseline/log/delete commands and rollback integration, (3) query/UI handoff and readable display. The feature spec, UG and this DG describe the completed runtime implementation. These increments together, not just a foundation model, complete the assigned v1.4 scope.
 
 Automated coverage in `BodyProgressTest`, `JsonAdaptedBodyProgressTest`, `BodyProgressIntegrationTest` and `BodyProgressPanelTest` exercises:
 
