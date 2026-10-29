@@ -1,3 +1,36 @@
+package seedu.address;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.TimeZone;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.ResourceLock;
+
+import seedu.address.model.AddressBook;
+import seedu.address.model.UserPrefs;
+import seedu.address.model.person.WorkoutLogEntry;
+import seedu.address.model.person.WorkoutSession;
+import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.storage.JsonUserPrefsStorage;
+import seedu.address.storage.StorageManager;
+import seedu.address.testutil.PersonBuilder;
+
+/**
+ * Verifies that startup never replaces an unreadable existing client file with an empty roster.
+ */
+
 @ResourceLock("java.util.TimeZone.default")
 public class MainAppLoadTest {
     @TempDir
