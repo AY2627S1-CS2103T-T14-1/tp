@@ -1,24 +1,33 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.css.PseudoClass;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextInputControl;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
@@ -48,9 +57,11 @@ public class MainWindow extends UiPart<Stage> {
     private static final String FXML = "MainWindow.fxml";
     private static final double MIN_WIDTH = 1280;
     private static final double MIN_HEIGHT = 800;
-    private static final PseudoClass FILTERED = PseudoClass.getPseudoClass("filtered");
     private static final DateTimeFormatter HEADER_DATE_FORMAT =
             DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH);
+    private static final DateTimeFormatter FULL_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale.ENGLISH);
+    private static final DateTimeFormatter CLOCK_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
     private static final Set<String> INDEX_COMMANDS = Set.of(
             "edit", "delete", "diet", "remark", "schedule", "viewschedule",
             "addex", "delex", "clearplan", "dayex", "log", "editlog", "history", PayCommand.COMMAND_WORD,
@@ -72,9 +83,13 @@ public class MainWindow extends UiPart<Stage> {
     private CommandBox commandBox;
     private HelpWindow helpWindow;
     private String filterQuery;
+    private double terminalHeight;
+    private boolean clockExpanded;
+    private Timeline clockTimeline;
+    private Tooltip dateTooltip;
 
     @FXML
-    private MenuItem helpMenuItem;
+    private StackPane brandIcon;
     @FXML
     private StackPane personListPanelPlaceholder;
     @FXML
@@ -95,6 +110,18 @@ public class MainWindow extends UiPart<Stage> {
     private Label filterCountText;
     @FXML
     private Label currentDate;
+    @FXML
+    private Label currentTime;
+    @FXML
+    private HBox dateToggle;
+    @FXML
+    private SplitPane workspace;
+    @FXML
+    private ScrollPane contentScroll;
+    @FXML
+    private VBox terminalPanel;
+    @FXML
+    private HBox terminalClosedBar;
 
     /** Creates the main window. */
     public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath) {
@@ -103,8 +130,17 @@ public class MainWindow extends UiPart<Stage> {
         this.logic = logic;
         this.dataFilePath = dataFilePath;
         setWindowDefaultSize(logic.getGuiSettings());
+        terminalHeight = clampTerminalHeight(logic.getGuiSettings().getTerminalHeight());
+        workspace.getItems().remove(terminalPanel);
+        SplitPane.setResizableWithParent(terminalPanel, false);
+        brandIcon.getChildren().add(FittixIcon.createNode());
         setAccelerators();
-        currentDate.setText(LocalDate.now().format(HEADER_DATE_FORMAT));
+        dateTooltip = new Tooltip();
+        Tooltip.install(dateToggle, dateTooltip);
+        refreshDateTime();
+        clockTimeline = new Timeline(new KeyFrame(Duration.seconds(1), unused -> refreshDateTime()));
+        clockTimeline.setCycleCount(Timeline.INDEFINITE);
+        installKeyboardHandlers();
         helpWindow = new HelpWindow();
     }
 
@@ -113,15 +149,155 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void setAccelerators() {
-        setAccelerator(helpMenuItem, KeyCombination.valueOf("F1"));
+        primaryStage.getScene().getAccelerators().put(KeyCombination.valueOf("F1"), this::handleHelp);
     }
 
-    private void setAccelerator(MenuItem menuItem, KeyCombination keyCombination) {
-        menuItem.setAccelerator(keyCombination);
-        getRoot().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getTarget() instanceof TextInputControl && keyCombination.match(event)) {
-                menuItem.getOnAction().handle(new ActionEvent());
+    private void installKeyboardHandlers() {
+        primaryStage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            // Nothing else in the main window uses Esc, so it closes the terminal whatever has focus.
+            if (event.getCode() == KeyCode.ESCAPE && isTerminalOpen()) {
+                closeTerminal();
                 event.consume();
+            }
+        });
+        primaryStage.getScene().addEventFilter(KeyEvent.KEY_TYPED, event -> {
+            if (commandBox == null || event.isControlDown() || event.isMetaDown() || event.isAltDown()
+                    || primaryStage.getScene().getFocusOwner() instanceof TextInputControl) {
+                return;
+            }
+            // Blank keys keep their normal meaning, such as Space activating a focused button.
+            String character = event.getCharacter();
+            if (character == null || character.isBlank() || character.codePoints()
+                    .anyMatch(Character::isISOControl)) {
+                return;
+            }
+            openTerminal();
+            commandBox.appendTypedText(character);
+            event.consume();
+        });
+    }
+
+    private static double clampTerminalHeight(double height) {
+        return Math.min(640, Math.max(170, height));
+    }
+
+    private boolean isTerminalOpen() {
+        return workspace.getItems().contains(terminalPanel);
+    }
+
+    void openTerminal() {
+        if (!isTerminalOpen()) {
+            workspace.getItems().add(terminalPanel);
+            terminalClosedBar.setVisible(false);
+            terminalClosedBar.setManaged(false);
+            restoreTerminalHeight();
+        }
+        commandBox.requestFocus();
+    }
+
+    /**
+     * Sizes the newly opened terminal to the remembered height. The window is laid out first so the
+     * workspace has its open-state height, then the divider is corrected by the measured difference,
+     * which accounts for the divider's own size and fractional display scaling.
+     */
+    private void restoreTerminalHeight() {
+        Parent root = primaryStage.getScene().getRoot();
+        root.applyCss();
+        root.layout();
+        double workspaceHeight = workspace.getHeight();
+        if (workspaceHeight <= 0) {
+            return;
+        }
+        double position = 1 - terminalHeight / workspaceHeight;
+        workspace.setDividerPositions(position);
+        root.layout();
+        double error = terminalPanel.getHeight() - terminalHeight;
+        workspace.setDividerPositions(position + error / workspaceHeight);
+        root.layout();
+    }
+
+    private void closeTerminal() {
+        if (!isTerminalOpen()) {
+            return;
+        }
+        terminalHeight = clampTerminalHeight(terminalPanel.getHeight());
+        workspace.getItems().remove(terminalPanel);
+        terminalClosedBar.setVisible(true);
+        terminalClosedBar.setManaged(true);
+        contentScroll.requestFocus();
+    }
+
+    @FXML
+    private void handleOpenTerminal() {
+        openTerminal();
+    }
+
+    @FXML
+    private void handleCloseTerminal() {
+        closeTerminal();
+    }
+
+    @FXML
+    private void handleClearFilter() {
+        try {
+            executeCommand("list");
+        } catch (CommandException | ParseException exception) {
+            logger.warning("Could not clear client filter: " + exception.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleDateToggle() {
+        clockExpanded = !clockExpanded;
+        currentTime.setVisible(clockExpanded);
+        currentTime.setManaged(clockExpanded);
+        if (clockExpanded) {
+            clockTimeline.play();
+        } else {
+            clockTimeline.stop();
+        }
+        refreshDateTime();
+    }
+
+    private void refreshDateTime() {
+        LocalDateTime now = LocalDateTime.now();
+        currentDate.setText(now.toLocalDate().format(clockExpanded ? FULL_DATE_FORMAT : HEADER_DATE_FORMAT));
+        currentTime.setText(now.format(CLOCK_FORMAT));
+        String hint = clockExpanded ? "Click to collapse" : "Click for full date and live time";
+        dateToggle.setAccessibleText(hint);
+        dateTooltip.setText(hint);
+    }
+
+    /** Scrolls the workspace only as far as needed to show the whole of {@code node}. */
+    private void scrollIntoView(Node node) {
+        Parent root = primaryStage.getScene().getRoot();
+        root.applyCss();
+        root.layout();
+        Node content = contentScroll.getContent();
+        Bounds bounds = content.sceneToLocal(node.localToScene(node.getBoundsInLocal()));
+        double viewportHeight = contentScroll.getViewportBounds().getHeight();
+        double overflow = content.getBoundsInLocal().getHeight() - viewportHeight;
+        if (viewportHeight <= 0 || overflow <= 0) {
+            return;
+        }
+        double top = contentScroll.getVvalue() * overflow;
+        if (bounds.getMinY() < top) {
+            top = bounds.getMinY();
+        } else if (bounds.getMaxY() > top + viewportHeight) {
+            top = bounds.getMaxY() - viewportHeight;
+        } else {
+            return;
+        }
+        contentScroll.setVvalue(Math.max(0, Math.min(1, top / overflow)));
+    }
+
+    private void revealInContent(Node node) {
+        Platform.runLater(() -> {
+            Bounds bounds = contentScroll.getContent().sceneToLocal(node.localToScene(node.getBoundsInLocal()));
+            double overflow = contentScroll.getContent().getBoundsInLocal().getHeight()
+                    - contentScroll.getViewportBounds().getHeight();
+            if (overflow > 0) {
+                contentScroll.setVvalue(Math.max(0, Math.min(1, bounds.getMinY() / overflow)));
             }
         });
     }
@@ -146,6 +322,7 @@ public class MainWindow extends UiPart<Stage> {
 
         personListPanel.selectedPersonProperty().addListener((unused, previous, selected) ->
                 refreshSelectedClient());
+        personListPanel.setOnSelectionChanged(this::scrollIntoView);
         logic.getFilteredPersonList().addListener((javafx.collections.ListChangeListener<Person>) change -> {
             refreshSelectedClient();
             refreshHeaderCounts();
@@ -155,7 +332,6 @@ public class MainWindow extends UiPart<Stage> {
         personListPanel.setFilterQuery(null);
         refreshSelectedClient();
         refreshFilterPill();
-        Platform.runLater(commandBox::requestFocus);
     }
 
     private void setWindowDefaultSize(GuiSettings guiSettings) {
@@ -169,13 +345,18 @@ public class MainWindow extends UiPart<Stage> {
         }
     }
 
-    /** Opens the help window from the menu and records the action in result history. */
+    /** Runs help from the header and opens the existing guide window. */
     @FXML
     public void handleHelp() {
-        if (resultDisplay != null) {
-            resultDisplay.appendInfo("Help menu", "Opened help window.", CommandCatalog.helpDetails());
+        if (commandBox == null) {
+            showHelpWindow();
+            return;
         }
-        showHelpWindow();
+        try {
+            executeCommand("help");
+        } catch (CommandException | ParseException exception) {
+            logger.warning("Could not run help: " + exception.getMessage());
+        }
     }
 
     private void showHelpWindow() {
@@ -193,8 +374,12 @@ public class MainWindow extends UiPart<Stage> {
     /** Closes Fittix and persists the current window geometry. */
     @FXML
     private void handleExit() {
+        if (isTerminalOpen()) {
+            terminalHeight = clampTerminalHeight(terminalPanel.getHeight());
+        }
+        clockTimeline.stop();
         GuiSettings guiSettings = new GuiSettings(primaryStage.getWidth(), primaryStage.getHeight(),
-                (int) primaryStage.getX(), (int) primaryStage.getY());
+                (int) primaryStage.getX(), (int) primaryStage.getY(), terminalHeight);
         logic.setGuiSettings(guiSettings);
         helpWindow.hide();
         primaryStage.hide();
@@ -205,6 +390,7 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
+        openTerminal();
         String commandWord = commandWord(commandText);
         Person previousSelection = personListPanel.getSelectedPerson();
         selectCommandTarget(commandText, commandWord);
@@ -245,6 +431,7 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void updateUiAfterSuccessfulCommand(String commandText, String commandWord, CommandResult result) {
+        String previousFilterQuery = filterQuery;
         if (FindCommand.COMMAND_WORD.equals(commandWord)) {
             filterQuery = commandText.substring(commandWord.length()).trim();
         } else if (RESET_FILTER_COMMANDS.contains(commandWord)
@@ -258,12 +445,21 @@ public class MainWindow extends UiPart<Stage> {
         }
 
         personListPanel.setFilterQuery(filterQuery);
+        if (FindCommand.COMMAND_WORD.equals(commandWord) || INDEX_COMMANDS.contains(commandWord)
+                || !Objects.equals(previousFilterQuery, filterQuery)) {
+            // A new filter, or a command naming a client by index, may leave the selected index unchanged
+            // while its card is scrolled away, so reveal the selection explicitly.
+            personListPanel.revealSelection();
+        }
         if (AddCommand.COMMAND_WORD.equals(commandWord)) {
             personListPanel.selectLast();
         }
         result.getBodyProgressViewRequest().ifPresent(request -> personListPanel.selectPerson(request.person()));
         refreshSelectedClient();
-        result.getBodyProgressViewRequest().ifPresent(clientDetailPanel::revealBodyProgress);
+        result.getBodyProgressViewRequest().ifPresent(request -> {
+            clientContextPanel.revealBodyProgress(request);
+            revealInContent(clientContextPanel.getBodyProgressNode(request));
+        });
         refreshFilterPill();
     }
 
@@ -279,8 +475,9 @@ public class MainWindow extends UiPart<Stage> {
 
     private void refreshFilterPill() {
         boolean isFiltered = filterQuery != null;
-        filterStateText.setText(isFiltered ? "find: " + filterQuery : "All clients");
-        filterPill.pseudoClassStateChanged(FILTERED, isFiltered);
+        filterStateText.setText(isFiltered ? "find: " + filterQuery : "");
+        filterPill.setVisible(isFiltered);
+        filterPill.setManaged(isFiltered);
         refreshHeaderCounts();
     }
 

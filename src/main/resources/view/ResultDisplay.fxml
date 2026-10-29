@@ -4,5 +4,5 @@
 <?import javafx.scene.layout.StackPane?>
 
 <StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <ListView fx:id="resultList" prefHeight="118" minHeight="92" maxHeight="150" styleClass="result-list" />
+  <ListView fx:id="resultList" styleClass="result-list" />
 </StackPane>

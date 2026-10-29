@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#0b0b0c;color:#f4f4f2;font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}a{color:#d4f25a}a:hover{color:#e8ff94}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#333337;border-radius:8px}::-webkit-scrollbar-track{background:transparent}input::placeholder{color:#6f6f76}pre{margin:0}</style>
+</helmet>
+<div style="width:1568px;padding:56px 64px 96px;display:flex;flex-direction:column;gap:80px">
+
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px"><div style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 24 24" aria-label="Fittix"><g transform="rotate(-45 12 12)" fill="#d4f25a"><rect x="7.4" y="10.7" width="9.2" height="2.6" rx=".4"></rect><rect x="4.4" y="6.6" width="3.4" height="10.8" rx="1"></rect><rect x="16.2" y="6.6" width="3.4" height="10.8" rx="1"></rect><rect x="1.8" y="8.6" width="2" height="6.8" rx=".8"></rect><rect x="20.2" y="8.6" width="2" height="6.8" rx=".8"></rect></g></svg></div><span style="font:600 13px 'JetBrains Mono',monospace;color:#a3a3a8;letter-spacing:.04em">FITTIX · DESKTOP REDESIGN · v2</span></div>
+    <h1 style="margin:0;font-size:52px;line-height:1.05;font-weight:700;letter-spacing:-.02em">A command-first workspace<br><span style="color:#d4f25a">for trainers between sessions.</span></h1>
+  </div>
+  <p style="margin:0;max-width:460px;color:#a3a3a8;font-size:15px;line-height:1.6;text-wrap:pretty">v2 · Every record lives in the GUI. The terminal is now a panel you open and close, and you can resize it. Nothing is cut off. Empty sections stay blank. The File menu and the client-count pill are gone.</p>
+</div>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:600 14px 'JetBrains Mono',monospace;color:#d4f25a">01</span><h2 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.01em">Main screen</h2><span style="color:#a3a3a8;font-size:14px">Interactive. Click a client, or just start typing (try <code style="font-family:'JetBrains Mono',monospace;color:#f4f4f2">help</code> or <code style="font-family:'JetBrains Mono',monospace;color:#f4f4f2">find alex</code>). Esc closes the terminal; drag its top edge to resize it.</span></div>
+    <button onClick="{{ reset }}" style="background:#1c1c1e;border:1px solid #2a2a2d;color:#f4f4f2;border-radius:999px;padding:9px 18px;font:600 13px Manrope,sans-serif;cursor:pointer" style-hover="background:#232326">Reset demo data</button>
+  </div>
+
+  <div ref="{{ winRef }}" style="position:relative;width:1440px;height:980px;background:#121213;border:1px solid #29292c;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 40px 120px rgba(0,0,0,.55)">
+    <div style="height:36px;flex:none;display:flex;align-items:center;gap:8px;padding:0 18px;border-bottom:1px solid #1d1d20;position:relative">
+      <div style="width:12px;height:12px;border-radius:50%;background:#3a3a3e"></div><div style="width:12px;height:12px;border-radius:50%;background:#3a3a3e"></div><div style="width:12px;height:12px;border-radius:50%;background:#3a3a3e"></div>
+      <div style="position:absolute;left:0;right:0;text-align:center;font-size:12px;font-weight:600;color:#85858b;pointer-events:none">Fittix</div>
+    </div>
+
+    <div style="height:64px;flex:none;display:flex;align-items:center;gap:16px;padding:0 24px;position:relative">
+      <sc-if value="{{ showZones }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;top:2px;width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px #121213;z-index:5">1</div></sc-if>
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" aria-label="Fittix"><g transform="rotate(-45 12 12)" fill="#d4f25a"><rect x="7.4" y="10.7" width="9.2" height="2.6" rx=".4"></rect><rect x="4.4" y="6.6" width="3.4" height="10.8" rx="1"></rect><rect x="16.2" y="6.6" width="3.4" height="10.8" rx="1"></rect><rect x="1.8" y="8.6" width="2" height="6.8" rx=".8"></rect><rect x="20.2" y="8.6" width="2" height="6.8" rx=".8"></rect></g></svg></div><span style="font-size:20px;font-weight:700;letter-spacing:-.01em">Fittix</span></div>
+      <div onClick="{{ runHelp }}" style="padding:7px 16px;border-radius:999px;background:#1c1c1e;border:1px solid #26262a;font-size:13px;font-weight:600;color:#d6d6d9;cursor:pointer" style-hover="background:#2a2a2d;color:#f4f4f2">Help</div>
+      <sc-if value="{{ filterOn }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ clearFilter }}" title="Click to show all clients (list)" style="display:flex;align-items:center;gap:10px;background:#1c1c1e;border:1px solid #3b3566;border-radius:999px;padding:7px 14px;font-size:13px;color:#a3a3a8;cursor:pointer" style-hover="border-color:#a99ffb"><div style="width:8px;height:8px;border-radius:50%;background:#a99ffb"></div><span style="color:#f4f4f2;font-weight:600">{{ filterLabel }}</span><span>{{ filterCount }}</span><span style="color:#85858b;font-weight:700">×</span></div>
+      </sc-if>
+      <div style="flex:1"></div>
+      <div onClick="{{ toggleClock }}" title="{{ clockTitle }}" style="display:flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;color:#85858b" style-hover="background:#1c1c1e;color:#f4f4f2">
+        <sc-if value="{{ clockClosed }}" hint-placeholder-val="{{ true }}"><span>Sat, 17 Oct 2026</span></sc-if>
+        <sc-if value="{{ clockOpen }}" hint-placeholder-val="{{ false }}"><span style="color:#f4f4f2;font-weight:600">Saturday, 17 October 2026</span><span style="font:600 13px 'JetBrains Mono',monospace;color:#d4f25a;font-variant-numeric:tabular-nums">{{ clockTime }}</span></sc-if>
+      </div>
+    </div>
+
+    <div style="flex:1;min-height:0;overflow:auto;padding:12px 24px 24px;display:flex;flex-direction:column">
+      <div style="flex:1 0 auto;display:grid;grid-template-columns:300px minmax(0,1fr) 340px;gap:16px;align-items:stretch">
+
+        <div style="position:relative;background:#1a1a1c;border:1px solid #26262a;border-radius:24px;display:flex;flex-direction:column;padding:20px 12px 12px;gap:12px">
+          <sc-if value="{{ showZones }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-10px;top:-10px;width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px #121213;z-index:5">2</div></sc-if>
+          <div style="display:flex;align-items:center;gap:10px;padding:0 8px"><span style="font-size:17px;font-weight:700">Clients</span><span style="font:600 12px 'JetBrains Mono',monospace;background:#2a2a2d;border-radius:999px;padding:3px 9px;color:#d6d6d9">{{ shownCount }}</span></div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <sc-for list="{{ listItems }}" as="c" hint-placeholder-count="6">
+              <div onClick="{{ c.select }}" style="display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px;padding:12px 10px;border-radius:16px;background:{{ c.bg }};border:1px solid {{ c.border }};cursor:pointer" style-hover="border-color:#3a3a3e">
+                <div style="width:32px;height:32px;border-radius:10px;background:{{ c.badgeBg }};color:{{ c.badgeInk }};font:700 13px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">{{ c.idx }}</div>
+                <div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+                  <div style="font-size:14.5px;font-weight:700;line-height:1.3;overflow-wrap:anywhere">{{ c.name }}</div>
+                  <div style="font:500 12px 'JetBrains Mono',monospace;color:#a3a3a8">{{ c.phone }}</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px">
+                    <sc-for list="{{ c.tags }}" as="t" hint-placeholder-count="1"><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#26262a;color:#d6d6d9">{{ t }}</span></sc-for>
+                  </div>
+                  <div style="font-size:11.5px;color:#85858b;line-height:1.4">{{ c.meta }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="position:relative;display:flex;flex-direction:column;gap:16px;min-width:0">
+          <sc-if value="{{ showZones }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-10px;top:-10px;width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px #121213;z-index:5">3</div></sc-if>
+          <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:16px;flex:none">
+              <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                <div style="height:40px;min-width:40px;padding:0 10px;border-radius:12px;background:#d4f25a;color:#141414;font:700 18px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">{{ sel.idx }}</div>
+                <div style="font-size:26px;font-weight:700;letter-spacing:-.015em;overflow-wrap:anywhere">{{ sel.name }}</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <sc-for list="{{ sel.tags }}" as="t" hint-placeholder-count="2"><span style="font-size:12px;font-weight:600;padding:4px 11px;border-radius:999px;background:#2a2a2d;color:#e2e2e5">{{ t }}</span></sc-for>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 24px;border-top:1px dashed #2f2f33;padding-top:16px">
+                <div style="display:flex;flex-direction:column;gap:5px;min-width:0"><span style="font-size:10.5px;font-weight:700;letter-spacing:.09em;color:#85858b">PHONE</span><span style="font:500 13.5px 'JetBrains Mono',monospace">{{ sel.phone }}</span></div>
+                <div style="display:flex;flex-direction:column;gap:5px;min-width:0"><span style="font-size:10.5px;font-weight:700;letter-spacing:.09em;color:#85858b">EMAIL</span><span style="font-size:13.5px;font-weight:500;line-height:1.4;overflow-wrap:anywhere">{{ sel.email }}</span></div>
+                <div style="display:flex;flex-direction:column;gap:5px;min-width:0"><span style="font-size:10.5px;font-weight:700;letter-spacing:.09em;color:#85858b">ADDRESS</span><span style="font-size:13.5px;font-weight:500;line-height:1.4;overflow-wrap:anywhere">{{ sel.address }}</span></div>
+                <div style="display:flex;flex-direction:column;gap:5px;min-width:0"><span style="font-size:10.5px;font-weight:700;letter-spacing:.09em;color:#d4f25a">GOAL</span><span style="font-size:13.5px;font-weight:600;line-height:1.4;overflow-wrap:anywhere">{{ sel.goal }}</span></div>
+              </div>
+            </div>
+
+            <div style="flex:1 0 auto;background:#1c1c1e;border:1px solid #2a2a2d;border-radius:24px;display:flex;flex-direction:column;padding:20px;gap:8px">
+              <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:17px;font-weight:700">Workout plan</span><span style="font-size:12.5px;color:#a3a3a8">{{ sel.planSummary }}</span></div>
+              <sc-if value="{{ sel.hasPlan }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column">
+                  <sc-for list="{{ sel.days }}" as="d" hint-placeholder-count="7">
+                    <div style="display:grid;grid-template-columns:104px minmax(0,1fr);gap:14px;padding:10px 0;border-top:1px dashed #2c2c30;align-items:start">
+                      <div style="display:flex;flex-direction:column;gap:3px;padding-top:6px">
+                        <div style="display:flex;align-items:center;gap:7px"><span style="font:700 13px 'JetBrains Mono',monospace;color:{{ d.labelColor }}">{{ d.short }}</span><sc-if value="{{ d.isToday }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;font-weight:800;letter-spacing:.06em;background:#d4f25a;color:#141414;border-radius:999px;padding:2px 7px">TODAY</span></sc-if></div>
+                        <span style="font-size:11.5px;color:#85858b">{{ d.sub }}</span>
+                      </div>
+                      <sc-if value="{{ d.hasEx }}" hint-placeholder-val="{{ true }}">
+                        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                          <sc-for list="{{ d.exs }}" as="e" hint-placeholder-count="3">
+                            <div style="background:#242427;border:1px solid {{ e.border }};border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0">
+                              <div style="display:flex;align-items:flex-start;gap:8px;min-width:0"><span style="flex:none;font:700 11.5px 'JetBrains Mono',monospace;background:#34343a;color:#f4f4f2;border-radius:7px;padding:2px 7px">{{ e.idx }}</span><span style="font-size:13.5px;font-weight:700;line-height:1.3;overflow-wrap:anywhere">{{ e.name }}</span></div>
+                              <div style="display:flex;justify-content:space-between;font:500 12.5px 'JetBrains Mono',monospace;color:#a3a3a8"><span>{{ e.sr }}</span><span style="color:#f4f4f2">{{ e.w }}</span></div>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ d.isRest }}" hint-placeholder-val="{{ false }}"><div style="padding-top:6px;font-size:12.5px;color:#6f6f76">Rest</div></sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+            </div>
+          </sc-if>
+          <sc-if value="{{ noSel }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1 0 auto;min-height:320px;background:#1c1c1e;border:1px solid #2a2a2d;border-radius:24px"></div>
+          </sc-if>
+        </div>
+
+        <div style="position:relative;display:flex;flex-direction:column;gap:16px;min-width:0">
+          <sc-if value="{{ showZones }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-10px;top:-10px;width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px #121213;z-index:5">4</div></sc-if>
+          <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:14px;flex:none">
+              <div style="display:flex;align-items:center;gap:10px"><div style="width:10px;height:10px;border-radius:3px;background:#f0a54b"></div><span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#f0a54b">DIET</span><span style="font-size:15px;font-weight:700">Targets &amp; notes</span></div>
+              <sc-if value="{{ sel.hasDiet }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:34px;font-weight:700;letter-spacing:-.02em">{{ sel.diet.cal }}</span><span style="font-size:13px;color:#a3a3a8">kcal / day</span></div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <span style="font-size:10.5px;font-weight:700;letter-spacing:.09em;color:#85858b">SPLIT OF DAILY CALORIES</span>
+                  <div style="display:flex;gap:2px;height:8px;border-radius:4px;overflow:hidden;background:#2a2a2d">
+                    <sc-for list="{{ sel.diet.macros }}" as="m" hint-placeholder-count="3"><div style="height:100%;width:{{ m.pct }};background:{{ m.color }}"></div></sc-for>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+                    <sc-for list="{{ sel.diet.macros }}" as="m" hint-placeholder-count="3">
+                      <div style="display:flex;flex-direction:column;gap:3px"><div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#a3a3a8"><span style="width:8px;height:8px;border-radius:2px;background:{{ m.color }}"></span>{{ m.label }}</div><span style="font:600 14px 'JetBrains Mono',monospace">{{ m.val }}</span><span style="font-size:11px;color:#85858b">{{ m.share }}</span></div>
+                    </sc-for>
+                  </div>
+                </div>
+                <sc-if value="{{ sel.diet.hasNotes }}" hint-placeholder-val="{{ true }}"><div style="background:#242427;border-radius:14px;padding:11px 13px;font-size:13px;line-height:1.5;color:#d6d6d9">{{ sel.diet.notes }}</div></sc-if>
+              </sc-if>
+
+            </div>
+
+            <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:10px;flex:none">
+              <div style="display:flex;align-items:center;gap:10px"><div style="width:10px;height:10px;border-radius:50%;background:#8b7cf8"></div><span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#a99ffb">SCHEDULE</span><span style="font-size:15px;font-weight:700">Sessions</span></div>
+              <sc-for list="{{ sel.sessions }}" as="s" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:16px;background:{{ s.bg }};opacity:{{ s.opacity }}">
+                  <div style="display:flex;flex-direction:column;align-items:center;line-height:1"><span style="font-size:10px;font-weight:800;letter-spacing:.08em;color:{{ s.sub }}">{{ s.dow }}</span><span style="font-size:20px;font-weight:700;margin-top:3px">{{ s.day }}</span><span style="font-size:10px;font-weight:700;color:{{ s.sub }};margin-top:2px">{{ s.mon }}</span></div>
+                  <div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-size:13.5px;font-weight:700;line-height:1.3;overflow-wrap:anywhere">{{ s.note }}</span><span style="font-size:11.5px;color:{{ s.sub }}">{{ s.tag }}</span></div>
+                  <span style="font:600 13px 'JetBrains Mono',monospace">{{ s.time }}</span>
+                </div>
+              </sc-for>
+
+            </div>
+
+            <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:10px;flex:none">
+              <div style="display:flex;align-items:center;gap:10px"><div style="width:10px;height:10px;border-radius:50%;border:2px solid #d4f25a"></div><span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#a3a3a8">HISTORY</span><span style="font-size:15px;font-weight:700">Completed workouts</span></div>
+              <sc-for list="{{ sel.logs }}" as="l" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:10px 0;border-top:1px dashed #2c2c30">
+                  <div style="width:22px;height:22px;border-radius:50%;background:#d4f25a;color:#141414;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">✓</div>
+                  <div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+                    <div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-weight:700">{{ l.date }}</span><span style="font-family:'JetBrains Mono',monospace;color:#a3a3a8">{{ l.time }}</span></div>
+                    <sc-for list="{{ l.items }}" as="it" hint-placeholder-count="2"><span style="font:500 12px 'JetBrains Mono',monospace;color:#c4c4c8;overflow-wrap:anywhere">{{ it }}</span></sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              </div>
+
+            <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:12px;flex:none">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="width:10px;height:10px;border-radius:3px;border:2px solid #f4f4f2"></div><span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#a3a3a8">BODY</span><span style="font-size:15px;font-weight:700">Progress</span></div>
+              <sc-if value="{{ sel.hasBody }}" hint-placeholder-val="{{ true }}">
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+                  <sc-for list="{{ sel.bodyRows }}" as="b" hint-placeholder-count="3">
+                    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                      <span style="font-size:11.5px;color:#a3a3a8">{{ b.label }}</span>
+                      <span style="font-size:19px;font-weight:700;letter-spacing:-.01em">{{ b.latest }}</span>
+                      <span style="font:600 12px 'JetBrains Mono',monospace;color:#f4f4f2">{{ b.delta }}</span>
+                      <span style="font-size:11px;color:#85858b">{{ b.from }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <span style="font-size:11.5px;color:#85858b;border-top:1px dashed #2c2c30;padding-top:10px">{{ sel.bodySummary }}</span>
+              </sc-if>
+            </div>
+
+            <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:12px;flex:1 0 auto">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="width:10px;height:10px;border-radius:50%;background:#c4c4c8"></div><span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#a3a3a8">PAYMENTS</span><span style="font-size:15px;font-weight:700">Billing</span></div>
+              <sc-for list="{{ sel.payments }}" as="p" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding-top:10px;border-top:1px dashed #2c2c30">
+                  <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:13.5px;font-weight:700;line-height:1.3;overflow-wrap:anywhere">{{ p.note }}</span><span style="font-size:11.5px;color:#a3a3a8">{{ p.date }}</span></div>
+                  <span style="font:600 13px 'JetBrains Mono',monospace">{{ p.amount }}</span>
+                  <span style="font-size:11px;font-weight:800;letter-spacing:.04em;border-radius:999px;padding:3px 9px;background:{{ p.bg }};color:{{ p.ink }}">{{ p.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <sc-if value="{{ termOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;height:{{ termH }};display:flex;flex-direction:column;background:#161618;border-top:1px solid #2a2a2d;position:relative">
+        <sc-if value="{{ showZones }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;right:220px;top:9px;width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px #121213;z-index:5">5</div></sc-if>
+        <div onMouseDown="{{ startResize }}" title="Drag to resize" style="position:absolute;left:0;right:0;top:-5px;height:9px;cursor:ns-resize;z-index:6;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(212,242,90,.35)"></div>
+        <div style="flex:none;height:44px;display:flex;align-items:center;gap:12px;padding:0 16px 0 24px;border-bottom:1px solid #222225">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.1em;color:#f4f4f2;border-bottom:2px solid #d4f25a;padding:13px 0 11px">TERMINAL</span>
+          <div style="flex:1"></div>
+          <span style="font:500 11.5px 'JetBrains Mono',monospace;color:#6f6f76">Esc to close</span>
+          <button onClick="{{ closeTerm }}" title="Close terminal (Esc)" style="width:32px;height:32px;border:none;border-radius:10px;background:transparent;color:#a3a3a8;font:600 18px Manrope,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#2a2a2d;color:#f4f4f2">×</button>
+        </div>
+        <div ref="{{ resultRef }}" style="flex:1;min-height:0;overflow:auto;padding:14px 24px;display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ results }}" as="r" hint-placeholder-count="0">
+            <div style="display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;align-items:start">
+              <div style="width:22px;height:22px;border-radius:50%;background:{{ r.iconBg }};color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center;margin-top:1px">{{ r.icon }}</div>
+              <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+                <span style="font:500 13px 'JetBrains Mono',monospace;color:#85858b;overflow-wrap:anywhere">› {{ r.cmd }}</span>
+                <span style="font-size:15px;font-weight:600;line-height:1.45;color:{{ r.color }}">{{ r.msg }}</span>
+                <sc-for list="{{ r.detail }}" as="dl" hint-placeholder-count="0"><span style="font:500 13px/1.6 'JetBrains Mono',monospace;color:#a3a3a8;overflow-wrap:anywhere">{{ dl }}</span></sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex:none;padding:0 24px 10px;display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;display:flex;align-items:center;gap:12px;height:44px;border-top:1px solid {{ barBorder }};padding:0">
+            <sc-if value="{{ showZones }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-10px;top:-10px;width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px #121213;z-index:5">6</div></sc-if>
+            <span style="font:700 17px 'JetBrains Mono',monospace;color:{{ promptColor }}">›</span>
+            <input ref="{{ inputRef }}" value="{{ input }}" onChange="{{ onInput }}" onKeyDown="{{ onKey }}" onFocus="{{ onFocus }}" onBlur="{{ onBlur }}" placeholder="Enter command — type “help” to see all commands" style="flex:1;min-width:0;background:transparent;border:none;outline:none;color:{{ inputColor }};font:500 15px 'JetBrains Mono',monospace">
+            <span style="font:500 11.5px 'JetBrains Mono',monospace;color:#6f6f76;white-space:nowrap">↵ run · ↑↓ history</span>
+          </div>
+          <sc-if value="{{ hasHints }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:11.5px;font-weight:700;color:#85858b">{{ hintLabel }}</span>
+              <sc-for list="{{ hints }}" as="h" hint-placeholder-count="0">
+                <div onClick="{{ h.fill }}" style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8;cursor:pointer" style-hover="color:#d4f25a">{{ h.text }}</div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ termClosed }}" hint-placeholder-val="{{ true }}">
+      <div onClick="{{ openTerm }}" style="position:relative;flex:none;height:44px;display:flex;align-items:center;gap:12px;padding:0 16px 0 24px;border-top:1px solid #2a2a2d;background:#161618;cursor:text" style-hover="background:#19191b">
+        <sc-if value="{{ showZones }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;right:200px;top:9px;width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px #121213;z-index:5">5</div></sc-if>
+        <span style="font:700 15px 'JetBrains Mono',monospace;color:#d4f25a">›</span>
+        <span style="font-size:13px;font-weight:500;color:#a3a3a8">Start typing to run a command</span>
+        <div style="flex:1"></div>
+        <button onClick="{{ openTerm }}" style="display:flex;align-items:center;gap:8px;height:30px;padding:0 12px;border:none;border-radius:8px;background:transparent;color:#a3a3a8;font:600 12px Manrope,sans-serif;cursor:pointer" style-hover="background:#2a2a2d;color:#f4f4f2">Terminal <span style="font-size:9px">▲</span></button>
+      </div>
+    </sc-if>
+    <div style="height:30px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-top:1px solid #1d1d20;font:500 11.5px 'JetBrains Mono',monospace;color:#85858b"><span>./data/fittix.json</span><span>Saved</span></div>
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;align-items:baseline;gap:16px"><span style="font:600 14px 'JetBrains Mono',monospace;color:#d4f25a">02</span><h2 style="margin:0;font-size:30px;font-weight:700">Layout &amp; information hierarchy</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center">1</span><span style="font-size:16px;font-weight:700">Header</span></div><p style="margin:0;font-size:14px;line-height:1.55;color:#a3a3a8">Dumbbell logo, Help and today's date as plain text (click the date for the full date and a live clock). During a <b style="color:#f4f4f2">find</b>, a violet filter pill appears, so indexes are never ambiguous. Click it to list all clients again. File → Exit is gone; the window's close button does that.</p></div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center">2</span><span style="font-size:16px;font-weight:700">Client list</span></div><p style="margin:0;font-size:14px;line-height:1.55;color:#a3a3a8">Compact cards, index badge first. The selected client's badge turns lime. Each card adds a one-line summary (plan size, next session). Long names wrap instead of being cut off.</p></div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center">3</span><span style="font-size:16px;font-weight:700">Client detail</span></div><p style="margin:0;font-size:14px;line-height:1.55;color:#a3a3a8">2×2 profile grid, so long emails and addresses wrap in full. Below it, the workout plan, grouped Mon→Sun. Exercise tiles carry their plan index; today's row is flagged so the next set is obvious.</p></div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center">4</span><span style="font-size:16px;font-weight:700">Context column</span></div><p style="margin:0;font-size:14px;line-height:1.55;color:#a3a3a8">Three record types, three signals: <b style="color:#f0a54b">amber square</b> = diet, <b style="color:#a99ffb">violet dot</b> = scheduled sessions (next one filled), <b style="color:#d4f25a">lime check</b> = completed history. Body progress and Payments sit below them, so the right column is about as tall as the centre. The last card in each column stretches, so all columns end on the same line. Empty cards shrink to just their header.</p></div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center">5</span><span style="font-size:16px;font-weight:700">Terminal panel</span></div><p style="margin:0;font-size:14px;line-height:1.55;color:#a3a3a8">Closed by default, so the content fills the window. It opens on the first keystroke, on Help, or from the Terminal button. Drag the top edge to resize it, VS Code-style; the content above scrolls instead of shrinking. Esc or × closes it.</p></div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:50%;background:#d4f25a;color:#141414;font:800 12px Manrope;display:flex;align-items:center;justify-content:center">6</span><span style="font-size:16px;font-weight:700">Command input</span></div><p style="margin:0;font-size:14px;line-height:1.55;color:#a3a3a8">Sits at the bottom of the terminal. No box, just a prompt on a hairline. Coral means an error. A quiet hint shows ↵ run · ↑↓ history. Usage hints from <code style="font-family:'JetBrains Mono',monospace">MESSAGE_USAGE</code> appear only while typing.</p></div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px;color:#a3a3a8"><span style="font-weight:700;color:#f4f4f2">Reading order</span><span style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:999px;padding:6px 14px">Who · name, index, goal</span><span>→</span><span style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:999px;padding:6px 14px">What today · flagged plan row</span><span>→</span><span style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:999px;padding:6px 14px">What's next · violet session</span><span>→</span><span style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:999px;padding:6px 14px">Feedback · terminal, on demand</span></div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;align-items:baseline;gap:16px"><span style="font:600 14px 'JetBrains Mono',monospace;color:#d4f25a">03</span><h2 style="margin:0;font-size:30px;font-weight:700">Design system</h2></div>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:16px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">COLOUR</span>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#121213;border:1px solid #2a2a2d"></div><b style="font-size:13px">Canvas</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#121213 · window</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#1c1c1e;border:1px solid #2a2a2d"></div><b style="font-size:13px">Surface</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#1c1c1e · cards</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#242427;border:1px solid #2a2a2d"></div><b style="font-size:13px">Raised</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#242427 · tiles</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#2a2a2d"></div><b style="font-size:13px">Line</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#2a2a2d · borders</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#f4f4f2"></div><b style="font-size:13px">Ink</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#f4f4f2 · primary text</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#a3a3a8"></div><b style="font-size:13px">Muted</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#a3a3a8 · secondary</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#85858b"></div><b style="font-size:13px">Subtle</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#85858b · labels</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#d4f25a"></div><b style="font-size:13px">Lime</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#d4f25a · action, select, done</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#5d4fd8"></div><b style="font-size:13px">Violet</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#5d4fd8 / #a99ffb · sessions</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#f0a54b"></div><b style="font-size:13px">Amber</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#f0a54b · diet</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#ff6b5e"></div><b style="font-size:13px">Coral</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#ff6b5e · error</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="height:56px;border-radius:14px;background:#f3d34a"></div><b style="font-size:13px">Yellow</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">#f3d34a · warning</span></div>
+      </div>
+      <p style="margin:0;font-size:12.5px;color:#85858b;line-height:1.5">Accent fills always carry #141414 ink (lime, amber, coral) or white (violet). No gradients; elevation comes from surface steps, not shadows.</p>
+    </div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">TYPE · Manrope + JetBrains Mono</span>
+      <div style="display:grid;grid-template-columns:110px 1fr;gap:12px 16px;align-items:baseline">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#85858b">Display 26/700</span><span style="font-size:26px;font-weight:700;letter-spacing:-.015em">Charlotte Oliveiro</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#85858b">Metric 34/700</span><span style="font-size:34px;font-weight:700;letter-spacing:-.02em">2,100</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#85858b">Title 17/700</span><span style="font-size:17px;font-weight:700">Workout plan</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#85858b">Body 13.5/500</span><span style="font-size:13.5px;font-weight:500">Blk 11 Ang Mo Kio Street 74</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#85858b">Label 10.5/800</span><span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#a3a3a8">GOAL · SCHEDULE</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#85858b">Mono 15/500</span><span style="font:500 15px 'JetBrains Mono',monospace">addex 1 n/Squat d/MON</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#85858b">Mono 12.5/500</span><span style="font:500 12.5px 'JetBrains Mono',monospace;color:#a3a3a8">4 × 8 · 80 kg · 87438807</span>
+      </div>
+      <p style="margin:0;font-size:12.5px;color:#85858b;line-height:1.5">Mono is reserved for anything a trainer might type back: indexes, commands, phones, sets/reps/weights, times.</p>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">SPACING · 4 px base</span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:4px;height:14px;background:#d4f25a;border-radius:2px"></div><span style="font:500 12px 'JetBrains Mono',monospace;color:#a3a3a8">4 · icon/text</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:8px;height:14px;background:#d4f25a;border-radius:2px"></div><span style="font:500 12px 'JetBrains Mono',monospace;color:#a3a3a8">8 · tiles in a row</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:12px;height:14px;background:#d4f25a;border-radius:2px"></div><span style="font:500 12px 'JetBrains Mono',monospace;color:#a3a3a8">12 · inside cards</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:16px;height:14px;background:#d4f25a;border-radius:2px"></div><span style="font:500 12px 'JetBrains Mono',monospace;color:#a3a3a8">16 · between cards &amp; columns</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:24px;height:14px;background:#d4f25a;border-radius:2px"></div><span style="font:500 12px 'JetBrains Mono',monospace;color:#a3a3a8">24 · window margin (all sides)</span></div>
+      </div>
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b;margin-top:6px">RADII</span>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:44px;height:44px;border:1.5px solid #d4f25a;border-radius:8px"></div><span style="font:500 11px 'JetBrains Mono',monospace;color:#a3a3a8">8</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:44px;height:44px;border:1.5px solid #d4f25a;border-radius:14px"></div><span style="font:500 11px 'JetBrains Mono',monospace;color:#a3a3a8">14</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:44px;height:44px;border:1.5px solid #d4f25a;border-radius:22px 22px 4px 4px"></div><span style="font:500 11px 'JetBrains Mono',monospace;color:#a3a3a8">22</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:72px;height:30px;border:1.5px solid #d4f25a;border-radius:999px"></div><span style="font:500 11px 'JetBrains Mono',monospace;color:#a3a3a8">pill</span></div>
+      </div>
+    </div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">BUTTONS</span>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <button style="height:44px;padding:0 20px;border:none;border-radius:999px;background:#d4f25a;color:#141414;font:700 14px Manrope;cursor:pointer" style-hover="background:#e3ff7a">Run ↵</button>
+        <button style="height:44px;padding:0 18px;border:1px solid #2a2a2d;border-radius:999px;background:#242427;color:#f4f4f2;font:600 14px Manrope;cursor:pointer" style-hover="background:#2e2e32">Secondary</button>
+        <button style="height:44px;padding:0 18px;border:1px solid #3a3a3e;border-radius:999px;background:transparent;color:#d6d6d9;font:600 14px Manrope;cursor:pointer" style-hover="border-color:#85858b">Ghost</button>
+        <button style="width:44px;height:44px;border:none;border-radius:50%;background:#f4f4f2;color:#141414;font:700 17px Manrope;cursor:pointer">↗</button>
+        <button style="height:44px;padding:0 18px;border:none;border-radius:999px;background:#242427;color:#6f6f76;font:600 14px Manrope">Disabled</button>
+      </div>
+      <p style="margin:0;font-size:12.5px;color:#85858b;line-height:1.5">Only one lime button per screen (Run). Everything else is secondary, because the keyboard is the primary input.</p>
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b;margin-top:6px">STATUS</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;background:#242427;border-radius:999px;padding:5px 12px 5px 6px"><span style="width:18px;height:18px;border-radius:50%;background:#d4f25a;color:#141414;font:800 10px Manrope;display:flex;align-items:center;justify-content:center">✓</span>Success</span>
+        <span style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;background:#242427;border-radius:999px;padding:5px 12px 5px 6px;color:#ff8a7f"><span style="width:18px;height:18px;border-radius:50%;background:#ff6b5e;color:#141414;font:800 10px Manrope;display:flex;align-items:center;justify-content:center">!</span>Error</span>
+        <span style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;background:#242427;border-radius:999px;padding:5px 12px 5px 6px"><span style="width:18px;height:18px;border-radius:50%;background:#f3d34a;color:#141414;font:800 10px Manrope;display:flex;align-items:center;justify-content:center">–</span>Warning</span>
+        <span style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;background:#242427;border-radius:999px;padding:5px 12px 5px 6px"><span style="width:18px;height:18px;border-radius:50%;background:#a99ffb;color:#141414;font:800 10px Manrope;display:flex;align-items:center;justify-content:center">?</span>Help / info</span>
+      </div>
+    </div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">CARDS</span>
+      <div style="background:#121213;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px">
+        <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:16px;padding:12px 14px;display:flex;justify-content:space-between;font-size:13px"><b>Card</b><span style="font:500 11.5px 'JetBrains Mono',monospace;color:#a3a3a8">surface · r22 · p20</span></div>
+        <div style="background:#242427;border:1px solid #2a2a2d;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:5px"><div style="display:flex;align-items:center;gap:8px"><span style="font:700 11.5px 'JetBrains Mono',monospace;background:#34343a;border-radius:7px;padding:2px 7px">4</span><b style="font-size:13.5px">Back Squat</b></div><div style="display:flex;justify-content:space-between;font:500 12.5px 'JetBrains Mono',monospace;color:#a3a3a8"><span>4 × 8</span><span style="color:#f4f4f2">80 kg</span></div></div>
+        <div style="background:#5d4fd8;border-radius:16px;padding:10px 12px;display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>Next session · Upper body</span><span style="font-family:'JetBrains Mono',monospace">07:30</span></div>
+        <div style="border:1px solid #2a2a2d;border-radius:14px;padding:12px;font-size:12.5px;color:#85858b;min-height:56px">Empty: the title stays, the body is blank</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:16px">
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">LIST ITEM STATES</span>
+      <div style="display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:center;padding:10px;border-radius:16px;border:1px solid transparent"><div style="width:32px;height:32px;border-radius:10px;background:#2a2a2d;font:700 13px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">2</div><b style="font-size:14px">Bernice Yu</b><span style="font-size:11px;color:#85858b">default</span></div>
+      <div style="display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:center;padding:10px;border-radius:16px;border:1px solid #3a3a3e"><div style="width:32px;height:32px;border-radius:10px;background:#2a2a2d;font:700 13px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">3</div><b style="font-size:14px">Charlotte Oliveiro</b><span style="font-size:11px;color:#85858b">hover</span></div>
+      <div style="display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:center;padding:10px;border-radius:16px;background:#26262a;border:1px solid #34343a"><div style="width:32px;height:32px;border-radius:10px;background:#d4f25a;color:#141414;font:700 13px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">1</div><b style="font-size:14px">Alex Yeoh</b><span style="font-size:11px;color:#d4f25a">selected</span></div>
+    </div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">COMMAND BAR STATES</span>
+      <div style="display:flex;align-items:center;gap:10px;height:40px;border-top:1px solid #2a2a2d;padding:0 4px"><span style="font:700 15px 'JetBrains Mono',monospace;color:#85858b">›</span><span style="font:500 13px 'JetBrains Mono',monospace;color:#6f6f76">Enter command…</span></div>
+      <div style="display:flex;align-items:center;gap:10px;height:40px;border-top:1px solid #2a2a2d;padding:0 4px"><span style="font:700 15px 'JetBrains Mono',monospace;color:#d4f25a">›</span><span style="font:500 13px 'JetBrains Mono',monospace">find bernice</span></div>
+      <div style="display:flex;align-items:center;gap:10px;height:40px;border-top:1px solid #ff6b5e;padding:0 4px"><span style="font:700 15px 'JetBrains Mono',monospace;color:#ff6b5e">›</span><span style="font:500 13px 'JetBrains Mono',monospace;color:#ff8a7f">delete 0</span></div>
+      <span style="font-size:12px;color:#85858b;line-height:1.5">No box: one hairline above the prompt. On error the line, prompt and text turn coral, and the text stays in the field so it can be fixed instead of retyped.</span>
+    </div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:12px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">COMMAND RESULTS</span>
+      <div style="background:#161618;border:1px solid #26262a;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:grid;grid-template-columns:20px 1fr;gap:10px"><span style="width:20px;height:20px;border-radius:50%;background:#d4f25a;color:#141414;font:800 11px Manrope;display:flex;align-items:center;justify-content:center">✓</span><div style="display:flex;flex-direction:column;gap:2px"><span style="font:500 12px 'JetBrains Mono',monospace;color:#85858b">› editex 1 ex/4 d/THU</span><span style="font-size:13.5px;font-weight:600">Moved #4 Back Squat to Thursday for Alex Yeoh</span></div></div>
+        <div style="display:grid;grid-template-columns:20px 1fr;gap:10px"><span style="width:20px;height:20px;border-radius:50%;background:#ff6b5e;color:#141414;font:800 11px Manrope;display:flex;align-items:center;justify-content:center">!</span><div style="display:flex;flex-direction:column;gap:2px"><span style="font:500 12px 'JetBrains Mono',monospace;color:#85858b">› addex 1 n/Deadlift s/3 r/5 d/FUNDAY</span><span style="font-size:13.5px;font-weight:600;color:#ff8a7f">Day must be one of MON, TUE, WED, THU, FRI, SAT, SUN.</span><span style="font:500 12px 'JetBrains Mono',monospace;color:#a3a3a8">Usage: addex INDEX n/EXERCISE s/SETS r/REPS w/KG d/DAY</span></div></div>
+        <div style="display:grid;grid-template-columns:20px 1fr;gap:10px"><span style="width:20px;height:20px;border-radius:50%;background:#a99ffb;color:#141414;font:800 11px Manrope;display:flex;align-items:center;justify-content:center">?</span><div style="display:flex;flex-direction:column;gap:2px"><span style="font:500 12px 'JetBrains Mono',monospace;color:#85858b">› help</span><span style="font-size:13.5px;font-weight:600">14 commands. Full guide: Help › User Guide</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;align-items:baseline;gap:16px"><span style="font:600 14px 'JetBrains Mono',monospace;color:#d4f25a">04</span><h2 style="margin:0;font-size:30px;font-weight:700">Feature → UI mapping</h2><span style="font-size:14px;color:#a3a3a8">Command words are illustrative — keep your existing parser keywords and prefixes.</span></div>
+  <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:300px 460px 1fr;padding:14px 24px;background:#161618;font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b"><span>FEATURE</span><span>COMMAND</span><span>WHERE IT SHOWS UP</span></div>
+    <sc-for list="{{ mapping }}" as="m" hint-placeholder-count="18">
+      <div style="display:grid;grid-template-columns:300px 460px 1fr;padding:12px 24px;border-top:1px solid #26262a;font-size:13.5px;align-items:baseline">
+        <span style="font-weight:700">{{ m.f }}</span>
+        <code style="font:500 12.5px 'JetBrains Mono',monospace;color:#d4f25a">{{ m.c }}</code>
+        <span style="color:#c4c4c8;line-height:1.5">{{ m.w }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;align-items:baseline;gap:16px"><span style="font:600 14px 'JetBrains Mono',monospace;color:#d4f25a">05</span><h2 style="margin:0;font-size:30px;font-weight:700">JavaFX implementation notes</h2></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">SCENE GRAPH · MainWindow.fxml</span>
+      <pre style="font:500 12.5px/1.7 'JetBrains Mono',monospace;color:#d6d6d9;white-space:pre;overflow:auto">BorderPane  .window
+├─ top     HBox .app-header         spacing 16 · padding 0 24
+│   ├─ Label .brand   Button .pill (Help)
+│   ├─ Label .filter-pill   visible+managed only during find
+│   ├─ Region (HBox.hgrow=ALWAYS)
+│   └─ Label .date-text
+├─ center  SplitPane .workspace     orientation VERTICAL
+│   ├─ ScrollPane .content          fitToWidth=true
+│   │   └─ GridPane .body           hgap 16 · padding 12 24 24
+│   │        cols: 300 · hgrow ALWAYS · 340
+│   │        ├─ VBox .card  ClientListPanel › VBox of ClientCard
+│   │        ├─ VBox (spacing 16)
+│   │        │    ├─ ProfileCard  GridPane 2×2, Labels wrapText
+│   │        │    └─ WorkoutPlanCard  VBox › DayRow ×7
+│   │        │         └─ ExerciseTile  VBox .tile
+│   │        └─ VBox (spacing 16)  Diet · Sessions · Log · Body · Payments
+│             (last child VBox.vgrow=ALWAYS)
+│   └─ VBox .terminal               only in items while open
+│        ├─ HBox .terminal-header   (Label, Region, Button ×)
+│        ├─ ListView&lt;CommandResult&gt; .result-list  vgrow
+│        ├─ HBox .command-bar  (Label ›, TextField, Label hint)
+│        └─ FlowPane .hint-row      only while typing
+└─ bottom  VBox
+    ├─ HBox .terminal-closed-bar    only while closed
+    └─ HBox .status-bar   (StatusBarFooter)</pre>
+    </div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:#85858b">CSS · FittixTheme.css</span>
+      <pre style="font:500 12.5px/1.65 'JetBrains Mono',monospace;color:#d6d6d9;white-space:pre;overflow:auto"><span style="color:#85858b">/* looked-up colours on .root */</span>
+.root {
+  canvas: #121213; surface: #1c1c1e; raised: #242427;
+  line: #2a2a2d; ink: #f4f4f2; muted: #a3a3a8;
+  lime: #d4f25a; violet: #5d4fd8; amber: #f0a54b; coral: #ff6b5e;
+  -fx-font-family: "Manrope"; -fx-font-size: 14px;
+  -fx-background-color: canvas;
+}
+.card {
+  -fx-background-color: surface; -fx-background-radius: 22;
+  -fx-border-color: line; -fx-border-radius: 22; -fx-padding: 20;
+}
+.tile   { -fx-background-color: raised; -fx-background-radius: 14; }
+.index-badge { -fx-font-family: "JetBrains Mono"; -fx-background-radius: 10; }
+.client-list .list-cell:selected .index-badge {
+  -fx-background-color: lime; -fx-text-fill: #141414;
+}
+.day-row { -fx-border-color: line transparent transparent transparent;
+           -fx-border-style: dashed; }
+.command-bar { -fx-background-color: transparent;
+  -fx-border-color: line transparent transparent transparent; -fx-border-width: 1 0 0 0; }
+.command-bar .text-field { -fx-background-color: transparent; -fx-padding: 0; }
+.command-bar:error { -fx-border-color: coral transparent transparent transparent; }
+.terminal { -fx-background-color: #161618; }
+.workspace > .split-pane-divider { -fx-padding: 0 0 4 0;
+  -fx-background-color: line; }
+.workspace > .split-pane-divider:hover { -fx-background-color: lime; }
+.btn-primary { -fx-background-color: lime; -fx-text-fill: #141414;
+  -fx-background-radius: 999; -fx-font-weight: bold; }</pre>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:8px"><b style="font-size:15px">States via PseudoClass</b><p style="margin:0;font-size:13.5px;color:#a3a3a8;line-height:1.55;text-wrap:pretty">JavaFX has no <code style="font-family:'JetBrains Mono',monospace">:focus-within</code>. Register <code style="font-family:'JetBrains Mono',monospace">focused-field</code> and <code style="font-family:'JetBrains Mono',monospace">error</code> PseudoClasses and toggle them on the HBox from the TextField's focus listener and CommandBox's existing failure path.</p></div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:8px"><b style="font-size:15px">Results as a list</b><p style="margin:0;font-size:13.5px;color:#a3a3a8;line-height:1.55;text-wrap:pretty">Swap ResultDisplay's TextArea for a ListView of a small record (command, success, feedback, usage). Append on every execute, then <code style="font-family:'JetBrains Mono',monospace">scrollTo(size-1)</code>. Cap at ~50 items. No model changes.</p></div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:8px"><b style="font-size:15px">Derived, not new, data</b><p style="margin:0;font-size:13.5px;color:#a3a3a8;line-height:1.55;text-wrap:pretty">Day grouping, "next session", "today" and macro bars are computed in the UI layer from existing fields. Load fonts with <code style="font-family:'JetBrains Mono',monospace">Font.loadFont</code> at startup; no box-shadows needed (use surface steps).</p></div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:8px"><b style="font-size:15px">Terminal toggle &amp; resize</b><p style="margin:0;font-size:13.5px;color:#a3a3a8;line-height:1.55;text-wrap:pretty">Open and close the terminal by adding or removing its VBox in the SplitPane's <code style="font-family:'JetBrains Mono',monospace">getItems()</code>, then restore the saved divider position (persist it in GuiSettings). Put a Scene-level <code style="font-family:'JetBrains Mono',monospace">KEY_TYPED</code> filter in place: when the terminal is closed and a printable key is typed, open it, focus the TextField and pass the character on. A <code style="font-family:'JetBrains Mono',monospace">KEY_PRESSED</code> filter handles Esc (close).</p></div>
+    <div style="background:#1c1c1e;border:1px solid #2a2a2d;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:8px"><b style="font-size:15px">Wrap, don't truncate</b><p style="margin:0;font-size:13.5px;color:#a3a3a8;line-height:1.55;text-wrap:pretty">Set <code style="font-family:'JetBrains Mono',monospace">wrapText=true</code> on the profile, list-card, tile and session labels, and bind their <code style="font-family:'JetBrains Mono',monospace">maxWidth</code> to the column. Keep the ScrollPane at <code style="font-family:'JetBrains Mono',monospace">fitToWidth=true</code> so only vertical scrolling appears. Empty cards render their header and an empty Region with a min height.</p></div>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Populated&quot;,&quot;Empty list&quot;,&quot;Error result&quot;],&quot;default&quot;:&quot;Populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;showZones&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+const DAYS=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+const DAYFULL={MON:'Monday',TUE:'Tuesday',WED:'Wednesday',THU:'Thursday',FRI:'Friday',SAT:'Saturday',SUN:'Sunday'};
+const TODAY='SAT', TODAY_ISO='2026-10-17';
+const DOW=['SUN','MON','TUE','WED','THU','FRI','SAT'], MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const USAGE={
+  add:'add n/NAME p/PHONE e/EMAIL a/ADDRESS [g/GOAL] [t/TAG]…',
+  edit:'edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…',
+  delete:'delete INDEX', list:'list', clear:'clear', find:'find KEYWORD [MORE_KEYWORDS]…',
+  session:'session INDEX d/YYYY-MM-DD t/HH:MM [n/NOTE]',
+  diet:'diet INDEX cal/KCAL [pro/G] [carb/G] [fat/G] [n/NOTES]',
+  addex:'addex INDEX n/EXERCISE s/SETS r/REPS w/KG d/DAY',
+  editex:'editex INDEX ex/EX_INDEX d/DAY', delex:'delex INDEX ex/EX_INDEX', clearplan:'clearplan INDEX',
+  log:'log INDEX d/YYYY-MM-DD t/HH:MM ex/EXERCISE SETSxREPS @KG…', help:'help'
+};
+const ex=(name,sets,reps,weight,day)=>({name,sets,reps,weight,day});
+const EXTRA={
+ 1:{body:{base:{date:'2026-09-01',weight:84.2,fat:24.5,waist:92},entries:[{date:'2026-09-22',weight:83.1,fat:23.8,waist:90.5},{date:'2026-10-13',weight:81.8,fat:22.9,waist:89}]},
+    payments:[{date:'2026-10-01',amount:480,status:'Paid',note:'October · 8 sessions'},{date:'2026-11-01',amount:480,status:'Due',note:'November · 8 sessions'}]},
+ 2:{payments:[{date:'2026-10-05',amount:360,status:'Paid',note:'October · 6 sessions'}]},
+ 4:{body:{base:{date:'2026-10-01',weight:78,fat:19,waist:84},entries:[]}},
+ 5:{payments:[{date:'2026-10-20',amount:300,status:'Due',note:'Starter block · 5 sessions'}]}
+};
+function seed(){return [
+ {id:1,name:'Alex Yeoh',phone:'87438807',email:'alexyeoh@example.com',address:'Blk 30 Geylang Street 29, #06-40',goal:'Lose 6 kg by December',tags:['friends','beginner'],
+  plan:[ex('Bench Press',3,10,60,'MON'),ex('Incline DB Press',3,12,22,'MON'),ex('Cable Fly',3,15,15,'MON'),ex('Back Squat',4,8,80,'WED'),ex('Romanian Deadlift',3,10,70,'WED'),ex('Walking Lunge',3,12,20,'WED'),ex('Pull-up',4,8,0,'FRI'),ex('Barbell Row',4,8,60,'FRI'),ex('Face Pull',3,15,20,'FRI'),ex('Kettlebell Swing',4,15,24,'SAT')],
+  diet:{cal:2100,pro:160,carb:210,fat:65,notes:'High protein, low added sugar. Banana + coffee 45 min pre-workout. Nothing after 9 pm.'},
+  sessions:[{date:'2026-10-14',time:'18:00',note:'Lower body'},{date:'2026-10-19',time:'07:30',note:'Upper body · strength'},{date:'2026-10-21',time:'18:00',note:'Lower body'},{date:'2026-10-23',time:'07:30',note:'Pull + conditioning'}],
+  logs:[{date:'2026-10-16',time:'07:35',items:['Pull-up 4x8 @BW','Barbell Row 4x8 @57.5kg','Face Pull 3x15 @20kg']},{date:'2026-10-14',time:'18:05',items:['Back Squat 4x8 @77.5kg','Romanian Deadlift 3x10 @70kg','Walking Lunge 3x12 @20kg']},{date:'2026-10-12',time:'07:30',items:['Bench Press 3x10 @57.5kg','Incline DB Press 3x12 @20kg']}]},
+ {id:2,name:'Bernice Yu',phone:'99272758',email:'berniceyu@example.com',address:'Blk 30 Lorong 3 Serangoon Gardens, #07-18',goal:'Bench press 80 kg',tags:['colleagues','powerlifting'],
+  plan:[ex('Bench Press',5,5,70,'TUE'),ex('Overhead Press',4,6,40,'TUE'),ex('Deadlift',5,3,120,'THU'),ex('Front Squat',4,6,65,'THU'),ex('Close-grip Bench',3,8,55,'SAT')],
+  diet:null,sessions:[{date:'2026-10-20',time:'12:00',note:'Bench technique'}],
+  logs:[{date:'2026-10-15',time:'12:10',items:['Deadlift 5x3 @117.5kg','Front Squat 4x6 @62.5kg']}]},
+ {id:3,name:'Charlotte Oliveiro',phone:'93210283',email:'charlotte@example.com',address:'Blk 11 Ang Mo Kio Street 74, #11-04',goal:'Half marathon in March',tags:['neighbours'],
+  plan:[],diet:{cal:1900,pro:110,carb:260,fat:55,notes:'Carb-load the evening before long Sunday runs. 500 ml electrolytes per hour of running.'},sessions:[],logs:[]},
+ {id:4,name:'David Li',phone:'91031282',email:'lidavid@example.com',address:'Blk 436 Serangoon Gardens Street 26, #16-43',goal:'Rehab knee, rebuild squat',tags:['family','rehab'],
+  plan:[ex('Goblet Squat',3,12,16,'MON'),ex('Step-up',3,10,10,'MON'),ex('Leg Press',3,12,80,'THU'),ex('Hamstring Curl',3,12,30,'THU')],
+  diet:null,sessions:[{date:'2026-10-18',time:'09:00',note:'Knee check-in'}],logs:[{date:'2026-10-15',time:'09:05',items:['Leg Press 3x12 @75kg','Hamstring Curl 3x12 @27.5kg']}]},
+ {id:5,name:'Irfan Ibrahim',phone:'92492021',email:'irfan@example.com',address:'Blk 47 Tampines Street 20, #17-35',goal:'Gain 4 kg lean mass',tags:['classmates'],
+  plan:[ex('Deadlift',4,5,140,'MON'),ex('Bench Press',4,6,85,'WED'),ex('Weighted Dip',3,8,15,'WED'),ex('Back Squat',4,6,110,'FRI')],
+  diet:{cal:3100,pro:180,carb:380,fat:90,notes:'Surplus of ~300 kcal. Shake after every session.'},sessions:[{date:'2026-10-22',time:'19:30',note:'Push day'}],logs:[]},
+ {id:6,name:'Roy Balakrishnan',phone:'92624417',email:'royb@example.com',address:'Blk 45 Aljunied Street 85, #11-31',goal:'General fitness',tags:['colleagues'],plan:[],diet:null,sessions:[],logs:[]}
+].map(c=>({body:null,payments:[],...c,...(EXTRA[c.id]||{})}));}
+const fmt=d=>{const t=new Date(d+'T00:00:00');return{dow:DOW[t.getDay()],day:String(t.getDate()),mon:MON[t.getMonth()],label:DOW[t.getDay()].charAt(0)+DOW[t.getDay()].slice(1).toLowerCase()+' '+t.getDate()+' '+MON[t.getMonth()].charAt(0)+MON[t.getMonth()].slice(1).toLowerCase()};};
+const kg=w=>Number(w)===0?'BW':w+' kg';
+function fail(msg,usage){const e=new Error(msg);e.usage=usage;throw e;}
+
+class Component extends DCLogic {
+  inputRef=React.createRef(); resultRef=React.createRef(); winRef=React.createRef();
+  state=this.init(this.props.startState);
+  init(mode){
+    let sv={};try{sv=JSON.parse(localStorage.getItem('fittix-v2-terminal')||'{}');}catch(e){}
+    const base={clients:seed(),filter:null,selectedId:1,input:'',inputError:false,focused:false,cmdHist:[],histIdx:-1,nextId:7,termOpen:false,termH:sv.h||320,log:[]};
+    if(mode==='Empty list') return {...base,clients:[],selectedId:null,log:[...base.log,{cmd:'clear',kind:'success',msg:'Client list has been cleared!',detail:[]}]};
+    if(mode==='Error result') return {...base,termOpen:true,input:'addex 1 n/Deadlift s/3 r/5 w/120 d/FUNDAY',inputError:true,log:[{cmd:'addex 1 n/Deadlift s/3 r/5 w/120 d/FUNDAY',kind:'error',msg:'Day must be one of MON, TUE, WED, THU, FRI, SAT, SUN.',detail:['Usage: '+USAGE.addex]}]};
+    return base;
+  }
+  componentDidMount(){this.scrollLog();this._k=e=>this.onGlobalKey(e);window.addEventListener('keydown',this._k);this._t=setInterval(()=>{if(this.state.clockOpen) this.forceUpdate();},1000);}
+  componentWillUnmount(){window.removeEventListener('keydown',this._k);clearInterval(this._t);}
+  componentDidUpdate(prev,ps){
+    if(prev.startState!==this.props.startState){this.setState(this.init(this.props.startState));return;}
+    if(ps.log!==this.state.log) this.scrollLog();
+    if(!ps.termOpen&&this.state.termOpen){this.scrollLog();this.focusInput();}
+  }
+  focusInput(){const el=this.inputRef.current;if(!el) return;el.focus();const n=el.value.length;try{el.setSelectionRange(n,n);}catch(e){}}
+  openTerm(extra){this.setState(s=>({termOpen:true,input:extra?s.input+extra:s.input,inputError:extra?false:s.inputError}),()=>this.focusInput());}
+  closeTerm(){const el=this.inputRef.current;if(el) el.blur();this.setState({termOpen:false});}
+  onGlobalKey(e){
+    const a=document.activeElement;const inField=a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT'||a.isContentEditable);const own=a===this.inputRef.current;
+    if(e.key==='Escape'&&this.state.termOpen&&(!inField||own)){e.preventDefault();this.closeTerm();return;}
+    if(inField||e.ctrlKey||e.metaKey||e.altKey||e.key.length!==1) return;
+    e.preventDefault();this.openTerm(e.key);
+  }
+  startResize(e){
+    e.preventDefault();e.stopPropagation();const w=this.winRef.current;const sc=w?(w.getBoundingClientRect().height/w.offsetHeight)||1:1;
+    const y0=e.clientY,h0=this.state.termH;
+    const mv=ev=>this.setState({termH:Math.max(170,Math.min(640,Math.round(h0-(ev.clientY-y0)/sc)))});
+    const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);document.body.style.cursor='';try{localStorage.setItem('fittix-v2-terminal',JSON.stringify({h:this.state.termH}));}catch(x){}};
+    document.body.style.cursor='ns-resize';window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);
+  }
+  scrollLog(){const el=this.resultRef.current;if(el) el.scrollTop=el.scrollHeight;}
+  shown(){const {clients,filter}=this.state;return filter?clients.filter(c=>filter.some(k=>c.name.toLowerCase().split(/\s+/).includes(k.toLowerCase()))):clients;}
+  parse(rest){
+    const m=rest.match(/(^|\s)[a-z]+\//i);const idx=m?m.index:rest.length;
+    const pre=rest.slice(0,idx).trim(), args={};
+    const re=/([a-z]+)\/(.*?)(?=\s+[a-z]+\/|$)/gi;let x;const tail=rest.slice(idx);
+    while((x=re.exec(tail))){const k=x[1].toLowerCase();(args[k]=args[k]||[]).push(x[2].trim());}
+    const get=k=>args[k]?args[k][args[k].length-1]:undefined;
+    return {pre,args,get};
+  }
+  target(pre,usage){
+    if(!/^\d+$/.test(pre)||+pre<1) fail('Invalid command format!',usage);
+    const list=this.shown();const c=list[+pre-1];
+    if(!c) fail('The client index provided is invalid.',usage);
+    return c;
+  }
+  day(v,usage){const d=(v||'').toUpperCase();const k=DAYS.find(x=>d===x||d===DAYFULL[x].toUpperCase());if(!k) fail('Day must be one of MON, TUE, WED, THU, FRI, SAT, SUN.',usage);return k;}
+  mutate(id,fn){const clients=structuredClone(this.state.clients);const c=clients.find(x=>x.id===id);fn(c);c.plan.sort((a,b)=>DAYS.indexOf(a.day)-DAYS.indexOf(b.day));this.setState({clients,selectedId:id});return c;}
+  exec(cmd,rest){
+    const U=USAGE[cmd];const {pre,args,get}=this.parse(rest);
+    switch(cmd){
+      case 'help':return{kind:'info',msg:'14 commands. Full guide: Help › User Guide',detail:Object.values(USAGE)};
+      case 'list':this.setState({filter:null});return{kind:'success',msg:'Listed all clients'};
+      case 'find':{const ks=rest.split(/\s+/).filter(Boolean);if(!ks.length) fail('Invalid command format!',U);this.setState({filter:ks});const n=this.state.clients.filter(c=>ks.some(k=>c.name.toLowerCase().split(/\s+/).includes(k.toLowerCase()))).length;return{kind:'success',msg:n+' client'+(n===1?'':'s')+' listed!'};}
+      case 'clear':this.setState({clients:[],selectedId:null,filter:null});return{kind:'success',msg:'Client list has been cleared!'};
+      case 'delete':{const c=this.target(rest.trim(),U);const clients=this.state.clients.filter(x=>x.id!==c.id);this.setState({clients,selectedId:this.state.selectedId===c.id?(clients[0]||{}).id:this.state.selectedId});return{kind:'success',msg:'Deleted Client: '+c.name};}
+      case 'add':{
+        if(pre||!get('n')||!get('p')||!get('e')||!get('a')) fail('Invalid command format!',U);
+        if(!/^\d{3,}$/.test(get('p'))) fail('Phone numbers should only contain digits, and be at least 3 digits long.',U);
+        if(!/^\S+@\S+\.\S+$/.test(get('e'))) fail('Emails should be of the format local-part@domain.',U);
+        if(this.state.clients.some(c=>c.name.toLowerCase()===get('n').toLowerCase())) fail('This client already exists in Fittix.');
+        const id=this.state.nextId;const c={id,name:get('n'),phone:get('p'),email:get('e'),address:get('a'),goal:get('g')||'—',tags:args.t||[],plan:[],diet:null,sessions:[],logs:[]};
+        this.setState({clients:[...this.state.clients,c],selectedId:id,nextId:id+1,filter:null});return{kind:'success',msg:'New client added: '+c.name};}
+      case 'edit':{const c=this.target(pre,U);const map={n:'name',p:'phone',e:'email',a:'address',g:'goal'};const keys=Object.keys(args);if(!keys.length) fail('At least one field to edit must be provided.',U);
+        if(get('p')&&!/^\d{3,}$/.test(get('p'))) fail('Phone numbers should only contain digits, and be at least 3 digits long.',U);
+        const r=this.mutate(c.id,x=>{keys.forEach(k=>{if(map[k]) x[map[k]]=get(k);});if(args.t) x.tags=args.t.filter(Boolean);});return{kind:'success',msg:'Edited Client: '+r.name};}
+      case 'session':{const c=this.target(pre,U);const d=get('d'),t=get('t');if(!d||!t) fail('Invalid command format!',U);
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||isNaN(new Date(d+'T00:00:00'))) fail('Dates must be in the format YYYY-MM-DD.',U);if(!/^\d{2}:\d{2}$/.test(t)) fail('Times must be in the format HH:MM (24h).',U);
+        this.mutate(c.id,x=>{x.sessions.push({date:d,time:t,note:get('n')||'Training session'});x.sessions.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));});return{kind:'success',msg:'Scheduled session for '+c.name+' on '+fmt(d).label+', '+t};}
+      case 'diet':{const c=this.target(pre,U);const cal=get('cal');if(!cal||!/^\d+$/.test(cal)) fail('Calorie target must be a whole number (cal/2000).',U);
+        ['pro','carb','fat'].forEach(k=>{const v=get(k);if(v!==undefined&&v!==''&&!/^\d+$/.test(v)) fail('Macros must be whole numbers of grams.',U);});
+        this.mutate(c.id,x=>{x.diet={cal:+cal,pro:+(get('pro')||0),carb:+(get('carb')||0),fat:+(get('fat')||0),notes:get('n')||(x.diet&&x.diet.notes)||''};});return{kind:'success',msg:'Updated diet plan for '+c.name+': '+(+cal).toLocaleString()+' kcal/day'};}
+      case 'addex':{const c=this.target(pre,U);const n=get('n'),s=get('s'),r=get('r'),w=get('w')||'0';if(!n||!s||!r||!get('d')) fail('Invalid command format!',U);
+        const d=this.day(get('d'),U);if(!/^\d+$/.test(s)||!/^\d+$/.test(r)) fail('Sets and reps must be positive whole numbers.',U);if(isNaN(+w)) fail('Weight must be a number in kg (0 for bodyweight).',U);
+        const e=ex(n,+s,+r,+w,d);let pos;this.mutate(c.id,x=>{x.plan.push(e);});
+        const pl=[...c.plan,e].sort((a,b)=>DAYS.indexOf(a.day)-DAYS.indexOf(b.day));pos=pl.indexOf(e)+1;
+        return{kind:'success',msg:'Added exercise #'+pos+' to '+c.name+' — '+DAYFULL[d]+' · '+n+' '+s+'x'+r+' @'+(+w===0?'BW':w+'kg')};}
+      case 'editex':{const c=this.target(pre,U);const i=+get('ex');if(!get('ex')||!get('d')) fail('Invalid command format!',U);if(!c.plan[i-1]) fail('The exercise index provided is invalid.',U);
+        const d=this.day(get('d'),U);const nm=c.plan[i-1].name;this.mutate(c.id,x=>{x.plan[i-1].day=d;});return{kind:'success',msg:'Moved #'+i+' '+nm+' to '+DAYFULL[d]+' for '+c.name};}
+      case 'delex':{const c=this.target(pre,U);const i=+get('ex');if(!get('ex')) fail('Invalid command format!',U);if(!c.plan[i-1]) fail('The exercise index provided is invalid.',U);
+        const nm=c.plan[i-1].name;this.mutate(c.id,x=>{x.plan.splice(i-1,1);});return{kind:'success',msg:'Removed #'+i+' '+nm+' from '+c.name+"'s plan. Later exercises were renumbered."};}
+      case 'clearplan':{const c=this.target(rest.trim(),U);if(!c.plan.length) return{kind:'warning',msg:c.name+' has no workout plan to clear.'};this.mutate(c.id,x=>{x.plan=[];});return{kind:'success',msg:'Cleared workout plan for '+c.name};}
+      case 'log':{const c=this.target(pre,U);const d=get('d'),t=get('t');if(!d||!t||!args.ex) fail('Invalid command format!',U);
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) fail('Dates must be in the format YYYY-MM-DD.',U);if(!/^\d{2}:\d{2}$/.test(t)) fail('Times must be in the format HH:MM (24h).',U);
+        this.mutate(c.id,x=>{x.logs.unshift({date:d,time:t,items:args.ex});x.logs.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));});return{kind:'success',msg:'Logged workout for '+c.name+' on '+fmt(d).label+' ('+args.ex.length+' exercise'+(args.ex.length===1?'':'s')+')'};}
+      default:fail('Unknown command. Type help to see all commands.');
+    }
+  }
+  run(raw){
+    const line=(raw||'').trim();if(!line) return;
+    const sp=line.indexOf(' ');const cmd=(sp<0?line:line.slice(0,sp)).toLowerCase();const rest=sp<0?'':line.slice(sp+1).trim();
+    let res;try{res=this.exec(cmd,rest);}catch(e){res={kind:'error',msg:e.message,detail:e.usage?['Usage: '+e.usage]:[]};}
+    res.detail=res.detail||[];const err=res.kind==='error';
+    this.setState(s=>({termOpen:true,log:[...s.log,{cmd:line,...res}].slice(-40),input:err?line:'',inputError:err,cmdHist:[...s.cmdHist,line],histIdx:-1}));
+  }
+  renderVals(){
+    const st=this.state;const shown=this.shown();
+    let selC=shown.find(c=>c.id===st.selectedId)||shown[0]||null;
+    const listItems=shown.map((c,i)=>{const on=selC&&c.id===selC.id;const nx=c.sessions.find(s=>s.date>=TODAY_ISO);
+      return{idx:String(i+1),name:c.name,phone:c.phone,tags:c.tags.slice(0,2),
+        meta:(c.plan.length?c.plan.length+' exercises':'No plan')+' · '+(nx?'Next '+fmt(nx.date).label:'No session booked'),
+        bg:on?'#26262a':'transparent',border:on?'#34343a':'transparent',badgeBg:on?'#d4f25a':'#2a2a2d',badgeInk:on?'#141414':'#f4f4f2',
+        select:()=>this.setState({selectedId:c.id})};});
+    let sel=null;
+    if(selC){const c=selC;const plan=c.plan.map((e,i)=>({...e,idx:i+1}));
+      const days=DAYS.map(d=>{const exs=plan.filter(e=>e.day===d).map(e=>({idx:String(e.idx),name:e.name,sr:e.sets+' × '+e.reps,w:kg(e.weight),border:d===TODAY?'#3d4420':'#2e2e32'}));
+        return{short:d,sub:exs.length?DAYFULL[d]+' · '+exs.length:DAYFULL[d],exs,hasEx:exs.length>0,isRest:!exs.length,isToday:d===TODAY,labelColor:d===TODAY?'#d4f25a':(exs.length?'#f4f4f2':'#6f6f76')};});
+      const tdays=days.filter(d=>d.hasEx).length;
+      let nextFound=false;
+      const sessions=c.sessions.map(s=>{const f=fmt(s.date);const past=s.date<TODAY_ISO;const isNext=!past&&!nextFound;if(isNext) nextFound=true;
+        return{...f,time:s.time,note:s.note,bg:isNext?'#5d4fd8':'#242427',sub:isNext?'#e4e0ff':'#a3a3a8',opacity:past?'0.55':'1',tag:past?'Past':(isNext?'Next session':'Upcoming')};});
+      const dt=c.diet;const diet=dt?{cal:dt.cal.toLocaleString(),notes:dt.notes,hasNotes:!!(dt.notes&&dt.notes.trim()),macros:[['Protein',dt.pro,4,'#f0a54b'],['Carbs',dt.carb,4,'#f7d3a0'],['Fat',dt.fat,9,'#a8692a']].map(([l,g,k,col])=>{const p=g?Math.round(g*k/dt.cal*100):0;return{label:l,val:g?g+' g':'—',pct:Math.min(100,p)+'%',share:g?p+'% of kcal':'',color:col};})}:null;
+      const bd=c.body||null;const pays=c.payments||[];let bodyRows=[],bodySummary='';
+      if(bd){const base=bd.base,lat=bd.entries.length?bd.entries[bd.entries.length-1]:null;
+        bodyRows=[['Weight','weight',' kg'],['Body fat','fat','%'],['Waist','waist',' cm']].map(([l,k,u])=>{const d=lat?Math.round((lat[k]-base[k])*10)/10:null;
+          return{label:l,latest:(lat||base)[k]+u,delta:d===null?'':(d>0?'+':d<0?'−':'±')+Math.abs(d)+u.trim(),from:lat?'from '+base[k]+u:'baseline'};});
+        bodySummary='Baseline '+fmt(base.date).label+(lat?' · latest '+fmt(lat.date).label+' · '+bd.entries.length+' check-in'+(bd.entries.length===1?'':'s'):'');}
+      const payments=pays.map(p=>({note:p.note,date:(p.status==='Due'?'Due ':'Paid ')+fmt(p.date).label,amount:'S$'+p.amount,status:p.status.toUpperCase(),bg:p.status==='Due'?'#f3d34a':'#26262a',ink:p.status==='Due'?'#141414':'#c4c4c8'}));
+      sel={bodyRows,bodySummary,hasBody:!!bd,payments,idx:String(shown.indexOf(c)+1),name:c.name,tags:c.tags,phone:c.phone,email:c.email,address:c.address,goal:c.goal,
+        days,hasPlan:plan.length>0,noPlan:!plan.length,planSummary:plan.length?plan.length+' exercises · '+tdays+' training day'+(tdays===1?'':'s'):'',
+        diet,hasDiet:!!dt,noDiet:!dt,sessions,noSessions:!sessions.length,
+        logs:c.logs.map(l=>({date:fmt(l.date).label,time:l.time,items:l.items})),noLogs:!c.logs.length};}
+    const KIND={success:['#d4f25a','✓','#f4f4f2'],error:['#ff6b5e','!','#ff8a7f'],info:['#a99ffb','?','#f4f4f2'],warning:['#f3d34a','–','#f4f4f2']};
+    const results=st.log.map(r=>({cmd:r.cmd,msg:r.msg,detail:r.detail||[],iconBg:KIND[r.kind][0],icon:KIND[r.kind][1],color:KIND[r.kind][2]}));
+    const word=st.input.trim().split(/\s+/)[0].toLowerCase();
+    const fill=t=>()=>{this.setState({input:t,inputError:false});setTimeout(()=>this.inputRef.current&&this.inputRef.current.focus(),0);};
+    let hints,hintLabel;
+    if(word){const ks=Object.keys(USAGE).filter(k=>k.startsWith(word));hintLabel=ks.length?'Usage':'No matching command';hints=ks.slice(0,4).map(k=>({text:USAGE[k],fill:fill(k+' ')}));}
+    else{hintLabel='';hints=[];}
+    return{
+      showZones:this.props.showZones??true,
+      reset:()=>this.setState(this.init(this.props.startState)),
+      runHelp:()=>this.run('help'),
+      clockOpen:!!st.clockOpen,clockClosed:!st.clockOpen,clockTitle:st.clockOpen?'Click to collapse':'Click for full date and live time',toggleClock:()=>this.setState(s=>({clockOpen:!s.clockOpen})),clockTime:new Date().toLocaleTimeString('en-GB',{hour12:false}),
+      filterOn:!!st.filter,clearFilter:()=>this.run('list'),filterLabel:'find: '+(st.filter||[]).join(' '),filterCount:shown.length+' of '+st.clients.length,
+      termOpen:st.termOpen,termClosed:!st.termOpen,termH:st.termH+'px',winRef:this.winRef,hasHints:hints.length>0,
+      openTerm:()=>this.openTerm(),closeTerm:()=>this.closeTerm(),startResize:e=>this.startResize(e),
+      shownCount:String(shown.length),listItems,listEmpty:!shown.length,
+      listEmptyTitle:st.clients.length?'No clients match':'No clients yet',
+      listEmptyBody:st.clients.length?'Nothing matched “'+(st.filter||[]).join(' ')+'”. Indexes refer to this filtered list.':'Add a client to get started.',
+      listEmptyCmd:st.clients.length?'list':'add n/NAME p/PHONE e/EMAIL a/ADDRESS',
+      hasSel:!!sel,noSel:!sel,sel:sel||{},
+      results,resultRef:this.resultRef,inputRef:this.inputRef,input:st.input,
+      barBorder:st.inputError?'#ff6b5e':'#26262a',promptColor:st.inputError?'#ff6b5e':'#d4f25a',inputColor:st.inputError?'#ff8a7f':'#f4f4f2',
+      onInput:e=>this.setState({input:e.target.value,inputError:false}),
+      onFocus:()=>this.setState({focused:true}),onBlur:()=>this.setState({focused:false}),
+      onKey:e=>{const h=st.cmdHist;
+        if(e.key==='Enter'){e.preventDefault();this.run(st.input);}
+        else if(e.key==='ArrowUp'&&h.length){e.preventDefault();const i=st.histIdx<0?h.length-1:Math.max(0,st.histIdx-1);this.setState({histIdx:i,input:h[i],inputError:false});}
+        else if(e.key==='ArrowDown'&&st.histIdx>=0){e.preventDefault();const i=st.histIdx+1;this.setState(i>=h.length?{histIdx:-1,input:''}:{histIdx:i,input:h[i]});}},
+      submit:()=>this.run(st.input),
+      hints,hintLabel,
+      mapping:[
+        {f:'Add client',c:USAGE.add,w:'New card appended to Client list (2), auto-selected; result in terminal (5)'},
+        {f:'Edit client',c:USAGE.edit,w:'Profile strip (3) updates in place; list card refreshes'},
+        {f:'Delete client',c:USAGE.delete,w:'Card removed from list (2); selection moves to first client'},
+        {f:'List all clients',c:'list',w:'Filter pill (1) disappears'},
+        {f:'Clear all clients',c:'clear',w:'Cards stay in place; their bodies go blank'},
+        {f:'Find clients',c:USAGE.find,w:'Violet filter pill appears in header (1) with keywords + “x of y”; click it to list all; indexes renumber'},
+        {f:'Name, phone, email, address',c:'n/ p/ e/ a/',w:'Name in profile header; phone/email/address in 2×2 profile grid (3); values wrap, never truncated'},
+        {f:'Goal',c:'g/',w:'Profile grid, lime label (3)'},
+        {f:'Tags',c:'t/',w:'Pills on list card (first two) and full set in profile header'},
+        {f:'Schedule a training session',c:USAGE.session,w:'Sessions card (4); next upcoming filled violet; also on list card meta'},
+        {f:'View scheduled sessions',c:'— (select client)',w:'Sessions card (4), chronological, past sessions dimmed'},
+        {f:'Diet targets & notes',c:USAGE.diet,w:'Diet card (4): kcal headline, calorie split bar (protein/carbs/fat as % of the kcal target), notes block'},
+        {f:'Add exercise to plan',c:USAGE.addex,w:'Exercise tile in its weekday row (3), with plan index badge'},
+        {f:'Edit exercise day',c:USAGE.editex,w:'Tile moves to the new weekday row; indexes re-sort by day'},
+        {f:'Remove exercise',c:USAGE.delex,w:'Tile removed; result message warns that indexes renumbered'},
+        {f:'Clear workout plan',c:USAGE.clearplan,w:'Plan card stays; body goes blank'},
+        {f:'Record completed workout',c:USAGE.log,w:'History card (4), newest first, lime check per session'},
+        {f:'Success / error feedback',c:'any command',w:'Terminal (5) opens automatically; input border (6) turns coral; failed text stays editable'},
+        {f:'Help',c:'help · Help menu',w:'Help pill (1) or command; usage printed in terminal (5); live usage hints only while typing'},
+        {f:'Open / close terminal',c:'any key · Terminal button · Esc · ×',w:'Terminal panel (5) opens from the bottom; drag its top edge to resize; the content above scrolls instead of shrinking'},
+        {f:'Body progress',c:'(existing body commands)',w:'Body card (4): latest weight / body fat / waist, change from baseline, check-in count; header only if no baseline'},
+        {f:'Payments',c:'(existing payment commands)',w:'Payments card (4), last in the column so it stretches; DUE in yellow, PAID muted'},
+        {f:'Data file location',c:'—',w:'Status bar, bottom-left'}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

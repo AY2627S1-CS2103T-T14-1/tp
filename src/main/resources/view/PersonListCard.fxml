@@ -19,8 +19,8 @@
   <Label fx:id="id" alignment="CENTER" minWidth="32" minHeight="32" prefWidth="32" prefHeight="32"
          styleClass="index-badge" GridPane.columnIndex="0" GridPane.valignment="TOP" />
   <VBox spacing="5" minWidth="0" GridPane.columnIndex="1">
-    <Label fx:id="name" maxWidth="Infinity" styleClass="client-name" />
-    <Label fx:id="phone" styleClass="client-phone,mono" />
+    <Label fx:id="name" minWidth="0" maxWidth="Infinity" wrapText="true" styleClass="client-name" />
+    <Label fx:id="phone" minWidth="0" maxWidth="Infinity" wrapText="true" styleClass="client-phone,mono" />
     <FlowPane fx:id="tags" hgap="4" vgap="4" minWidth="0" />
     <Label fx:id="meta" maxWidth="Infinity" styleClass="client-meta" wrapText="true" />
   </VBox>

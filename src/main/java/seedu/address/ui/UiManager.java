@@ -22,7 +22,6 @@ public class UiManager implements Ui {
     public static final String ALERT_DIALOG_PANE_FIELD_ID = "alertDialogPane";
 
     private static final Logger logger = LogsCenter.getLogger(UiManager.class);
-    private static final String ICON_APPLICATION = "/images/address_book_32.png";
     private static final String[] FONT_FILES = {
         "/fonts/Manrope-Regular.ttf",
         "/fonts/Manrope-Medium.ttf",
@@ -56,7 +55,7 @@ public class UiManager implements Ui {
         }
 
         //Set the application icon.
-        primaryStage.getIcons().add(getImage(ICON_APPLICATION));
+        primaryStage.getIcons().add(FittixIcon.createImage());
 
         try {
             mainWindow = new MainWindow(primaryStage, logic, dataFilePath);

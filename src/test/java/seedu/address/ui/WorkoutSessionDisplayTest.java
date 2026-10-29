@@ -29,6 +29,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import seedu.address.logic.commands.BodyProgressViewRequest;
 import seedu.address.model.person.DietPlan;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.TrainingSession;
@@ -84,7 +85,6 @@ public class WorkoutSessionDisplayTest {
             assertEquals("1800 kcal per day", label(panel, "dietTarget").getText());
             assertEquals("Prioritise vegetables", label(panel, "dietNotes").getText());
             assertTrue(region(panel, "dietNotesBox").isManaged());
-            assertEquals("diet 2", label(panel, "dietCommandHint").getText());
 
             panel.showPerson(new PersonBuilder().withDietPlan(new DietPlan("High protein")).build(), 1);
             assertFalse(region(panel, "dietNotesBox").isManaged());
@@ -100,7 +100,7 @@ public class WorkoutSessionDisplayTest {
                     .withDietaryRestrictions("Peanut allergy", "Halal meals").build();
             panel.showPerson(restricted, 2);
 
-            assertTrue(region(panel, "dietEmpty").isManaged());
+            assertFalse(region(panel, "dietContent").isManaged());
             assertTrue(region(panel, "dietaryRestrictionsBox").isManaged());
             assertEquals("Peanut allergy; Halal meals", label(panel, "dietaryRestrictions").getText());
 
@@ -226,7 +226,37 @@ public class WorkoutSessionDisplayTest {
                     labelTexts(rows.getChildren().get(0)));
             assertEquals(List.of("✓", "2. Tue 14 Jan 2020", "Time not specified",
                     "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(1)));
-            assertEquals("history 4", label(panel, "historyCommandHint").getText());
+            assertTrue(rows.getChildren().get(0).lookup(".history-date") instanceof Label);
+            return null;
+        });
+    }
+
+    @Test
+    public void completedWorkouts_zeroWeightEntry_showsBodyweight() throws Exception {
+        runOnFxThread(() -> {
+            WorkoutLogEntry pushUp = new WorkoutLogEntry("Push up", BigDecimal.ZERO, 3, 12);
+            Person person = new PersonBuilder().withWorkoutSessions(List.of(
+                    new WorkoutSession(LocalDate.of(2020, 1, 15), Optional.empty(), List.of(pushUp)))).build();
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(person, 1);
+
+            assertEquals(List.of("✓", "1. Wed 15 Jan 2020", "Time not specified", "Push up · 3 × 12 · BW"),
+                    labelTexts(vbox(panel, "historyRows").getChildren().getFirst()));
+            return null;
+        });
+    }
+
+    @Test
+    public void revealBodyProgress_requestForAnotherClient_isIgnored() throws Exception {
+        runOnFxThread(() -> {
+            Person displayed = new PersonBuilder().withName("Alice Lee").build();
+            Person other = new PersonBuilder().withName("Priya Nair").build();
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(displayed, 1);
+
+            panel.revealBodyProgress(new BodyProgressViewRequest(other, BodyProgressViewRequest.Section.HISTORY));
+            panel.revealBodyProgress(new BodyProgressViewRequest(displayed,
+                    BodyProgressViewRequest.Section.HISTORY));
             return null;
         });
     }
@@ -288,6 +318,13 @@ public class WorkoutSessionDisplayTest {
                     }
                 }
             }
+
+            VBox rows = (VBox) root.lookup("#historyRows");
+            assertEquals(3, rows.getChildren().size());
+            assertEquals(List.of("✓", "1. Wed 15 Jan 2020", "Time not specified",
+                    "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(0)));
+            assertEquals(List.of("✓", "3. Wed 15 Jan 2014", "Time not specified",
+                    "Back squat · 3 × 10 · 60 kg"), labelTexts(rows.getChildren().get(2)));
             return null;
         });
     }
@@ -303,9 +340,9 @@ public class WorkoutSessionDisplayTest {
 
             assertEquals(0, vbox(panel, "sessionRows").getChildren().size());
             assertEquals(0, vbox(panel, "historyRows").getChildren().size());
-            assertTrue(region(panel, "dietEmpty").isManaged());
-            assertTrue(region(panel, "sessionsEmpty").isManaged());
-            assertTrue(region(panel, "historyEmpty").isManaged());
+            assertFalse(region(panel, "dietContent").isManaged());
+            assertFalse(region(panel, "sessionRows").isManaged());
+            assertFalse(region(panel, "historyRows").isManaged());
             return null;
         });
     }

@@ -24,7 +24,7 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Fittix v1.4 running with sample client data](images/FittixActualV14.jpg)
 
-1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
+1. In the redesigned workspace, type any letter to open the terminal, then enter a command and press Enter. Press Esc to close the terminal; drag the lime grip at the centre of its top divider to resize it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
    * `list` : Lists all contacts.
@@ -185,7 +185,7 @@ Examples:
 
 ### Recording a client's diet goals: `diet`
 
-Records a client's current nutrition target and optional coaching notes. Together, these are the client's **diet goals**; only one current target record is stored per client. Select a client in the list to read their target and notes in the **DIET** section of the right-hand context panel. The section shows **No diet target recorded.** when that client has no diet goals. Long text wraps, and the panel can be scrolled.
+Records a client's current nutrition target and optional coaching notes. Together, these are the client's **diet goals**; only one current target record is stored per client. Select a client in the list to read their target and notes in the **DIET** section of the right-hand context panel. An empty section keeps its heading and leaves its body blank. Long text wraps, and the workspace can be scrolled.
 
 The `diet` command's feedback still calls this record a "diet plan". The messages below quote the application's exact wording.
 
@@ -380,7 +380,7 @@ Day not specified
 
 Adding an exercise, changing its day, or deleting an exercise can change the numbers shown. Always use the **current displayed exercise number** for `dayex` and `delex`. Exercises already in the same day group keep their relative order when the plan is sorted.
 
-An empty plan shows `No workout plan yet` on the person card. Command feedback also shows the plan in weekday order with the same exercise numbers.
+An empty plan leaves only the **Workout plan** heading visible in the selected client's workout card. For a nonempty plan, command feedback lists exercises in weekday order with the same exercise numbers as the card.
 
 ### Removing an exercise from a client's workout plan: `delex`
 
@@ -659,7 +659,7 @@ Format: `bodyhistory INDEX`
 
 Example: `bodyhistory 1`
 
-Selects that client and reveals their body-progress history in the **Body progress** card in the centre details column. Scroll inside the card to read the complete history or comparison; the centre column also scrolls when needed. It shows the baseline separately, then **all** progress entries in date order, oldest first, with weight and notes. The baseline is not counted as an entry. Missing notes appear as `—`. Long notes wrap; scroll vertically to read older or longer records.
+Selects that client and reveals their body-progress history in the **Body progress** card in the right context column. Scroll the workspace to read the complete history or comparison. It shows the baseline separately, then **all** progress entries in date order, oldest first, with weight and notes. The baseline is not counted as an entry. Missing notes appear as `—`. Long notes wrap; scroll vertically to read older or longer records.
 
 Successful feedback is `Showing body progress history for NAME: N entries.` With only a baseline, it displays the baseline and `No body progress entries recorded.` With no baseline, it selects the requested client and shows `No body baseline recorded for NAME. Use bodybase first.` These empty views do not change data.
 

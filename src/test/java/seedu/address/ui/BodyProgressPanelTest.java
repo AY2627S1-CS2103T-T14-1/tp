@@ -26,13 +26,14 @@ import org.junit.jupiter.api.io.TempDir;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import seedu.address.logic.LogicManager;
 import seedu.address.logic.commands.BodyProgressViewRequest;
@@ -112,8 +113,47 @@ class BodyProgressPanelTest {
             return value;
         });
         onFx(() -> {
-            ScrollPane scroll = (ScrollPane) panel.getRoot().lookup("#bodyScroll");
-            assertTrue(scroll.getVvalue() > 0);
+            assertEquals(panel.getRevealTarget(new BodyProgressViewRequest(
+                    person("74.20", note), BodyProgressViewRequest.Section.COMPARISON)),
+                    panel.getRoot().lookup("#comparisonHeading"));
+            return null;
+        });
+    }
+
+    @Test
+    void revealTarget_withoutBaselineIsSummary_withBaselineFollowsRequestedSection() throws Exception {
+        onFx(() -> {
+            BodyProgressPanel panel = new BodyProgressPanel();
+            Person unrecorded = new PersonBuilder().withName("Daniel Tan").build();
+            panel.showPerson(unrecorded);
+            assertEquals(label(panel.getRoot(), "baseline"), panel.getRevealTarget(
+                    new BodyProgressViewRequest(unrecorded, BodyProgressViewRequest.Section.HISTORY)));
+
+            Person recorded = person("74.20", "Measured before breakfast");
+            panel.showPerson(recorded);
+            assertEquals(panel.getRoot().lookup("#historyHeading"), panel.getRevealTarget(
+                    new BodyProgressViewRequest(recorded, BodyProgressViewRequest.Section.HISTORY)));
+            assertEquals(panel.getRoot().lookup("#comparisonHeading"), panel.getRevealTarget(
+                    new BodyProgressViewRequest(recorded, BodyProgressViewRequest.Section.COMPARISON)));
+            return null;
+        });
+    }
+
+    @Test
+    void narrowContextColumn_showsCompleteSummaryAndComparison() throws Exception {
+        onFx(() -> {
+            BodyProgressPanel panel = new BodyProgressPanel();
+            panel.showPerson(person("74.20", "Measured before breakfast"));
+            Scene scene = new Scene(panel.getRoot(), 340, 900);
+            scene.getStylesheets().add(getClass().getResource("/view/FittixTheme.css").toExternalForm());
+            panel.getRoot().applyCss();
+            panel.getRoot().layout();
+            for (String id : List.of("baseline", "comparison")) {
+                Label value = label(panel.getRoot(), id);
+                Text rendered = (Text) value.lookup(".text");
+                assertEquals(value.getText(), rendered.getText(), id + " should not be ellipsised");
+                assertTrue(rendered.getLayoutBounds().getHeight() <= value.getHeight(), id);
+            }
             return null;
         });
     }
@@ -140,6 +180,7 @@ class BodyProgressPanelTest {
             Stage stage = new Stage();
             MainWindow window = new MainWindow(stage, logic, storage.getAddressBookFilePath());
             window.fillInnerParts();
+            window.openTerminal();
             stage.setWidth(1280);
             stage.setHeight(800);
             stage.show();
@@ -184,7 +225,13 @@ class BodyProgressPanelTest {
             TextField input = (TextField) rendered.getScene().lookup("#commandTextField");
             assertTrue(input.localToScene(input.getBoundsInLocal()).getMaxY() <= rendered.getScene().getHeight(),
                     "The command field must remain visible at the minimum window size.");
+            assertBalancedColumns(rendered.getScene());
             writeScreenshot(rendered.getScene(), Path.of("build/reports/body-progress-ui.png"));
+            rendered.setWidth(1440);
+            rendered.setHeight(980);
+            rendered.getScene().getRoot().applyCss();
+            rendered.getScene().getRoot().layout();
+            assertBalancedColumns(rendered.getScene());
             rendered.close();
             return null;
         });
@@ -209,6 +256,17 @@ class BodyProgressPanelTest {
 
     private static Label label(Region root, String id) {
         return (Label) root.lookup("#" + id);
+    }
+
+    private static void assertBalancedColumns(Scene scene) {
+        Node list = scene.lookup(".client-list-card");
+        Node plan = scene.lookup(".workout-card");
+        Node payments = scene.lookup(".payments-card");
+        double listBottom = list.localToScene(list.getBoundsInLocal()).getMaxY();
+        double planBottom = plan.localToScene(plan.getBoundsInLocal()).getMaxY();
+        double paymentsBottom = payments.localToScene(payments.getBoundsInLocal()).getMaxY();
+        assertEquals(listBottom, planBottom, 1, "The plan should reach the list column's bottom.");
+        assertEquals(listBottom, paymentsBottom, 1, "Payments should reach the list column's bottom.");
     }
 
     private static void run(TextField field, String command) {
