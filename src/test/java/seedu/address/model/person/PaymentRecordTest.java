@@ -129,6 +129,16 @@ public class PaymentRecordTest {
     }
 
     @Test
+    public void remarksValidation_treatsOtherUnicodeSpaceAsSpace() {
+        // The rule covers every SPACE_SEPARATOR, not just U+00A0 (here U+3000 IDEOGRAPHIC SPACE).
+        assertFalse(PaymentRecord.isValidRemarks("\u3000"));
+        assertThrows(IllegalArgumentException.class, PaymentRecord.MESSAGE_REMARKS_CONSTRAINTS, () ->
+                PaymentRecord.parseRemarks("\u3000"));
+        assertTrue(PaymentRecord.isValidRemarks("fee\u3000paid"));
+        assertEquals("fee paid", PaymentRecord.parseRemarks("fee\u3000paid"));
+    }
+
+    @Test
     public void equalsAndHashCode_useAllValues() {
         PaymentRecord record = new PaymentRecord(new BigDecimal("150"), DATE, Optional.of("Initial fee"));
         PaymentRecord sameValues = PaymentRecord.fromText("150.00", "2026-10-20", Optional.of("Initial fee"));

@@ -311,6 +311,35 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_twoLetterSlashTokenNearSingleLetterPrefix_rejected() {
+        // Pin down the inherent limitation: a two-letter <letters>/ token that sits within one edit of
+        // a single-letter prefix is rejected, because this is structurally identical to issue #253's
+        // "ad/" -> "a/" case and cannot be distinguished lexically. "on"->"n/", "in"->"n/",
+        // "am"->"a/", and "up"->"p/" are therefore flagged just like "ad"->"a/".
+        Index targetIndex = INDEX_FIRST_PERSON;
+
+        String onOff = targetIndex.getOneBased() + " g/Track on/off trends";
+        String expectedOnOff = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "on/")
+                + " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN, "n/ (name)");
+        assertParseFailure(parser, onOff, expectedOnOff);
+
+        String inOut = targetIndex.getOneBased() + " g/Track in/out values";
+        String expectedInOut = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "in/")
+                + " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN, "n/ (name)");
+        assertParseFailure(parser, inOut, expectedInOut);
+
+        String ampm = targetIndex.getOneBased() + " g/Take pill am/pm schedule";
+        String expectedAmPm = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "am/")
+                + " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN, "a/ (address)");
+        assertParseFailure(parser, ampm, expectedAmPm);
+
+        String upDown = targetIndex.getOneBased() + " g/Track up/down trends";
+        String expectedUpDown = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "up/")
+                + " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN, "p/ (phone)");
+        assertParseFailure(parser, upDown, expectedUpDown);
+    }
+
+    @Test
     public void parse_multiWordGoalWithoutPrefixShape_success() {
         // A normal multi-word goal must still parse successfully.
         Index targetIndex = INDEX_FIRST_PERSON;

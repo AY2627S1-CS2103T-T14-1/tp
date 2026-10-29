@@ -318,7 +318,7 @@ The edit is rejected if the resulting client would duplicate another client unde
 
 **Repeated single-value prefix:** `The n/, p/, e/, a/ and g/ prefixes may each be used only once. Repeat t/ for multiple tags.`
 
-**Near-miss parameter prefix:** `Parameter 'ad/' is not a valid parameter prefix. Recognized parameter prefixes are: n/ (name), p/ (phone), e/ (email), a/ (address), g/ (goal) and t/ (tag). Did you mean 'a/ (address)'?` Only an unambiguous near miss of a single valid prefix is rejected; ordinary text containing a slash (for example `c/o`, `and/or`, `km/h`, `w/`) is accepted.
+**Near-miss parameter prefix:** `Parameter 'ad/' is not a valid parameter prefix. Recognized parameter prefixes are: n/ (name), p/ (phone), e/ (email), a/ (address), g/ (goal) and t/ (tag). Did you mean 'a/ (address)'?` Only an unambiguous near miss of a single valid prefix is rejected; ordinary text containing a slash (for example `c/o`, `and/or`, `km/h`, `w/`) is accepted. Typo detection is case-sensitive and applies only to lowercase, so an uppercase token such as `E/` is not flagged; a two-letter token within one edit of a single-letter prefix (for example `in/` or `on/` for `n/`) is always rejected because it is indistinguishable from a genuine typo like `ad/`.
 
 **Duplicate client:** `This person already exists in the address book.`
 
