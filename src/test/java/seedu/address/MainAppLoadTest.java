@@ -30,6 +30,7 @@ import seedu.address.testutil.PersonBuilder;
 /**
  * Verifies that startup never replaces an unreadable existing client file with an empty roster.
  */
+
 @ResourceLock("java.util.TimeZone.default")
 public class MainAppLoadTest {
     @TempDir
@@ -112,6 +113,22 @@ public class MainAppLoadTest {
         // A roster saved before names were compared without regard to case can hold such duplicates.
         Files.copy(Path.of("src", "test", "data", "JsonSerializableAddressBookTest",
                 "caseOnlyDuplicatePersonAddressBook.json"), dataFile);
+        byte[] legacyBytes = Files.readAllBytes(dataFile);
+
+        assertThrows(IllegalStateException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
+        assertArrayEquals(legacyBytes, Files.readAllBytes(dataFile));
+    }
+
+    @Test
+    public void initModelManager_savedSingleLabelEmailDomain_stopsAndPreservesOriginalBytes() throws Exception {
+        StorageManager storage = storage();
+        AddressBook original = new AddressBook();
+        original.addPerson(new PersonBuilder().withEmail("amy@gmail.com").build());
+        storage.saveAddressBook(original);
+        Path dataFile = storage.getAddressBookFilePath();
+        // A roster saved before the two-label rule can still hold an email such as alpha@example.
+        Files.writeString(dataFile, Files.readString(dataFile).replace("\"amy@gmail.com\"", "\"alpha@example\""));
+        assertTrue(Files.readString(dataFile).contains("\"alpha@example\""));
         byte[] legacyBytes = Files.readAllBytes(dataFile);
 
         assertThrows(IllegalStateException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
