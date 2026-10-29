@@ -133,6 +133,53 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseAddressForAdd_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseAddressForAdd(null));
+    }
+
+    @Test
+    public void parseAddressForAdd_blankAddress_retainsExistingValidation() {
+        for (String address : List.of("", " ", WHITESPACE)) {
+            assertThrows(ParseException.class, Address.MESSAGE_CONSTRAINTS, () ->
+                    ParserUtil.parseAddressForAdd(address));
+        }
+    }
+
+    @Test
+    public void parseAddressForAdd_lengthBoundaries_returnsAddressOrRejectsOverflow() throws Exception {
+        for (int length : List.of(1, 199, 200)) {
+            String address = "A".repeat(length);
+            assertEquals(new Address(address), ParserUtil.parseAddressForAdd(address));
+        }
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_ADD_ADDRESS_CONSTRAINTS, () ->
+                ParserUtil.parseAddressForAdd("A".repeat(201)));
+    }
+
+    @Test
+    public void parseAddressForAdd_outerWhitespaceExcluded_preservesInternalSpacingAndCase() throws Exception {
+        String address = "Mixed  Case " + "A".repeat(188);
+        assertEquals(200, address.length());
+        assertEquals(new Address(address), ParserUtil.parseAddressForAdd(WHITESPACE + address + WHITESPACE));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_ADD_ADDRESS_CONSTRAINTS, () ->
+                ParserUtil.parseAddressForAdd("  " + address + "A  "));
+    }
+
+    @Test
+    public void parseAddressForAdd_supplementaryCharacters_countsUnicodeCodePoints() throws Exception {
+        String character = "\uD83C\uDFE0";
+        String address = character.repeat(200);
+        assertEquals(new Address(address), ParserUtil.parseAddressForAdd(address));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_ADD_ADDRESS_CONSTRAINTS, () ->
+                ParserUtil.parseAddressForAdd(address + character));
+    }
+
+    @Test
+    public void parseAddress_legacyOversizedAddress_remainsAccepted() throws Exception {
+        String address = "A".repeat(201);
+        assertEquals(new Address(address), ParserUtil.parseAddress(address));
+    }
+
+    @Test
     public void parseEmail_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseEmail((String) null));
     }
@@ -159,6 +206,7 @@ public class ParserUtilTest {
     public void parseGoal_validAndInvalidValues() throws Exception {
         assertEquals(new Goal("Build strength"), ParserUtil.parseGoal(" Build strength "));
         assertThrows(ParseException.class, Goal.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseGoal("!!!"));
+        assertThrows(ParseException.class, Goal.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseGoal("\fabc"));
     }
 
     @Test
@@ -192,6 +240,26 @@ public class ParserUtilTest {
     @Test
     public void parseTags_collectionWithInvalidTags_throwsParseException() {
         assertThrows(ParseException.class, () -> ParserUtil.parseTags(List.of(VALID_TAG_1, INVALID_TAG)));
+    }
+
+    @Test
+    public void parseTags_maxDistinctTags_returnsTagSet() throws Exception {
+        List<String> tags = List.of("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten");
+        assertEquals(Tag.MAX_TAGS, ParserUtil.parseTags(tags).size());
+    }
+
+    @Test
+    public void parseTags_moreThanMaxDistinctTags_throwsParseException() {
+        List<String> tags = List.of("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+                "eleven");
+        assertThrows(ParseException.class, Tag.MESSAGE_TOO_MANY_TAGS, () -> ParserUtil.parseTags(tags));
+    }
+
+    @Test
+    public void parseTags_duplicatesCollapseToMax_returnsTagSet() throws Exception {
+        List<String> tags = List.of("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+                "ten", "one");
+        assertEquals(Tag.MAX_TAGS, ParserUtil.parseTags(tags).size());
     }
 
     @Test

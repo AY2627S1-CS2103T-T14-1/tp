@@ -5,11 +5,13 @@ import java.nio.file.AccessDeniedException;
 import java.time.Clock;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.logic.commands.BodyCommand;
 import seedu.address.logic.commands.BodyMutationCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
@@ -73,12 +75,21 @@ public class LogicManager implements Logic {
         // Snapshot the address book before execution so a failed save can restore
         // the previous model state instead of leaving in-memory changes behind.
         AddressBook backup = new AddressBook(model.getAddressBook());
+        // Commands such as edit show every client before saving; a failed save must also restore the filter,
+        // or the displayed indexes would refer to different clients.
+        Predicate<Person> filterBackup = model.getFilteredPersonListPredicate();
         CommandResult commandResult = command.execute(model);
+
+        // Body history/comparison only request a view; they must also work when storage is read-only.
+        if (command instanceof BodyCommand && !(command instanceof BodyMutationCommand)) {
+            return commandResult;
+        }
 
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (IOException ioe) {
             model.setAddressBook(backup);
+            model.updateFilteredPersonList(filterBackup);
             throw saveException(command, ioe);
         }
 

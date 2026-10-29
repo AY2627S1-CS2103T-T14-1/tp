@@ -161,6 +161,8 @@ A membership assignment stores a plan key rather than a reference to `JsonAdapte
 
 The storage component reads JSON back into the corresponding model objects and saves model data in JSON form. It therefore depends on model classes even though those dependencies are outside the scope of the two diagrams.
 
+`MainApp#initModelManager` uses sample data only when the client file is absent. A `DataLoadingException` for an existing file aborts initialization before `LogicManager` is created. This prevents a subsequent command from overwriting unreadable data with an empty address book. The original file remains available for recovery after correcting the local date/time zone or restoring a backup. New future-dated workout input and invalid saved workout dates are still rejected.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.
@@ -227,7 +229,7 @@ The workout plan feature lets a trainer keep a per-client list of prescribed exe
 #### Storage: `JsonAdaptedExercise` and `JsonAdaptedPerson`
 
 - `storage.JsonAdaptedExercise` is the Jackson-friendly form with fields `name`, `sets`, `reps`, `weightKg`, `day`. `toModelType` throws `IllegalValueException` with `Exercise's %s field is missing!` for null `name`/`sets`/`reps`/`weightKg`, or the matching `Exercise.MESSAGE_CONSTRAINTS_*` message for invalid values, and rejects non-finite/negative weights. A missing/`null` `day` loads as `""` (unscheduled, backward compatible with old files); any other stored day goes through the `Exercise` constructor, so legacy `Day not specified` values (any casing) also normalize to `""`.
-- `storage.JsonAdaptedPerson` persists the plan as JSON array `exercises`. The `@JsonCreator` constructor treats a missing/`null` `exercises` field as empty (backward compatible with old files). `toModelType` rejects `null` entries with `Workout plan must not contain null exercises`, converts each entry via `JsonAdaptedExercise#toModelType`, and builds `new WorkoutPlan(personExercises)` (which re-sorts by weekday). Any invalid exercise therefore fails the whole person load, which `JsonSerializableAddressBook` propagates as `IllegalValueException`; the app then starts with an empty address book (same corrupted-file behavior as other fields).
+- `storage.JsonAdaptedPerson` persists the plan as JSON array `exercises`. The `@JsonCreator` constructor treats a missing/`null` `exercises` field as empty (backward compatible with old files). `toModelType` rejects `null` entries with `Workout plan must not contain null exercises`, converts each entry via `JsonAdaptedExercise#toModelType`, and builds `new WorkoutPlan(personExercises)` (which re-sorts by weekday). Any invalid exercise therefore fails the whole person load, which `JsonSerializableAddressBook` propagates as `IllegalValueException`; startup then stops before creating the command-processing logic, preserving the original file instead of opening an empty roster that could overwrite it.
 - Save path: `JsonAdaptedPerson(Person source)` copies `source.getWorkoutPlan().getExercises()` into adapted exercises (including each exercise's canonical `day`), so every `addex`/`delex`/`dayex`/`clearplan` is persisted on the next `StorageManager` save (automatic after each mutating command).
 
 #### UI: person card rendering
@@ -246,9 +248,11 @@ Diet goals consist of one current nutrition target and optional coaching notes p
 
 Each `Person` owns an optional immutable `DietPlan`, consisting of one required target and optional notes. The model trims outer whitespace, counts Unicode code points, rejects nonprintable characters, and requires at least one letter or digit in the target. It preserves internal text and case. `JsonAdaptedPerson` and `JsonAdaptedDietPlan` serialize the diet goals in the client's JSON record, so deleting the client also removes their diet goals. A client has at most one current target record and no history of diet goals.
 
-For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw arguments to `DietCommandParser`. This preserves invalid line breaks for validation. The parser recognises single-letter prefixes only at the beginning of an argument or after horizontal whitespace; it leaves slashes inside values such as `kcal/day` untouched. It validates the displayed-list index, one required target, at most one optional notes value, and rejects unknown or repeated prefixes. `DietCommand` looks up the `Person` in the filtered list, compares the candidate with the current diet goals after trimming and ignoring case, then uses `Model#setPerson` to replace the client record while retaining the other fields and current list filter. An omitted `n/` saves diet goals without notes, even when the previous record had notes.
+For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw arguments to `DietCommandParser`. This preserves invalid line breaks for validation. At the beginning of an argument or after horizontal whitespace, the parser reserves single-letter prefixes and markers formed by repeating or mixing `t` and `n` in either case. Only exact lowercase `t/` and `n/` are accepted; mistyped markers such as `nn/`, `tt/`, `nt/`, and `tn/` are rejected before command execution, including inside notes. Other slash-separated words such as `kcal/day` remain ordinary text. It validates the displayed-list index, one required target, at most one optional notes value, and rejects unknown or repeated prefixes. `DietCommand` looks up the `Person` in the filtered list, compares the candidate with the current diet goals after trimming and ignoring case, then uses `Model#setPerson` to replace the client record while retaining the other fields and current list filter. An omitted `n/` saves diet goals without notes, even when the previous record had notes.
 
 `LogicManager` snapshots the address book before executing a diet command. `JsonAddressBookStorage` writes a complete JSON document to a temporary file in the data file's directory, then atomically moves it over the old file. If writing or replacing the file fails, `LogicManager` restores the snapshot and returns `The diet plan could not be saved. The previous plan remains unchanged.` The storage layer does not fall back to a non-atomic replacement when the filesystem does not support atomic moves. Validation and duplicate failures occur before any model change.
+
+After a successful save, the shared undo history retains the previous complete address book and clears the redo history. Rejected diet commands and failed saves create no undo step. A replacement clears omitted notes in the current record, while session-level undo can still restore the previous target and notes. There is no separate diet-history store.
 
 `ClientContextPanel` shows the selected client's diet goals in the right-hand **DIET** section. It shows the current target and notes, hides notes when absent, and displays `No diet target recorded.` for clients without diet goals. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the diet goals' nutritional or medical suitability.
 
@@ -265,6 +269,25 @@ Each `Person` owns an immutable `DietaryRestrictions` list, which is empty when 
 Each `Person` has an optional immutable `HealthProfile` with one current trainer-visible note. `health INDEX h/NOTE` replaces the note and `health INDEX h/` clears it. `HealthProfile` trims outer whitespace, accepts 1 to 500 printable Unicode characters with at least one letter or digit, and rejects line breaks and control characters. The profile is serialized as the optional `healthProfile` field in `JsonAdaptedPerson`; older data without that field loads without a profile.
 
 `HealthCommandParser` requires exactly one `h/` prefix and a displayed-list index. `HealthCommand` rejects a no-op update, replaces the client through `Person#withHealthProfile`, and preserves all unrelated client information. `find h/KEYWORDS` uses `HealthProfileContainsKeywordsPredicate` with the existing case-insensitive OR search behavior. The selected-client details panel displays the profile only when present. Health considerations are informational only; the application does not diagnose conditions or evaluate medical suitability.
+
+### Search clients (`find`)
+
+`find` has two forms: `find KEYWORD...`, a name search, and `find [n/NAME] [p/PHONE] [e/EMAIL] [g/GOAL] [dr/RESTRICTION] [h/HEALTH]`. Use case UC03 describes only the name form; the user-facing behaviour of all criteria is in the User Guide.
+
+`FindCommandParser` tokenizes the input with the six supported prefixes. With no prefix, the whole trimmed input becomes a name search. With at least one prefix, it rejects a non-empty preamble (a bare keyword cannot be mixed with prefixes), a prefix used more than once, an empty value, and a `p/` value without a digit. It creates one predicate per supplied prefix and wraps them all in a `ClientMatchesAnyPredicate`, which uses `anyMatch`, so a client is shown when it satisfies any one criterion (OR).
+
+| Prefix | Predicate | Matching rule |
+| --- | --- | --- |
+| `n/` | `NameContainsKeywordsPredicate` | any whitespace-separated keyword is a case-insensitive substring of the name |
+| `p/` | `PhoneMatchesPredicate` | one query; spaces and hyphens are removed from the query and the stored phone, then the phone must contain the query |
+| `e/` | `EmailContainsKeywordsPredicate` | any keyword is a case-insensitive substring of the email |
+| `g/` | `GoalContainsKeywordsPredicate` | any keyword is a case-insensitive substring of the goal; clients without a goal never match |
+| `dr/` | `DietaryRestrictionsContainsKeywordsPredicate` | any keyword is a case-insensitive substring of any current restriction |
+| `h/` | `HealthProfileContainsKeywordsPredicate` | any keyword is a case-insensitive substring of the health note; clients without one never match |
+
+Case-insensitive matching lowercases both sides with `Locale.ROOT`, except the name predicate, which uses `StringUtil#containsIgnoreCase`. The health predicate also folds the Greek final sigma (`ς`) to the ordinary sigma (`σ`) after lowercasing, so sigma variants match each other. `FindCommand` passes the combined predicate to `Model#updateFilteredPersonList` and reports `Found N client(s).` or the zero-result message. It does not modify stored data.
+
+OR was chosen so that each additional criterion widens the result and so that each feature can contribute its own predicate without changing the others. To add a criterion, define a prefix in `CliSyntax`, add it to `FindCommandParser#SUPPORTED_PREFIXES`, write a `Predicate<Person>` in `model.person`, and add a branch to `FindCommandParser#createFindCommand`. Automated coverage is in `FindCommandParserTest`, `FindCommandTest`, `ClientMatchesAnyPredicateTest` and one test class per predicate.
 
 ### Workout session logging
 
@@ -305,11 +328,39 @@ Automated coverage includes model validation and immutability, JSON round trips 
 
 Parsers require each mandatory prefix exactly once, reject repeated or unknown prefixes and extra text, and validate prices, session counts, and dates before changing the model. `amem` requires a future expiry date when one is supplied. `imem` and `dmem` accept amounts from 1 to 1000 and keep the resulting balance within 0 to 1000. A client with an assignment must use `rmem` before receiving another plan. Both view aliases show the same plan order and `No membership plans available.` when the catalog is empty.
 
-The client card shows a single membership tag reading `Plan_name Member: N sessions left`, with `[expires YYYY-MM-DD]` appended when an expiry exists and the plan name's first letter upper-cased. The tag joins the client's other tags in the card's tag area, directly under the name, and wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. The plan-list output of `view mem`/`view membership` prefixes each price with `S$` and upper-cases the first letter of each plan name. Command messages and error behavior follow the [Feature 14 specification](featureSpecs.md#feature-14-membership-plan).
+The client card shows a single membership tag reading `Plan_name Member: N sessions left`, with `[expires YYYY-MM-DD]` appended when an expiry exists and the plan name's first letter upper-cased. The tag joins the client's other tags in the card's tag area, directly under the name, and wraps within the card, so a long plan name does not push the balance or expiry outside it. An unassigned client shows no membership tag. The plan-list output of `view mem`/`view membership` prefixes each price with `S$` and upper-cases the first letter of each plan name. Command messages and error behavior follow the [Feature 11 specification](featureSpecs.md#feature-11-membership-plan).
+
+### Payment records
+
+Implemented for v1.4. The [feature contract](featureSpecs.md#feature-14-payment-records) defines user-visible behavior. `pay` appends one immutable payment to a client's history; it does not change a membership assignment, plan price, or session balance.
+
+#### Model and persistence
+
+- `model.person.PaymentRecord` is an immutable payment containing a `BigDecimal amount` (normalized to two decimal places), a `LocalDate date`, and an optional `remarks`. It exposes `fromText` and the `parse*`/`isValid*` helpers for raw input and validation, reused by parsing and storage.
+  - `amount` is positive with no precision beyond two decimals; `AMOUNT_SCALE` is 2. It is stored and displayed via `BigDecimal.toPlainString()`, so there is no floating-point rounding and `75`, `75.5`, and `75.50` are equivalent. `AMOUNT_PATTERN` (`\d+(\.\d{1,2})?`) rejects signs, currency symbols, thousands separators, and over-precise or malformed text.
+  - `date` must match `uuuu-MM-dd` with a `ResolverStyle.STRICT` formatter and year 0001–9999. Past, current, and future dates are all accepted.
+  - `remarks` is optional; when present it trims outer horizontal whitespace, counts Unicode code points (1–300, `MAX_REMARKS_LENGTH`), and rejects ISO control, format, line/paragraph separator, surrogate, private-use, and unassigned code points. Internal spacing and case are preserved.
+- `Person` owns an insertion-ordered `List<PaymentRecord>` (`paymentRecords`). `withAddedPayment` copies the list and appends the new record. Every other client-update command (`diet`, `edit`, `editlog`, `remark`, and the workout-plan, workout-logging, membership, and body-progress commands) constructs a new `Person` passing `person.getPaymentRecords()` through, so payments are preserved across unrelated edits. Deleting a client removes their payments with the client.
+- JSON stores `paymentRecords` on each person. `JsonAdaptedPerson` initializes the field to an empty list, so a missing/null `paymentRecords` field in older files loads an empty payment history. `toModelType` rejects null entries (`Payment records must not contain null entries.`) and converts each entry via `JsonAdaptedPaymentRecord#toModelType`, preserving entry order and never deduplicating, so repeated payments stay distinct.
+- `storage.JsonAdaptedPaymentRecord` is the Jackson form with required `amount` and `date` strings and a `@JsonInclude(JsonInclude.Include.NON_NULL)` `remarks` string. `toModelType` throws `IllegalValueException` with `Payment record's %s field is missing!` for a null `amount`/`date`, and maps invalid stored values to the `PaymentRecord` constraint messages.
+
+#### Commands and UI
+
+- `logic.commands.PayCommand` (`COMMAND_WORD = pay`):
+  - `MESSAGE_USAGE = pay: Records a payment for the client identified by the index number used in the displayed client list.\nParameters: INDEX (must be a positive integer) a/AMOUNT d/YYYY-MM-DD [r/REMARKS]\nExample: pay 1 a/150 d/2026-10-20`.
+  - Success `MESSAGE_SUCCESS = Recorded payment for %1$s: %2$s on %3$s.`, formatted with `updated.getName()`, `paymentRecord.getFormattedAmount()`, and `paymentRecord.getDate()`.
+  - `MESSAGE_SAVE_FAILURE = Payment could not be saved. No payment was recorded.`
+  - `execute` resolves the index against `getFilteredPersonList()`, rejects an out-of-range index with `Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX`, builds `target.withAddedPayment(paymentRecord)`, and saves via `model#setPerson`, preserving the client's other fields and the current filter.
+- `logic.parser.PayCommandParser` reads the displayed index, then the prefixed `a/` (`CliSyntax.PREFIX_ADDRESS`), `d/` (`CliSyntax.PREFIX_DATE`), and optional `r/` (`CliSyntax.PREFIX_REMARK`) values. The command word and prefixes are matched case-sensitively. `AddressBookParser` routes `pay` with a `DOTALL` pattern (AddressBookParser.java:62) and the parser keeps raw arguments until validation so an embedded line break survives to be rejected (`containsLineBreak`); any line break produces `Invalid command format!` + `MESSAGE_USAGE`. It rejects a blank index or argument area, a repeated/unknown/empty prefix, an unknown `word/`-style token inside a value (e.g. `x/`), and extra unprefixed text. `a/` and `d/` are required and must be single tokens (internal whitespace is rejected), while a single empty `r/` is rejected. Validated values are built into a `PaymentRecord` via `PaymentRecord.fromText` before a `PayCommand` is returned.
+- `LogicManager` maps an `IOException` from a `PayCommand` to `PayCommand.MESSAGE_SAVE_FAILURE` (LogicManager.java:159), so a failed write restores the previous payment data in memory and on disk, exactly like `diet`, membership, and body mutations.
+- `ui.CommandCatalog` registers `PayCommand` for usage hints and the help window.
+- `ui.ClientDetailPanel#showPayments` renders the client's payments: it sorts a copy by date (oldest first) with entry order within a date, shows `None` for an empty history or `N record(s)`, and adds one fixed-width `payment-row` per record with a monospace date, a right-aligned monospace amount, and an optional wrapable remarks label. Selection changes rebuild the rows, so switching clients never leaves a stale payment row.
+
+Automated coverage includes model validation and immutability, JSON round trips and legacy absence, parser boundary cases, filtered-list targeting, preservation by other client-update commands, selected-client display, and the save-failure path. Manual scenarios are below.
 
 ### Body progress tracker
 
-Implemented for v1.4. The [feature contract](featureSpecs.md#feature-13-body-progress-tracker) and [User Guide](UserGuide.md#body-progress-tracker) define user-visible behavior. The tracker supports baseline measurements, dated weight/notes, complete history, latest-to-baseline comparison, and correction/deletion.
+Implemented for v1.4. The [feature contract](featureSpecs.md#feature-10-body-progress-tracker) and [User Guide](UserGuide.md#body-progress-tracker) define user-visible behavior. The tracker supports baseline measurements, dated weight/notes, complete history, latest-to-baseline comparison, and correction/deletion.
 
 #### Ownership and invariants
 
@@ -328,7 +379,7 @@ Aggregate invariants:
 * Baseline replacement retains entries and must validate its candidate date against **all** retained entries. Never silently drop or re-date history.
 * Same-date `bodylog` replaces the complete entry, including clearing notes when omitted. An exact duplicate is rejected before replacement. `bodydelete` cannot remove the baseline.
 
-`Person.withBodyProgress(updated)` copies every unrelated field. Existing client reconstruction paths and `PersonBuilder` retain the tracker. Full person equality/hashCode include it; client identity does not depend on measurements. Deleting/clearing clients removes their owned aggregates; catalog operations preserve them.
+`Person.withBodyProgress(updated)` copies every unrelated field. Existing client reconstruction paths and `PersonBuilder` retain the tracker. Full person equality/hashCode include it; client identity (`Person#isSamePerson`, used by `add`, `edit`, `UniquePersonList` and storage loading) is the name after trimming, collapsing internal whitespace, and lowercasing with `Locale.ROOT`, plus the phone number. Thus two clients may share only a name or only a phone, and identity does not depend on measurements. Deleting/clearing clients removes their owned aggregates; catalog operations preserve them.
 
 #### Commands, parsing and UI requests
 
@@ -370,13 +421,13 @@ Build the view from the aggregate on demand. Baseline is separate from the progr
 
 This is a fragment of a person, not a complete standalone address book. Measurements are **JSON strings** with strict decimal content, serialized at scale two to preserve exact values. Dates are strings. Notes, when present, are strings. Read raw JSON nodes or equivalent strict adapters so Jackson cannot silently coerce a number/boolean into a string.
 
-Missing/null `bodyProgress` in legacy persons means an empty tracker. Within a present object, missing/null baseline means absent baseline, and missing/null entries means an empty list; entries without a baseline are invalid. Missing/null notes means absent notes; a supplied empty/blank string is invalid. Present baseline/entry measurements and dates are required. Validate object/array types and every list element before conversion. Reject null entries, malformed or future dates, unsupported year ranges, invalid/wrong-type measurements, duplicates, baseline-date conflicts and all other invariant violations through `IllegalValueException`, translated by storage to `DataLoadingException`. Do not leak NPE/number-format exceptions, silently coerce values, remove bad entries or truncate old records. Existing corrupt-file handling remains the shared startup behavior.
+Missing/null `bodyProgress` in legacy persons means an empty tracker. Within a present object, missing/null baseline means absent baseline, and missing/null entries means an empty list; entries without a baseline are invalid. Missing/null notes means absent notes; a supplied empty/blank string is invalid. Present baseline/entry measurements and dates are required. Validate object/array types and every list element before conversion. Reject null entries, malformed or future dates, unsupported year ranges, invalid/wrong-type measurements, duplicates, baseline-date conflicts and all other invariant violations through `IllegalValueException`, translated by storage to `DataLoadingException`. Do not leak NPE/number-format exceptions, silently coerce values, remove bad entries or truncate old records. The shared startup guard stops initialization on a loading error and leaves the original client file untouched.
 
 Load then sort valid entries by date. On save, emit the canonical date order. Round-trip tests must keep a populated baseline, several adjusted entries and optional notes present across restart. Also verify unrelated person data and shared address-book catalogs survive serialization and restore.
 
 #### Atomic mutation, rollback and integration
 
-For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` `BodyMutationCommand` identifies the three mutations for this message mapping; read-only queries should not be classified as mutations merely to reuse it. Existing application-wide autosave behavior need not change for this feature, but history/comparison must leave all domain data unchanged.
+For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` `BodyMutationCommand` identifies the three mutations for this message mapping. `LogicManager` returns successful non-mutating `BodyCommand` results without saving or changing undo/redo history. Thus history/comparison remain available with read-only storage and do not create a data file merely to show an empty tracker. They still return typed view requests for the UI. Mutations continue through the atomic save and undo boundary.
 
 <img src="images/BodyProgressSaveSequence.png" alt="Body mutation sequence with validation, atomic save and rollback on IOException" width="820" />
 
@@ -386,13 +437,14 @@ Snapshots, `AddressBook` copy/reset/equality, `Person` builders and the shared u
 
 #### Implementation increments and validation
 
-Implementation commits cover: (1) immutable model/adapters and legacy/invalid-file tests, (2) baseline/log/delete commands and rollback integration, (3) query/UI handoff and readable display. The feature spec, UG and this DG describe the complete runtime companion PR. Merge the runtime PR before this documentation update. These increments together, not just a foundation model, complete the assigned v1.4 scope.
+Implementation commits cover: (1) immutable model/adapters and legacy/invalid-file tests, (2) baseline/log/delete commands and rollback integration, (3) query/UI handoff and readable display. The feature spec, UG and this DG describe the completed runtime implementation. These increments together, not just a foundation model, complete the assigned v1.4 scope.
 
 Automated coverage in `BodyProgressTest`, `JsonAdaptedBodyProgressTest`, `BodyProgressIntegrationTest` and `BodyProgressPanelTest` exercises:
 
 * Parser/router boundaries: zero/signed/oversized and filtered indexes; missing/repeated/unknown prefixes; newline preservation; leap/impossible/future dates; decimal syntax/bounds; Unicode code-point note limits and nonprintables.
 * Aggregate transitions: create/replace baseline; invalid correction keeps all entries; create/replace/delete entry; notes clearing; exact duplicates versus case-only note edits; duplicate dates; sorted backdating; independent clients.
 * Derived views: positive, negative and zero differences; latest by date after backdated insertion/edit; fallback after deleting latest; no baseline and baseline-only empty states; no mutation by queries.
+* Query storage/history boundaries: `queries_unwritableStoragePreservesFileFilterAndRedoHistory` rejects every attempted write and verifies both queries still succeed without changing file bytes, filter or redo history; `queries_missingBaselineDoNotCreateDataFile` checks that viewing an empty tracker creates no client data file.
 * Real save/reload: populated baseline and multiple entries, target-only notes absence, corrected entries, unrelated fields/catalogs, legacy absence, null/wrong-type fields/elements and invalid cross-date relationships.
 * Fault injection for every mutation form (including both creation and replacement): unchanged model/filter/catalogs and original file bytes, cleaned temporary files, and a later successful command not persisting rejected values.
 * UI selection/refresh, invalid-index stability, maximum-length notes and supported narrow-window layout; confirm target/notes/delta are not stale when switching clients or after failed saves.
@@ -539,6 +591,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | gym trainer | view a client's complete workout history                                             | review how their training has changed over time                        |
 | `*`      | gym trainer | edit a previously logged workout session                                             | correct mistakes in weights, sets, repetitions, or exercises           |
 | `* * *` | gym trainer | record a client's starting body weight and height | have a baseline for later weight comparisons |
+| `* * *` | gym trainer | record dated body weight and optional notes | track changes between client visits |
+| `* * *` | gym trainer | correct or delete a mistaken body-progress entry | keep the client's recorded history accurate |
 | `* * *` | gym trainer | view a client's complete dated body-progress history | review all recorded changes in order |
 | `* * *` | gym trainer | compare the latest dated weight with the baseline | see the exact recorded weight difference |
 | `*`      | gym trainer | record the number of sessions purchased by a client                                  | keep track of their training package                                   |
@@ -635,7 +689,7 @@ _{More to be added}_
 
     Use case resumes at step 2.
 
-- 3b. The weight, sets or repetitions is not a positive number.
+- 3b. The weight is outside 0 to 1000 kg or has more than two decimal places, the sets are outside 1 to 100, or the repetitions are outside 1 to 1000. Weight 0 is valid for bodyweight exercises.
   - 3b1. Fittix shows an error message stating the expected format.
 
     Use case resumes at step 3.
@@ -959,24 +1013,36 @@ testers are expected to do more *exploratory* testing.
 
 ### Diet goals
 
-Use a disposable copy of the data file. Start with at least two clients; run `list` and note the displayed index and name of one client.
+Use a separate disposable test folder, with no real client data. **The setup below deletes every client in that test folder.** Run each line as a separate command:
+
+```text
+clear
+add n/Priya Nair p/97001001 e/priya@example.com a/Test Road
+add n/Daniel Tan p/97001002 e/daniel@example.com a/Test Road
+diet 2 t/Daniel maintenance
+list
+```
+
+Confirm Priya is index 1 with no diet goals, and Daniel is index 2 with `Daniel maintenance`. This makes the create/replace expectations reproducible.
 
 1. Record diet goals without notes: `diet 1 t/1800 kcal per day, 120 g protein`.<br>
-   Expected: `Created diet plan for NAME.` and the selected client's details pane shows the full target without notes.
-1. Add notes: `diet 1 t/1800 kcal per day, 120 g protein n/Prioritise vegetables`.<br>
-   Expected: `Replaced diet plan for NAME.` and the notes appear in the pane.
-1. Replace with `diet 1 t/2000 kcal/day`.<br>
-   Expected: The target changes, old notes disappear, and `kcal/day` remains intact.
-1. Repeat `diet 1 t/2000 KCAL/DAY`.<br>
-   Expected: `This is already the current diet plan for NAME.` and the saved spelling remains `2000 kcal/day`.
-1. Try `diet 1 t/`, `diet 1 t/2000 kcal n/`, `diet 1 t/2000 kcal r/vegan`, and `diet 0 t/2000 kcal`.<br>
-   Expected: Respectively, the target, notes, format, and client-index errors appear. The previous diet goals remain visible.
-1. Close and restart the app.<br>
-   Expected: Selecting the same client shows the saved target with no notes.
-1. Run `find` for that client and use the index shown in the filtered list in a `diet` command.<br>
-   Expected: Only the displayed client is updated. Run `list` to confirm the other client's diet goals are unchanged.
-1. Delete the client using the displayed index, then restart.<br>
-   Expected: The client and their diet goals are gone; the context panel no longer shows the deleted client's target.
+   Expected: `Created diet plan for Priya Nair.` Select Priya; the **DIET** section shows the full target without notes.
+2. Add notes: `diet 1 t/1800 kcal per day, 120 g protein n/Prioritise vegetables`.<br>
+   Expected: `Replaced diet plan for Priya Nair.` and the notes appear.
+3. Mistype the notes marker: `diet 1 t/2000 kcal nn/Include vegetables`.<br>
+   Expected: `Invalid command format. Use: diet INDEX t/TARGET [n/NOTES]`. The previous target and `Prioritise vegetables` notes remain. Restart and select Priya to confirm both values are unchanged; then run `diet 1 t/2000 kcal n/Include vegetables` successfully.
+4. Replace with `diet 1 t/2000 kcal/day`.<br>
+   Expected: Old notes disappear and `kcal/day` remains intact. Run `undo` and select Priya: `2000 kcal` and `Include vegetables` return. Run `redo` and select Priya: `2000 kcal/day` returns without notes.
+5. Repeat `diet 1 t/2000 KCAL/DAY`.<br>
+   Expected: `This is already the current diet plan for Priya Nair.` and the saved spelling remains `2000 kcal/day`.
+6. Try `diet 1 t/`, `diet 1 t/2000 kcal n/`, `diet 1 t/2000 kcal r/vegan`, and `diet 0 t/2000 kcal`.<br>
+   Expected: Respectively, the target, notes, format, and client-index errors appear. The previous diet goals remain unchanged.
+7. Close and restart the app.<br>
+   Expected: Selecting Priya shows `2000 kcal/day` with no notes; Daniel still has `Daniel maintenance`.
+8. Run `find Daniel`, then `diet 1 t/2300 kcal`.<br>
+   Expected: Only Daniel is displayed at index 1 and updated; the filter stays active. Run `list` and select each client: Priya is unchanged and Daniel at index 2 has `2300 kcal`.
+9. Run `find Daniel`, then `delete 1`, then restart.<br>
+   Expected: Only Priya remains, with her diet goals intact. Daniel and his diet goals are gone; no deleted-client values appear when selecting Priya.
 
 An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it forces the atomic replacement to throw, verifies the specified failure message, confirms that both the model and original JSON bytes are unchanged, and checks that the temporary file is removed.
 
@@ -987,10 +1053,10 @@ An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it
       Expected: The app starts with an empty address book (or sample data on first run) and recreates the file after the next mutating command.
 
    1. Corrupted top-level JSON: open `addressbook.json`, replace its contents with `not json`, save, then relaunch.<br>
-      Expected: The app starts with an empty address book rather than crashing. The invalid file stays on disk until the next save overwrites it.
+      Expected: Startup stops with an error identifying the client file. No empty roster is opened and the invalid file is not overwritten. Keep a backup and restore valid data before restarting.
 
    1. Corrupted `exercises` entry: open `addressbook.json`, pick a person, and set one exercise to an invalid value (e.g. `"sets": 0`, `"reps": -1`, `"weightKg": -5`, `"name": "  "`, or `"weightKg": "NaN"` / `Infinity` / `null`, or a `null` array element). Save, then relaunch.<br>
-      Expected: That person fails validation (`Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`, `Exercise name should not be blank`, `Exercise's <field> field is missing!`, or `Workout plan must not contain null exercises`), so the whole file is treated as corrupted and the app starts with an empty address book.
+      Expected: That person fails validation (`Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`, `Exercise name should not be blank`, `Exercise's <field> field is missing!`, or `Workout plan must not contain null exercises`), so startup stops and the original file remains unchanged. No command-processing logic is created for an empty replacement roster.
 
    1. Missing `exercises` field (backward compatibility): open `addressbook.json`, delete the `"exercises": [...]` array from one person, save, then relaunch.<br>
       Expected: That person loads with an empty workout plan; the card shows `No workout plan yet` and `Messages.format` shows `Workout Plan: Empty`.
@@ -1071,7 +1137,7 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
    Expected: The session is recorded. A new history row shows `Thu 16 Jan 2020`, `Time not specified`, and the Push-up entry above the session dated 2020-01-15.
 
 4. Run `log 1 d/2020-01-16 t/19:00 ex/Push-up|0|3|12`.
-   Expected: The session is accepted because a specified time differs from an unspecified time. Its `19:00` row appears above the unspecified-time row on the same date.
+   Expected: The session is accepted because a specified time differs from an unspecified time. Its `19:00` row appears below the unspecified-time row on the same date. Among specified times on that date, later times appear first; midnight remains distinct from an unspecified time.
 
 5. Run `log 1 d/2020-01-17 ex/Back squat|60|3|10 ex/Bench press|-1|3|8`.
    Expected: A weight validation error appears. Neither exercise is saved as a new session.
@@ -1107,35 +1173,89 @@ Use a disposable address book with at least two clients.
 7. Run `clearmem`.<br>
    Expected: With no plan assigned, the status message shows `Cleared all membership plans.` The catalog is now empty (`view mem` shows `No membership plans available.`), while both clients and their other data are unchanged.
 8. Run `addmem n/Platinum p/200 s/40`, then `clear`, then `view mem`.<br>
-   Expected: `clear` deletes all clients, but the Platinum plan is still listed, confirming that clearing clients does not delete membership plans.
+    Expected: `clear` deletes all clients, but the Platinum plan is still listed, confirming that clearing clients does not delete membership plans.
+
+### Payment records acceptance checks
+
+Use a disposable address book with at least two clients. If needed, add a uniquely named client and run `find` so the target is displayed at index 1.
+
+1. Run `pay 1 a/150 d/2026-10-20`.<br>
+   Expected: `Recorded payment for NAME: 150.00 on 2026-10-20.` The Payments section shows one record, the card summary reads `1 record`, and the plan balance and price are unchanged.
+2. Run `pay 1 d/2026-10-19 a/75.50 r/October membership payment`.<br>
+   Expected: The record is added. The section lists both records oldest first (`2026-10-19` before `2026-10-20`); the amount is right-aligned and two decimals, and the remarks wrap.
+3. Repeat the command from step 1.<br>
+   Expected: A third identical record is added and the summary reads `3 records`. Repeated records are allowed and stay in entry order for the same date.
+4. Try `pay 1 a/0 d/2026-10-20`, `pay 1 a/-5 d/2026-10-20`, `pay 1 a/1.234 d/2026-10-20`, `pay 1 a/S$150 d/2026-10-20`, `pay 1 a/150 d/2026-13-40`, `pay 1 a/150 d/2026-10-20 x/extra`, and `pay 1 a/150 a/200 d/2026-10-20`.<br>
+   Expected: Each is rejected with the relevant amount or date error, or with `Invalid command format!` for the unknown-prefix, extra-text, and repeated-prefix cases. No record is added and the summary is unchanged.
+5. Try `pay 0 a/150 d/2026-10-20` and `pay 99 a/150 d/2026-10-20`.<br>
+   Expected: `pay 0` has invalid index syntax and is rejected with `Invalid command format!` followed by the `pay` usage; `pay 99` is a valid index outside the displayed list and shows `The person index provided is invalid.`
+6. Run `pay 1 a/150 d/2026-10-20 r/`.<br>
+   Expected: `Invalid command format!` followed by the `pay` usage; the empty `r/` is rejected.
+7. Close and restart the app, then find and select the same client.<br>
+   Expected: All three records remain, oldest first, with the same amounts and remarks.
+8. Run an unrelated command such as `diet 1 t/1800 kcal` or `amem Gold 1`, then restart.<br>
+   Expected: Payment records are preserved alongside the other change.
+9. Delete the client with `delete`, then restart.<br>
+   Expected: The client and their payments are gone.
 
 ### Body progress tracker acceptance checks
 
-Run these using disposable data and a correct local clock. The fixed dates below are historical; on a controlled test clock earlier than them, substitute equivalent past dates. Prepare two uniquely named clients, Priya Nair and Daniel Tan. Run `list` and use their actual displayed indexes in place of `P` and `D`. Preserve Daniel's values for cross-client checks. Start Priya with no tracker; optionally give her diet/workout/schedule/membership data to verify preservation.
+Use a separate disposable test folder and a correct local clock. **The setup below deletes every client in that test folder.** Run each line separately:
 
-1. Run `bodyhistory P` and `bodycompare P`, then `bodylog P d/2020-01-08 w/74.80`.<br>
+```text
+clear
+add n/Priya Nair p/97001001 e/priya@example.com a/Test Road
+add n/Daniel Tan p/97001002 e/daniel@example.com a/Test Road
+diet 1 t/1800 kcal n/Vegetables
+list
+```
+
+Confirm Priya is index 1 and Daniel is index 2, both with no tracker. The commands below use those indexes; after a restart run `list` before continuing. The fixed dates are historical; on a controlled test clock earlier than them, substitute equivalent past dates. Priya's diet and Daniel's empty tracker should survive unrelated body updates.
+
+1. Run `bodyhistory 1` and `bodycompare 1`, then `bodylog 1 d/2020-01-08 w/74.80`.<br>
    Expected: Queries select Priya and display the missing-baseline state without changing data. Logging fails with `No body baseline recorded for Priya Nair. Use bodybase first.`
-2. Run `bodybase P d/2020-01-01 w/75.50 h/175`, then `bodycompare P`.<br>
-   Expected: Created feedback, baseline 75.50 kg/175.00 cm, no progress entries and no fabricated comparison. Repeating with `w/75.5 h/175.00` is rejected as already current.
-3. Run `bodylog P d/2020-01-15 w/74.20`, then `bodylog P d/2020-01-08 w/74.80 n/Measured before breakfast`, then `bodyhistory P` and `bodycompare P`.<br>
+2. Run `bodybase 1 d/2020-01-01 w/75.50 h/175`, then `bodycompare 1`.<br>
+   Expected: Created feedback, baseline 75.50 kg/175.00 cm, no progress entries and no fabricated comparison. `bodybase 1 d/2020-01-01 w/75.5 h/175.00` is rejected as already current.
+3. Run `bodylog 1 d/2020-01-15 w/74.20`, then `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`, then `bodyhistory 1` and `bodycompare 1`.<br>
    Expected: History lists 8 January before 15 January; latest remains 15 January. Weight change is -1.30 kg. Missing notes appear as `—`.
+   Run `undo`, `bodyhistory 1`, `bodycompare 1`, then `redo`. Expected: Undo removes only the 8 January entry; the queries show one entry and do not clear redo. Redo restores the 8 January entry and its notes, giving two entries again.
 4. **Restart while the baseline and both entries are still present.** Find/select Priya; run both queries.<br>
    Expected: Baseline, height, both dates/weights and the first entry's notes survive; the second has no notes. Chronological order, latest date and -1.30 kg remain correct. Daniel and Priya's other feature data are unchanged.
-5. Run `bodylog P d/2020-01-08 w/74.60`, then the same command again.<br>
+5. Run `bodylog 1 d/2020-01-08 w/74.60`, then the same command again.<br>
    Expected: First command replaces only the 8 January entry and clears its notes; second reports an identical entry. Latest comparison still uses 15 January. Adding notes with different capitalization is a valid correction; an identical normalized note is a duplicate.
-6. Run `bodybase P d/2020-01-10 w/75 h/175`.<br>
-   Expected: Rejected because the retained 8 January entry would be on/before the baseline. Original baseline, both entries and comparison remain unchanged. Run `bodybase P d/2020-01-01 w/75 h/175`; expected: baseline replacement retains both entries and updates the difference to -0.80 kg.
-7. Run `bodylog P d/2020-01-15 w/76`, then compare; replace that weight with `75`, then compare.<br>
+6. Run `bodybase 1 d/2020-01-10 w/75 h/175`.<br>
+   Expected: Rejected because the retained 8 January entry would be on/before the baseline. Original baseline, both entries and comparison remain unchanged. Run `bodybase 1 d/2020-01-01 w/75 h/175`; expected: baseline replacement retains both entries and updates the difference to -0.80 kg.
+7. Run `bodylog 1 d/2020-01-15 w/76`, then `bodycompare 1`; run `bodylog 1 d/2020-01-15 w/75`, then `bodycompare 1`.<br>
    Expected: Respectively +1.00 kg and 0.00 kg, with no health judgement and no negative zero. No new same-date row is added.
 8. Use `find Priya`, then `bodyhistory 1`, `bodylog 1 d/2020-01-22 w/74 n/Walk 5 km/day`, and `bodycompare 1`.<br>
-   Expected: All target Priya; filter and numbering remain stable. Notes retain `km/day`. Run `list` and confirm Daniel is unchanged; refresh `P`/`D` indexes before continuing.
-9. Try `bodylog P d/2020-01-01 w/74`, an impossible date (`2020-02-30`), tomorrow's date, `w/0`, `w/500.01`, `w/74.001`, `w/NaN`, a blank `n/`, and repeated/unknown prefixes.<br>
+   Expected: All target Priya; filter and numbering remain stable. Notes retain `km/day`. Run `list`, then `bodyhistory 2`: Daniel has no baseline. Priya is index 1 again.
+9. Try `bodylog 1 d/2020-01-01 w/74`, `bodylog 1 d/2020-02-30 w/74`, `bodylog 1 d/2020-01-24 w/0`, `bodylog 1 d/2020-01-24 w/500.01`, `bodylog 1 d/2020-01-24 w/74.001`, `bodylog 1 d/2020-01-24 w/NaN`, `bodylog 1 d/2020-01-24 w/74 n/`, `bodylog 1 d/2020-01-24 w/74 w/75`, and `bodylog 1 d/2020-01-24 w/74 x/extra`. Also try a complete command with tomorrow's date.<br>
    Expected: Each is rejected with the corresponding contract error. No entry, baseline or other data changes. In automated/router tests, also inject trailing newlines, invalid control characters, 300/301-code-point notes, and invalid/overflow indexes.
-10. Correct a mistaken date by recording `bodylog P d/2020-01-23 w/74 n/Walk 5 km/day`, then `bodydelete P d/2020-01-22`.<br>
-    Expected: Only the requested old date is removed. Delete 23 January, then 15 January: latest falls back to 8 January (74.60 kg; -0.40 kg). Delete 8 January: baseline stays and no-progress states return. Repeating deletion reports no matching entry; deleting the baseline date reports the baseline-protection error.
-11. Record a new valid entry and restart before deleting the client. Switch between Priya and Daniel, including a client with no tracker.<br>
+10. Correct a mistaken date with `bodylog 1 d/2020-01-23 w/74 n/Walk 5 km/day`, then `bodydelete 1 d/2020-01-22`.<br>
+    Expected: Only the requested old date is removed. Run `bodydelete 1 d/2020-01-23`, `bodydelete 1 d/2020-01-15`, then `bodycompare 1`: latest falls back to 8 January (74.60 kg; -0.40 kg). Run `bodydelete 1 d/2020-01-08`: baseline stays and no-progress states return. Repeat that deletion: no matching entry. Run `bodydelete 1 d/2020-01-01`: baseline-protection error.
+11. Run `bodylog 1 d/2020-01-24 w/74 n/Restart check`, then restart before deleting the client. Switch between Priya and Daniel, including a client with no tracker.<br>
     Expected: Saved data survives; no stale notes/dates/delta remain when selection changes. At the minimum supported window size, maximum valid notes remain readable through wrapping and scrolling without automatic resizing. An invalid-index query leaves selection unchanged.
-12. With populated body data, execute unrelated contact/remark/diet/workout/schedule/membership updates as available; then delete Priya and restart.<br>
+12. With populated body data, run `diet 1 t/1900 kcal`, then `bodyhistory 1` and `bodycompare 1`.<br>
+    Expected: The baseline and 24 January entry/notes remain; comparison is -1.00 kg. Also try unrelated contact/remark/workout/schedule/membership updates as available. Finally run `list`, `delete 1`, then restart.<br>
     Expected: Unrelated updates retain all body data. Client deletion removes Priya and her body data, preserving Daniel and shared plans. In separate disposable scenarios, verify `clear` removes body data with clients while retaining shared membership plans, and `clearmem` leaves body data unchanged when permitted.
 
-Save-failure and malformed-file cases require automated fault injection/fixtures: fail the atomic commit for baseline create/replace, entry create/replace and deletion; verify the specified body-save error, unchanged original JSON bytes and model, no success display request, no leftover temp file, and no later persistence of rejected data. Restart fixtures with legacy missing/null tracker fields, populated records, duplicate dates, null list elements, wrong scalar types, future dates and baseline-order violations. Malformed data must enter the normal loading-error path rather than crash or silently lose individual entries. Do not simulate these failures by corrupting real client data.
+Save-failure and malformed-file cases require automated fault injection/fixtures: fail the atomic commit for baseline create/replace, entry create/replace and deletion; verify the specified body-save error, unchanged original JSON bytes and model, no success display request, no leftover temp file, and no later persistence of rejected data. `BodyProgressIntegrationTest` also verifies successful history/comparison queries with unwritable storage, preserved redo history and no file creation for an empty tracker. Restart fixtures with legacy missing/null tracker fields, populated records, duplicate dates, null list elements, wrong scalar types, future dates and baseline-order violations. Malformed data must enter the guarded loading-error path: startup stops with an explanatory error, preserving the original file rather than opening an empty replacement roster or silently dropping individual entries. Do not simulate these failures by corrupting real client data.
+
+### Undo and redo acceptance checks
+
+Use disposable data. Add a uniquely named client `UndoManualTest` with all required contact fields. Before every indexed command below, run `find UndoManualTest` and confirm this client is the only match at index 1. Successful undo/redo shows the full list, so restore that filter before another indexed command. Record the client's other data to check preservation.
+
+1. Set `remark 1 r/Before`, close and restart, then find the same client. Run `undo` and `redo`.<br>
+   Expected: `No changes to undo.` and `No changes to redo.` The remark is still `Before`; saved data survives restart while session history does not.
+2. Run `remark 1 r/After`, then `undo`. Restore the name filter and inspect the remark.<br>
+   Expected: `Undid the last change.` The remark returns to `Before`, unrelated fields remain unchanged, and the full list was shown immediately after undo. Run `redo`; expected: `Redid the last change.`, remark `After`, full list shown again.
+3. Run `undo`, then read-only commands `list`, `find UndoManualTest` and `help`, followed by the failing command `delete 0`. Try `undo extra` and `redo extra`, then `redo`.<br>
+   Expected: Extra arguments and invalid deletion are rejected without changing data/history. Read-only commands also retain redo. The final redo still restores `After`.
+4. Run `undo`, restore the name filter, and run `remark 1 r/Branch`. Run `redo`.<br>
+   Expected: The new effective change clears redo. `No changes to redo.` leaves `Branch` intact. Restart and find the client; `Branch` remains saved, while both histories are empty.
+5. In a separate fresh session, make 51 effective remark changes on this client (`History step 1` through `History step 51`), restoring the name filter before each indexed command. Run `undo` 50 times, then once more.<br>
+   Expected: Only the newest 50 steps can be undone, leaving `History step 1`. The 51st undo reports no history. Fifty redo commands restore `History step 51`; another redo reports no history.
+6. In a separate session with populated diet and body-progress data, delete a progress entry or the client, then undo and redo before restarting.<br>
+   Expected: Undo restores the complete address-book snapshot, including diet/body data; redo reapplies the deletion. The state visible immediately before restart is the state loaded afterwards, with empty undo/redo histories.
+
+Save failures are covered by the fault-injected `LogicManagerTest` cases: a failed undo/redo save must preserve the model and both history stacks. Do not make real client data unwritable or corrupt it to simulate this failure.

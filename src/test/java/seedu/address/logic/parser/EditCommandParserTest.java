@@ -51,6 +51,14 @@ public class EditCommandParserTest {
     private EditCommandParser parser = new EditCommandParser();
 
     @Test
+    public void parse_documentedNameCharacters_success() {
+        for (String name : new String[] {"Anne-Marie Tan", "D'Angelo Lim", "Dr. Ahmad Rahman", "\u674e\u5c0f\u9f99"}) {
+            EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName(name).build();
+            assertParseSuccess(parser, "1 n/" + name, new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        }
+    }
+
+    @Test
     public void parse_missingParts_failure() {
         // no index specified
         assertParseFailure(parser, NAME_DESC_AMY, EditCommand.MESSAGE_INDEX_REQUIRED);
@@ -85,8 +93,11 @@ public class EditCommandParserTest {
         assertParseFailure(parser, "1" + INVALID_ADDRESS_DESC, Address.MESSAGE_CONSTRAINTS); // invalid address
         assertParseFailure(parser, "1" + INVALID_TAG_DESC, Tag.MESSAGE_CONSTRAINTS); // invalid tag
         assertParseFailure(parser, "1 g/!!!", Goal.MESSAGE_CONSTRAINTS); // invalid goal
+        assertParseFailure(parser, "1 g/\fRun", Goal.MESSAGE_CONSTRAINTS); // leading control character
+        assertParseFailure(parser, "1 g/\f", Goal.MESSAGE_CONSTRAINTS); // must not clear the goal
         assertParseFailure(parser, "1 n/", Name.MESSAGE_CONSTRAINTS); // empty name
         assertParseFailure(parser, "1 p/", Phone.MESSAGE_CONSTRAINTS); // empty phone
+        assertParseFailure(parser, "1 p/1234567890123456", Phone.MESSAGE_CONSTRAINTS); // 16 digits
         assertParseFailure(parser, "1 e/", Email.MESSAGE_CONSTRAINTS); // empty email
 
         // invalid phone followed by valid email
@@ -170,6 +181,14 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_moreThanMaxDistinctTags_failure() {
+        String index = Integer.toString(INDEX_FIRST_PERSON.getOneBased());
+        assertParseFailure(parser, index
+                + " t/one t/two t/three t/four t/five t/six t/seven t/eight t/nine t/ten t/eleven",
+                Tag.MESSAGE_TOO_MANY_TAGS);
+    }
+
+    @Test
     public void parse_multipleRepeatedFields_failure() {
         // More extensive testing of duplicate parameter detections is done in
         // AddCommandParserTest#parse_repeatedNonTagValue_failure()
@@ -215,6 +234,21 @@ public class EditCommandParserTest {
         EditPersonDescriptor descriptor = new EditPersonDescriptor();
         descriptor.clearGoal();
         assertParseSuccess(parser, INDEX_THIRD_PERSON.getOneBased() + GOAL_EMPTY,
+                new EditCommand(INDEX_THIRD_PERSON, descriptor));
+    }
+
+    @Test
+    public void parse_whitespaceOnlyGoal_clearsGoal() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptor();
+        descriptor.clearGoal();
+        assertParseSuccess(parser, INDEX_THIRD_PERSON.getOneBased() + " g/   ",
+                new EditCommand(INDEX_THIRD_PERSON, descriptor));
+    }
+
+    @Test
+    public void parse_whitespaceOnlyTags_clearsTags() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withTags().build();
+        assertParseSuccess(parser, INDEX_THIRD_PERSON.getOneBased() + " t/   ",
                 new EditCommand(INDEX_THIRD_PERSON, descriptor));
     }
 
