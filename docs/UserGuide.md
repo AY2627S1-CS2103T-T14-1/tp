@@ -158,7 +158,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 * `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags. A value that is only spaces counts as empty.
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
 * When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative. A client can have at most 10 distinct tags.
-* An edit that would duplicate another client's name is rejected. Changing only the letter case of the same client's name is allowed.
+* An edit that would give the client both the same name (after trimming, collapsing internal whitespace, and ignoring letter case) and the same phone number as another client is rejected. Sharing only a name or only a phone number is allowed. Changing only the letter case of the same client's name is allowed.
 * If the values are identical to the client's current details, Fittix reports `No changes made: the new values are the same as the current details.`
 * On success, Fittix reports `Edited client: NAME; Phone: PHONE.`
 
