@@ -260,7 +260,7 @@ public class EditCommandParserTest {
     }
 
     @Test
-    public void parse_mistypedPrefixAbsorbedIntoGoal_rejected() throws Exception {
+    public void parse_mistypedPrefixAbsorbedIntoGoal_rejected() {
         // Reproduces issue #253: a mistyped "ad/" address token is swallowed by the goal value.
         String userInput = INDEX_FIRST_PERSON.getOneBased() + " g/Run 10 km ad/18 Clementi Road";
 
@@ -270,10 +270,35 @@ public class EditCommandParserTest {
     }
 
     @Test
-    public void parse_unknownPrefixInsideGoal_rejected() {
-        // Any letter-prefixed token inside a recognised prefix's value is rejected.
-        String userInput = INDEX_FIRST_PERSON.getOneBased() + " g/Build strength rr/5";
-        assertParseFailure(parser, userInput, String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, "rr/"));
+    public void parse_distantUnknownPrefixInsideGoal_notFlagged() {
+        // A letter-prefixed token that is not a near miss of any recognised prefix is ordinary text.
+        Index targetIndex = INDEX_FIRST_PERSON;
+        String userInput = targetIndex.getOneBased() + " g/Build strength rr/5";
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withGoal("Build strength rr/5").build();
+        assertParseSuccess(parser, userInput, new EditCommand(targetIndex, descriptor));
+    }
+
+    @Test
+    public void parse_slashInOrdinaryText_notFlagged() {
+        // Ordinary text containing a slash must not be mistaken for a mistyped prefix.
+        Index targetIndex = INDEX_FIRST_PERSON;
+
+        String address = targetIndex.getOneBased() + " a/Blk 30 c/o John Tan";
+        assertParseSuccess(parser, address, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withAddress("Blk 30 c/o John Tan").build()));
+
+        String andOr = targetIndex.getOneBased() + " g/Run 5km and/or swim";
+        assertParseSuccess(parser, andOr, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Run 5km and/or swim").build()));
+
+        String unit = targetIndex.getOneBased() + " g/Cycle at 25 km/h";
+        assertParseSuccess(parser, unit, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Cycle at 25 km/h").build()));
+
+        String with = targetIndex.getOneBased() + " g/Lose 5kg w/ diet";
+        assertParseSuccess(parser, with, new EditCommand(targetIndex,
+                new EditPersonDescriptorBuilder().withGoal("Lose 5kg w/ diet").build()));
     }
 
     @Test

@@ -108,20 +108,23 @@ public class EditCommandParser implements Parser<EditCommand> {
     }
 
     /**
-     * Rejects a token that looks like a parameter prefix (that is, {@code <letters>/}) but whose
-     * marker is not one of the recognised {@code edit} prefixes.
+     * Rejects a token that is a near miss of a recognized {@code edit} prefix: a
+     * {@code <letters>/} token within {@value #MAX_SUGGESTION_DISTANCE} edits of exactly one
+     * recognized prefix (for example {@code ad/} for {@code a/}).
      *
-     * <p>Because the argument tokenizer only recognises the {@code edit} prefixes, such a mistyped
-     * token (for example {@code ad/}) is otherwise silently absorbed into the value of the nearest
-     * recognised prefix (for example the fitness goal) instead of being reported.
+     * <p>Because the argument tokenizer only recognizes the {@code edit} prefixes, such a mistyped
+     * token is otherwise silently absorbed into the value of the nearest recognized prefix (for
+     * example the fitness goal) instead of being reported. Only unambiguous near misses are
+     * rejected, so ordinary text that merely contains a slash (for example {@code c/o},
+     * {@code and/or}, {@code km/h} or {@code w/}) is left untouched.
      *
-     * @throws ParseException if an unrecognised prefix-shaped token is found inside any recognised
+     * @throws ParseException if a near-miss prefix-shaped token is found inside any recognized
      *                        prefix's value
      */
     private static void rejectUnknownPrefix(ArgumentMultimap argMultimap) throws ParseException {
         for (Prefix prefix : EDIT_PREFIXES) {
             for (String value : argMultimap.getAllValues(prefix)) {
-                Prefix unknown = findUnrecognizedPrefixToken(value);
+                String unknown = findUnrecognizedPrefixToken(value);
                 if (unknown != null) {
                     throw new ParseException(buildUnrecognizedMessage(unknown));
                 }
@@ -130,10 +133,10 @@ public class EditCommandParser implements Parser<EditCommand> {
     }
 
     /**
-     * Returns the first token in {@code value} that resembles a parameter prefix yet is not one of
-     * the recognised {@code edit} prefixes, or {@code null} if there is none.
+     * Returns the letters of the first token in {@code value} that is a near miss of a recognized
+     * {@code edit} prefix, or {@code null} if there is none.
      */
-    private static Prefix findUnrecognizedPrefixToken(String value) {
+    private static String findUnrecognizedPrefixToken(String value) {
         for (String token : value.trim().split("\\s+")) {
             if (token.isEmpty()) {
                 continue;
@@ -146,37 +149,39 @@ public class EditCommandParser implements Parser<EditCommand> {
             if (!letters.matches("[A-Za-z]+")) {
                 continue;
             }
-            Prefix candidate = new Prefix(letters + "/");
-            if (!EDIT_PREFIXES.contains(candidate)) {
-                return candidate;
+            if (EDIT_PREFIXES.contains(new Prefix(letters + "/"))) {
+                continue;
+            }
+            if (uniqueClosestPrefix(letters) != null) {
+                return letters;
             }
         }
         return null;
     }
 
     /**
-     * Builds the message for an unrecognised prefix-shaped token, appending a closest-prefix
-     * suggestion when one is close enough to be useful.
+     * Builds the message for a near-miss prefix-shaped token, naming the intended prefix.
      */
-    private static String buildUnrecognizedMessage(Prefix unknown) {
-        String message = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, unknown.getPrefix());
-        String suggestion = suggestPrefix(unknown.getPrefix());
-        if (suggestion != null) {
-            message += " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN, suggestion);
+    private static String buildUnrecognizedMessage(String letters) {
+        String message = String.format(EditCommand.MESSAGE_UNRECOGNIZED_PREFIX, letters + "/");
+        Prefix closest = uniqueClosestPrefix(letters);
+        if (closest != null) {
+            message += " " + String.format(EditCommand.MESSAGE_DID_YOU_MEAN,
+                    closest.getPrefix() + " (" + PREFIX_DESCRIPTIONS.get(closest) + ")");
         }
         return message;
     }
 
     /**
-     * Returns a suggestion for the closest recognised prefix formatted as {@code "n/ (name)"},
-     * or {@code null} if no recognised prefix is within {@value #MAX_SUGGESTION_DISTANCE} edits.
+     * Returns the unique closest recognized prefix to {@code letters} when it is within
+     * {@value #MAX_SUGGESTION_DISTANCE} edits and no other recognized prefix ties that distance,
+     * or {@code null} otherwise. Requiring a unique winner keeps the suggestion deterministic and
+     * avoids flagging tokens (such as a single letter) that sit equally close to several prefixes.
      */
-    private static String suggestPrefix(String letters) {
-        if (letters.endsWith("/")) {
-            letters = letters.substring(0, letters.length() - 1);
-        }
+    private static Prefix uniqueClosestPrefix(String letters) {
         Prefix bestPrefix = null;
         int bestDistance = Integer.MAX_VALUE;
+        int bestCount = 0;
         for (Prefix prefix : EDIT_PREFIXES) {
             String marker = prefix.getPrefix();
             marker = marker.substring(0, marker.length() - 1);
@@ -184,12 +189,12 @@ public class EditCommandParser implements Parser<EditCommand> {
             if (distance < bestDistance) {
                 bestDistance = distance;
                 bestPrefix = prefix;
+                bestCount = 1;
+            } else if (distance == bestDistance) {
+                bestCount++;
             }
         }
-        if (bestPrefix != null && bestDistance <= MAX_SUGGESTION_DISTANCE) {
-            return bestPrefix.getPrefix() + " (" + PREFIX_DESCRIPTIONS.get(bestPrefix) + ")";
-        }
-        return null;
+        return bestDistance <= MAX_SUGGESTION_DISTANCE && bestCount == 1 ? bestPrefix : null;
     }
 
     /**
@@ -213,9 +218,6 @@ public class EditCommandParser implements Parser<EditCommand> {
         }
         return previous[b.length()];
     }
-
-
-
 
     /**
      * Parses {@code Collection<String> tags} into a {@code Set<Tag>} if {@code tags} is non-empty.
