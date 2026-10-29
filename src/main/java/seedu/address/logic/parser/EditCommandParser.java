@@ -152,6 +152,13 @@ public class EditCommandParser implements Parser<EditCommand> {
             if (EDIT_PREFIXES.contains(new Prefix(letters + "/"))) {
                 continue;
             }
+            // A slash that joins two ordinary words (for example "on/off", "up/down", "in/out",
+            // "am/pm") is normal text, not a mistyped prefix, so it must not be flagged. A genuine
+            // typo such as "ad/" only attaches a value after the slash (for example "ad/18 Clementi
+            // Road"), so a purely alphabetic remainder distinguishes the two.
+            if (token.substring(slashIndex + 1).matches("[a-z]+")) {
+                continue;
+            }
             if (uniqueClosestPrefix(letters) != null) {
                 return letters;
             }
