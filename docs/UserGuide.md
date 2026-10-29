@@ -90,10 +90,12 @@ A client can have up to 10 distinct tags, including zero. Adding or editing with
 
 * `g/GOAL` is optional. A goal must contain 1 to 100 characters after trimming and include at least one letter or digit.
 * A supplied goal is saved with the client and shown on the client card.
+* Names accept Unicode letters, digits (`0`–`9`), spaces, apostrophes (`'`), hyphens (`-`), and full stops (`.`), with at least one letter or digit. For example, `Anne-Marie Tan`, `D'Angelo Lim`, and `Dr. Ahmad Rahman` are accepted. Leading and trailing whitespace is trimmed; internal spaces and letter case are preserved.
 * The address supplied to `add` must be nonblank and contain at most 200 characters after trimming leading and trailing whitespace. Internal spacing and case are preserved. The limit counts Unicode code points, so a supplementary Unicode character counts as one character. Existing saved addresses remain readable and are not truncated.
 
 Examples:
 * `add n/Priya Nair p/91234567 e/priya@example.com a/123 Clementi Road g/Build strength`
+* `add n/Anne-Marie Tan p/92345678 e/annemarie@example.com a/123 Test Road`
 * `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
 
 ### Listing all persons: `list`
@@ -157,6 +159,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 * Existing values will be updated to the input values.
 * `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags. A value that is only spaces counts as empty.
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
+* Names use the same permitted characters as `add`, including hyphens, apostrophes, full stops, and Unicode letters. Renaming preserves the entered case and internal spacing after trimming outer whitespace.
 * When editing tags, all of the client's existing tags are replaced; adding tags is not cumulative. A client can have at most 10 distinct tags.
 * A token that is a near miss of a parameter prefix is rejected, with a suggestion of the intended prefix. Only an unambiguous near miss is flagged (for example `ad/` is reported as a likely typo of `a/`), so ordinary text that contains a slash, such as `c/o`, `and/or`, `km/h`, or `w/`, is accepted.
 * An edit that would give the client both the same name (after trimming, collapsing internal whitespace, and ignoring letter case) and the same phone number as another client is rejected. Sharing only a name or only a phone number is allowed. Changing only the letter case of the same client's name is allowed.
@@ -735,7 +738,7 @@ Examples:
 * `a/AMOUNT` is required. It must be greater than zero and have at most two decimal places, without a currency symbol, sign, or thousands separator. `150`, `150.5`, and `150.50` are accepted; `0`, `-5`, `1.234`, and `S$150` are rejected. Amounts are stored and displayed with exactly two decimal places without floating-point rounding.
 * `d/YYYY-MM-DD` is required. It must be a real Gregorian date in exactly four-digit-year, two-digit-month, two-digit-day form, with the year between 0001 and 9999. Past, current, and future dates are accepted.
 * `r/REMARKS` is optional. After trimming outer whitespace it must contain 1 to 300 printable characters. Internal spacing, punctuation, and case are preserved. A blank `r/` is invalid, as are line breaks and control characters. Non-breaking spaces (for example U+00A0) are treated as ordinary spaces, so a remark made up of only such characters is rejected as blank. Omit `r/` when no remarks are needed.
-* `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. A token such as `x/` inside remarks is treated as an unknown prefix; ordinary punctuation such as `and/or` and `1/2` remains valid.
+* `a/`, `d/`, and `r/` may appear in any order after the index, but each may appear only once. The command word and prefix letters are case-sensitive. Missing, repeated, unknown, empty, or uppercase prefixes and extra unprefixed text are rejected. A token of letters followed by `/` inside remarks, such as `x/100` or `abc/100`, is treated as an unknown prefix and rejected; ordinary punctuation such as `and/or` and `1/2` remains valid.
 
 On success, Fittix saves the record, selects the client, and reports `Recorded payment for NAME: AMOUNT on YYYY-MM-DD.` The client's **Payments** section shows every saved record oldest first, keeping entry order for records on the same date. Each record shows its date, its amount to two decimal places, and remarks when present. Long remarks wrap and the card scrolls; they are never truncated. A client with no payments shows `No payments recorded.`
 
