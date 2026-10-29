@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -22,6 +23,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.TrainingSession;
 import seedu.address.model.person.WorkoutPlan;
 
 public class JsonAddressBookStorageTest {
@@ -89,6 +91,34 @@ public class JsonAddressBookStorageTest {
         readBack = jsonAddressBookStorage.readAddressBook().get(); // file path not specified
         assertEquals(original, new AddressBook(readBack));
 
+    }
+
+    @Test
+    public void readAndSaveAddressBook_v14SpaceOnlyLocation_preservesRoster() throws Exception {
+        // v1.4 wrote this location because String.isBlank() does not treat NBSP as blank.
+        // Start with the app's normal JSON format, then substitute the location accepted by v1.4.
+        AddressBook v14Roster = new AddressBook();
+        v14Roster.addPerson(ALICE.withTrainingSession(
+                new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "legacy location")));
+        v14Roster.addPerson(seedu.address.testutil.TypicalPersons.BOB);
+        String json = JsonUtil.toJsonString(new JsonSerializableAddressBook(v14Roster));
+        String legacyJson = json.replace("legacy location", "\u00a0\u00a0\u00a0");
+        assertFalse(json.equals(legacyJson));
+
+        Path filePath = testFolder.resolve("v14-roster.json");
+        Files.writeString(filePath, legacyJson);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+
+        ReadOnlyAddressBook loaded = storage.readAddressBook().orElseThrow();
+        assertEquals(2, loaded.getPersonList().size());
+        assertEquals("\u00a0\u00a0\u00a0", loaded.getPersonList().get(0).getTrainingSessions().get(0).getLocation());
+
+        // LogicManager saves after ordinary commands such as list. The migrated model
+        // must remain intact when it is saved and loaded again.
+        storage.saveAddressBook(loaded);
+        ReadOnlyAddressBook reloaded = storage.readAddressBook().orElseThrow();
+        assertEquals(2, reloaded.getPersonList().size());
+        assertEquals("\u00a0\u00a0\u00a0", reloaded.getPersonList().get(0).getTrainingSessions().get(0).getLocation());
     }
 
     @Test

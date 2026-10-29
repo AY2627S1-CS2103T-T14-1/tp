@@ -47,11 +47,11 @@ public class AddCommandParser implements Parser<AddCommand> {
         Name name = ParserUtil.parseName(argMultimap.getValue(PREFIX_NAME).get());
         Phone phone = ParserUtil.parsePhone(argMultimap.getValue(PREFIX_PHONE).get());
         Email email = ParserUtil.parseEmail(argMultimap.getValue(PREFIX_EMAIL).get());
-        Address address = ParserUtil.parseAddress(argMultimap.getValue(PREFIX_ADDRESS).get());
+        Address address = ParserUtil.parseAddressForAdd(argMultimap.getValue(PREFIX_ADDRESS).get());
         Set<Tag> tagList = ParserUtil.parseTags(argMultimap.getAllValues(PREFIX_TAG));
 
         Goal goal = argMultimap.getValue(PREFIX_GOAL).isPresent()
-                ? ParserUtil.parseGoal(argMultimap.getValue(PREFIX_GOAL).get()) : null;
+                ? ParserUtil.parseGoal(argMultimap.getRawValue(PREFIX_GOAL).get()) : null;
         Person person = new Person(name, phone, email, address, new Remark(""), tagList, new WorkoutPlan(),
                 java.util.Optional.empty(), goal);
 

@@ -1,19 +1,71 @@
 ---
-layout: page
-title: AddressBook Level 3
+layout: default
+title: Fittix | Gym trainer workspace
 ---
 
-[![CI Status](https://github.com/se-edu/addressbook-level3/workflows/Java%20CI/badge.svg)](https://github.com/se-edu/addressbook-level3/actions)
-[![codecov](https://codecov.io/gh/se-edu/addressbook-level3/branch/master/graph/badge.svg)](https://codecov.io/gh/se-edu/addressbook-level3)
+<div class="fittix-home" markdown="1">
 
-![Ui](images/Ui.png)
+<div class="fittix-hero" markdown="1">
 
-**AddressBook is a desktop application for managing your contact details.** While it has a GUI, most of the user interactions happen using a CLI (Command Line Interface).
+<p class="fittix-eyebrow">DESKTOP APP FOR GYM TRAINERS</p>
 
-* If you are interested in using AddressBook, head over to the [_Quick Start_ section of the **User Guide**](UserGuide.html#quick-start).
-* If you are interested in developing AddressBook, the [**Developer Guide**](DeveloperGuide.html) is a good place to start.
+# Your clients and training work, in one place.
 
+Fittix helps trainers keep client details, workout plans, sessions, and progress close at hand. Enter commands quickly and review each client's information in a clear desktop interface.
 
-**Acknowledgements**
+<p class="fittix-actions"><a class="fittix-button" href="https://github.com/AY2627S1-CS2103T-T14-1/tp/releases/latest">Download Fittix</a><a class="fittix-text-link" href="UserGuide.html#quick-start">Get started →</a></p>
 
-* Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit5](https://github.com/junit-team/junit5)
+</div>
+
+<figure class="fittix-preview">
+  <img src="images/FittixActualV14.jpg" alt="Fittix desktop app showing a client profile, payments, body progress, diet goals, and training sessions">
+  <figcaption>Fittix desktop interface, version 1.4</figcaption>
+</figure>
+
+## Everything you need between sessions
+
+<div class="fittix-features" markdown="1">
+
+<div markdown="1">
+
+### Keep clients organized
+
+Add, edit, find, and filter client records. Keep fitness goals, health considerations, and dietary restrictions with each profile.
+
+</div>
+
+<div markdown="1">
+
+### Plan and schedule training
+
+Build day-by-day workout plans and book training sessions. Check each client's upcoming schedule from the same workspace.
+
+</div>
+
+<div markdown="1">
+
+### Track the work done
+
+Log completed workouts and review session history. Record body measurements and compare the latest weight with a client's baseline.
+
+</div>
+
+<div markdown="1">
+
+### Manage the details
+
+Record diet goals, membership plans, remaining sessions, and payments alongside your client records.
+
+</div>
+
+</div>
+
+<div class="fittix-next" markdown="1">
+
+## Ready to use Fittix?
+
+Download the latest release, then follow the [User Guide](UserGuide.html) for setup and commands. Building or contributing? Start with the [Developer Guide](DeveloperGuide.html).
+
+</div>
+
+</div>
