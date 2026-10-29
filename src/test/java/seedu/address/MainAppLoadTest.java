@@ -89,6 +89,22 @@ public class MainAppLoadTest {
         }
     }
 
+    @Test
+    public void initModelManager_savedSingleLabelEmailDomain_stopsAndPreservesOriginalBytes() throws Exception {
+        StorageManager storage = storage();
+        AddressBook original = new AddressBook();
+        original.addPerson(new PersonBuilder().withEmail("amy@gmail.com").build());
+        storage.saveAddressBook(original);
+        Path dataFile = storage.getAddressBookFilePath();
+        // A roster saved before the two-label rule can still hold an email such as alpha@example.
+        Files.writeString(dataFile, Files.readString(dataFile).replace("\"amy@gmail.com\"", "\"alpha@example\""));
+        assertTrue(Files.readString(dataFile).contains("\"alpha@example\""));
+        byte[] legacyBytes = Files.readAllBytes(dataFile);
+
+        assertThrows(IllegalStateException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
+        assertArrayEquals(legacyBytes, Files.readAllBytes(dataFile));
+    }
+
     private StorageManager storage() {
         return new StorageManager(new JsonAddressBookStorage(folder.resolve("clients.json")),
                 new JsonUserPrefsStorage(folder.resolve("preferences.json")));
