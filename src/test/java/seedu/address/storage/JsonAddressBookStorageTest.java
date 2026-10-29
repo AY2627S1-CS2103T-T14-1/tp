@@ -13,9 +13,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.util.JsonUtil;
@@ -174,6 +180,63 @@ public class JsonAddressBookStorageTest {
         storage.saveAddressBook(original);
 
         assertEquals(original, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
+    public void readAddressBook_invalidRestrictions_rejectsWithoutChangingFile() throws Exception {
+        List<List<String>> invalidLists = List.of(
+                List.of("Peanut allergy", "Peanut allergy\t"),
+                List.of("Peanut allergy", "Peanut allergy\n"),
+                List.of("Peanut allergy", "PEANUT ALLERGY"),
+                List.of("Peanut allergy", "Peanut allergy"),
+                Collections.nCopies(11, "Peanut allergy"),
+                List.of("Peanut allergy", ""),
+                List.of("Peanut allergy", "a".repeat(101)),
+                Arrays.asList("Peanut allergy", null),
+                List.of("ΧΩΡΙΣ", "χωρις"),
+                List.of("No dairy Σ", "NO DAIRY ς", "no dairy σ"),
+                List.of("No dairy Σ", "NO DAIRY ς", "no dairy σ\t"));
+        for (List<String> values : invalidLists) {
+            Path path = writeRestrictions(values);
+            String original = Files.readString(path);
+            assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(path).readAddressBook());
+            assertEquals(original, Files.readString(path));
+        }
+    }
+
+    @Test
+    public void readAndSaveAddressBook_validLegacySigmaCollision_keepsFirstAndUnrelatedData() throws Exception {
+        Path path = writeRestrictions(List.of("Peanut allergy", "No dairy Σ", "NO DAIRY ς", "Halal meals"));
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(path);
+        ReadOnlyAddressBook loaded = storage.readAddressBook().orElseThrow();
+        Person expected = new seedu.address.testutil.PersonBuilder(ALICE)
+                .withDietaryRestrictions("Peanut allergy", "No dairy Σ", "Halal meals").build();
+        assertEquals(List.of(expected), loaded.getPersonList());
+        storage.saveAddressBook(loaded);
+        assertEquals(loaded, storage.readAddressBook().orElseThrow());
+    }
+
+    @Test
+    public void readAddressBook_tooManyPreviouslyValidRestrictions_rejectsBeforeMigration() throws Exception {
+        List<String> values = new java.util.ArrayList<>();
+        for (int i = 0; i < 9; i++) {
+            values.add("Restriction " + i);
+        }
+        values.add("No dairy Σ");
+        values.add("NO DAIRY ς");
+        Path path = writeRestrictions(values);
+        String original = Files.readString(path);
+        assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(path).readAddressBook());
+        assertEquals(original, Files.readString(path));
+    }
+
+    private Path writeRestrictions(List<String> values) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode person = (ObjectNode) mapper.readTree(JsonUtil.toJsonString(new JsonAdaptedPerson(ALICE)));
+        person.set("dietaryRestrictions", mapper.valueToTree(values));
+        Path path = testFolder.resolve("restrictions.json");
+        Files.writeString(path, "{\"persons\":[" + person + "]}");
+        return path;
     }
 
     private void assertInvalidExercises(String exercises) throws Exception {

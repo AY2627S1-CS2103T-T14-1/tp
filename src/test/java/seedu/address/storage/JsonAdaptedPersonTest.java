@@ -57,6 +57,15 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_legacySigmaVariantDuplicates_keepsFirstEntry() throws Exception {
+        Person person = new PersonBuilder().withDietaryRestrictions("Peanut allergy").build();
+        String json = JsonUtil.toJsonString(new JsonAdaptedPerson(person)).replace("[ \"Peanut allergy\" ]",
+                "[ \"Peanut allergy\", \"No dairy \u03A3\", \"NO DAIRY \u03C2\" ]");
+        Person loaded = JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType();
+        assertEquals(List.of("Peanut allergy", "No dairy \u03A3"), loaded.getDietaryRestrictions().getValues());
+    }
+
+    @Test
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(BENSON);
         assertEquals(BENSON, person.toModelType());
