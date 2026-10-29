@@ -85,13 +85,13 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
   </a>
 </div>
 
-The workspace has three columns: `PersonListPanel` displays clients and manages selection, `ClientDetailPanel` shows the selected client's profile and workout plan, and `ClientContextPanel` shows their diet, restrictions, appointments, and workout history. `ClientDetailPanel` owns a `BodyProgressPanel` for baseline measurements, progress history, and the latest comparison. These visible controllers, together with `MainWindow`, `CommandBox`, `ResultDisplay`, `HelpWindow`, `PersonCard`, and `StatusBarFooter`, inherit from the abstract `UiPart<T>` class, which loads their FXML and exposes their root node.
+The workspace has three columns inside one scroll pane: `PersonListPanel` displays clients and manages selection, `ClientDetailPanel` shows the selected client's profile and workout plan, and `ClientContextPanel` shows their diet, restrictions, appointments, workout history, body progress, and payments. `ClientContextPanel` owns a `BodyProgressPanel` for baseline measurements, progress history, and the latest comparison. These visible controllers, together with `MainWindow`, `CommandBox`, `ResultDisplay`, `HelpWindow`, `PersonCard`, and `StatusBarFooter`, inherit from the abstract `UiPart<T>` class, which loads their FXML and exposes their root node.
 
-`MainWindow` creates and retains the main panels, command box, result display, and help window. It also creates a `StatusBarFooter` locally and supplies the save path and the list panel's observable client count. The footer binds its count label to that property. The list panel creates `PersonCard` controllers through its JavaFX cell renderer; it does not retain a separate card controller for every client.
+`MainWindow` creates and retains the main panels, command box, result display, and help window. It also creates a `StatusBarFooter` locally and supplies the save path and the list panel's observable client count. The footer binds its count label to that property. The list panel builds one `PersonCard` per displayed client into a `VBox`, rebuilding the cards when the filtered list changes, so the workspace has a single scrollbar; it does not retain a separate card controller for every client. Selecting a client moves the `selected` style class between the existing cards. The panel reports selection changes, and explicit reveal requests, to `MainWindow`, which scrolls the workspace only as far as needed to show the selected card. The command box and result display sit in a terminal panel below the workspace; `MainWindow` adds it to the workspace `SplitPane` when it opens, removes it when it closes, and remembers its height in `GuiSettings`.
 
 `CommandBox` receives a `CommandExecutor` callback supplied as `MainWindow`'s `this::executeCommand` method reference. `MainWindow` calls `Logic.execute`, appends results or errors to `ResultDisplay`, and updates selection and filter indicators. `CommandCatalog` supplies command hints and help details. `ResultDisplay` retains up to 50 immutable `CommandFeedback` entries for its scrolling history. `MainWindow` does not implement the callback interface itself.
 
-`MainWindow` listens to the list panel's selection and the observable client data supplied by `Logic`, then refreshes both selected-client panels. A `CommandResult` may also contain a `BodyProgressViewRequest`; after a successful body-progress command, `MainWindow` selects the resolved client and forwards the request through `ClientDetailPanel` to reveal the requested tracker section. UI controllers display `Person` data from the Model component.
+`MainWindow` listens to the list panel's selection and the observable client data supplied by `Logic`, then refreshes both selected-client panels. A `CommandResult` may also contain a `BodyProgressViewRequest`; after a successful body-progress command, `MainWindow` selects the resolved client, passes the request to `ClientContextPanel`, and scrolls the shared workspace to the requested tracker section. UI controllers display `Person` data from the Model component.
 
 The `UI` component uses JavaFX. Layouts are defined in `.fxml` resources under `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/resources/view/MainWindow.fxml) defines the layout loaded by [`MainWindow`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/ui/MainWindow.java). The diagram omits individual JavaFX controls, private rendering helpers, and the detailed Model classes to keep the component relationships readable.
 
@@ -256,13 +256,15 @@ The workout plan feature lets a trainer keep a per-client list of prescribed exe
 - `storage.JsonAdaptedPerson` persists the plan as JSON array `exercises`. The `@JsonCreator` constructor treats a missing/`null` `exercises` field as empty (backward compatible with old files). `toModelType` rejects `null` entries with `Workout plan must not contain null exercises`, converts each entry via `JsonAdaptedExercise#toModelType`, and builds `new WorkoutPlan(personExercises)` (which re-sorts by weekday). Any invalid exercise therefore fails the whole person load, which `JsonSerializableAddressBook` propagates as `IllegalValueException`; startup then stops before creating the command-processing logic, preserving the original file instead of opening an empty roster that could overwrite it.
 - Save path: `JsonAdaptedPerson(Person source)` copies `source.getWorkoutPlan().getExercises()` into adapted exercises (including each exercise's canonical `day`), so every `addex`/`delex`/`dayex`/`clearplan` is persisted on the next `StorageManager` save (automatic after each mutating command).
 
-#### UI: person card rendering
+#### UI: selected-client workout card
 
-- `ui.PersonCard#displayWorkoutPlan` renders the plan inside `workoutPlanContainer`, reusing `Messages#getExercisesInDisplayOrder`, `#getExerciseDayHeading` and `#formatExercise` so the card and command feedback always agree.
-  - Header is `Workout Plan:` when empty, otherwise `Workout Plan (N):` where `N` is the plan size.
-  - An empty plan shows placeholder label `No workout plan yet`.
-  - Non-empty plan groups exercises under bold full-weekday headings in Monday-to-Sunday order with `Day not specified` last; only non-empty groups are shown, separated by an 8px spacer. Within each group, one `Label` per exercise is numbered with the continuous 1-based display index (`1. ...`, `2. ...`) using the `Name SetsxReps @Weightkg` format (e.g. `Bench Press 4x10 @60kg`). These numbers are exactly the `EXERCISE_INDEX` values accepted by `delex` and `dayex`, so the card doubles as the index reference; `addex`/`dayex`/`delex` re-sort and renumber, so callers must always use the current card numbering.
-  - Labels wrap (`setWrapText(true)`, max width 350) so long lists grow vertically without breaking the card layout. The card observes the filtered person list, so it refreshes automatically after each command.
+`ClientDetailPanel#showWorkoutPlan` renders the selected client's plan in `workoutRows`, using `Messages#getExercisesInDisplayOrder` for the continuous 1-based numbers shared with command feedback. `PersonCard` renders the client-list summary; it does not render the workout plan.
+
+- The card heading is `Workout plan`. A nonempty plan also shows the exercise count and number of assigned training days in `planSummary`. An empty plan leaves the summary blank and hides `workoutRows`, so only the heading remains visible.
+- `createDayRow` renders all seven weekdays in Monday-to-Sunday order, with short day codes and full weekday subtitles. Days without exercises show `Rest`. Unscheduled exercises appear in a final `Day not specified` row created by `createUnspecifiedRow`.
+- `createExerciseTile` shows the current exercise number, a wrapping name, sets × reps, and weight. Zero weight displays as `BW`; other weights display in kg. Each day lays out up to three tiles per row. The current weekday is highlighted.
+- `delex` and `dayex` use the current displayed exercise numbers. Adding, moving or deleting exercises can re-sort and renumber the plan, so trainers must check the updated numbers before the next indexed command.
+- `MainWindow` refreshes the selected-client panel after model/list changes. The card grows vertically within the shared workspace scroll pane; it has no internal scrollbar or fixed 350-pixel label width.
 
 <a id="diet-plan-management"></a>
 
@@ -278,9 +280,9 @@ For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw argument
 
 After a successful save, the shared undo history retains the previous complete address book and clears the redo history. Rejected diet commands and failed saves create no undo step. A replacement clears omitted notes in the current record, while session-level undo can still restore the previous target and notes. There is no separate diet-history store.
 
-`ClientContextPanel` shows the selected client's diet goals in the right-hand **DIET** section. It shows the current target and notes, hides notes when absent, and displays `No diet target recorded.` for clients without diet goals. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the diet goals' nutritional or medical suitability.
+`ClientContextPanel` shows the selected client's diet goals in the right-hand **DIET** section. It shows the current target and notes and hides notes when absent. For a client without diet goals, the section keeps its heading and hides the target and notes. Long accepted values wrap, and the workspace scrolls as a whole. The UI does not evaluate the diet goals' nutritional or medical suitability.
 
-`DietCommandParserTest`, `DietCommandTest`, and `DietIntegrationTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, and injected commit failure. `WorkoutSessionDisplayTest#dietPlan_showsTargetAndOptionalNotes` checks the `ClientContextPanel` target text, optional-note visibility, and displayed client index in the command hint. `WorkoutSessionDisplayTest#switchingToClientWithoutRecords_clearsPriorRows` checks that switching to a client without records shows the empty diet state. The manual scenarios below cover the main user flows.
+`DietCommandParserTest`, `DietCommandTest`, and `DietIntegrationTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, and injected commit failure. `WorkoutSessionDisplayTest#dietPlan_showsTargetAndOptionalNotes` checks the `ClientContextPanel` target text and optional-note visibility. `WorkoutSessionDisplayTest#switchingToClientWithoutRecords_clearsPriorRows` checks that switching to a client without records hides the previous client's diet, appointment and history content. The manual scenarios below cover the main user flows.
 
 ### Dietary restrictions
 
@@ -329,7 +331,7 @@ On success, the command appends the session to a copy of the existing session li
 
 `LogicManager` saves the updated address book through the storage component. If saving throws an `IOException`, it restores the address-book snapshot taken before command execution and reports the save error.
 
-`MainWindow` observes the selected client and changes to the client list. `ClientContextPanel#showHistory` displays every completed session under **HISTORY** / **Completed workouts**, numbering rows consistently with `history`. It sorts a copy by date descending, then places unspecified times before specified times on the same date, with specified times descending. Unspecified times are distinct from midnight and display as `Time not specified`. The stored recording order and exercise order are unchanged. A client without sessions sees `No completed workouts logged.`; no selection shows the context placeholder. Exercise labels wrap, and the context panel supports scrolling.
+`MainWindow` observes the selected client and changes to the client list. `ClientContextPanel#showHistory` displays every completed session under **HISTORY** / **Completed workouts**, numbering rows consistently with `history`. It sorts a copy by date descending, then places unspecified times before specified times on the same date, with specified times descending. Unspecified times are distinct from midnight and display as `Time not specified`. The stored recording order and exercise order are unchanged. For a client without sessions, the section keeps its heading and shows no rows; with no client selected, the context column is blank. Exercise labels wrap, and the workspace scrolls as a whole.
 
 `HistoryCommand` reads the filtered client list and formats all sessions without modifying data. `EditLogCommandParser` reuses `LogCommandParser` validation to construct a complete replacement session. `EditLogCommand` resolves the displayed client and history indexes, rejects unchanged and duplicate-key replacements, replaces the selected session in the client's stored list, and preserves every unrelated client field. `MainWindow` selects the targeted client before command execution. The usual `LogicManager` save and snapshot restoration protect edits from failed writes.
 
@@ -378,7 +380,7 @@ Implemented for v1.4. The [feature contract](featureSpecs.md#feature-14-payment-
 - `logic.parser.PayCommandParser` reads the displayed index, then the prefixed `a/` (`CliSyntax.PREFIX_ADDRESS`), `d/` (`CliSyntax.PREFIX_DATE`), and optional `r/` (`CliSyntax.PREFIX_REMARK`) values. The command word and prefixes are matched case-sensitively. `AddressBookParser` routes `pay` with a `DOTALL` pattern (AddressBookParser.java:62) and the parser keeps raw arguments until validation so an embedded line break survives to be rejected (`containsLineBreak`); any line break produces `Invalid command format!` + `MESSAGE_USAGE`. It rejects a blank index or argument area, a repeated/unknown/empty prefix, an unknown `word/`-style token inside a value (e.g. `x/`), and extra unprefixed text. `a/` and `d/` are required and must be single tokens (internal whitespace is rejected), while a single empty `r/` is rejected. Validated values are built into a `PaymentRecord` via `PaymentRecord.fromText` before a `PayCommand` is returned.
 - `LogicManager` maps an `IOException` from a `PayCommand` to `PayCommand.MESSAGE_SAVE_FAILURE` (LogicManager.java:159), so a failed write restores the previous payment data in memory and on disk, exactly like `diet`, membership, and body mutations.
 - `ui.CommandCatalog` registers `PayCommand` for usage hints and the help window.
-- `ui.ClientDetailPanel#showPayments` renders the client's payments: it sorts a copy by date (oldest first) with entry order within a date, shows `None` for an empty history or `N record(s)`, and adds one fixed-width `payment-row` per record with a monospace date, a right-aligned monospace amount, and an optional wrapable remarks label. Selection changes rebuild the rows, so switching clients never leaves a stale payment row.
+- `ui.ClientContextPanel#showPayments` renders the client's payments in the **PAYMENTS** card: it sorts a copy by date (oldest first) with entry order within a date, shows `No payments recorded.` for an empty history, and adds one `payment-row` `GridPane` per record with the remarks (or `Payment` when there are none) above the date, a monospace amount, and a `PAID` status label. The remarks, date and amount wrap instead of being truncated. Selection changes rebuild the rows, so switching clients never leaves a stale payment row.
 
 Automated coverage includes model validation and immutability, JSON round trips and legacy absence, parser boundary cases, filtered-list targeting, preservation by other client-update commands, selected-client display, and the save-failure path. Manual scenarios are below.
 
@@ -417,7 +419,7 @@ Resolve indexes against `getFilteredPersonList()` exactly once before mutation. 
 
 `CommandResult` carries an optional typed `BodyProgressViewRequest` containing the resolved target `Person` and section (`HISTORY` or `COMPARISON`). Mutations request the updated client; queries request the existing client. Existing constructors retain an empty request by default; result equality and hashCode include the optional request. `MainWindow` consumes the request only after `LogicManager.execute` returns successfully, selects the target in `PersonListPanel`, and reveals the section. Do not pass the numeric index on for later re-resolution against a potentially changed list, and do not mutate domain data to implement selection.
 
-`BodyProgressPanel` renders baseline, all entries and comparison in the centre column's `ClientDetailPanel`. The body card scrolls internally, and the centre details column scrolls when its content exceeds the available height. `MainWindow` observes selection/client replacement and consumes successful typed requests, then `ClientDetailPanel.revealBodyProgress` reveals the card and requested section. Maximum-length notes wrap within the available width. Selection changes rebuild/clear all body fields; the window never resizes automatically. All five commands are registered in `CommandCatalog` for usage hints and help.
+`BodyProgressPanel` renders baseline, all entries and comparison in the right-hand column, inside `ClientContextPanel`. It has no scroll pane of its own: a long history makes the card taller, and the shared workspace scroll pane scrolls. `MainWindow` observes selection/client replacement and consumes successful typed requests: it selects the client, calls `ClientContextPanel.revealBodyProgress`, then scrolls the workspace to the node from `ClientContextPanel.getBodyProgressNode`, which is the requested section heading, or the baseline summary when no baseline is recorded. Maximum-length notes wrap within the available width. Selection changes rebuild/clear all body fields; the window never resizes automatically. All five commands are registered in `CommandCatalog` for usage hints and help.
 
 #### Deriving history and comparison
 
@@ -1070,6 +1072,29 @@ Confirm Priya is index 1 with no diet goals, and Daniel is index 2 with `Daniel 
 
 An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it forces the atomic replacement to throw, verifies the specified failure message, confirms that both the model and original JSON bytes are unchanged, and checks that the temporary file is removed.
 
+### Dietary restrictions
+
+Use a fresh, disposable roster. Add `Priya Nair` and `Daniel Tan` in that order, with different phone numbers and emails, then run `list`. Priya must be displayed at index 1 and Daniel at index 2. The commands below are sequential; `NAME` in feedback is `Priya Nair`.
+
+1. Record dietary restrictions: `restriction 1 r/Peanut allergy r/Halal meals`.<br>
+   Expected: `Recorded dietary restrictions for NAME.` and the client detail pane shows both restrictions in the order entered.
+1. Replace with different restrictions: `restriction 1 r/No shellfish`.<br>
+   Expected: `Recorded dietary restrictions for NAME.`; old restrictions are replaced and only `No shellfish` appears.
+1. Clear restrictions: `restriction 1 r/`.<br>
+   Expected: `Cleared dietary restrictions for NAME.` and the restrictions section clears. Record `restriction 1 r/Peanut allergy`, then enter `restriction 1 r/` followed by three spaces. This whitespace-only value also clears the nonempty list with the same success message. Repeat it on the empty list: expect `No changes made: dietary restrictions are already current.`
+1. Duplicate detection: `restriction 1 r/No dairy r/NO DAIRY`.<br>
+   Expected: Rejection with error: `Each dietary restriction must contain 1 to 100 printable characters and include at least one letter or digit. At most 10 restrictions are allowed, without duplicates.` No changes are made.
+1. Invalid entries: Try `restriction 1 r/!!!`, `restriction 1 r/ r/Peanut`, and `restriction 0 r/Halal`.<br>
+   Expected: Respectively rejected with restriction constraints, invalid clear format, and invalid index errors. The list remains empty.
+1. Search restrictions: Set `restriction 1 r/Peanut allergy` and run `find dr/peanut`.<br>
+   Expected: Only Priya is displayed, at filtered index 1. Daniel is unchanged. Before changing restrictions again, run `list`, then `find n/Priya`. Priya remains at index 1 under this name filter even when her restriction text changes.
+1. Separation from diet goals: Set `diet 1 t/2000 kcal`, then `restriction 1 r/No dairy`.<br>
+   Expected: Priya's diet target remains `2000 kcal`. Run `diet 1 t/2100 kcal`: restrictions remain `No dairy`.
+1. Persistence across restart: Restart the application, run `list`, then `find n/Priya`.<br>
+   Expected: Only Priya is displayed at index 1, with `No dairy` and `2100 kcal` intact. Run `list` and select Daniel at index 2: he still has no restrictions or diet goals.
+1. Greek case-insensitive search (requires the Unicode search fix from #267 or #295): Run `list`, set `restriction 1 r/ΧΩΡΙΣ`, then run `find dr/Σ`, `find dr/σ`, and `find dr/ς` in turn.<br>
+   Expected: Each search displays only Priya at index 1. Search scans the full roster each time. Restart, run `list`, then `find n/Priya` and check that `ΧΩΡΙΣ` and the `2100 kcal` diet target remain intact. Run this check on the combined release build before accepting the complete release test.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files
@@ -1083,7 +1108,7 @@ An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it
       Expected: That person fails validation (`Sets should be a positive integer greater than 0`, `Reps should be a positive integer greater than 0`, `Weight should be a finite non-negative number in kg`, `Exercise name should not be blank`, `Exercise's <field> field is missing!`, or `Workout plan must not contain null exercises`), so startup stops and the original file remains unchanged. No command-processing logic is created for an empty replacement roster.
 
    1. Missing `exercises` field (backward compatibility): open `addressbook.json`, delete the `"exercises": [...]` array from one person, save, then relaunch.<br>
-      Expected: That person loads with an empty workout plan; the card shows `No workout plan yet` and `Messages.format` shows `Workout Plan: Empty`.
+      Expected: That person loads with an empty workout plan; the selected client's workout card shows only its `Workout plan` heading and `Messages.format` shows `Workout Plan: Empty`.
 
    1. Missing `day` field on an exercise (backward compatibility): open `addressbook.json`, delete the `"day"` key from one exercise object, save, then relaunch.<br>
       Expected: That exercise loads as unscheduled and appears under `Day not specified`; a stored `"day": "Day not specified"` (any casing, from older saves) normalizes the same way.
@@ -1141,7 +1166,7 @@ An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it
 1. Clearing a workout plan (`clearplan`)
    1. Prerequisites: 1st person has at least one exercise; 2nd person has an empty plan.
    1. Test case: `clearplan 1`<br>
-      Expected: All exercises are removed. The status message shows `Cleared workout plan for Person: ` with `Workout Plan: Empty`, and the card shows `Workout Plan:` + `No workout plan yet`.
+      Expected: All exercises are removed. The status message shows `Cleared workout plan for Person: ` with `Workout Plan: Empty`, and the selected client's workout card shows only its `Workout plan` heading.
    1. Test case: `clearplan 1` again (already empty), or `clearplan 2` on the empty-plan person.<br>
       Expected: No change. Shows `Workout plan is already empty for Person: ` with that person.
    1. Other incorrect commands to try: `clearplan`, `clearplan 0`, `clearplan x`, `clearplan 1 2`.<br>
@@ -1176,7 +1201,7 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
    Expected: All recorded sessions remain visible in newest-first workout-date/time order, including the session dated 2020-01-14. Repeating the command from step 1 is rejected as a duplicate, confirming that the earlier entry was retained.
 
 9. Select another client with no recorded sessions.
-   Expected: `No completed workouts logged.` appears, and the previous client's workout details disappear.
+   Expected: The history section keeps its heading but shows no rows, and the previous client's workout details disappear.
 
 ### Membership plan management
 
@@ -1204,13 +1229,13 @@ Use a disposable address book with at least two clients.
 Use a disposable address book with at least two clients. If needed, add a uniquely named client and run `find` so the target is displayed at index 1.
 
 1. Run `pay 1 a/150 d/2026-10-20`.<br>
-   Expected: `Recorded payment for NAME: 150.00 on 2026-10-20.` The Payments section shows one record, the card summary reads `1 record`, and the plan balance and price are unchanged.
+   Expected: `Recorded payment for NAME: 150.00 on 2026-10-20.` The Payments section shows one record with a `PAID` label, and the plan balance and price are unchanged.
 2. Run `pay 1 d/2026-10-19 a/75.50 r/October membership payment`.<br>
    Expected: The record is added. The section lists both records oldest first (`2026-10-19` before `2026-10-20`); the amount is right-aligned and two decimals, and the remarks wrap.
 3. Repeat the command from step 1.<br>
-   Expected: A second record identical to the first is added and the summary reads `3 records` overall. Repeated records are allowed and stay in entry order for the same date.
+   Expected: A second record identical to the first is added, so the Payments section shows three rows. Repeated records are allowed and stay in entry order for the same date.
 4. Try `pay 1 a/0 d/2026-10-20`, `pay 1 a/-5 d/2026-10-20`, `pay 1 a/1.234 d/2026-10-20`, `pay 1 a/S$150 d/2026-10-20`, `pay 1 a/150 d/2026-13-40`, `pay 1 a/150 d/2026-10-20 x/extra`, and `pay 1 a/150 a/200 d/2026-10-20`.<br>
-   Expected: Each is rejected with the relevant amount or date error, or with `Invalid command format!` for the unknown-prefix, extra-text, and repeated-prefix cases. No record is added and the summary is unchanged.
+   Expected: Each is rejected with the relevant amount or date error, or with `Invalid command format!` for the unknown-prefix, extra-text, and repeated-prefix cases. No record is added and the Payments section is unchanged.
 5. Try `pay 0 a/150 d/2026-10-20` and `pay 99 a/150 d/2026-10-20`.<br>
    Expected: `pay 0` has invalid index syntax and is rejected with `Invalid command format!` followed by the `pay` usage; `pay 99` is a valid index outside the displayed list and shows `The person index provided is invalid.`
 6. Run `pay 1 a/150 d/2026-10-20 r/`.<br>

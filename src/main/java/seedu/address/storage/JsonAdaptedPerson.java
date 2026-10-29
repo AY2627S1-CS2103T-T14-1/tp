@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -333,7 +334,8 @@ class JsonAdaptedPerson {
         final DietaryRestrictions modelDietaryRestrictions;
         try {
             modelDietaryRestrictions = dietaryRestrictions.isEmpty()
-                    ? new DietaryRestrictions() : new DietaryRestrictions(dietaryRestrictions);
+                    ? new DietaryRestrictions()
+                    : new DietaryRestrictions(dropCaseFoldDuplicates(dietaryRestrictions));
         } catch (IllegalArgumentException | NullPointerException exception) {
             throw new IllegalValueException(DietaryRestrictions.MESSAGE_CONSTRAINTS);
         }
@@ -381,4 +383,31 @@ class JsonAdaptedPerson {
                 bodyProgress == null ? new BodyProgress() : bodyProgress.toModelType(clock),
                 modelPayments);
     }
+
+    /**
+     * Validates the original list using the pre-migration rules, then drops only newly equivalent Unicode
+     * variants. Malformed entries, excessive counts and pre-existing duplicates must still fail loading.
+     */
+    private static List<String> dropCaseFoldDuplicates(List<String> values) {
+        if (values.size() > DietaryRestrictions.MAX_ENTRIES) {
+            throw new IllegalArgumentException(DietaryRestrictions.MESSAGE_CONSTRAINTS);
+        }
+        Set<String> legacyKeys = new HashSet<>();
+        for (String value : values) {
+            if (value == null || !DietaryRestrictions.isValidRestriction(value)
+                    || !legacyKeys.add(value.strip().toLowerCase(Locale.ROOT))) {
+                throw new IllegalArgumentException(DietaryRestrictions.MESSAGE_CONSTRAINTS);
+            }
+        }
+
+        Set<String> seen = new HashSet<>();
+        List<String> kept = new ArrayList<>();
+        for (String value : values) {
+            if (seen.add(DietaryRestrictions.foldCase(value.strip()))) {
+                kept.add(value);
+            }
+        }
+        return kept;
+    }
+
 }

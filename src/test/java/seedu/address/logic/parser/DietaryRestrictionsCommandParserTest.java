@@ -38,4 +38,22 @@ public class DietaryRestrictionsCommandParserTest {
         assertParseFailure(parser, "0 r/Halal meals", usage);
         assertParseFailure(parser, "1 r/Halal meals r/halal MEALS", DietaryRestrictions.MESSAGE_CONSTRAINTS);
     }
+
+    @Test
+    public void parse_unknownPrefixInsideRestriction_failure() {
+        String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, DietaryRestrictionsCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "1 r/No dairy x/unknown", usage);
+        assertParseFailure(parser, "1 r/Peanut allergy r/No dairy xy/unknown", usage);
+        assertParseFailure(parser, "1 r/No dairy x/", usage);
+        assertParseFailure(parser, "1 r/No dairy abc/100", usage);
+        assertParseFailure(parser, "1 r/No dairy R/Halal", usage);
+    }
+
+    @Test
+    public void parse_slashInOrdinaryText_success() {
+        assertParseSuccess(parser, "1 r/Dairy/eggs r/Avoid nuts and/or seeds r/Half 1/2 portions",
+                new DietaryRestrictionsCommand(INDEX_FIRST_PERSON,
+                        new DietaryRestrictions(
+                                List.of("Dairy/eggs", "Avoid nuts and/or seeds", "Half 1/2 portions"))));
+    }
 }

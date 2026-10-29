@@ -69,11 +69,11 @@ MainWindow *-down-> "1" ClientContextPanel
 MainWindow *-down-> "1" CommandBox
 MainWindow *-down-> "1" ResultDisplay
 MainWindow *--> "1" HelpWindow
-ClientDetailPanel *-down-> "1" BodyProgressPanel
+ClientContextPanel *-down-> "1" BodyProgressPanel
 
 ' Locally created controllers are not retained as fields.
 MainWindow ..> StatusBarFooter : creates
-PersonListPanel ..> PersonCard : creates via\nlist cells
+PersonListPanel ..> PersonCard : creates one per\ndisplayed client
 
 ' Every visible controller loads FXML through UiPart<T>.
 MainWindow -up-|> UiPart

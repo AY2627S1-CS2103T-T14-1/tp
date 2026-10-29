@@ -10,6 +10,7 @@ import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
+import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
@@ -299,6 +300,50 @@ public class LogicManagerTest {
     public void execute_storageThrowsAdException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
                 LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage()));
+    }
+
+    @Test
+    public void execute_failingSaveAfterFind_keepsFilterIndexesAndUndoHistory() throws Exception {
+        Person alice = new PersonBuilder(AMY).withName("Alice Alpha").build();
+        Person bob = new PersonBuilder(BOB).withName("Bob Beta").build();
+        model.addPerson(alice);
+        model.addPerson(bob);
+        boolean[] failSaves = {false};
+        JsonAddressBookStorage togglingStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("togglingAddressBook.json")) {
+                    @Override
+                    public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                        if (failSaves[0]) {
+                            throw DUMMY_IO_EXCEPTION;
+                        }
+                        super.saveAddressBook(addressBook);
+                    }
+                };
+        logic = new LogicManager(model, new StorageManager(togglingStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("togglingUserPrefs.json"))));
+
+        logic.execute("remark 1 r/Morning sessions");
+        logic.execute("find Bob");
+        Person filteredBob = model.getFilteredPersonList().get(0);
+        assertEquals(List.of(filteredBob), model.getFilteredPersonList());
+
+        // Issue #280: each of these commands shows every client before the save that fails.
+        failSaves[0] = true;
+        for (String command : List.of("edit 1 g/Build strength", "remark 1 r/Evening sessions")) {
+            assertThrows(CommandException.class, () -> logic.execute(command));
+            assertEquals(List.of(filteredBob), model.getFilteredPersonList(), command);
+        }
+
+        // The retried command still means Bob, and only it reaches the undo history.
+        failSaves[0] = false;
+        logic.execute("edit 1 g/Build strength");
+        assertEquals("Build strength", personNamed("Bob Beta").getGoal().orElseThrow().value);
+        assertEquals(alice.getGoal(), personNamed("Alice Alpha").getGoal());
+
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute("undo").getFeedbackToUser());
+        assertEquals(filteredBob.getGoal(), personNamed("Bob Beta").getGoal());
+        assertEquals(UndoCommand.MESSAGE_SUCCESS, logic.execute("undo").getFeedbackToUser());
+        assertEquals(UndoCommand.MESSAGE_FAILURE, logic.execute("undo").getFeedbackToUser());
     }
 
     @Test
@@ -680,6 +725,11 @@ public class LogicManagerTest {
      * @param e the exception to be thrown by the Storage component
      * @param expectedMessage the message expected inside exception thrown by the Logic component
      */
+    private Person personNamed(String name) {
+        return model.getAddressBook().getPersonList().stream()
+                .filter(person -> person.getName().fullName.equals(name)).findFirst().orElseThrow();
+    }
+
     private void setFailingStorage(IOException e) {
         Path prefPath = temporaryFolder.resolve("ExceptionUserPrefs.json");
 

@@ -813,7 +813,7 @@ Day not specified
 4. Shoulder Press 1x8 @25.5kg
 ```
 
-An empty plan shows `No workout plan yet` on the person card. Command feedback also shows the plan in weekday order with the same exercise numbers.
+An empty plan leaves only the **Workout plan** heading visible in the selected client's workout card. For a nonempty plan, command feedback lists exercises in weekday order with the same exercise numbers as the card.
 
 Workout exercises, their sets, reps, weight, and assigned weekdays are restored when you reopen the app. Exercises saved without a day, including older entries labelled `day not specified` or `Day not specified`, appear together under the single **Day not specified** heading.
 
@@ -1529,6 +1529,8 @@ The command replaces the complete current list rather than appending to it. Dupl
 **Missing restriction prefix:** The command is rejected using the `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` usage message.
 
 **Invalid clear form:** An empty `r/` cannot be repeated or combined with a nonblank restriction.
+
+**Unknown prefix:** The command is rejected using the restriction command usage message when any restriction contains a word made of one or two letters followed by a slash, such as `x/unknown` or `R/`, or a longer alphabetic marker followed by a slash and only nonletters, such as `abc/100`. This stops a mistyped parameter from being saved as part of a restriction. Longer words such as `and/or` or `Dairy/eggs`, and slashes after digits such as `1/2`, are ordinary text. The existing restrictions are unchanged.
 
 **Invalid client index or format:** The command is rejected using the restriction command usage message when the index cannot be parsed.
 

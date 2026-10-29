@@ -56,4 +56,18 @@ public class GoalContainsKeywordsPredicateTest {
         String expected = GoalContainsKeywordsPredicate.class.getCanonicalName() + "{keywords=" + keywords + "}";
         assertEquals(expected, predicate.toString());
     }
+
+    @Test
+    public void test_greekGoalMatchesEverySigmaForm() {
+        // Issue #279: "ΜΑΡΑΘΩΝΙΟΣ" ends with a capital sigma, which lower-cases to the final form at a word end,
+        // while a lone query sigma lower-cases to the ordinary form.
+        Person client = new PersonBuilder().withGoal("ΜΑΡΑΘΩΝΙΟΣ").build();
+        for (String keyword : List.of("Σ", "σ", "ς", "ΙΟΣ", "ιος", "ιοσ", "μαραθωνιος", "ΜΑΡΑΘΩΝΙΟΣ")) {
+            assertTrue(new GoalContainsKeywordsPredicate(List.of(keyword)).test(client), keyword);
+        }
+        assertTrue(new GoalContainsKeywordsPredicate(List.of("ΣΑ")).test(
+                new PersonBuilder().withGoal("ΣΑΒΒΑΤΟ run").build()));
+        assertFalse(new GoalContainsKeywordsPredicate(List.of("Ω")).test(
+                new PersonBuilder().withGoal("ΜΑΡΑΘΟΝ").build()));
+    }
 }

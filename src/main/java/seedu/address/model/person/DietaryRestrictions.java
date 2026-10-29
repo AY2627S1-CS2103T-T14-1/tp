@@ -6,8 +6,9 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
+
+import seedu.address.commons.util.StringUtil;
 
 /** An immutable, ordered list of a client's current dietary restrictions. */
 public final class DietaryRestrictions {
@@ -34,10 +35,19 @@ public final class DietaryRestrictions {
             requireNonNull(value);
             checkArgument(isValidRestriction(value), MESSAGE_CONSTRAINTS);
             String trimmed = value.strip();
-            checkArgument(seen.add(trimmed.toLowerCase(Locale.ROOT)), MESSAGE_CONSTRAINTS);
+            checkArgument(seen.add(foldCase(trimmed)), MESSAGE_CONSTRAINTS);
             normalized.add(trimmed);
         }
         this.values = List.copyOf(normalized);
+    }
+
+    /**
+     * Returns {@code value} folded for case-insensitive comparison. Lower-casing alone turns a capital sigma into
+     * {@code ς} or {@code σ} depending on its position, so Greek final sigma is normalised to {@code σ} explicitly.
+     */
+    public static String foldCase(String value) {
+        requireNonNull(value);
+        return StringUtil.foldCaseForSearch(value);
     }
 
     /** Returns whether one restriction value is valid. */
