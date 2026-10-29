@@ -44,7 +44,7 @@ public class CommandResult {
         this(feedbackToUser, false, false);
     }
 
-    /** Creates a result whose resolved client is selected only after successful saving. */
+    /** Creates a result whose resolved client is selected after the command succeeds. */
     public CommandResult(String feedbackToUser, BodyProgressViewRequest request) {
         this(feedbackToUser, false, false, Optional.of(requireNonNull(request)));
     }

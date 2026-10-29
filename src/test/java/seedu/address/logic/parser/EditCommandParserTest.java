@@ -171,6 +171,14 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_moreThanMaxDistinctTags_failure() {
+        String index = Integer.toString(INDEX_FIRST_PERSON.getOneBased());
+        assertParseFailure(parser, index
+                + " t/one t/two t/three t/four t/five t/six t/seven t/eight t/nine t/ten t/eleven",
+                Tag.MESSAGE_TOO_MANY_TAGS);
+    }
+
+    @Test
     public void parse_multipleRepeatedFields_failure() {
         // More extensive testing of duplicate parameter detections is done in
         // AddCommandParserTest#parse_repeatedNonTagValue_failure()
@@ -216,6 +224,21 @@ public class EditCommandParserTest {
         EditPersonDescriptor descriptor = new EditPersonDescriptor();
         descriptor.clearGoal();
         assertParseSuccess(parser, INDEX_THIRD_PERSON.getOneBased() + GOAL_EMPTY,
+                new EditCommand(INDEX_THIRD_PERSON, descriptor));
+    }
+
+    @Test
+    public void parse_whitespaceOnlyGoal_clearsGoal() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptor();
+        descriptor.clearGoal();
+        assertParseSuccess(parser, INDEX_THIRD_PERSON.getOneBased() + " g/   ",
+                new EditCommand(INDEX_THIRD_PERSON, descriptor));
+    }
+
+    @Test
+    public void parse_whitespaceOnlyTags_clearsTags() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withTags().build();
+        assertParseSuccess(parser, INDEX_THIRD_PERSON.getOneBased() + " t/   ",
                 new EditCommand(INDEX_THIRD_PERSON, descriptor));
     }
 

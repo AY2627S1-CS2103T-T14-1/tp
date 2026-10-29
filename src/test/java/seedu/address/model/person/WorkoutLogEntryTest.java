@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.math.BigDecimal;
+import java.text.Normalizer;
 
 import org.junit.jupiter.api.Test;
 
@@ -130,4 +131,19 @@ public class WorkoutLogEntryTest {
         assertFalse(entry.equals(
                 new WorkoutLogEntry("Squat", new BigDecimal("60"), 3, 11)));
     }
+    @Test
+    public void constructor_equivalentAccents_normalizesBeforeValidationAndStorage() {
+        String composed = "Développé couché";
+        String decomposed = Normalizer.normalize(composed, Normalizer.Form.NFD);
+        WorkoutLogEntry first = new WorkoutLogEntry(composed, new BigDecimal("40"), 3, 10);
+        WorkoutLogEntry second = new WorkoutLogEntry(decomposed, new BigDecimal("40"), 3, 10);
+
+        assertTrue(WorkoutLogEntry.isValidName(decomposed));
+        assertEquals(composed, second.getName());
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
+        assertTrue(WorkoutLogEntry.isValidName(Normalizer.normalize("É".repeat(50), Normalizer.Form.NFD)));
+        assertFalse(WorkoutLogEntry.isValidName(Normalizer.normalize("É".repeat(51), Normalizer.Form.NFD)));
+    }
+
 }
