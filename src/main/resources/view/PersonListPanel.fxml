@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
@@ -12,17 +11,6 @@
   <HBox alignment="CENTER_LEFT" spacing="10" styleClass="client-list-header">
     <Label text="Clients" styleClass="section-title" />
     <Label fx:id="shownCount" styleClass="count-badge,mono" />
-    <Region HBox.hgrow="ALWAYS" />
-    <Label text="list · find" styleClass="header-command-hint,mono" />
   </HBox>
-  <ListView fx:id="personListView" VBox.vgrow="ALWAYS">
-    <placeholder>
-      <VBox alignment="CENTER" spacing="8" styleClass="empty-box,list-empty-state">
-        <Label text="0" alignment="CENTER" styleClass="empty-count,mono" />
-        <Label fx:id="emptyTitle" styleClass="empty-title" />
-        <Label fx:id="emptyBody" maxWidth="230" textAlignment="CENTER" wrapText="true" styleClass="muted" />
-        <Label fx:id="emptyCommand" maxWidth="240" wrapText="true" styleClass="empty-command,mono" />
-      </VBox>
-    </placeholder>
-  </ListView>
+  <VBox fx:id="personRows" spacing="4" minWidth="0" />
 </VBox>

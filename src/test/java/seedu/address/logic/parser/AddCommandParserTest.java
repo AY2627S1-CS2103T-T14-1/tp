@@ -55,6 +55,14 @@ public class AddCommandParserTest {
     private AddCommandParser parser = new AddCommandParser();
 
     @Test
+    public void parse_issue244HyphenatedName_success() {
+        Person expected = new PersonBuilder().withName("Anne-Marie Tan").withPhone("92345678")
+                .withEmail("annemarie@example.com").withAddress("123 Test Road").withTags().build();
+        assertParseSuccess(parser, " n/Anne-Marie Tan p/92345678 e/annemarie@example.com a/123 Test Road",
+                new AddCommand(expected));
+    }
+
+    @Test
     public void parse_addressAtLengthLimit_success() {
         String address = "A".repeat(200);
         Person expected = new PersonBuilder(BOB).withAddress(address).withTags().build();
@@ -203,6 +211,10 @@ public class AddCommandParserTest {
         // invalid phone
         assertParseFailure(parser, NAME_DESC_BOB + INVALID_PHONE_DESC + EMAIL_DESC_BOB + ADDRESS_DESC_BOB
                 + TAG_DESC_HUSBAND + TAG_DESC_FRIEND, Phone.MESSAGE_CONSTRAINTS);
+
+        // phone longer than 15 digits
+        assertParseFailure(parser, NAME_DESC_BOB + " p/1234567890123456" + EMAIL_DESC_BOB + ADDRESS_DESC_BOB,
+                Phone.MESSAGE_CONSTRAINTS);
 
         // invalid email
         assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + INVALID_EMAIL_DESC + ADDRESS_DESC_BOB

@@ -26,6 +26,59 @@ body:has(.fittix-home) {
   .page-content > .wrapper { max-width: 1100px; }
 }
 
+// Keep long-form guides readable while sharing the landing page's palette.
+body:has(.fittix-guide) {
+  background: #101114;
+  color: #e9eaf0;
+
+  .site-header { border-bottom-color: #303238; }
+  .site-title, .site-title:visited, .page-link { color: #f7f8fa; }
+  .site-nav { background-color: #101114; }
+  .site-nav .menu-icon > svg path { fill: #f7f8fa; }
+  .site-nav .page-link img.icon { filter: invert(1); }
+  .site-footer { border-top-color: #303238; color: #bec2cc; }
+  .footer-col-wrapper { color: #bec2cc; }
+  .page-content > .wrapper { max-width: 1100px; }
+}
+
+.fittix-guide {
+  max-width: 920px;
+  margin: 0 auto;
+
+  .post-title, h1, h2, h3, h4, h5, h6 { color: #f7f8fa; }
+  .post-header { padding-top: 38px; }
+  .post-title { font-size: clamp(2.2rem, 5vw, 3.5rem); letter-spacing: -.03em; }
+  h2 { margin-top: 2.5rem; padding-top: .8rem; border-top: 1px solid #303238; }
+  h3 { margin-top: 1.7rem; }
+  a, a:visited { color: #d8f24a; }
+  a:hover { color: #e8ff6d; }
+  code { background: #292c32; color: #e9eaf0; }
+  pre, pre code { background: #1b1d21; color: #e9eaf0; }
+  pre { border: 1px solid #303238; }
+  .highlight, .highlighter-rouge .highlight { background: #1b1d21; color: #e9eaf0; }
+  .highlight {
+    .c, .cm, .cp, .c1, .cs, .gh, .go, .gp, .gu, .w, .bp { color: #aeb4c0; }
+    .err, .gr, .gt { color: #ff9b9b; background: transparent; }
+    .k, .kc, .kd, .kp, .kr, .ow { color: #d8f24a; }
+    .kt, .nc, .nf, .ne, .nt { color: #9ecbff; }
+    .m, .mf, .mh, .mi, .mo, .il, .ni, .ss { color: #d9b3ff; }
+    .s, .sb, .sc, .sd, .s2, .se, .sh, .si, .sx, .sr, .s1 { color: #ffd091; }
+    .na, .nb, .no, .nv, .vc, .vg, .vi { color: #8de0c9; }
+    .gd, .gd .x { color: #ffb6b6; background: #442329; }
+    .gi, .gi .x { color: #b7f7c4; background: #1e4031; }
+  }
+  blockquote { color: #bec2cc; border-left-color: #d8f24a; }
+  table { border-color: #303238; color: #e9eaf0; }
+  th, td { border-color: #303238; }
+  th { background: #25272c; }
+  tr:nth-child(even) { background: #1b1d21; }
+  tr:nth-child(odd) { background: #17191d; }
+  .alert { background: #242831; color: #e9eaf0; border: 1px solid #414858; }
+  .alert a { color: #d8f24a; }
+  .diagram-scroll { background: #fff; }
+  img { border-radius: 6px; }
+}
+
 .fittix-hero {
   padding: 64px 0 38px;
   max-width: 780px;

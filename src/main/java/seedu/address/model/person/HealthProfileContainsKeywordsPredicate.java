@@ -1,8 +1,9 @@
 package seedu.address.model.person;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Predicate;
+
+import seedu.address.commons.util.StringUtil;
 
 /** Tests whether a client's health profile contains any supplied keyword. */
 public class HealthProfileContainsKeywordsPredicate implements Predicate<Person> {
@@ -15,14 +16,10 @@ public class HealthProfileContainsKeywordsPredicate implements Predicate<Person>
     @Override
     public boolean test(Person person) {
         return person.getHealthProfile()
-                .map(profile -> foldCase(profile.value))
+                .map(profile -> StringUtil.foldCaseForSearch(profile.value))
                 .map(profile -> keywords.stream()
-                        .anyMatch(keyword -> profile.contains(foldCase(keyword))))
+                        .anyMatch(keyword -> profile.contains(StringUtil.foldCaseForSearch(keyword))))
                 .orElse(false);
-    }
-
-    private static String foldCase(String text) {
-        return text.toLowerCase(Locale.ROOT).replace('\u03C2', '\u03C3');
     }
 
     @Override

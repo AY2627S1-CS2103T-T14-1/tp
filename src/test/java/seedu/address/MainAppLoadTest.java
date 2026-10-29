@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -17,6 +18,9 @@ import java.util.TimeZone;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.ResourceLock;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import seedu.address.model.AddressBook;
 import seedu.address.model.UserPrefs;
@@ -30,6 +34,7 @@ import seedu.address.testutil.PersonBuilder;
 /**
  * Verifies that startup never replaces an unreadable existing client file with an empty roster.
  */
+
 @ResourceLock("java.util.TimeZone.default")
 public class MainAppLoadTest {
     @TempDir
@@ -90,6 +95,22 @@ public class MainAppLoadTest {
     }
 
     @Test
+    public void initModelManager_savedPhoneLongerThanFifteenDigits_stopsAndPreservesOriginalBytes() throws Exception {
+        StorageManager storage = storage();
+        AddressBook original = new AddressBook();
+        original.addPerson(new PersonBuilder().withPhone("85355255").build());
+        storage.saveAddressBook(original);
+        Path dataFile = storage.getAddressBookFilePath();
+        // A roster saved before the 15-digit limit can still hold a longer phone number.
+        Files.writeString(dataFile, Files.readString(dataFile).replace("\"85355255\"", "\"1234567890123456\""));
+        assertTrue(Files.readString(dataFile).contains("\"1234567890123456\""));
+        byte[] legacyBytes = Files.readAllBytes(dataFile);
+
+        assertThrows(IllegalStateException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
+        assertArrayEquals(legacyBytes, Files.readAllBytes(dataFile));
+    }
+
+    @Test
     public void initModelManager_savedCaseOnlyDuplicateClients_stopsAndPreservesOriginalBytes() throws Exception {
         StorageManager storage = storage();
         Path dataFile = storage.getAddressBookFilePath();
@@ -100,6 +121,46 @@ public class MainAppLoadTest {
 
         assertThrows(IllegalStateException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
         assertArrayEquals(legacyBytes, Files.readAllBytes(dataFile));
+    }
+
+    @Test
+    public void initModelManager_savedSingleLabelEmailDomain_stopsAndPreservesOriginalBytes() throws Exception {
+        StorageManager storage = storage();
+        AddressBook original = new AddressBook();
+        original.addPerson(new PersonBuilder().withEmail("amy@gmail.com").build());
+        storage.saveAddressBook(original);
+        Path dataFile = storage.getAddressBookFilePath();
+        // A roster saved before the two-label rule can still hold an email such as alpha@example.
+        Files.writeString(dataFile, Files.readString(dataFile).replace("\"amy@gmail.com\"", "\"alpha@example\""));
+        assertTrue(Files.readString(dataFile).contains("\"alpha@example\""));
+        byte[] legacyBytes = Files.readAllBytes(dataFile);
+
+        assertThrows(IllegalStateException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
+        assertArrayEquals(legacyBytes, Files.readAllBytes(dataFile));
+    }
+
+    @Test
+    public void initModelManager_invalidSavedRestrictions_stopsAndPreservesOriginalBytes() throws Exception {
+        StorageManager storage = storage();
+        AddressBook original = new AddressBook();
+        original.addPerson(new PersonBuilder().withDietaryRestrictions("Peanut allergy").build());
+        storage.saveAddressBook(original);
+        Path dataFile = storage.getAddressBookFilePath();
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode roster = (ObjectNode) mapper.readTree(Files.readString(dataFile));
+        ObjectNode person = (ObjectNode) roster.get("persons").get(0);
+        for (List<String> values : List.of(List.of("Peanut allergy", "Peanut allergy\t"),
+                List.of("Peanut allergy", "Peanut allergy\n"), List.of("Peanut allergy", "PEANUT ALLERGY"),
+                Collections.nCopies(11, "Peanut allergy"))) {
+            person.set("dietaryRestrictions", mapper.valueToTree(values));
+            Files.writeString(dataFile, roster.toString());
+            byte[] originalBytes = Files.readAllBytes(dataFile);
+            MainApp app = new MainApp();
+            app.storage = storage;
+            assertThrows(IllegalStateException.class, () -> app.initModelManager(storage, new UserPrefs()));
+            app.stop();
+            assertArrayEquals(originalBytes, Files.readAllBytes(dataFile));
+        }
     }
 
     private StorageManager storage() {

@@ -56,6 +56,16 @@ public class StringUtil {
     }
 
     /**
+     * Returns {@code text} in a form for case-insensitive substring search. Lower-casing a whole word turns a
+     * final Greek capital sigma into the final form, while a lone query sigma becomes the ordinary form, so
+     * both forms are mapped to the ordinary sigma to keep exact substrings matching.
+     */
+    public static String foldCaseForSearch(String text) {
+        requireNonNull(text);
+        return text.toLowerCase(Locale.ROOT).replace('\u03C2', '\u03C3');
+    }
+
+    /**
      * Returns a detailed message of {@code t}, including the stack trace.
      */
     public static String getDetails(Throwable t) {

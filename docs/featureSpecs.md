@@ -277,15 +277,15 @@ edit 2 g/
 | Parameter         | Rule and current behaviour                                                                                              |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | Client index      | A positive whole number identifying a client in the displayed list.                                                     |
-| Name `n/`         | Must contain only alphanumeric characters and spaces and must not be blank.                                             |
-| Phone `p/`        | Must contain only digits and be at least 3 digits long.                                                                 |
+| Name `n/`         | Unicode letters, ASCII digits, spaces, apostrophes, hyphens, and full stops are accepted. At least one letter or digit is required. Trim outer whitespace; preserve internal spaces and case. |
+| Phone `p/`        | Must contain only digits, 3 to 15 digits long.                                                                          |
 | Email `e/`        | Must follow the application's local-part and domain email format.                                                       |
 | Address `a/`      | May contain any value but must not be blank.                                                                            |
 | Goal `g/`         | A nonblank value replaces the goal. An empty `g/` clears it. Nonblank goals follow the fitness-goal rules in Feature 7. |
 | Tags `t/`         | Each tag must be alphanumeric. Supplied tags replace the complete tag set; a single empty `t/` clears all tags.         |
 | Repeated prefixes | `n/`, `p/`, `e/`, `a/`, and `g/` may each appear once. Repeat `t/` to supply multiple tags.                             |
 
-**Source validation distinction:** This source describes implemented edit validation (alphanumeric names and phones of at least 3 digits), whereas Feature 1A specifies broader name characters and normalized 7–15-digit phones. These different contracts are retained explicitly; the sources do not establish a common add/edit validator.
+**Source validation distinction:** The implemented shared name validator supports the documented punctuation and Unicode letters while retaining existing numeric and long names. Feature 1A additionally specifies a 1–70-character limit, letter-based names, collapsed whitespace, and normalized 7–15-digit phones; those broader validation changes are not introduced by the name-character fix. Edit retains the character rules above and phones of 3 to 15 digits.
 
 ### 6. Output
 
@@ -828,7 +828,7 @@ Day not specified
 4. Shoulder Press 1x8 @25.5kg
 ```
 
-Command feedback shows the plan in weekday order with the same exercise numbers, but groups only the weekdays that have exercises and omits the `Rest` rows.
+An empty plan leaves only the **Workout plan** heading visible in the selected client's workout card. For a nonempty plan, command feedback lists exercises in weekday order with the same exercise numbers as the card. Command feedback shows the plan in weekday order with the same exercise numbers, but groups only the weekdays that have exercises and omits the `Rest` rows.
 
 Workout exercises, their sets, reps, weight, and assigned weekdays are restored when you reopen the app. Exercises saved without a day, including older entries labelled `day not specified` or `Day not specified`, appear together under the single **Day not specified** heading.
 
@@ -1544,6 +1544,8 @@ The command replaces the complete current list rather than appending to it. Dupl
 **Missing restriction prefix:** The command is rejected using the `restriction INDEX r/RESTRICTION [r/RESTRICTION]...` usage message.
 
 **Invalid clear form:** An empty `r/` cannot be repeated or combined with a nonblank restriction.
+
+**Unknown prefix:** The command is rejected using the restriction command usage message when any restriction contains a word made of one or two letters followed by a slash, such as `x/unknown` or `R/`, or a longer alphabetic marker followed by a slash and only nonletters, such as `abc/100`. This stops a mistyped parameter from being saved as part of a restriction. Longer words such as `and/or` or `Dairy/eggs`, and slashes after digits such as `1/2`, are ordinary text. The existing restrictions are unchanged.
 
 **Invalid client index or format:** The command is rejected using the restriction command usage message when the index cannot be parsed.
 

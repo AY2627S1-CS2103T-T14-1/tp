@@ -62,6 +62,7 @@ public class MainWindowUndoRedoTest {
                     new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json")));
             MainWindow window = new MainWindow(new Stage(), new LogicManager(model, storage), data);
             window.fillInnerParts();
+            window.openTerminal();
             try {
                 enter(window, "remark 1 r/Changed Alice");
                 enter(window, "find Bob");
@@ -88,6 +89,7 @@ public class MainWindowUndoRedoTest {
     }
 
     private static void enter(MainWindow window, String command) {
+        window.getPrimaryStage().getScene().getRoot().applyCss();
         TextField field = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
         field.setText(command);
         field.fireEvent(new ActionEvent());
@@ -109,7 +111,7 @@ public class MainWindowUndoRedoTest {
         assertEquals(2, window.getPersonListPanel().getDisplayedCount());
         Label indicator = (Label) window.getPrimaryStage().getScene().lookup("#filterStateText");
         Label count = (Label) window.getPrimaryStage().getScene().lookup("#filterCountText");
-        assertEquals("All clients", indicator.getText());
+        assertEquals("", indicator.getText());
         assertEquals("2 of 2", count.getText());
     }
 
