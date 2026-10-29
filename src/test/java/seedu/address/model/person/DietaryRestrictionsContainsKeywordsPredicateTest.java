@@ -19,6 +19,14 @@ public class DietaryRestrictionsContainsKeywordsPredicateTest {
     }
 
     @Test
+    public void test_greekSigmaQueryMatchesWordFinalSigma() {
+        Person client = new PersonBuilder().withDietaryRestrictions("ΧΩΡΙΣ ΛΑΚΤΟΖΗ").build();
+        assertTrue(new DietaryRestrictionsContainsKeywordsPredicate(List.of("Σ")).test(client));
+        assertTrue(new DietaryRestrictionsContainsKeywordsPredicate(List.of("ΧΩΡΙΣ")).test(client));
+        assertTrue(new DietaryRestrictionsContainsKeywordsPredicate(List.of("χωρις")).test(client));
+    }
+
+    @Test
     public void test_greekRestrictionMatchesEverySigmaForm() {
         // Issue #245: a capital sigma at the end of a restriction lower-cases to the final form.
         Person client = new PersonBuilder().withDietaryRestrictions("Peanut allergy", "ΧΩΡΙΣ ΓΛΟΥΤΕΝΗ ΚΑΙ ΓΑΛΑΚΤΟΣ")
