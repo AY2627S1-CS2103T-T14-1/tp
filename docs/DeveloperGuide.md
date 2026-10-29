@@ -256,6 +256,8 @@ For `diet INDEX t/TARGET [n/NOTES]`, `AddressBookParser` passes the raw argument
 
 `LogicManager` snapshots the address book before executing a diet command. `JsonAddressBookStorage` writes a complete JSON document to a temporary file in the data file's directory, then atomically moves it over the old file. If writing or replacing the file fails, `LogicManager` restores the snapshot and returns `The diet plan could not be saved. The previous plan remains unchanged.` The storage layer does not fall back to a non-atomic replacement when the filesystem does not support atomic moves. Validation and duplicate failures occur before any model change.
 
+After a successful save, the shared undo history retains the previous complete address book and clears the redo history. Rejected diet commands and failed saves create no undo step. A replacement clears omitted notes in the current record, while session-level undo can still restore the previous target and notes. There is no separate diet-history store.
+
 `ClientContextPanel` shows the selected client's diet goals in the right-hand **DIET** section. It shows the current target and notes, hides notes when absent, and displays `No diet target recorded.` for clients without diet goals. Wrapping and scrolling keep long accepted values readable. The UI does not evaluate the diet goals' nutritional or medical suitability.
 
 `DietCommandParserTest`, `DietCommandTest`, and `DietIntegrationTest` cover parsing limits, duplicate and replacement behavior, filtered indexes, save and restart, and injected commit failure. `WorkoutSessionDisplayTest#dietPlan_showsTargetAndOptionalNotes` checks the `ClientContextPanel` target text, optional-note visibility, and displayed client index in the command hint. `WorkoutSessionDisplayTest#switchingToClientWithoutRecords_clearsPriorRows` checks that switching to a client without records shows the empty diet state. The manual scenarios below cover the main user flows.
@@ -446,6 +448,7 @@ Automated coverage in `BodyProgressTest`, `JsonAdaptedBodyProgressTest`, `BodyPr
 * Parser/router boundaries: zero/signed/oversized and filtered indexes; missing/repeated/unknown prefixes; newline preservation; leap/impossible/future dates; decimal syntax/bounds; Unicode code-point note limits and nonprintables.
 * Aggregate transitions: create/replace baseline; invalid correction keeps all entries; create/replace/delete entry; notes clearing; exact duplicates versus case-only note edits; duplicate dates; sorted backdating; independent clients.
 * Derived views: positive, negative and zero differences; latest by date after backdated insertion/edit; fallback after deleting latest; no baseline and baseline-only empty states; no mutation by queries.
+* Query storage/history boundaries: `queries_unwritableStoragePreservesFileFilterAndRedoHistory` rejects every attempted write and verifies both queries still succeed without changing file bytes, filter or redo history; `queries_missingBaselineDoNotCreateDataFile` checks that viewing an empty tracker creates no client data file.
 * Real save/reload: populated baseline and multiple entries, target-only notes absence, corrected entries, unrelated fields/catalogs, legacy absence, null/wrong-type fields/elements and invalid cross-date relationships.
 * Fault injection for every mutation form (including both creation and replacement): unchanged model/filter/catalogs and original file bytes, cleaned temporary files, and a later successful command not persisting rejected values.
 * UI selection/refresh, invalid-index stability, maximum-length notes and supported narrow-window layout; confirm target/notes/delta are not stale when switching clients or after failed saves.
@@ -592,6 +595,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | gym trainer | view a client's complete workout history                                             | review how their training has changed over time                        |
 | `*`      | gym trainer | edit a previously logged workout session                                             | correct mistakes in weights, sets, repetitions, or exercises           |
 | `* * *` | gym trainer | record a client's starting body weight and height | have a baseline for later weight comparisons |
+| `* * *` | gym trainer | record dated body weight and optional notes | track changes between client visits |
+| `* * *` | gym trainer | correct or delete a mistaken body-progress entry | keep the client's recorded history accurate |
 | `* * *` | gym trainer | view a client's complete dated body-progress history | review all recorded changes in order |
 | `* * *` | gym trainer | compare the latest dated weight with the baseline | see the exact recorded weight difference |
 | `*`      | gym trainer | record the number of sessions purchased by a client                                  | keep track of their training package                                   |
@@ -1012,26 +1017,36 @@ testers are expected to do more *exploratory* testing.
 
 ### Diet goals
 
-Use a disposable copy of the data file. Start with at least two clients; run `list` and note the displayed index and name of one client.
+Use a separate disposable test folder, with no real client data. **The setup below deletes every client in that test folder.** Run each line as a separate command:
+
+```text
+clear
+add n/Priya Nair p/97001001 e/priya@example.com a/Test Road
+add n/Daniel Tan p/97001002 e/daniel@example.com a/Test Road
+diet 2 t/Daniel maintenance
+list
+```
+
+Confirm Priya is index 1 with no diet goals, and Daniel is index 2 with `Daniel maintenance`. This makes the create/replace expectations reproducible.
 
 1. Record diet goals without notes: `diet 1 t/1800 kcal per day, 120 g protein`.<br>
-   Expected: `Created diet plan for NAME.` and the selected client's details pane shows the full target without notes.
-1. Add notes: `diet 1 t/1800 kcal per day, 120 g protein n/Prioritise vegetables`.<br>
-   Expected: `Replaced diet plan for NAME.` and the notes appear in the pane.
-1. Mistype the notes marker: `diet 1 t/2000 kcal nn/Include vegetables`.<br>
-   Expected: `Invalid command format. Use: diet INDEX t/TARGET [n/NOTES]`. The previous target and `Prioritise vegetables` notes remain visible. Restart and select the same client to confirm both values are unchanged, then correct `nn/` to `n/` and retry successfully.
-1. Replace with `diet 1 t/2000 kcal/day`.<br>
-   Expected: The target changes, old notes disappear, and `kcal/day` remains intact.
-1. Repeat `diet 1 t/2000 KCAL/DAY`.<br>
-   Expected: `This is already the current diet plan for NAME.` and the saved spelling remains `2000 kcal/day`.
-1. Try `diet 1 t/`, `diet 1 t/2000 kcal n/`, `diet 1 t/2000 kcal r/vegan`, and `diet 0 t/2000 kcal`.<br>
-   Expected: Respectively, the target, notes, format, and client-index errors appear. The previous diet goals remain visible.
-1. Close and restart the app.<br>
-   Expected: Selecting the same client shows the saved target with no notes.
-1. Run `find` for that client and use the index shown in the filtered list in a `diet` command.<br>
-   Expected: Only the displayed client is updated. Run `list` to confirm the other client's diet goals are unchanged.
-1. Delete the client using the displayed index, then restart.<br>
-   Expected: The client and their diet goals are gone; the context panel no longer shows the deleted client's target.
+   Expected: `Created diet plan for Priya Nair.` Select Priya; the **DIET** section shows the full target without notes.
+2. Add notes: `diet 1 t/1800 kcal per day, 120 g protein n/Prioritise vegetables`.<br>
+   Expected: `Replaced diet plan for Priya Nair.` and the notes appear.
+3. Mistype the notes marker: `diet 1 t/2000 kcal nn/Include vegetables`.<br>
+   Expected: `Invalid command format. Use: diet INDEX t/TARGET [n/NOTES]`. The previous target and `Prioritise vegetables` notes remain. Restart and select Priya to confirm both values are unchanged; then run `diet 1 t/2000 kcal n/Include vegetables` successfully.
+4. Replace with `diet 1 t/2000 kcal/day`.<br>
+   Expected: Old notes disappear and `kcal/day` remains intact. Run `undo` and select Priya: `2000 kcal` and `Include vegetables` return. Run `redo` and select Priya: `2000 kcal/day` returns without notes.
+5. Repeat `diet 1 t/2000 KCAL/DAY`.<br>
+   Expected: `This is already the current diet plan for Priya Nair.` and the saved spelling remains `2000 kcal/day`.
+6. Try `diet 1 t/`, `diet 1 t/2000 kcal n/`, `diet 1 t/2000 kcal r/vegan`, and `diet 0 t/2000 kcal`.<br>
+   Expected: Respectively, the target, notes, format, and client-index errors appear. The previous diet goals remain unchanged.
+7. Close and restart the app.<br>
+   Expected: Selecting Priya shows `2000 kcal/day` with no notes; Daniel still has `Daniel maintenance`.
+8. Run `find Daniel`, then `diet 1 t/2300 kcal`.<br>
+   Expected: Only Daniel is displayed at index 1 and updated; the filter stays active. Run `list` and select each client: Priya is unchanged and Daniel at index 2 has `2300 kcal`.
+9. Run `find Daniel`, then `delete 1`, then restart.<br>
+   Expected: Only Priya remains, with her diet goals intact. Daniel and his diet goals are gone; no deleted-client values appear when selecting Priya.
 
 An I/O failure is best checked with the fault-injected `DietIntegrationTest`: it forces the atomic replacement to throw, verifies the specified failure message, confirms that both the model and original JSON bytes are unchanged, and checks that the temporary file is removed.
 
@@ -1189,34 +1204,46 @@ Use a disposable address book with at least two clients. If needed, add a unique
 
 ### Body progress tracker acceptance checks
 
-Run these using disposable data and a correct local clock. The fixed dates below are historical; on a controlled test clock earlier than them, substitute equivalent past dates. Prepare two uniquely named clients, Priya Nair and Daniel Tan. Run `list` and use their actual displayed indexes in place of `P` and `D`. Preserve Daniel's values for cross-client checks. Start Priya with no tracker; optionally give her diet/workout/schedule/membership data to verify preservation.
+Use a separate disposable test folder and a correct local clock. **The setup below deletes every client in that test folder.** Run each line separately:
 
-1. Run `bodyhistory P` and `bodycompare P`, then `bodylog P d/2020-01-08 w/74.80`.<br>
+```text
+clear
+add n/Priya Nair p/97001001 e/priya@example.com a/Test Road
+add n/Daniel Tan p/97001002 e/daniel@example.com a/Test Road
+diet 1 t/1800 kcal n/Vegetables
+list
+```
+
+Confirm Priya is index 1 and Daniel is index 2, both with no tracker. The commands below use those indexes; after a restart run `list` before continuing. The fixed dates are historical; on a controlled test clock earlier than them, substitute equivalent past dates. Priya's diet and Daniel's empty tracker should survive unrelated body updates.
+
+1. Run `bodyhistory 1` and `bodycompare 1`, then `bodylog 1 d/2020-01-08 w/74.80`.<br>
    Expected: Queries select Priya and display the missing-baseline state without changing data. Logging fails with `No body baseline recorded for Priya Nair. Use bodybase first.`
-2. Run `bodybase P d/2020-01-01 w/75.50 h/175`, then `bodycompare P`.<br>
-   Expected: Created feedback, baseline 75.50 kg/175.00 cm, no progress entries and no fabricated comparison. Repeating with `w/75.5 h/175.00` is rejected as already current.
-3. Run `bodylog P d/2020-01-15 w/74.20`, then `bodylog P d/2020-01-08 w/74.80 n/Measured before breakfast`, then `bodyhistory P` and `bodycompare P`.<br>
+2. Run `bodybase 1 d/2020-01-01 w/75.50 h/175`, then `bodycompare 1`.<br>
+   Expected: Created feedback, baseline 75.50 kg/175.00 cm, no progress entries and no fabricated comparison. `bodybase 1 d/2020-01-01 w/75.5 h/175.00` is rejected as already current.
+3. Run `bodylog 1 d/2020-01-15 w/74.20`, then `bodylog 1 d/2020-01-08 w/74.80 n/Measured before breakfast`, then `bodyhistory 1` and `bodycompare 1`.<br>
    Expected: History lists 8 January before 15 January; latest remains 15 January. Weight change is -1.30 kg. Missing notes appear as `—`.
+   Run `undo`, `bodyhistory 1`, `bodycompare 1`, then `redo`. Expected: Undo removes only the 8 January entry; the queries show one entry and do not clear redo. Redo restores the 8 January entry and its notes, giving two entries again.
 4. **Restart while the baseline and both entries are still present.** Find/select Priya; run both queries.<br>
    Expected: Baseline, height, both dates/weights and the first entry's notes survive; the second has no notes. Chronological order, latest date and -1.30 kg remain correct. Daniel and Priya's other feature data are unchanged.
-5. Run `bodylog P d/2020-01-08 w/74.60`, then the same command again.<br>
+5. Run `bodylog 1 d/2020-01-08 w/74.60`, then the same command again.<br>
    Expected: First command replaces only the 8 January entry and clears its notes; second reports an identical entry. Latest comparison still uses 15 January. Adding notes with different capitalization is a valid correction; an identical normalized note is a duplicate.
-6. Run `bodybase P d/2020-01-10 w/75 h/175`.<br>
-   Expected: Rejected because the retained 8 January entry would be on/before the baseline. Original baseline, both entries and comparison remain unchanged. Run `bodybase P d/2020-01-01 w/75 h/175`; expected: baseline replacement retains both entries and updates the difference to -0.80 kg.
-7. Run `bodylog P d/2020-01-15 w/76`, then compare; replace that weight with `75`, then compare.<br>
+6. Run `bodybase 1 d/2020-01-10 w/75 h/175`.<br>
+   Expected: Rejected because the retained 8 January entry would be on/before the baseline. Original baseline, both entries and comparison remain unchanged. Run `bodybase 1 d/2020-01-01 w/75 h/175`; expected: baseline replacement retains both entries and updates the difference to -0.80 kg.
+7. Run `bodylog 1 d/2020-01-15 w/76`, then `bodycompare 1`; run `bodylog 1 d/2020-01-15 w/75`, then `bodycompare 1`.<br>
    Expected: Respectively +1.00 kg and 0.00 kg, with no health judgement and no negative zero. No new same-date row is added.
 8. Use `find Priya`, then `bodyhistory 1`, `bodylog 1 d/2020-01-22 w/74 n/Walk 5 km/day`, and `bodycompare 1`.<br>
-   Expected: All target Priya; filter and numbering remain stable. Notes retain `km/day`. Run `list` and confirm Daniel is unchanged; refresh `P`/`D` indexes before continuing.
-9. Try `bodylog P d/2020-01-01 w/74`, an impossible date (`2020-02-30`), tomorrow's date, `w/0`, `w/500.01`, `w/74.001`, `w/NaN`, a blank `n/`, and repeated/unknown prefixes.<br>
+   Expected: All target Priya; filter and numbering remain stable. Notes retain `km/day`. Run `list`, then `bodyhistory 2`: Daniel has no baseline. Priya is index 1 again.
+9. Try `bodylog 1 d/2020-01-01 w/74`, `bodylog 1 d/2020-02-30 w/74`, `bodylog 1 d/2020-01-24 w/0`, `bodylog 1 d/2020-01-24 w/500.01`, `bodylog 1 d/2020-01-24 w/74.001`, `bodylog 1 d/2020-01-24 w/NaN`, `bodylog 1 d/2020-01-24 w/74 n/`, `bodylog 1 d/2020-01-24 w/74 w/75`, and `bodylog 1 d/2020-01-24 w/74 x/extra`. Also try a complete command with tomorrow's date.<br>
    Expected: Each is rejected with the corresponding contract error. No entry, baseline or other data changes. In automated/router tests, also inject trailing newlines, invalid control characters, 300/301-code-point notes, and invalid/overflow indexes.
-10. Correct a mistaken date by recording `bodylog P d/2020-01-23 w/74 n/Walk 5 km/day`, then `bodydelete P d/2020-01-22`.<br>
-    Expected: Only the requested old date is removed. Delete 23 January, then 15 January: latest falls back to 8 January (74.60 kg; -0.40 kg). Delete 8 January: baseline stays and no-progress states return. Repeating deletion reports no matching entry; deleting the baseline date reports the baseline-protection error.
-11. Record a new valid entry and restart before deleting the client. Switch between Priya and Daniel, including a client with no tracker.<br>
+10. Correct a mistaken date with `bodylog 1 d/2020-01-23 w/74 n/Walk 5 km/day`, then `bodydelete 1 d/2020-01-22`.<br>
+    Expected: Only the requested old date is removed. Run `bodydelete 1 d/2020-01-23`, `bodydelete 1 d/2020-01-15`, then `bodycompare 1`: latest falls back to 8 January (74.60 kg; -0.40 kg). Run `bodydelete 1 d/2020-01-08`: baseline stays and no-progress states return. Repeat that deletion: no matching entry. Run `bodydelete 1 d/2020-01-01`: baseline-protection error.
+11. Run `bodylog 1 d/2020-01-24 w/74 n/Restart check`, then restart before deleting the client. Switch between Priya and Daniel, including a client with no tracker.<br>
     Expected: Saved data survives; no stale notes/dates/delta remain when selection changes. At the minimum supported window size, maximum valid notes remain readable through wrapping and scrolling without automatic resizing. An invalid-index query leaves selection unchanged.
-12. With populated body data, execute unrelated contact/remark/diet/workout/schedule/membership updates as available; then delete Priya and restart.<br>
+12. With populated body data, run `diet 1 t/1900 kcal`, then `bodyhistory 1` and `bodycompare 1`.<br>
+    Expected: The baseline and 24 January entry/notes remain; comparison is -1.00 kg. Also try unrelated contact/remark/workout/schedule/membership updates as available. Finally run `list`, `delete 1`, then restart.<br>
     Expected: Unrelated updates retain all body data. Client deletion removes Priya and her body data, preserving Daniel and shared plans. In separate disposable scenarios, verify `clear` removes body data with clients while retaining shared membership plans, and `clearmem` leaves body data unchanged when permitted.
 
-Save-failure and malformed-file cases require automated fault injection/fixtures: fail the atomic commit for baseline create/replace, entry create/replace and deletion; verify the specified body-save error, unchanged original JSON bytes and model, no success display request, no leftover temp file, and no later persistence of rejected data. Restart fixtures with legacy missing/null tracker fields, populated records, duplicate dates, null list elements, wrong scalar types, future dates and baseline-order violations. Malformed data must enter the guarded loading-error path: startup stops with an explanatory error, preserving the original file rather than opening an empty replacement roster or silently dropping individual entries. Do not simulate these failures by corrupting real client data.
+Save-failure and malformed-file cases require automated fault injection/fixtures: fail the atomic commit for baseline create/replace, entry create/replace and deletion; verify the specified body-save error, unchanged original JSON bytes and model, no success display request, no leftover temp file, and no later persistence of rejected data. `BodyProgressIntegrationTest` also verifies successful history/comparison queries with unwritable storage, preserved redo history and no file creation for an empty tracker. Restart fixtures with legacy missing/null tracker fields, populated records, duplicate dates, null list elements, wrong scalar types, future dates and baseline-order violations. Malformed data must enter the guarded loading-error path: startup stops with an explanatory error, preserving the original file rather than opening an empty replacement roster or silently dropping individual entries. Do not simulate these failures by corrupting real client data.
 
 ### Undo and redo acceptance checks
 

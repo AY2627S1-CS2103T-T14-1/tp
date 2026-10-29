@@ -277,7 +277,7 @@ edit 2 g/
 | Parameter         | Rule and current behaviour                                                                                              |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | Client index      | A positive whole number identifying a client in the displayed list.                                                     |
-| Name `n/`         | Must contain only alphanumeric characters and spaces and must not be blank.                                             |
+| Name `n/`         | Unicode letters, ASCII digits, spaces, apostrophes, hyphens, and full stops are accepted. At least one letter or digit is required. Trim outer whitespace; preserve internal spaces and case. |
 | Phone `p/`        | Must contain only digits, 3 to 15 digits long.                                                                          |
 | Email `e/`        | Must follow the application's local-part and domain email format.                                                       |
 | Address `a/`      | May contain any value but must not be blank.                                                                            |
@@ -285,7 +285,7 @@ edit 2 g/
 | Tags `t/`         | Each tag must be alphanumeric. Supplied tags replace the complete tag set; a single empty `t/` clears all tags.         |
 | Repeated prefixes | `n/`, `p/`, `e/`, `a/`, and `g/` may each appear once. Repeat `t/` to supply multiple tags.                             |
 
-**Source validation distinction:** This source describes implemented edit validation (alphanumeric names and phones of 3 to 15 digits), whereas Feature 1A specifies broader name characters and normalized 7–15-digit phones. These different contracts are retained explicitly; the sources do not establish a common add/edit validator.
+**Source validation distinction:** The implemented shared name validator supports the documented punctuation and Unicode letters while retaining existing numeric and long names. Feature 1A additionally specifies a 1–70-character limit, letter-based names, collapsed whitespace, and normalized 7–15-digit phones; those broader validation changes are not introduced by the name-character fix. Edit retains the character rules above and phones of 3 to 15 digits.
 
 ### 6. Output
 
