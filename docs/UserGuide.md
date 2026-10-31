@@ -313,6 +313,21 @@ Examples:
 * `list` followed by `delete 2` deletes the 2nd client in the current list.
 * `find Betsy` followed by `delete 1` deletes the 1st client in the search results.
 
+### Recording a general client remark: `remark`
+
+Adds or replaces the general remark stored with a client. This is separate from diet notes, health considerations, and payment remarks.
+
+Format: `remark INDEX [r/REMARK]`
+
+* `INDEX` refers to the client in the current displayed list, including filtered search results.
+* A supplied remark replaces the previous remark. Use `remark INDEX r/` or omit `r/` to clear it.
+* The current workspace does not display this general remark in a dedicated panel. Command feedback confirms whether a remark was added or removed; use `diet` or `health` for notes that need to appear in those panels.
+* Remarks are saved with the client and participate in the shared [undo/redo history](#undo-redo).
+
+Examples:
+* `remark 1 r/Prefers morning sessions`
+* `remark 1 r/`
+
 ### Clearing all entries: `clear`
 
 Clears all client entries from the address book.
@@ -828,7 +843,7 @@ Before changing anything, back up the file. Check the computer's date and time z
 
 ### Editing the data file
 
-AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+Client data is saved automatically in `data/addressbook.json` relative to the terminal's current folder when Fittix is launched. This is the Fittix home folder described in [Quick start](#quick-start); it need not be the folder containing the JAR. Exit Fittix before editing the file so a later save cannot overwrite your manual changes. Advanced users may edit this JSON file directly after making a backup.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, Fittix stops startup and leaves that file untouched. Restore a valid backup or correct the invalid data before restarting. Always back up the file before editing it.<br>
@@ -838,7 +853,7 @@ Furthermore, certain edits can cause the AddressBook to behave in unexpected way
 ## FAQ
 
 **Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous AddressBook home folder.
+**A**: Exit Fittix on both computers. Back up the destination's existing data, then copy `data/addressbook.json` from the old Fittix home folder to the new one. Launch Fittix from the new home folder. This transfers client records and membership plans; undo/redo history is not transferred. Do not combine two data files by overwriting one unless you intend to replace its records.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -864,6 +879,7 @@ Action | Format, Examples
 **Diet goals** | `diet INDEX t/TARGET [n/NOTES]`<br> e.g., `diet 2 t/1800 kcal per day n/Prioritise vegetables`
 **Dietary restrictions** | `restriction INDEX r/RESTRICTION [r/RESTRICTION]...`<br> e.g., `restriction 2 r/Peanut allergy r/Halal meals`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee g/Marathon prep`
+**General remark** | `remark INDEX [r/REMARK]`<br> e.g., `remark 1 r/Prefers morning sessions`; `remark 1 r/` clears it
 **Record payment** | `pay PERSON_INDEX a/AMOUNT d/YYYY-MM-DD [r/REMARKS]`<br> e.g., `pay 1 a/150 d/2026-10-20`
 **Undo** | `undo`
 **Redo** | `redo`
@@ -888,4 +904,7 @@ Action | Format, Examples
 **Day schedule** | `dayschedule d/YYYY-MM-DD`<br> e.g., `dayschedule d/2099-03-15`
 **Inactive clients** | `inactive DAYS`<br> e.g., `inactive 14`
 **Help** | `help`
+**Exit** | `exit`
 **Log workout session** | `log INDEX d/DATE [t/TIME] ex/EXERCISE\|WEIGHT\|SETS\|REPS [ex/EXERCISE\|WEIGHT\|SETS\|REPS]...`<br> e.g., `log 1 d/2020-01-15 t/18:00 ex/Back squat\|60\|3\|10`
+**Workout history** | `history CLIENT_INDEX`<br> e.g., `history 1`
+**Correct workout session** | `editlog CLIENT_INDEX SESSION_INDEX d/DATE [t/TIME] ex/EXERCISE\|WEIGHT\|SETS\|REPS [ex/EXERCISE\|WEIGHT\|SETS\|REPS]...`<br> e.g., `editlog 1 1 d/2020-01-15 t/18:00 ex/Back squat\|65\|3\|8`
