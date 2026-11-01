@@ -905,6 +905,6 @@ Action | Format, Examples
 **Inactive clients** | `inactive DAYS`<br> e.g., `inactive 14`
 **Help** | `help`
 **Exit** | `exit`
-**Log workout session** | `log INDEX d/DATE [t/TIME] ex/EXERCISE\|WEIGHT\|SETS\|REPS [ex/EXERCISE\|WEIGHT\|SETS\|REPS]...`<br> e.g., `log 1 d/2020-01-15 t/18:00 ex/Back squat\|60\|3\|10`
+**Log workout session** | <code>log INDEX d/DATE [t/TIME] ex/EXERCISE&#124;WEIGHT&#124;SETS&#124;REPS [ex/EXERCISE&#124;WEIGHT&#124;SETS&#124;REPS]...</code><br> e.g., <code>log 1 d/2020-01-15 t/18:00 ex/Back squat&#124;60&#124;3&#124;10</code>
 **Workout history** | `history CLIENT_INDEX`<br> e.g., `history 1`
-**Correct workout session** | `editlog CLIENT_INDEX SESSION_INDEX d/DATE [t/TIME] ex/EXERCISE\|WEIGHT\|SETS\|REPS [ex/EXERCISE\|WEIGHT\|SETS\|REPS]...`<br> e.g., `editlog 1 1 d/2020-01-15 t/18:00 ex/Back squat\|65\|3\|8`
+**Correct workout session** | <code>editlog CLIENT_INDEX SESSION_INDEX d/DATE [t/TIME] ex/EXERCISE&#124;WEIGHT&#124;SETS&#124;REPS [ex/EXERCISE&#124;WEIGHT&#124;SETS&#124;REPS]...</code><br> e.g., <code>editlog 1 1 d/2020-01-15 t/18:00 ex/Back squat&#124;65&#124;3&#124;8</code>
