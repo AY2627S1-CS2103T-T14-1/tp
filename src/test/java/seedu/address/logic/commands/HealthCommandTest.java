@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
 import org.junit.jupiter.api.Test;
@@ -56,5 +57,19 @@ public class HealthCommandTest {
         new HealthCommand(INDEX_FIRST_PERSON, new HealthProfile("Avoid jumping")).execute(model);
 
         assertEquals("Build strength", model.getFilteredPersonList().getFirst().getGoal().orElseThrow().value);
+    }
+
+    @Test
+    public void execute_clearHealth_preservesNameFilter() throws Exception {
+        Model model = new ModelManager(TypicalPersons.getTypicalAddressBook(), new UserPrefs());
+        Person original = model.getFilteredPersonList().getFirst();
+        model.setPerson(original, original.withHealthProfile(new HealthProfile("Avoid jumping")));
+        showPersonAtIndex(model, INDEX_FIRST_PERSON);
+
+        new HealthCommand(INDEX_FIRST_PERSON, null).execute(model);
+
+        assertEquals(1, model.getFilteredPersonList().size());
+        assertEquals(original.getName(), model.getFilteredPersonList().getFirst().getName());
+        assertEquals(false, model.getFilteredPersonList().getFirst().getHealthProfile().isPresent());
     }
 }

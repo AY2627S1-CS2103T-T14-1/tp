@@ -157,6 +157,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…
 * Edits the client at the specified `INDEX`. The index refers to the index number shown in the displayed client list. The index must be a positive whole number; leading zeros are accepted.
 * At least one field must be provided.
 * Existing values will be updated to the input values.
+* The current search filter remains active. If the updated client no longer matches it, the client disappears from the filtered list; use `list` to show all clients.
 * `g/` without a value removes the client's fitness goal. `t/` without a value removes all tags. A value that is only spaces counts as empty.
 * Empty `n/`, `p/`, `e/`, or `a/` values are invalid. Email and address remain required fields.
 * Names use the same permitted characters as `add`, including hyphens, apostrophes, full stops, and Unicode letters. Renaming preserves the entered case and internal spacing after trimming outer whitespace.

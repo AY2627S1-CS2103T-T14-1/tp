@@ -289,7 +289,7 @@ edit 2 g/
 
 ### 6. Output
 
-On success, the displayed list returns to all clients and the result identifies the edited client.
+On success, the active search filter remains in place and the result identifies the edited client. If the edited client no longer matches the search, the client disappears from the filtered list. Use `list` to show all clients.
 
 ```text
 Edited client: Alex Tan; Phone: 98765432.
@@ -379,7 +379,7 @@ find g/strength
 | Email `e/` | Case-insensitive substrings; whitespace-separated keywords are alternatives. |
 | Goal `g/` | Case-insensitive substrings of the recorded goal; whitespace-separated keywords are alternatives. Clients without a goal do not match this criterion. |
 
-Each prefix may appear once. Supplied criteria are combined using OR, so matching any one criterion includes the client. The `dr/` and `h/` criteria are described in Features 12 and 11 respectively.
+Each prefix may appear once. Supplied criteria are combined using OR, so matching any one criterion includes the client. The `dr/` and `h/` criteria are described in Features 9 and 8 respectively.
 
 ### 6. Output
 

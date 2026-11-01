@@ -38,7 +38,6 @@ import seedu.address.logic.commands.ClearPlanCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteExerciseCommand;
 import seedu.address.logic.commands.DietaryRestrictionsCommand;
-import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HealthCommand;
 import seedu.address.logic.commands.ListCommand;
@@ -67,7 +66,7 @@ public class MainWindow extends UiPart<Stage> {
             "addex", "delex", "clearplan", "dayex", "log", "editlog", "history", PayCommand.COMMAND_WORD,
             DietaryRestrictionsCommand.COMMAND_WORD, HealthCommand.COMMAND_WORD);
     private static final Set<String> RESET_FILTER_COMMANDS = Set.of(
-            AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD,
+            AddCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD,
             ListCommand.COMMAND_WORD, RemarkCommand.COMMAND_WORD, AddExerciseCommand.COMMAND_WORD,
             DeleteExerciseCommand.COMMAND_WORD, SetExerciseDayCommand.COMMAND_WORD);
 

@@ -71,7 +71,7 @@
                   <Label text="Esc to close" styleClass="terminal-escape,mono" />
                   <Button text="×" mnemonicParsing="false" onAction="#handleCloseTerminal" styleClass="icon-btn" />
                 </HBox>
-                <StackPane fx:id="resultDisplayPlaceholder" VBox.vgrow="ALWAYS" />
+                <StackPane fx:id="resultDisplayPlaceholder" minHeight="48" VBox.vgrow="ALWAYS" />
                 <StackPane fx:id="commandBoxPlaceholder" />
               </VBox>
             </items>

@@ -13,11 +13,13 @@ import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -90,6 +92,8 @@ public class CommandBoxTest {
     public void commandPrefix_updatesUsageHintsAndHintIsClickable() throws Exception {
         runOnFxThread(() -> {
             CommandBox box = new CommandBox(command -> new CommandResult("Done"));
+            new Scene(new StackPane(box.getRoot()));
+            box.getRoot().applyCss();
             TextField field = box.getCommandTextField();
             field.setText("sched");
             FlowPane hints = (FlowPane) box.getRoot().lookup("#hintContainer");
