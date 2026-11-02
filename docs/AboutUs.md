@@ -16,7 +16,8 @@ For bug reports and suggestions, use the [Fittix issue tracker](https://github.c
 [[homepage](https://winhks25.github.io/winhtutkhaungsoe/)]
 [[github](https://github.com/winhks25)]
 
-* Role: Project Lead
+- Role: Project Lead
+- Responsibilities: Implemented features: Workout Plan Management, Membership Plan, Payment Records
 
 ### Dao Anh Khoa
 
@@ -25,8 +26,8 @@ For bug reports and suggestions, use the [Fittix issue tracker](https://github.c
 [[homepage](https://www.linkedin.com/in/anhkhoadao/)]
 [[github](https://github.com/itzkhoadao)]
 
-* Role: Developer
-* Responsibilities: Diet goals and body progress tracking
+- Role: Developer
+- Responsibilities: Diet goals and body progress tracking
 
 ### Pham Doan Gia Hien
 
@@ -34,8 +35,8 @@ For bug reports and suggestions, use the [Fittix issue tracker](https://github.c
 
 [[github](https://github.com/HienPahm)]
 
-* Role: Developer
-* Responsibilities: Training sessions and meetings, day schedules, and inactive-client monitoring
+- Role: Developer
+- Responsibilities: Training sessions and meetings, day schedules, and inactive-client monitoring
 
 ### Frederico Samuel Halim
 
@@ -43,8 +44,8 @@ For bug reports and suggestions, use the [Fittix issue tracker](https://github.c
 
 [[github](https://github.com/fikoww)]
 
-* Role: Developer
-* Responsibilities: Workout session logging
+- Role: Developer
+- Responsibilities: Workout session logging
 
 ### Zhang Kaiwen
 
@@ -52,5 +53,5 @@ For bug reports and suggestions, use the [Fittix issue tracker](https://github.c
 
 [[github](https://github.com/zkw2004)]
 
-* Role: Developer
-* Responsibilities: UI
+- Role: Developer
+- Responsibilities: UI
