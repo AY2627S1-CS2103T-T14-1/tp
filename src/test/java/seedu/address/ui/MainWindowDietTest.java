@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +18,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import seedu.address.logic.LogicManager;
 import seedu.address.logic.commands.DietCommand;
@@ -27,7 +29,7 @@ import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PersonBuilder;
 
-/** Tests that a diet-prefix typo reports an error without clearing visible or saved coaching notes. */
+/** Tests diet command feedback, persistence, and the rendered coaching notes. */
 public class MainWindowDietTest {
     @TempDir
     public Path temporaryFolder;
@@ -105,5 +107,40 @@ public class MainWindowDietTest {
 
     private static Label label(MainWindow window, String id) {
         return (Label) window.getPrimaryStage().getScene().lookup("#" + id);
+    }
+
+    @Test
+    public void diet_maximumLengthText_displaysCompletelyWithoutOverlap() throws Exception {
+        FutureTask<Void> task = new FutureTask<>(() -> {
+            ModelManager model = new ModelManager();
+            model.addPerson(new PersonBuilder().build());
+            Path data = temporaryFolder.resolve("long-diet.json");
+            StorageManager storage = new StorageManager(new JsonAddressBookStorage(data),
+                    new JsonUserPrefsStorage(temporaryFolder.resolve("long-prefs.json")));
+            MainWindow window = new MainWindow(new Stage(), new LogicManager(model, storage), data);
+            window.show();
+            window.fillInnerParts();
+            window.openTerminal();
+            try {
+                String target = "A".repeat(200);
+                String notes = "N".repeat(300);
+                TextField input = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+                input.setText("diet 1 t/" + target + " n/" + notes);
+                input.fireEvent(new ActionEvent());
+                window.getPrimaryStage().getScene().getRoot().applyCss();
+                window.getPrimaryStage().getScene().getRoot().layout();
+                Label targetLabel = label(window, "dietTarget");
+                Label notesLabel = label(window, "dietNotes");
+                assertEquals(target, ((Text) targetLabel.lookup(".text")).getText());
+                assertEquals(notes, ((Text) notesLabel.lookup(".text")).getText());
+                assertTrue(targetLabel.localToScene(targetLabel.getLayoutBounds()).getMaxY()
+                        <= notesLabel.localToScene(notesLabel.getLayoutBounds()).getMinY());
+            } finally {
+                window.getPrimaryStage().hide();
+            }
+            return null;
+        });
+        Platform.runLater(task);
+        task.get(20, TimeUnit.SECONDS);
     }
 }

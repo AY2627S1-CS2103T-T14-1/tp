@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -17,6 +18,8 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.TreeMap;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,6 +36,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.BodyProgress;
+import seedu.address.model.person.BodyProgressEntry;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.PaymentRecord;
 import seedu.address.model.person.Person;
@@ -308,6 +312,43 @@ class BodyProgressIntegrationTest {
         assertNotEquals(history, new CommandResult("message"));
         assertNotEquals(history, new CommandResult("message",
                 new BodyProgressViewRequest(person, BodyProgressViewRequest.Section.COMPARISON)));
+    }
+
+    @Test
+    void mixedHistoryOperations_matchIndependentChronologyAndSurviveEveryReload() throws Exception {
+        ModelManager model = model();
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(directory.resolve("sequence.json"), CLOCK);
+        LogicManager logic = logic(model, storage);
+        Person otherClient = model.getAddressBook().getPersonList().getFirst();
+        logic.execute(BASE);
+        logic.execute("diet 1 t/2000 kcal n/Keep these coaching notes");
+        var originalDiet = selected(model).getDietPlan();
+        TreeMap<LocalDate, BodyProgressEntry> expected = new TreeMap<>();
+        Random random = new Random(2103);
+        for (int step = 0; step < 250; step++) {
+            LocalDate date = LocalDate.of(2020, 1, 2).plusDays(random.nextInt(30));
+            if (random.nextInt(4) == 0 && expected.containsKey(date)) {
+                logic.execute("bodydelete 1 d/" + date);
+                expected.remove(date);
+            } else {
+                BigDecimal weight = BigDecimal.valueOf(1 + random.nextInt(50000), 2);
+                Optional<String> notes = random.nextBoolean() ? Optional.of("Check-in " + step) : Optional.empty();
+                logic.execute("bodylog 1 d/" + date + " w/" + weight.toPlainString()
+                        + notes.map(value -> " n/" + value).orElse(""));
+                expected.put(date, new BodyProgressEntry(date, weight, notes));
+            }
+            BodyProgress actual = selected(model).getBodyProgress();
+            assertEquals(List.copyOf(expected.values()), actual.getEntries(), "step " + step);
+            assertEquals(Optional.ofNullable(expected.isEmpty() ? null : expected.lastEntry().getValue()),
+                    actual.getLatestEntry(), "latest at step " + step);
+            assertEquals(otherClient, model.getAddressBook().getPersonList().getFirst());
+            assertEquals(originalDiet, selected(model).getDietPlan());
+            assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
+            byte[] saved = Files.readAllBytes(storage.getAddressBookFilePath());
+            logic.execute("bodyhistory 1");
+            logic.execute("bodycompare 1");
+            assertArrayEquals(saved, Files.readAllBytes(storage.getAddressBookFilePath()));
+        }
     }
 
     private static ModelManager model() {

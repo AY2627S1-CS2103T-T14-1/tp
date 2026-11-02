@@ -33,6 +33,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import seedu.address.logic.LogicManager;
@@ -135,6 +136,27 @@ class BodyProgressPanelTest {
                     new BodyProgressViewRequest(recorded, BodyProgressViewRequest.Section.HISTORY)));
             assertEquals(panel.getRoot().lookup("#comparisonHeading"), panel.getRevealTarget(
                     new BodyProgressViewRequest(recorded, BodyProgressViewRequest.Section.COMPARISON)));
+            return null;
+        });
+    }
+
+    @Test
+    void maximumHeight_bundledFontInNarrowColumn_showsCompleteValueAndUnit() throws Exception {
+        onFx(() -> {
+            Font.loadFont(getClass().getResourceAsStream("/fonts/Manrope-ExtraBold.ttf"), 14);
+            BodyProgressPanel panel = new BodyProgressPanel();
+            BodyBaseline starting = new BodyBaseline(LocalDate.of(2020, 1, 1),
+                    new BigDecimal("500"), new BigDecimal("300"));
+            panel.showPerson(new PersonBuilder().withBodyProgress(new BodyProgress()
+                    .withBaseline(starting)).build());
+            Scene scene = new Scene(panel.getRoot(), 340, 900);
+            scene.getStylesheets().add(getClass().getResource("/view/FittixTheme.css").toExternalForm());
+            panel.getRoot().applyCss();
+            panel.getRoot().layout();
+            Label value = label(panel.getRoot(), "heightValue");
+            Text rendered = (Text) value.lookup(".text");
+            assertEquals("300.00 cm", rendered.getText());
+            assertTrue(rendered.getLayoutBounds().getHeight() <= value.getHeight());
             return null;
         });
     }

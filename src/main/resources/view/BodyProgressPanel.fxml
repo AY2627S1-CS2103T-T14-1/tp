@@ -29,7 +29,8 @@
       </VBox>
       <VBox spacing="3" minWidth="0" GridPane.columnIndex="1">
         <Label text="Height" styleClass="body-metric-label" />
-        <Label fx:id="heightValue" wrapText="true" styleClass="body-metric-value" />
+        <Label fx:id="heightValue" wrapText="true" minWidth="0" maxWidth="Infinity"
+               minHeight="-Infinity" styleClass="body-metric-value" />
         <Label fx:id="heightFrom" wrapText="true" styleClass="body-metric-from" />
       </VBox>
       <VBox spacing="3" minWidth="0" GridPane.columnIndex="2">

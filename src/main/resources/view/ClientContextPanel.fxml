@@ -20,12 +20,13 @@
       <VBox fx:id="dietContent" spacing="12">
         <VBox spacing="5">
           <Label text="TARGET" styleClass="caps-label" />
-          <Label fx:id="dietTarget" wrapText="true" minWidth="0" maxWidth="Infinity"
+          <Label fx:id="dietTarget" wrapText="true" minWidth="0" maxWidth="Infinity" minHeight="-Infinity"
                  styleClass="context-body" />
         </VBox>
         <VBox fx:id="dietNotesBox" spacing="5" styleClass="diet-notes">
           <Label text="NOTES" styleClass="caps-label" />
-          <Label fx:id="dietNotes" wrapText="true" styleClass="context-body" />
+          <Label fx:id="dietNotes" wrapText="true" minWidth="0" maxWidth="Infinity"
+                 minHeight="-Infinity" styleClass="context-body" />
         </VBox>
       </VBox>
       <VBox fx:id="dietaryRestrictionsBox" spacing="5" styleClass="diet-notes" visible="false" managed="false">
