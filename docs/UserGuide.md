@@ -540,7 +540,14 @@ Examples:
 * `log 1 d/2020-01-15 t/18:00 ex/Back squat|60|3|10 ex/Bench press|40.25|3|8`
 * `log 1 d/2020-01-16 ex/Push-up|0|3|12`
 
-On success, Fittix reports `Logged workout session for NAME on DATE at TIME.` When no time is supplied, it reports `Logged workout session for NAME on DATE.` Sessions are saved with the client's details and remain available after restarting the app.
+On success, Fittix reports `Logged workout for NAME on DATE at TIME: N exercises.` The date uses an English month abbreviation, for example `16 Sep 2026`. When no time is supplied, the `at TIME` part is omitted. One entry is reported as `1 exercise`; repeated exercise entries each count toward the total. For example:
+
+```text
+Logged workout for Priya Nair on 16 Sep 2026 at 18:00: 3 exercises.
+Logged workout for Priya Nair on 16 Sep 2026: 1 exercise.
+```
+
+Sessions are saved with the client's details and remain available after restarting the app.
 
 #### Duplicate sessions and invalid input
 
@@ -551,7 +558,12 @@ A client cannot have two sessions with the same date and time, even if their exe
 * An unspecified time is different from a specified time. For example, a session without `t/` and another with `t/18:00` on the same date are allowed.
 * Different clients may have sessions with the same date and time.
 
-A duplicate is rejected with `This client already has a workout session with the same date and time.`
+A duplicate with a specified time is rejected with `A workout session already exists for NAME on DATE at TIME.` When both times are unspecified, Fittix reports `An unspecified-time workout session already exists for NAME on DATE. Add t/TIME to distinguish another session.` For example:
+
+```text
+A workout session already exists for Priya Nair on 16 Sep 2026 at 18:00.
+An unspecified-time workout session already exists for Priya Nair on 16 Sep 2026. Add t/TIME to distinguish another session.
+```
 
 If any exercise entry or other required value is invalid, the entire command is rejected. No part of that session is added.
 
@@ -563,7 +575,7 @@ If any exercise entry or other required value is invalid, the entire command is 
 
 Select a client in the list to see **Completed workouts** under **HISTORY** in the context panel. Each row shows the session's date, time, and all exercise entries. When time was omitted, it appears as `Time not specified`. Text wraps, and the details pane can be scrolled.
 
-Sessions appear newest first by date and time, with every exercise entry shown. On the same date, a session without a time appears before sessions with a time; specified times are shown newest first, including midnight (`00:00`) last. The number beside each session is its current `SESSION_INDEX`. A client without sessions shows an empty history state.
+Sessions appear newest first by date and time, with every exercise entry shown. On the same date, a session without a time appears before sessions with a time; specified times are shown newest first, including midnight (`00:00`) last. The number beside each session is its current `SESSION_INDEX`. A client without sessions shows `No workout sessions recorded for NAME.` in the History section. The message disappears once a workout is recorded and updates when another client is selected.
 
 #### Viewing a client's workout history: `history`
 

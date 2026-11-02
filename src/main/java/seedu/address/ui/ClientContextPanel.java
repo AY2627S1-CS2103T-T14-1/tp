@@ -57,6 +57,8 @@ public class ClientContextPanel extends UiPart<Region> {
     @FXML
     private VBox historyRows;
     @FXML
+    private Label workoutHistoryEmpty;
+    @FXML
     private StackPane bodyProgressPlaceholder;
     @FXML
     private VBox paymentRows;
@@ -82,6 +84,8 @@ public class ClientContextPanel extends UiPart<Region> {
         setShown(selectedContent, hasPerson);
         setShown(emptyContent, !hasPerson);
         if (!hasPerson) {
+            setShown(workoutHistoryEmpty, false);
+            workoutHistoryEmpty.setText("");
             return;
         }
 
@@ -204,6 +208,9 @@ public class ClientContextPanel extends UiPart<Region> {
         List<WorkoutSession> sessions = person.getWorkoutSessions().stream().sorted(newestFirst).toList();
         historyRows.getChildren().clear();
         setShown(historyRows, !sessions.isEmpty());
+        workoutHistoryEmpty.setText(sessions.isEmpty()
+                ? "No workout sessions recorded for " + person.getName() + "." : "");
+        setShown(workoutHistoryEmpty, sessions.isEmpty());
         for (int i = 0; i < sessions.size(); i++) {
             historyRows.getChildren().add(createHistoryRow(sessions.get(i), i + 1));
         }

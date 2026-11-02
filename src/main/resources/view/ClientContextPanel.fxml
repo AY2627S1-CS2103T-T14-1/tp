@@ -50,6 +50,8 @@
         <Label text="Completed workouts" wrapText="true" styleClass="context-title" />
       </FlowPane>
       <VBox fx:id="historyRows" />
+      <Label fx:id="workoutHistoryEmpty" wrapText="true" minWidth="0" maxWidth="Infinity"
+             visible="false" managed="false" styleClass="context-body,muted" />
     </VBox>
     <StackPane fx:id="bodyProgressPlaceholder" />
     <VBox spacing="12" styleClass="card,payments-card" VBox.vgrow="ALWAYS">
