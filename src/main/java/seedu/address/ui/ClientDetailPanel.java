@@ -194,6 +194,7 @@ public class ClientDetailPanel extends UiPart<Region> {
         name.getStyleClass().add("exercise-name");
         name.setWrapText(true);
         name.setMinWidth(0);
+        name.setMinHeight(Region.USE_PREF_SIZE);
         name.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(name, Priority.ALWAYS);
         HBox title = new HBox(8, index, name);
