@@ -34,7 +34,11 @@ Refer to the guide [_Setting up and getting started_](SettingUp.md).
 
 ### Architecture
 
-<img src="images/ArchitectureDiagram.png" width="280" />
+Diagrams retain readable label sizes. Wider figures scroll horizontally within their own frames; focus a frame with the keyboard to scroll it without moving the surrounding text.
+
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="High-level Fittix components and dependencies">
+  <img src="images/ArchitectureDiagram.png" alt="High-level Fittix components and dependencies" width="300" style="width:300px; max-width:none; height:auto;" />
+</div>
 
 The **_Architecture Diagram_** given above explains the high-level design of the App.
 
@@ -60,7 +64,9 @@ The bulk of the app's work is done by the following four components:
 
 The _Sequence Diagram_ below shows how the components interact when a trainer records a completed workout session using `log 1 d/2020-01-15 ex/Push-up|0|3|12`. This shows the successful case: client 1 exists in the displayed list and has no session with the same date and time.
 
-<img src="images/ArchitectureSequenceDiagram.png" width="960" style="max-width:100%; height:auto;" />
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Successful workout logging across UI, Logic, Model and Storage">
+  <img src="images/ArchitectureSequenceDiagram.png" alt="Successful workout logging across UI, Logic, Model and Storage" width="760" style="width:760px; max-width:none; height:auto;" />
+</div>
 
 Each of the four main components (also shown in the diagram above),
 
@@ -69,7 +75,9 @@ Each of the four main components (also shown in the diagram above),
 
 For example, the `Logic` component defines its API in `Logic.java` and implements it in `LogicManager.java`. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
 
-<img src="images/ComponentManagers.png" width="300" />
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Component interfaces and their manager implementations">
+  <img src="images/ComponentManagers.png" alt="Component interfaces and their manager implementations" width="335" style="width:335px; max-width:none; height:auto;" />
+</div>
 
 The sections below give more details of each component.
 
@@ -101,26 +109,25 @@ The `UI` component uses JavaFX. Layouts are defined in `.fxml` resources under `
 
 Here's a (partial) class diagram of the `Logic` component:
 
-<img src="images/LogicClassDiagram.png" width="550"/>
-
-The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete 1")` API call as an example.
-
-![Interactions Inside the Logic Component for the `delete 1` Command](images/DeleteSequenceDiagram.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Logic commands, parser package and component dependencies">
+  <img src="images/LogicClassDiagram.png" alt="Logic commands, parser package and component dependencies" width="570" style="width:570px; max-width:none; height:auto;" />
 </div>
 
-How the `Logic` component works:
+For an ordinary command such as `delete 1`, the current execution boundary is:
 
-1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
-1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
-1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
-   Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
-1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
+1. `AddressBookParser` delegates to the matching parser and returns a validated `Command`. A parsing failure leaves the model unchanged.
+1. `LogicManager` snapshots the complete address book and the current client predicate, then executes the command against the model. The command returns a `CommandResult` or throws a `CommandException`.
+1. If the address book equals its snapshot, `LogicManager` returns the result without writing a file or changing undo/redo history. Changes to the displayed search filter alone do not require saving client data.
+1. Otherwise, `LogicManager` saves the changed address book. A successful save pushes the snapshot onto the bounded undo stack and clears redo. A failed save restores both the data and predicate and throws the appropriate save error, leaving history intact.
+1. The UI receives a successful result only after this boundary completes. The architecture sequence above shows the effective-change path for workout logging; the body-progress and undo/redo sections illustrate successful saves and rollback in more detail.
+
+`UndoCommand` and `RedoCommand` take the separate snapshot-restoration paths described in the [undo/redo implementation](#undo-redo-implementation).
 
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
 
-<img src="images/ParserClasses.png" width="600"/>
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Command parser interfaces, tokenization and validation helpers">
+  <img src="images/ParserClasses.png" alt="Command parser interfaces, tokenization and validation helpers" width="710" style="width:710px; max-width:none; height:auto;" />
+</div>
 
 How the parsing works:
 
@@ -131,7 +138,9 @@ How the parsing works:
 
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-T14-1/tp/blob/master/src/main/java/seedu/address/model/Model.java)
 
-<img src="images/ModelClassDiagram.png" width="900" />
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Selected model types and retained client data">
+  <img src="images/ModelClassDiagram.png" alt="Selected model types and retained client data" width="900" style="width:900px; max-width:none; height:auto;" />
+</div>
 
 The `Model` component,
 
@@ -145,8 +154,10 @@ The `Model` component,
 
 <div markdown="span" class="alert alert-info">:information_source: **Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `AddressBook`, and each `Person` references tags from that list. This lets `AddressBook` maintain one `Tag` object per unique tag instead of each `Person` holding its own `Tag` objects.<br>
 
-<img src="images/BetterModelClassDiagram.png" width="450" />
+</div>
 
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Proposed alternative model with shared tag objects">
+  <img src="images/BetterModelClassDiagram.png" alt="Proposed alternative model with shared tag objects" width="505" style="width:505px; max-width:none; height:auto;" />
 </div>
 
 ### Storage component
@@ -155,11 +166,15 @@ The `Model` component,
 
 `StorageManager` implements `Storage` and delegates JSON file access to one `JsonAddressBookStorage` and one `JsonUserPrefsStorage`. The overview shows these services and the top-level JSON representation. Model classes and common JSON/file utilities are omitted to keep the view focused on the storage component.
 
-<img src="images/StorageClassDiagram.png" alt="Storage services and top-level client and membership catalog adapters" width="450" />
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Storage services and top-level JSON adapters">
+  <img src="images/StorageClassDiagram.png" alt="Storage services and top-level JSON adapters" width="450" style="width:450px; max-width:none; height:auto;" />
+</div>
 
 `JsonSerializableAddressBook` contains the saved clients and shared membership-plan catalog. Each `JsonAdaptedPerson` retains adapters for its tags, exercises, optional diet plan, scheduled sessions, recorded workouts, payment records, optional membership assignment and optional body tracker. Its payment-history list retains zero or more `JsonAdaptedPaymentRecord` instances, each storing an amount, date and optional remarks. The detail diagram expands these client adapters; its multiplicities describe supported, validated data. In particular, a recorded workout contains 1 to 30 exercise entries.
 
-<img src="images/ClientStorageClassDiagram.png" alt="Client JSON adapter associations, including payment records, and body-progress conversion dependencies" width="800" />
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Client JSON adapters and nested conversion dependencies">
+  <img src="images/ClientStorageClassDiagram.png" alt="Client JSON adapters and nested conversion dependencies" width="800" style="width:800px; max-width:none; height:auto;" />
+</div>
 
 A membership assignment stores a plan key rather than a reference to `JsonAdaptedMembershipPlan`; loading validates that key against the catalog. `JsonAdaptedBodyProgress` retains a raw `JsonNode` and uses the baseline/entry adapters temporarily during conversion, so those helper relationships are dependencies rather than retained associations. Goal, health information and dietary restrictions are stored as strings or lists of strings and therefore have no separate adapter classes in these diagrams.
 
@@ -177,6 +192,8 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+<a id="scheduling-and-monitoring-implementation"></a>
+
 ### Training schedule and client monitoring (`schedule` / `viewschedule` / `meeting` / `dayschedule` / `inactive`)
 
 Each `Person` stores an immutable list of `TrainingSession` appointments. A session contains a `LocalDateTime`, a nonblank location, and a `Kind` of `TRAINING` or `MEETING`. `Person#withTrainingSession` returns a replacement person with the new appointment appended; the commands do not mutate the existing person. `JsonAdaptedTrainingSession` persists the appointment type alongside its date, time, and location. For compatibility with older saved data, a missing type is read as `TRAINING`.
@@ -185,27 +202,7 @@ Each `Person` stores an immutable list of `TrainingSession` appointments. A sess
 
 `ViewScheduleCommand` sorts one displayed client's appointments by start time; meetings are marked in the result. `DayScheduleCommand` instead scans all clients for the requested date, then orders appointments by start time and client name. Both commands are read-only. `InactiveCommand` also scans the full roster: for `inactive DAYS`, it calculates `today - (DAYS - 1)` and lists clients with no **completed workout log** on or after that date. A scheduled session or meeting does not count as a workout. The inactive list is ordered by client name and includes the latest recorded workout date, if any. `ClientContextPanel` labels meeting rows separately from training sessions, and `CommandCatalog` supplies usage hints for all five scheduling and monitoring commands.
 
-To check the scheduling and monitoring routes manually, use a separate disposable data folder. The setup below removes its sample clients; never run `clear` in a folder containing real client records. Run each line separately:
-
-```text
-clear
-add n/Priya Nair p/97001001 e/priya@example.com a/Test Road
-add n/Daniel Tan p/97001002 e/daniel@example.com a/Test Road
-list
-```
-
-Confirm Priya is index 1 and Daniel is index 2 before continuing. The example date, 2099-03-15, is fixed well in the future; if it ever becomes a past date, replace it with a later date in every command below.
-
-1. Run `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`, then `meeting 2 d/2099-03-15 tm/15:30 l/Cafe`.<br>
-   Expected: Priya has a training session; Daniel has a meeting. Both are saved.
-2. Run `dayschedule d/2099-03-15`, then `viewschedule 2`.<br>
-   Expected: The day view lists Priya at 14:30 before Daniel at 15:30; Daniel's appointment is marked `(meeting)` in his schedule.
-3. Run `meeting 2 d/2099-03-15 tm/14:30 l/Cafe` and `schedule 1 d/2099-03-15 tm/15:30 l/Main gym`.<br>
-   Expected: Both are rejected because the full roster already contains an appointment at that start time. Neither client's schedule gains a duplicate.
-4. Run `find Daniel`, then `dayschedule d/2099-03-15` and `viewschedule 1`.<br>
-   Expected: The day view still includes Priya despite the filter; index 1 in the filtered list refers to Daniel, whose meeting remains visible.
-5. Run `inactive 1`, then restart and run `list`, `viewschedule 1`, `viewschedule 2`, and `dayschedule d/2099-03-15`.<br>
-   Expected: Both clients are inactive because future appointments are not completed workouts. After restart, both appointments retain their dates, times, locations, and types.
+For repeatable command checks, see [Scheduling and client monitoring acceptance checks](#manual-scheduling-and-monitoring).
 
 ### Workout plan feature (`addex` / `delex` / `dayex` / `clearplan`)
 
@@ -252,7 +249,7 @@ The workout plan feature lets a trainer keep a per-client list of prescribed exe
 
 #### Storage: `JsonAdaptedExercise` and `JsonAdaptedPerson`
 
-- `storage.JsonAdaptedExercise` is the Jackson-friendly form with fields `name`, `sets`, `reps`, `weightKg`, `day`. `toModelType` throws `IllegalValueException` with `Exercise's %s field is missing!` for null `name`/`sets`/`reps`/`weightKg`, or the matching `Exercise.MESSAGE_CONSTRAINTS_*` message for invalid values, and rejects non-finite/negative weights. A missing/`null` `day` loads as `""` (unscheduled, backward compatible with old files); any other stored day goes through the `Exercise` constructor, so legacy `Day not specified` values (any casing) also normalize to `""`.
+- `storage.JsonAdaptedExercise` is the Jackson-friendly form with fields `name`, `sets`, `reps`, `weightKg`, `day`. `toModelType` throws `IllegalValueException` with `Exercise's %s field is missing!` for null `name`/`sets`/`reps`/`weightKg`, or the matching `Exercise.MESSAGE_CONSTRAINTS_*` message for invalid values, and rejects non-finite/negative weights. A missing, `null`, or blank `day`, and legacy `Day not specified` values (ignoring case), load as unscheduled. Other saved values are resolved with `Weekday#fromPrefix` and stored as canonical full names; an unrecognized value fails loading with `Invalid exercise day: VALUE` instead of being silently accepted.
 - `storage.JsonAdaptedPerson` persists the plan as JSON array `exercises`. The `@JsonCreator` constructor treats a missing/`null` `exercises` field as empty (backward compatible with old files). `toModelType` rejects `null` entries with `Workout plan must not contain null exercises`, converts each entry via `JsonAdaptedExercise#toModelType`, and builds `new WorkoutPlan(personExercises)` (which re-sorts by weekday). Any invalid exercise therefore fails the whole person load, which `JsonSerializableAddressBook` propagates as `IllegalValueException`; startup then stops before creating the command-processing logic, preserving the original file instead of opening an empty roster that could overwrite it.
 - Save path: `JsonAdaptedPerson(Person source)` copies `source.getWorkoutPlan().getExercises()` into adapted exercises (including each exercise's canonical `day`), so every `addex`/`delex`/`dayex`/`clearplan` is persisted on the next `StorageManager` save (automatic after each mutating command).
 
@@ -378,7 +375,7 @@ Implemented for v1.4. The [feature contract](featureSpecs.md#feature-14-payment-
   - `MESSAGE_SAVE_FAILURE = Payment could not be saved. No payment was recorded.`
   - `execute` resolves the index against `getFilteredPersonList()`, rejects an out-of-range index with `Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX`, builds `target.withAddedPayment(paymentRecord)`, and updates the in-memory model via `model#setPerson` (replacing only that person while preserving the client's other fields and the current filter). `LogicManager` then persists the changed address book through Storage (rolling the payment back if the write fails, as described at the end of this item).
 - `logic.parser.PayCommandParser` reads the displayed index, then the prefixed `a/` (`CliSyntax.PREFIX_ADDRESS`), `d/` (`CliSyntax.PREFIX_DATE`), and optional `r/` (`CliSyntax.PREFIX_REMARK`) values. The command word and prefixes are matched case-sensitively. `AddressBookParser` routes `pay` with a `DOTALL` pattern (AddressBookParser.java:62) and the parser keeps raw arguments until validation so an embedded line break survives to be rejected (`containsLineBreak`); any line break produces `Invalid command format!` + `MESSAGE_USAGE`. It rejects a blank index or argument area, a repeated/unknown/empty prefix, an unknown `word/`-style token inside a value (e.g. `x/`), and extra unprefixed text. `a/` and `d/` are required and must be single tokens (internal whitespace is rejected), while a single empty `r/` is rejected. Validated values are built into a `PaymentRecord` via `PaymentRecord.fromText` before a `PayCommand` is returned.
-- `LogicManager` maps an `IOException` from a `PayCommand` to `PayCommand.MESSAGE_SAVE_FAILURE` (LogicManager.java:159), so a failed write restores the previous payment data in memory and on disk, exactly like `diet`, membership, and body mutations.
+- `LogicManager` maps an `IOException` from a `PayCommand` to `PayCommand.MESSAGE_SAVE_FAILURE`, so a failed write restores the previous payment data in memory and on disk, exactly like `diet`, membership, and body mutations.
 - `ui.CommandCatalog` registers `PayCommand` for usage hints and the help window.
 - `ui.ClientContextPanel#showPayments` renders the client's payments in the **PAYMENTS** card: it sorts a copy by date (oldest first) with entry order within a date, shows `No payments recorded.` for an empty history, and adds one `payment-row` `GridPane` per record with the remarks (or `Payment` when there are none) above the date, a monospace amount, and a `PAID` status label. The remarks, date and amount wrap instead of being truncated. Selection changes rebuild the rows, so switching clients never leaves a stale payment row.
 
@@ -392,7 +389,9 @@ Implemented for v1.4. The [feature contract](featureSpecs.md#feature-10-body-pro
 
 Each `Person` owns one immutable `BodyProgress` aggregate, initially empty. An optional `BodyBaseline` contains `LocalDate date`, `BigDecimal weightKg` and `BigDecimal heightCm`. Each immutable `BodyProgressEntry` contains a date, exact weight and optional notes. The aggregate defensively copies its entry collection and exposes an unmodifiable list in date order.
 
-<img src="images/BodyProgressClassDiagram.png" alt="Body progress model: a Person owns a BodyProgress aggregate with an optional baseline and dated entries" width="760" />
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Body progress aggregate with optional baseline and dated entries">
+  <img src="images/BodyProgressClassDiagram.png" alt="Body progress aggregate with optional baseline and dated entries" width="670" style="width:670px; max-width:none; height:auto;" />
+</div>
 
 The model class diagram deliberately omits unrelated `Person` fields. It does not replace the shared Model diagram maintained by other members.
 
@@ -455,7 +454,9 @@ Load then sort valid entries by date. On save, emit the canonical date order. Ro
 
 For each mutation, take/retain the existing complete address-book snapshot, validate all requested fields and the proposed aggregate, replace the target client, and let the existing atomic storage boundary commit. On `IOException`, restore the snapshot and report `The body progress change could not be saved. No changes were made.` `BodyMutationCommand` identifies the three mutations for this message mapping. `LogicManager` returns successful non-mutating `BodyCommand` results without saving or changing undo/redo history. Thus history/comparison remain available with read-only storage and do not create a data file merely to show an empty tracker. They still return typed view requests for the UI. Mutations continue through the atomic save and undo boundary.
 
-<img src="images/BodyProgressSaveSequence.png" alt="Body mutation sequence with validation, atomic save and rollback on IOException" width="820" />
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Body mutation validation, save success and rollback">
+  <img src="images/BodyProgressSaveSequence.png" alt="Body mutation validation, save success and rollback" width="1125" style="width:1125px; max-width:none; height:auto;" />
+</div>
 
 The sequence diagram abstracts parsing and the actual filesystem temporary-file/move implementation. Its save arrow represents the existing `Storage.saveAddressBook` boundary. Return a display request only on successful completion; an exception must not reveal or later persist a rejected candidate. Do not fire irreversible UI/history side effects during command execution before saving.
 
@@ -476,6 +477,8 @@ Automated coverage in `BodyProgressTest`, `JsonAdaptedBodyProgressTest`, `BodyPr
 * UI selection/refresh, invalid-index stability, maximum-length notes and supported narrow-window layout; confirm target/notes/delta are not stale when switching clients or after failed saves.
 
 The manual scenarios in the appendix complement automated tests. Runtime validation includes the full Gradle test/Checkstyle suite and the packaged application smoke test; the UI tests exercise command entry and produce a minimum-window screenshot for visual inspection.
+
+<a id="undo-redo-implementation"></a>
 
 ### Undo/redo feature
 
@@ -515,7 +518,9 @@ data in those retained states.
 The following diagram shows a successful undo with a nonempty undo stack. Parsing is summarized inside
 `LogicManager`; the restored snapshot is `undoStack.peek()`.
 
-<img src="images/UndoSequenceDiagram-Logic.png" alt="Successful undo restores a snapshot, saves it, then advances the history stacks" width="960" style="max-width:100%; height:auto;" />
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Successful undo saves the restored snapshot before advancing history">
+  <img src="images/UndoSequenceDiagram-Logic.png" alt="Successful undo saves the restored snapshot before advancing history" width="600" style="width:600px; max-width:none; height:auto;" />
+</div>
 
 #### Failure handling and search state
 
@@ -524,10 +529,12 @@ If command execution fails, no save or history transition occurs. If saving thro
 Neither stack is advanced, so a failed undo or redo can be retried after the storage problem is resolved.
 The existing atomic JSON save boundary protects the previous file contents.
 
-<img src="images/UndoSequenceDiagram-Model.png" alt="A failed undo save restores the current snapshot and leaves both history stacks unchanged" width="960" style="max-width:100%; height:auto;" />
+<div class="diagram-scroll" role="region" tabindex="0" aria-label="Failed undo restores the previous state without advancing history">
+  <img src="images/UndoSequenceDiagram-Model.png" alt="Failed undo restores the previous state without advancing history" width="550" style="width:550px; max-width:none; height:auto;" />
+</div>
 
 After a successful undo or redo, `LogicManager` resets the client predicate to
-`Model.PREDICATE_SHOW_ALL_PERSONS`, and `MainWindow` clears the query indicator to `All clients`.
+`Model.PREDICATE_SHOW_ALL_PERSONS`, and `MainWindow` hides the active-search indicator.
 Restored clients are visible, and index-based commands use that complete list. An empty-history response
 or a failed save leaves both the active search predicate and its indicator unchanged. Window settings,
 the saved file location and command-entry history are not reversed.
@@ -583,7 +590,7 @@ the history limit and save failure. `MainWindowUndoRedoTest` exercises real comm
 - **All-in-one client management:** Keep client goals, injuries, workout plans, diet goals, progress, sessions, and payments in one place.
 - **Fast and efficient:** Quickly access and update information between sessions.
 - **Progress tracking:** Easily monitor each client's fitness progress over time.
-- **Session & payment management:** Track remaining sessions, payments, and unpaid balances.
+- **Session & payment management:** Track remaining membership sessions and recorded payments.
 - **Less admin work:** Reduce time spent searching through chats, notes, spreadsheets, and payment records.
 
 ### User stories
@@ -625,6 +632,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | gym trainer | record a completed session against a client's package                                | keep the remaining number of sessions accurate                         |
 | `*`      | gym trainer | list clients whose packages are running low                                          | ask them about renewal before their package runs out                   |
 | `*`      | gym trainer | list clients I have not trained recently                                             | identify clients who may be becoming inactive                          |
+| `* * *` | gym trainer | undo and redo saved client or membership-catalog changes | recover from an accidental change during the current application session |
+| `* *` | gym trainer | manage reusable membership plans and assign them to clients | reuse package prices and session allowances |
+| `* *` | gym trainer | search clients by dietary restrictions or health considerations | find clients with relevant coaching requirements |
+
+These priorities record the original requirements, not the implementation status. The unpaid-fee listing, cover-trainer summary, and low-balance client listing are future requirements; v1.6 does not provide those reports. Membership balances are adjusted explicitly with `imem`/`dmem`; logging a workout does not automatically consume a membership session.
 
 ### Use cases
 
@@ -700,7 +712,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 1.  Trainer requests to list clients.
 2.  Fittix shows a list of clients.
-3.  Trainer requests to log a completed session for a specific client in the list, giving the exercise, weight, sets and repetitions.
+3.  Trainer requests to log a completed session for a specific client in the list, giving its date, optional time, and one or more exercises with weight, sets and repetitions.
 4.  Fittix records the session against that client and shows the logged entry.
 
     Use case ends.
@@ -714,6 +726,16 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 - 3b. The weight is outside 0 to 1000 kg or has more than two decimal places, the sets are outside 1 to 100, or the repetitions are outside 1 to 1000. Weight 0 is valid for bodyweight exercises.
   - 3b1. Fittix shows an error message stating the expected format.
+
+    Use case resumes at step 3.
+
+- 3c. The date is in the future, a required value is missing, or the exercise count is outside 1 to 30.
+  - 3c1. Fittix shows the relevant validation or format error without recording a session.
+
+    Use case resumes at step 3.
+
+- 4a. The client already has a session on the same date with the same optional time.
+  - 4a1. Fittix reports the duplicate and preserves the existing session. An unspecified time is a separate key from each specified time, including midnight.
 
     Use case resumes at step 3.
 
@@ -836,7 +858,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Use case: UC08 - Schedule a session with a client**
 
-Each client's `Person` record stores immutable `TrainingSession` appointments with a date/time, location, and kind (`TRAINING` or `MEETING`). The `schedule` and `meeting` commands validate a future ISO date and 24-hour time, then replace the client record with a copy containing the new appointment. `AppointmentScheduler` checks every client in the full address book for another appointment at the same start time before changing the model. `viewschedule` orders saved appointments by date/time; `dayschedule` combines appointments across clients for a date. JSON storage writes a `trainingSessions` list for each client. Missing lists load as empty, and missing `kind` values load as `TRAINING` for older data. Editing a client or its remark preserves appointments. Appointment durations and recurring appointments are not stored; therefore only equal start times can be detected as conflicts.
+The same interaction applies to an ad-hoc meeting; its appointment kind is shown as a meeting. Conflicts mean equal start times across the full roster, because durations and recurring appointments are not recorded. Implementation and persistence details are in [Training schedule and client monitoring](#scheduling-and-monitoring-implementation).
 
 **MSS**
 
@@ -871,11 +893,21 @@ Each client's `Person` record stores immutable `TrainingSession` appointments wi
 
 **Use case: UC09 - Monitor clients and daily appointments**
 
-1. The trainer enters `inactive DAYS` to list clients without a completed workout logged within the last `DAYS` calendar days, including today. The full address book is searched, regardless of the current filter; a client with no workout logs is included.
-2. The trainer enters `dayschedule d/YYYY-MM-DD` to list all appointments on that date across the full address book, sorted by start time and client name. Training sessions and ad-hoc meetings are identified separately.
-3. The trainer enters `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION` to record an ad-hoc client meeting. It uses the same validation and conflict check as `schedule`; `INDEX` refers to the currently displayed client list.
+**MSS**
 
-The command parsers reject invalid dates, times, blank locations, and nonpositive day counts before model mutation. Both kinds of appointment use the existing `trainingSessions` storage list with a new `kind` field, so older saved files remain readable.
+1. Trainer requests all appointments for a calendar date.
+2. Fittix lists that date's training sessions and meetings across the full roster, sorted by start time and client name.
+3. Trainer requests clients without a completed workout within a given number of calendar days, including today.
+4. Fittix lists those clients across the full roster, including clients with no workout logs, without changing saved data or the active client filter.
+
+Use case ends.
+
+**Extensions**
+
+* 1a. The date is missing or invalid: Fittix reports the date/usage error. Resume at step 1.
+* 2a. No appointments exist on that date: Fittix reports the empty result. Continue at step 3.
+* 3a. The day count is not a positive whole number in the supported range: Fittix reports the input error. Resume at step 3.
+* 4a. Every client has a recent completed workout: Fittix reports the empty result. Use case ends.
 
 **Use case: UC10 - Record starting body measurements**
 
@@ -946,11 +978,49 @@ Use case ends.
 * 1a. The index is invalid: Fittix reports the index error and keeps selection unchanged. Use case ends.
 * 2a. No baseline or no progress entries exist: Fittix shows the relevant empty state, without fabricating a measurement or changing data. Use case ends.
 
+**Use case: UC14 - Correct a recorded workout session**
+
+**MSS**
+
+1. Trainer requests a client's workout history.
+2. Fittix shows the sessions with their current one-based history numbers, newest first.
+3. Trainer supplies a displayed session number and a complete corrected date, optional time, and exercise list.
+4. Fittix validates and saves the replacement, preserving the client's other records.
+5. Fittix shows the updated history; changing the session date/time may change its displayed number.
+
+Use case ends.
+
+**Extensions**
+
+* 1a/3a. The client or session index is invalid: Fittix reports the index error without changing records. Resume at step 1.
+* 3b. A required value is missing or invalid: Fittix reports the validation error. Resume at step 3.
+* 4a. Another session has the proposed client/date/optional-time key: Fittix reports the duplicate and leaves both sessions intact. Resume at step 3.
+* 4b. The replacement is identical: Fittix reports no change. Use case ends.
+* 4c. Saving fails: Fittix restores the previous records and retains the previous undo/redo history. Use case ends.
+
+**Use case: UC15 - Undo and redo a saved change**
+
+**MSS**
+
+1. Trainer requests undo.
+2. Fittix restores and saves the previous complete address-book state, then shows the full client list.
+3. Trainer requests redo without making another effective data change.
+4. Fittix restores and saves the undone state, then shows the full client list.
+
+Use case ends.
+
+**Extensions**
+
+* 1a. Undo history is empty or belongs to a previous application session: Fittix reports that no changes can be undone. Use case ends.
+* 2a/4a. Saving fails: Fittix restores the pre-command data and leaves both history stacks and the search state unchanged. The trainer may retry after resolving the storage problem.
+* 3a. A new saved data change was made after undo: redo history has been cleared, so Fittix reports that no changes can be redone. Use case ends.
+* Read-only and failed commands between steps 2 and 3 do not invalidate redo.
+
 ### Non-Functional Requirements
 
 **Technical and environment**
 
-1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed, without requiring any other installation.
+1.  Should run on supported Windows, macOS and Linux systems with a compatible Java `25` installation, without a separate JavaFX installation.
 2.  Should be delivered as a single JAR file of at most 100MB that runs without an installer.
 3.  Should work fully offline, with no dependency on a remote server or network connection.
 
@@ -965,14 +1035,14 @@ Use case ends.
 
 8.  Data should be saved to disk after every command that modifies it, so an unexpected shutdown loses at most the command in progress.
 9.  Data should be stored locally in a human editable text file, with no database management system.
-10. If the data file is missing or unreadable, the app should start with an empty data set rather than fail to launch.
+10. If the client data file is missing, the app should load the bundled sample clients. If an existing file cannot be read or validated, startup should stop with an explanatory error and preserve that file, rather than open an empty replacement roster.
 
 **Usability and privacy**
 
 11. Error messages should state what was rejected and the expected format, so the user can correct the command without consulting the user guide.
-12. The GUI should be usable at a screen resolution of 1280x720 and above, and remain readable at 150% display scaling.
-13. Dates and times should be displayed in one consistent, unambiguous format throughout the app.
-14. A shareable client summary should exclude _private contact details_ and the client's home address.
+12. The supported minimum application window is 1280x800 logical pixels. Display scaling requires proportionally more physical screen space; layout and text readability should be checked on each supported OS at its chosen scaling.
+13. Date/time fields should be unambiguous: command dates use ISO `yyyy-MM-dd`, specified times use 24-hour `HH:mm`, and formatted dates include a readable month and year. An unspecified workout time remains distinct from midnight.
+14. A future shareable client summary should exclude _private contact details_ and the client's home address. Such a summary/export is not implemented in v1.6.
 
 **Product scope constraints**
 
@@ -981,7 +1051,7 @@ Use case ends.
 
 ### Glossary
 
-- **Mainstream OS**: Windows, Linux, Unix, or macOS
+- **Supported desktop OS**: Windows, macOS, or Linux on an architecture supported by the bundled JavaFX runtime
 - **Private contact detail**: A contact detail that is not meant to be shared with others
 - **Client**: A person the trainer trains, stored as a record in Fittix
 - **Session**: One completed training appointment, logged with the exercises, weights, sets and repetitions performed
@@ -994,6 +1064,8 @@ Use case ends.
 ## **Appendix: Instructions for manual testing**
 
 Given below are instructions to test the app manually.
+
+Each scenario uses disposable data and states its own prerequisites. Run commands one at a time, and recheck displayed client/session indexes after filtering, editing a search field, or undo/redo. The checks below cover the main user-visible workflows; the linked User Guide supplies detailed syntax and validation limits.
 
 <div markdown="span" class="alert alert-info">:information_source: **Note:** These instructions only provide a starting point for testers to work on;
 testers are expected to do more *exploratory* testing.
@@ -1080,14 +1152,16 @@ Use a fresh, disposable roster. Add `Priya Nair` and `Daniel Tan` in that order,
    Expected: Priya's diet target remains `2000 kcal`. Run `diet 1 t/2100 kcal`: restrictions remain `No dairy`.
 1. Persistence across restart: Restart the application, run `list`, then `find n/Priya`.<br>
    Expected: Only Priya is displayed at index 1, with `No dairy` and `2100 kcal` intact. Run `list` and select Daniel at index 2: he still has no restrictions or diet goals.
-1. Greek case-insensitive search (requires the Unicode search fix from #267 or #295): Run `list`, set `restriction 1 r/ΧΩΡΙΣ`, then run `find dr/Σ`, `find dr/σ`, and `find dr/ς` in turn.<br>
-   Expected: Each search displays only Priya at index 1. Search scans the full roster each time. Restart, run `list`, then `find n/Priya` and check that `ΧΩΡΙΣ` and the `2100 kcal` diet target remain intact. Run this check on the combined release build before accepting the complete release test.
+1. Greek case-insensitive search: Run `list`, set `restriction 1 r/ΧΩΡΙΣ`, then run `find dr/Σ`, `find dr/σ`, and `find dr/ς` in turn.<br>
+   Expected: Each search displays only Priya at index 1. Search scans the full roster each time. Restart, run `list`, then `find n/Priya` and check that `ΧΩΡΙΣ` and the `2100 kcal` diet target remain intact. Check this behavior in the final release build.
 
 ### Saving data
 
+Use a separate disposable working folder, close the application before editing JSON, and keep a valid backup. Treat each malformed-file check as an independent case starting from that valid backup. The default `data/addressbook.json` path is relative to the working directory; a configured data path may point elsewhere.
+
 1. Dealing with missing/corrupted data files
-   1. Missing file: delete `[JAR file location]/data/addressbook.json`, then relaunch.<br>
-      Expected: The app starts with an empty address book (or sample data on first run) and recreates the file after the next mutating command.
+   1. Missing file: rename `data/addressbook.json` to a backup name, then relaunch from the same working folder.<br>
+      Expected: The bundled sample clients load and the backup is untouched. Queries such as `list` do not create the missing client file. A successful data-changing command, such as `remark 1 r/Missing-file check`, creates the new file.
 
    1. Corrupted top-level JSON: open `addressbook.json`, replace its contents with `not json`, save, then relaunch.<br>
       Expected: Startup stops with an error identifying the client file. No empty roster is opened and the invalid file is not overwritten. Keep a backup and restore valid data before restarting.
@@ -1097,6 +1171,9 @@ Use a fresh, disposable roster. Add `Priya Nair` and `Daniel Tan` in that order,
 
    1. Missing `exercises` field (backward compatibility): open `addressbook.json`, delete the `"exercises": [...]` array from one person, save, then relaunch.<br>
       Expected: That person loads with an empty workout plan; the selected client's workout card shows only its `Workout plan` heading and `Messages.format` shows `Workout Plan: Empty`.
+
+   1. Invalid saved weekday: starting from a valid file containing an exercise, set its `"day"` to `"Funday"`, then relaunch.<br>
+      Expected: Loading reports `Invalid exercise day: Funday` through the guarded startup failure; the file is not overwritten. In independent valid fixtures, `"MON"` loads as Monday, while a missing/null/blank day or legacy `"Day not specified"` loads as unscheduled.
 
    1. Missing `day` field on an exercise (backward compatibility): open `addressbook.json`, delete the `"day"` key from one exercise object, save, then relaunch.<br>
       Expected: That exercise loads as unscheduled and appears under `Day not specified`; a stored `"day": "Day not specified"` (any casing, from older saves) normalizes the same way.
@@ -1296,3 +1373,95 @@ Use disposable data. Add a uniquely named client `UndoManualTest` with all requi
    Expected: Undo restores the complete address-book snapshot, including diet/body data; redo reapplies the deletion. The state visible immediately before restart is the state loaded afterwards, with empty undo/redo histories.
 
 Save failures are covered by the fault-injected `LogicManagerTest` cases: a failed undo/redo save must preserve the model and both history stacks. Do not make real client data unwritable or corrupt it to simulate this failure.
+
+<a id="manual-client-health-search"></a>
+
+### Client details, goals, health considerations and search
+
+Use a separate disposable data folder. The following setup removes its sample clients; do not use a folder containing real records. Run each line separately:
+
+```text
+clear
+add n/Priya Nair p/97003001 e/priya@example.com a/Test Road
+add n/Daniel Tan p/97003002 e/daniel@example.com a/Test Road g/Improve endurance
+find n/Priya
+```
+
+1. Run `edit 1 p/97003003`.<br>
+   Expected: Only Priya is edited. The name search and its indicator remain active, and Priya stays at displayed index 1. Daniel's phone remains `97003002`.
+2. Run `edit 1 g/Build strength`, then `find g/strength`, then `edit 1 g/Improve mobility`.<br>
+   Expected: The first goal is recorded and matches the goal search. The second edit succeeds but removes Priya from those results; the search indicator remains active. Run `find n/Priya` to find her again, then `edit 1 g/` to clear the goal. Her contact details are unchanged.
+3. Run `health 1 h/Avoid jumping`, then `find h/jumping`.<br>
+   Expected: `Recorded health considerations for Priya Nair.` appears; the note is displayed and the health search finds only Priya. Replace it with `health 1 h/Avoid high-impact exercise`: Priya leaves the `jumping` results because the health predicate no longer matches.
+4. Run `find n/Daniel h/impact`.<br>
+   Expected: Both clients are shown: Daniel matches the name criterion and Priya matches the health criterion. Criteria use OR and scan the full roster, including clients hidden by the previous filter. Run `find n/Priya` before continuing.
+5. Run `health 1 h/`, then repeat `health 1 h/`.<br>
+   Expected: The first command reports `Cleared health considerations for Priya Nair.` and removes the displayed note. The second reports `No changes made: health considerations are already current.` The name filter remains active.
+6. Run `health 1`, `edit 1 p/abc`, and `add n/PRIYA NAIR p/97003003 e/duplicate@example.com a/Other Road` separately.<br>
+   Expected: A health-usage error, phone-validation error, and duplicate-client error respectively. The uppercase name and same phone still identify Priya as a duplicate. No client is added or changed, and the previously cleared goal/health note stay absent.
+7. Run `edit 1 g/Build strength` and `health 1 h/Avoid jumping`, then close and restart the app. Run `find n/Priya`.<br>
+   Expected: Priya's phone `97003003`, goal `Build strength`, and note `Avoid jumping` are retained. Run `list` and select Daniel: his original contact details and `Improve endurance` goal are unchanged and he has no health note.
+
+<a id="manual-workout-history-corrections"></a>
+
+### Workout history and corrections
+
+Use another disposable data folder, run `clear`, and add `HistoryManualTest` with `add n/HistoryManualTest p/97004001 e/history@example.com a/Test Road`. This scenario has exactly one client, at index 1.
+
+1. Run `history 1` before recording a workout.<br>
+   Expected: `No workout sessions recorded for HistoryManualTest.` No client data is changed.
+2. Run `log 1 d/2020-01-14 ex/Push-up|0|3|12`, then `log 1 d/2020-01-15 t/18:00 ex/Back squat|60|3|10`, then `history 1`.<br>
+   Expected: The 15 January session is numbered 1 and the 14 January session is numbered 2 in both text history and the context panel. All exercise fields are shown, and the older session has unspecified time.
+3. Run `editlog 1 2 d/2020-01-16 t/19:00 ex/Push-up|0|3|15`, then `history 1` again.<br>
+   Expected: `Edited workout session 2 for HistoryManualTest.` The corrected 16 January workout is now history number 1, with 15 repetitions; the 15 January squat remains number 2. Use these new numbers for subsequent commands.
+4. Run `editlog 1 2 d/2020-01-16 t/19:00 ex/Bench press|40|3|8`.<br>
+   Expected: `This client already has a workout session with the same date and time.` Both existing sessions remain intact, even though the proposed exercises differ.
+5. Run `editlog 1 1 d/2020-01-16 t/19:00 ex/Push-up|0|3|15`, then try the same replacement with session index `99`.<br>
+   Expected: Respectively `The workout session is unchanged.` and `The workout session index provided is invalid.` Neither command changes data or consumes an undo step.
+6. Run `undo`, then `history 1`; run `redo`, then `history 1`.<br>
+   Expected: Undo restores the original 14 January workout with 12 repetitions; redo restores the corrected 16 January workout with 15 repetitions. Recheck history numbers after each operation. Restart the app and confirm the corrected history remains saved.
+
+<a id="manual-terminal-layout"></a>
+
+### Terminal, selection and layout
+
+Use disposable demonstration data. Test at the supported minimum window size of 1280x800 logical pixels and at a larger size. At increased display scaling, ensure the physical desktop has enough usable space for that logical window; record the OS, scaling and resolution when reporting a layout problem.
+
+1. With the terminal closed, type `list` and press Enter.<br>
+   Expected: The terminal opens, retains every typed character, executes `list`, and shows the result. Press Esc to close it.
+2. Open the terminal, click a client card, then type `list` and press Enter.<br>
+   Expected: Typing focuses the command field and retains the whole command. With the terminal open, click a client card again and press Esc: it closes. Also check Esc after tabbing to the main window's Help button without activating it.
+3. Produce several results with `list`, then type `restriction` and delete characters until only `r` remains. Drag the terminal to its shortest allowed height.<br>
+   Expected: Results, command input and usage suggestions occupy separate areas. Suggestions scroll when necessary and can still be clicked to populate the command field. Clearing the field hides the suggestion area.
+4. Scroll to older terminal results, then resize the terminal or show/hide usage suggestions.<br>
+   Expected: Reading older results is not interrupted by an automatic jump to the newest entry. When already viewing the newest entry, it remains visible as the layout changes.
+5. With enough clients to require workspace scrolling, select the first client, scroll their card out of view, then run `find n/NAME` using their actual name. Repeat by scrolling away again and running an indexed command such as `remark 1 r/Layout check` for the first displayed client.<br>
+   Expected: The selected card is brought into view, including when the selected index did not change. Up/Down navigation at the first or last client also reveals that selection. An already visible card does not cause an unnecessary scroll.
+6. Resize the terminal, close/reopen it, then restart the application.<br>
+   Expected: Its saved height is restored without growing on each reopen. Open Help and confirm the help window appears. Click the date to expand the live clock, then collapse it; the clock is shown only while expanded.
+
+<a id="manual-scheduling-and-monitoring"></a>
+
+### Scheduling and client monitoring acceptance checks
+
+To check the scheduling and monitoring routes manually, use a separate disposable data folder. The setup below removes its sample clients; never run `clear` in a folder containing real client records. Run each line separately:
+
+```text
+clear
+add n/Priya Nair p/97001001 e/priya@example.com a/Test Road
+add n/Daniel Tan p/97001002 e/daniel@example.com a/Test Road
+list
+```
+
+Confirm Priya is index 1 and Daniel is index 2 before continuing. The example date, 2099-03-15, is fixed well in the future; if it ever becomes a past date, replace it with a later date in every command below.
+
+1. Run `schedule 1 d/2099-03-15 tm/14:30 l/Main gym`, then `meeting 2 d/2099-03-15 tm/15:30 l/Cafe`.<br>
+   Expected: Priya has a training session; Daniel has a meeting. Both are saved.
+2. Run `dayschedule d/2099-03-15`, then `viewschedule 2`.<br>
+   Expected: The day view lists Priya at 14:30 before Daniel at 15:30; Daniel's appointment is marked `(meeting)` in his schedule.
+3. Run `meeting 2 d/2099-03-15 tm/14:30 l/Cafe` and `schedule 1 d/2099-03-15 tm/15:30 l/Main gym`.<br>
+   Expected: Both are rejected because the full roster already contains an appointment at that start time. Neither client's schedule gains a duplicate.
+4. Run `find Daniel`, then `dayschedule d/2099-03-15` and `viewschedule 1`.<br>
+   Expected: The day view still includes Priya despite the filter; index 1 in the filtered list refers to Daniel, whose meeting remains visible.
+5. Run `inactive 1`, then restart and run `list`, `viewschedule 1`, `viewschedule 2`, and `dayschedule d/2099-03-15`.<br>
+   Expected: Both clients are inactive because future appointments are not completed workouts. After restart, both appointments retain their dates, times, locations, and types.
