@@ -7,6 +7,7 @@ import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
@@ -22,6 +23,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class CommandBox extends UiPart<Region> {
 
     private static final String FXML = "CommandBox.fxml";
+    private static final double MIN_VISIBLE_HINT_HEIGHT = 24;
+    private static final double MAX_HINT_HEIGHT = 90;
     private static final PseudoClass ERROR = PseudoClass.getPseudoClass("error");
 
     private final CommandExecutor commandExecutor;
@@ -38,6 +41,8 @@ public class CommandBox extends UiPart<Region> {
     private FlowPane hintContainer;
     @FXML
     private HBox hintRow;
+    @FXML
+    private ScrollPane hintScrollPane;
 
     /** Creates a command box backed by {@code commandExecutor}. */
     public CommandBox(CommandExecutor commandExecutor) {
@@ -49,6 +54,7 @@ public class CommandBox extends UiPart<Region> {
             setErrorState(false);
             updateHints(newValue);
         });
+        hintScrollPane.widthProperty().addListener((unused, oldWidth, newWidth) -> updateHintHeight());
         updateHints("");
     }
 
@@ -110,17 +116,29 @@ public class CommandBox extends UiPart<Region> {
         hintContainer.getChildren().clear();
         String trimmed = commandText.trim();
         if (trimmed.isEmpty()) {
-            hintRow.setVisible(false);
-            hintRow.setManaged(false);
+            hintScrollPane.setVisible(false);
+            hintScrollPane.setManaged(false);
+            getRoot().setMinHeight(Region.USE_COMPUTED_SIZE);
             return;
         }
-        hintRow.setVisible(true);
-        hintRow.setManaged(true);
+        hintScrollPane.setVisible(true);
+        hintScrollPane.setManaged(true);
+        getRoot().setMinHeight(commandBar.getMinHeight() + MIN_VISIBLE_HINT_HEIGHT);
 
         String commandWord = trimmed.split("\\s+", 2)[0];
         List<CommandCatalog.Entry> matches = CommandCatalog.matching(commandWord);
         hintLabel.setText(matches.isEmpty() ? "No matching command" : "Usage");
         matches.forEach(entry -> addHint(entry.usage(), entry.word() + " ", entry.usage()));
+        hintScrollPane.setVvalue(0);
+        updateHintHeight();
+    }
+
+    private void updateHintHeight() {
+        double width = hintScrollPane.getWidth();
+        if (width > 0) {
+            hintRow.applyCss();
+            hintScrollPane.setPrefHeight(Math.min(MAX_HINT_HEIGHT, hintRow.prefHeight(width)));
+        }
     }
 
     private void addHint(String label, String command, String tooltip) {

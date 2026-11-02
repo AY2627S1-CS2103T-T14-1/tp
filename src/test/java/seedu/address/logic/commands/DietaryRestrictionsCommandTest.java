@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
 import java.util.List;
@@ -47,5 +48,22 @@ public class DietaryRestrictionsCommandTest {
 
         assertCommandFailure(new DietaryRestrictionsCommand(INDEX_FIRST_PERSON, restrictions), model,
                 DietaryRestrictionsCommand.MESSAGE_NO_CHANGES);
+    }
+
+    @Test
+    public void execute_replaceRestrictions_preservesNameFilter() throws Exception {
+        Model model = new ModelManager(TypicalPersons.getTypicalAddressBook(), new UserPrefs());
+        showPersonAtIndex(model, INDEX_FIRST_PERSON);
+        Person original = model.getFilteredPersonList().getFirst();
+        Model expected = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expected.updateFilteredPersonList(model.getFilteredPersonListPredicate());
+        expected.setPerson(original, original.withDietaryRestrictions(
+                new DietaryRestrictions(List.of("No shellfish"))));
+
+        new DietaryRestrictionsCommand(INDEX_FIRST_PERSON,
+                new DietaryRestrictions(List.of("Peanut allergy", "Halal meals"))).execute(model);
+        assertCommandSuccess(new DietaryRestrictionsCommand(INDEX_FIRST_PERSON,
+                        new DietaryRestrictions(List.of("No shellfish"))), model,
+                String.format(DietaryRestrictionsCommand.MESSAGE_RECORDED, original.getName()), expected);
     }
 }

@@ -117,6 +117,20 @@ public class EditCommandTest {
     }
 
     @Test
+    public void execute_filteredListGoalEdit_preservesFilter() {
+        showPersonAtIndex(model, INDEX_FIRST_PERSON);
+        Person original = model.getFilteredPersonList().getFirst();
+        Person edited = new PersonBuilder(original).withGoal("Build strength").build();
+        Model expected = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expected.updateFilteredPersonList(model.getFilteredPersonListPredicate());
+        expected.setPerson(original, edited);
+
+        assertCommandSuccess(new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withGoal("Build strength").build()), model,
+                getSuccessMessage(edited), expected);
+    }
+
+    @Test
     public void execute_someFieldsSpecifiedUnfilteredList_success() {
         Index indexLastPerson = Index.fromOneBased(model.getFilteredPersonList().size());
         Person lastPerson = model.getFilteredPersonList().get(indexLastPerson.getZeroBased());
@@ -175,6 +189,7 @@ public class EditCommandTest {
         String expectedMessage = getSuccessMessage(editedPerson);
 
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.updateFilteredPersonList(model.getFilteredPersonListPredicate());
         expectedModel.setPerson(model.getFilteredPersonList().get(0), editedPerson);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);

@@ -920,6 +920,12 @@
 .command-bar:error {
     -fx-border-color: #ff6b5e transparent transparent transparent;
 }
+.hint-scroll, .hint-scroll > .viewport {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
 .hint-row {
     -fx-padding: 0 24 10 24;
 }

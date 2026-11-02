@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -34,6 +36,11 @@ public class ResultDisplay extends UiPart<Region> {
         super(FXML);
         resultList.setItems(feedbackEntries);
         resultList.setCellFactory(unused -> new FeedbackCell());
+        resultList.heightProperty().addListener((unused, oldHeight, newHeight) -> {
+            if (lastResultWasVisible(oldHeight.doubleValue())) {
+                scrollToLatestAfterLayout();
+            }
+        });
     }
 
     /** Appends a successful result returned by the logic layer. */
@@ -64,7 +71,30 @@ public class ResultDisplay extends UiPart<Region> {
         if (feedbackEntries.size() > MAX_ENTRIES) {
             feedbackEntries.remove(0, feedbackEntries.size() - MAX_ENTRIES);
         }
-        resultList.scrollTo(feedbackEntries.size() - 1);
+        scrollToLatestAfterLayout();
+    }
+
+    /** Keeps following new output after layout, without pulling a reader away from older entries. */
+    private void scrollToLatestAfterLayout() {
+        Platform.runLater(() -> {
+            if (!feedbackEntries.isEmpty()) {
+                resultList.scrollTo(feedbackEntries.size() - 1);
+            }
+        });
+    }
+
+    private boolean lastResultWasVisible(double previousHeight) {
+        if (feedbackEntries.isEmpty() || previousHeight <= 0 || resultList.getScene() == null) {
+            return false;
+        }
+        Bounds listBounds = resultList.localToScene(resultList.getLayoutBounds());
+        double top = listBounds.getMinY() + resultList.getInsets().getTop();
+        double bottom = listBounds.getMinY() + previousHeight - resultList.getInsets().getBottom();
+        int lastIndex = feedbackEntries.size() - 1;
+        return resultList.lookupAll(".list-cell").stream()
+                .filter(node -> node instanceof ListCell<?> cell && !cell.isEmpty() && cell.getIndex() == lastIndex)
+                .map(node -> node.localToScene(node.getBoundsInLocal()))
+                .anyMatch(bounds -> bounds.getMaxY() > top && bounds.getMinY() < bottom);
     }
 
     private static CommandFeedback.Kind classifySuccessfulMessage(String message) {

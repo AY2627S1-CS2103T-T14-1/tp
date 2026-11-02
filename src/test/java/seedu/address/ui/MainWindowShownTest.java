@@ -18,6 +18,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
@@ -26,6 +27,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -476,6 +478,133 @@ public class MainWindowShownTest {
         });
         waitForFx();
         assertEquals(0.0, runOnFxThread(() -> ((ScrollPane) scene().lookup("#contentScroll")).getVvalue()));
+    }
+
+    @Test
+    public void terminalHintsAndResults_remainInsideTheirAllocatedAreas() throws Exception {
+        showWindow(modelWithClients(1));
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        runCommand("list");
+        runCommand("find Client");
+        runCommand("edit"); // A multiline usage error followed by new suggestions.
+        runOnFxThread(() -> {
+            commandField().setText("edit");
+            workspace().setDividerPositions(0.99);
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            scene().getRoot().applyCss();
+            scene().getRoot().layout();
+            Node result = scene().lookup("#resultList");
+            Node bar = scene().lookup("#commandBar");
+            Node hints = scene().lookup("#hintScrollPane");
+            Node terminal = scene().lookup("#terminalPanel");
+            Bounds resultBounds = result.localToScene(result.getBoundsInLocal());
+            Bounds barBounds = bar.localToScene(bar.getBoundsInLocal());
+            Bounds hintBounds = hints.localToScene(hints.getBoundsInLocal());
+            Bounds terminalBounds = terminal.localToScene(terminal.getBoundsInLocal());
+            ListView<?> results = (ListView<?>) result;
+            int lastIndex = results.getItems().size() - 1;
+            boolean lastVisible = results.lookupAll(".list-cell").stream()
+                    .filter(node -> node instanceof ListCell<?> cell && cell.getIndex() == lastIndex && !cell.isEmpty())
+                    .map(node -> node.localToScene(node.getBoundsInLocal()))
+                    .anyMatch(bounds -> bounds.getMaxY() > resultBounds.getMinY() + 14
+                            && bounds.getMinY() < resultBounds.getMaxY() - 14);
+            assertTrue(lastVisible, "most recent result should remain visible after the terminal is resized");
+            ScrollPane hintScroll = (ScrollPane) hints;
+            assertTrue(hintScroll.getHeight() >= 20, "suggestions should stay visible at minimum terminal height");
+            assertTrue(((Region) result).getHeight() >= 48, "results should remain readable");
+            assertTrue(hintScroll.getContent().getLayoutBounds().getHeight()
+                    > hintScroll.getViewportBounds().getHeight(),
+                    "long suggestions should be scrollable");
+            assertTrue(resultBounds.getMaxY() <= barBounds.getMinY() + 1,
+                    "result " + resultBounds + " overlaps command " + barBounds);
+            assertTrue(barBounds.getMaxY() <= hintBounds.getMinY() + 1,
+                    "command " + barBounds + " overlaps hints " + hintBounds);
+            assertTrue(hintBounds.getMaxY() <= terminalBounds.getMaxY() + 1,
+                    "hints " + hintBounds + " overflow terminal " + terminalBounds);
+            return null;
+        });
+    }
+
+    @Test
+    public void terminalSuggestions_canScrollAndChooseCommandAfterResults() throws Exception {
+        showWindow(modelWithClients(1));
+        runOnFxThread(() -> {
+            window.openTerminal();
+            workspace().setDividerPositions(0.99);
+            return null;
+        });
+        waitForFx();
+        runCommand("list");
+        runCommand("history 1");
+        runOnFxThread(() -> {
+            commandField().setText("edit");
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            ScrollPane hints = (ScrollPane) scene().lookup("#hintScrollPane");
+            assertTrue(hints.getContent().getLayoutBounds().getHeight() > hints.getViewportBounds().getHeight());
+            hints.setVvalue(1);
+            assertEquals(1, hints.getVvalue());
+            FlowPane choices = (FlowPane) scene().lookup("#hintContainer");
+            assertEquals(2, choices.getChildren().size());
+            Button editLogHint = (Button) choices.getChildren().get(1);
+            editLogHint.fire();
+            assertEquals("editlog ", commandField().getText());
+            assertEquals(0, hints.getVvalue());
+            return null;
+        });
+        waitForFx();
+        runOnFxThread(() -> {
+            commandField().clear();
+            assertTrue(!scene().lookup("#hintScrollPane").isManaged());
+            return null;
+        });
+    }
+
+    @Test
+    public void terminalResize_doesNotPullReaderAwayFromOlderResults() throws Exception {
+        showWindow(modelWithClients(1));
+        runOnFxThread(() -> {
+            window.openTerminal();
+            return null;
+        });
+        waitForFx();
+        for (int i = 0; i < 6; i++) {
+            runCommand("list");
+        }
+        runOnFxThread(() -> {
+            ListView<?> results = (ListView<?>) scene().lookup("#resultList");
+            results.scrollTo(0);
+            return null;
+        });
+        waitForFx();
+        assertTrue(runOnFxThread(() -> isResultVisible(0)), "the oldest result should be visible");
+        runOnFxThread(() -> {
+            commandField().setText("edit");
+            workspace().setDividerPositions(0.99);
+            return null;
+        });
+        waitForFx();
+        assertTrue(runOnFxThread(() -> isResultVisible(0)), "resizing should retain the reader's position");
+    }
+
+    private boolean isResultVisible(int index) {
+        ListView<?> results = (ListView<?>) scene().lookup("#resultList");
+        Bounds listBounds = results.localToScene(results.getLayoutBounds());
+        double top = listBounds.getMinY() + results.getInsets().getTop();
+        double bottom = listBounds.getMaxY() - results.getInsets().getBottom();
+        return results.lookupAll(".list-cell").stream()
+                .filter(node -> node instanceof ListCell<?> cell && cell.getIndex() == index && !cell.isEmpty())
+                .map(node -> node.localToScene(node.getBoundsInLocal()))
+                .anyMatch(bounds -> bounds.getMaxY() > top && bounds.getMinY() < bottom);
     }
 
     private static Model modelWithClients(int count) {
