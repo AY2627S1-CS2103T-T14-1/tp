@@ -47,6 +47,20 @@ public class JsonAdaptedExerciseTest {
     }
 
     @Test
+    public void toModelType_invalidSavedDay_throwsIllegalValueException() {
+        JsonAdaptedExercise exercise = new JsonAdaptedExercise(VALID_NAME, VALID_SETS, VALID_REPS,
+                VALID_WEIGHT, "Funday");
+        assertThrows(IllegalValueException.class, "Invalid exercise day: Funday", exercise::toModelType);
+    }
+
+    @Test
+    public void toModelType_weekdayPrefix_loadsCanonicalDay() throws Exception {
+        JsonAdaptedExercise exercise = new JsonAdaptedExercise(VALID_NAME, VALID_SETS, VALID_REPS,
+                VALID_WEIGHT, "wEd");
+        assertEquals("Wednesday", exercise.toModelType().getDay());
+    }
+
+    @Test
     public void jsonLegacyUnspecifiedDays_loadUnderOneHeading() throws Exception {
         String json = "{\"name\":\"Shoulder Press\",\"sets\":1,\"reps\":1,\"weightKg\":0,\"day\":\"%s\"}";
         for (String day : List.of("day not specified", "Day not specified", " DAY NOT SPECIFIED ")) {

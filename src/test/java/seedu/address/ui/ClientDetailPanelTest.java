@@ -14,12 +14,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import seedu.address.model.person.Exercise;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.WorkoutPlan;
@@ -103,6 +105,11 @@ public class ClientDetailPanelTest {
                     new Exercise("Bench press", 3, 10, 40.25, "Wednesday")));
             ClientDetailPanel panel = new ClientDetailPanel();
             panel.showPerson(new PersonBuilder().withWorkoutPlan(plan).build(), 1);
+            Scene scene = new Scene(panel.getRoot(), 400, 900);
+            scene.getStylesheets().add(ClientDetailPanelTest.class.getResource("/view/FittixTheme.css")
+                    .toExternalForm());
+            panel.getRoot().applyCss();
+            panel.getRoot().layout();
             VBox rows = vbox(panel, "workoutRows");
             List<String> text = labelTexts(rows);
 
@@ -111,6 +118,12 @@ public class ClientDetailPanelTest {
                     "WED", "Bench press", "2", "3 × 10", "40.25 kg",
                     "UNSET", "Push up", "3", "3 × 12", "BW")));
             assertEquals("3 exercises · 2 training days", label(panel, "planSummary").getText());
+            Label bench = labels(rows).stream().filter(item -> item.getText().equals("Bench press"))
+                    .findFirst().orElseThrow();
+            Text rendered = (Text) bench.lookup(".text");
+            assertEquals("Bench press", rendered.getText());
+            Bounds textBounds = rendered.localToScene(rendered.getLayoutBounds());
+            assertTrue(bench.localToScene(bench.getLayoutBounds()).contains(textBounds));
             return null;
         });
     }

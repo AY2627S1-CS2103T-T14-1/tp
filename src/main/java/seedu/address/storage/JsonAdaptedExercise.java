@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Exercise;
+import seedu.address.model.person.Weekday;
 
 /**
  * Jackson-friendly version of {@link Exercise}.
@@ -84,6 +85,12 @@ class JsonAdaptedExercise {
             throw new IllegalValueException(Exercise.MESSAGE_CONSTRAINTS_WEIGHT);
         }
 
-        return new Exercise(name, sets, reps, weightKg, day == null ? "" : day);
+        String savedDay = day == null ? "" : day.trim();
+        if (savedDay.isEmpty() || savedDay.equalsIgnoreCase("Day not specified")) {
+            return new Exercise(name, sets, reps, weightKg);
+        }
+        String weekday = Weekday.fromPrefix(savedDay).map(Weekday::getDisplayName)
+                .orElseThrow(() -> new IllegalValueException("Invalid exercise day: " + savedDay));
+        return new Exercise(name, sets, reps, weightKg, weekday);
     }
 }
