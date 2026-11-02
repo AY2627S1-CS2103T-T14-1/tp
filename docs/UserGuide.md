@@ -321,7 +321,7 @@ Format: `remark INDEX [r/REMARK]`
 
 * `INDEX` refers to the client in the current displayed list, including filtered search results.
 * A supplied remark replaces the previous remark. Use `remark INDEX r/` or omit `r/` to clear it.
-* The current workspace does not display this general remark in a dedicated panel. Command feedback confirms whether a remark was added or removed; use `diet` or `health` for notes that need to appear in those panels.
+* A nonempty general remark appears under **REMARK** in the selected client's profile. Clearing the remark hides that section.
 * Remarks are saved with the client and participate in the shared [undo/redo history](#undo-redo).
 
 Examples:
