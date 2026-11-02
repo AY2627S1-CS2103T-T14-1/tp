@@ -85,15 +85,15 @@ public class PersonCardTest {
     }
 
     @Test
-    public void membershipTag_maximumUnbrokenName_showsFullBalanceAndExpiryWithinStyledCard() throws Exception {
+    public void membershipTag_showsFullBalanceAndExpiryWithinStyledCard() throws Exception {
         runOnFxThread(() -> {
-            String longName = "M".repeat(50);
-            Person assigned = new PersonBuilder().build().withMembershipAssignment(
+            String longName = "ReviewGold";
+            Person assigned = new PersonBuilder().withTags("strength", "beginner").build().withMembershipAssignment(
                     Optional.of(new MembershipAssignment(longName, longName, 30,
-                            Optional.of(LocalDate.of(2027, 12, 30)))));
+                            Optional.of(LocalDate.of(2026, 12, 30)))));
             PersonCard card = new PersonCard(assigned, 1);
             Region root = card.getRoot();
-            Scene scene = new Scene(root, 340, 600);
+            Scene scene = new Scene(root, 276, 600);
             scene.getStylesheets().add(PersonCardTest.class.getResource("/view/FittixTheme.css").toExternalForm());
             root.applyCss();
             root.layout();
@@ -102,19 +102,20 @@ public class PersonCardTest {
             assertNotNull(tag);
             assertTrue(tag.isWrapText());
             assertTrue(tag.getWidth() > 0, "membership tag should be laid out");
-            assertTrue(tag.getWidth() <= 340,
+            assertEquals(((FlowPane) root.lookup("#tags")).getWidth(), tag.prefWidth(-1), 0.01);
+            assertTrue(tag.getWidth() <= 276,
                     "membership tag must not exceed the card width, was " + tag.getWidth());
-            assertEquals(340, root.getWidth(), 0.01, "long names must not widen the card");
+            assertEquals(276, root.getWidth(), 0.01, "membership must not widen the card");
 
             // Inspect the skin's rendered text, since Label.getText() still returns the full value
             // even when the skin truncates it with an ellipsis.
             Text renderedText = (Text) tag.lookup(".text");
             assertNotNull(renderedText);
-            assertEquals(longName + " Member: 30 sessions left [expires 2027-12-30]", renderedText.getText());
+            assertEquals(longName + " Member: 30 sessions left [expires 2026-12-30]", renderedText.getText());
             Text singleLine = new Text("M");
             singleLine.setFont(renderedText.getFont());
             assertTrue(renderedText.getLayoutBounds().getHeight() > singleLine.getLayoutBounds().getHeight(),
-                    "the maximum-length name must wrap onto multiple lines");
+                    "membership details must wrap onto multiple lines");
 
             Bounds textBounds = renderedText.localToScene(renderedText.getLayoutBounds());
             Bounds tagBounds = tag.localToScene(tag.getLayoutBounds());

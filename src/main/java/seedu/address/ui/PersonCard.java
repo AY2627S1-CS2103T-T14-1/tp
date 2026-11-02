@@ -71,7 +71,7 @@ public class PersonCard extends UiPart<Region> {
             tag.setWrapText(true);
             tag.setMinWidth(0);
             tags.setMinWidth(0);
-            tag.maxWidthProperty().bind(tags.widthProperty());
+            tag.prefWidthProperty().bind(tags.widthProperty());
             tags.getChildren().add(tag);
         });
     }
