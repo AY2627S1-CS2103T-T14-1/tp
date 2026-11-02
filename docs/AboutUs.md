@@ -35,7 +35,7 @@ For bug reports and suggestions, use the [Fittix issue tracker](https://github.c
 [[github](https://github.com/HienPahm)]
 
 * Role: Developer
-* Responsibilities: Training schedule management
+* Responsibilities: Training sessions and meetings, day schedules, and inactive-client monitoring
 
 ### Frederico Samuel Halim
 
