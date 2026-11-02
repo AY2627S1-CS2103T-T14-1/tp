@@ -17,7 +17,8 @@ title: About Us
       <article class="about-card">
         <img src="images/winhks25.png" alt="Portrait of Win Htut Khaung Soe">
         <h3>Win Htut Khaung Soe</h3>
-        <p class="about-role">Project Lead</p>
+        <p class="about-role">Project Lead and Developer</p>
+        <p>Implemented features: Workout Plan Management, Membership Plan, </p>
         <p class="about-links"><a href="https://winhks25.github.io/winhtutkhaungsoe/">Win's homepage</a><a href="https://github.com/winhks25">Win's GitHub</a></p>
       </article>
       <article class="about-card">
