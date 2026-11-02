@@ -114,3 +114,52 @@ body:has(.fittix-guide) {
   .fittix-hero { padding-top: 42px; }
   .fittix-features { grid-template-columns: 1fr; }
 }
+
+// About Us shares the Fittix palette without changing other pages.
+body:has(.fittix-about) {
+  background: #101114;
+  color: #e9eaf0;
+
+  .site-header { border-bottom-color: #303238; }
+  .site-title, .site-title:visited, .page-link { color: #f7f8fa; }
+  .site-nav { background-color: #101114; }
+  .site-nav .menu-icon > svg path { fill: #f7f8fa; }
+  .site-nav .page-link img.icon { filter: invert(1); }
+  .page-content > .wrapper { max-width: 1100px; }
+  a:focus-visible { outline: 2px solid #d8f24a; outline-offset: 4px; }
+}
+
+.fittix-about {
+  padding-bottom: 64px;
+  h1, h2, h3 { color: #f7f8fa; }
+  a, a:visited { color: #d8f24a; }
+  a:hover { color: #e8ff6d; }
+}
+
+.about-intro {
+  max-width: 780px;
+  padding: 64px 0 38px;
+  h1 { font-size: clamp(2.5rem, 6vw, 4.25rem); line-height: 1.1; letter-spacing: -.04em; }
+  p:not(.fittix-eyebrow) { color: #bec2cc; font-size: 1.1rem; }
+}
+
+.about-team { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+.about-card {
+  padding: 26px;
+  border: 1px solid #303238;
+  border-radius: 14px;
+  background: #1b1d21;
+  p { color: #bec2cc; }
+  h3 { margin: 18px 0 4px; }
+  img { display: block; width: 120px; height: 120px; object-fit: cover; border-radius: 12px; }
+  .about-role { color: #f7f8fa; font-weight: 600; }
+  .about-links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 0; }
+}
+
+@media (max-width: 800px) {
+  .about-team { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .about-intro { padding-top: 42px; }
+  .about-team { grid-template-columns: 1fr; }
+}
