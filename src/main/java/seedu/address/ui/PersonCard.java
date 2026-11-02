@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
 
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
@@ -70,7 +71,8 @@ public class PersonCard extends UiPart<Region> {
             tag.getStyleClass().add("membership-tag");
             tag.setWrapText(true);
             tag.setMinWidth(0);
-            tag.setMinHeight(Region.USE_PREF_SIZE);
+            tag.minHeightProperty().bind(Bindings.createDoubleBinding(() -> tag.prefHeight(tags.getWidth()),
+                    tags.widthProperty(), tag.fontProperty()));
             tags.setMinWidth(0);
             tag.prefWidthProperty().bind(tags.widthProperty());
             tags.getChildren().add(tag);
