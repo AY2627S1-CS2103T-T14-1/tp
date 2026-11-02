@@ -17,8 +17,8 @@ title: About Us
       <article class="about-card">
         <img src="images/winhks25.png" alt="Portrait of Win Htut Khaung Soe">
         <h3>Win Htut Khaung Soe</h3>
-        <p class="about-role">Project Lead and Developer</p>
-        <p>Implemented features: Workout Plan Management, Membership Plan, </p>
+        <p class="about-role">Developer</p>
+        <p>Workout plan management, membership plans, and payment records</p>
         <p class="about-links"><a href="https://winhks25.github.io/winhtutkhaungsoe/">Win's homepage</a><a href="https://github.com/winhks25">Win's GitHub</a></p>
       </article>
       <article class="about-card">
@@ -39,7 +39,7 @@ title: About Us
         <img src="images/fikoww.png" alt="Portrait of Frederico Samuel Halim">
         <h3>Frederico Samuel Halim</h3>
         <p class="about-role">Developer</p>
-        <p>Workout session logging</p>
+        <p>Workout session logging, workout history and corrections, and undo/redo</p>
         <p class="about-links"><a href="https://github.com/fikoww">Frederico's GitHub</a></p>
       </article>
       <article class="about-card">
