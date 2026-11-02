@@ -3,8 +3,10 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
@@ -33,10 +35,16 @@ public class LogCommand extends Command {
             + "ex/Back squat|60|3|10 ex/Bench press|40|3|8";
 
     public static final String MESSAGE_SUCCESS =
-            "Logged workout session for %1$s on %2$s.";
+            "Logged workout for %1$s on %2$s: %3$d %4$s.";
 
     public static final String MESSAGE_DUPLICATE_SESSION =
-            "This client already has a workout session with the same date and time.";
+            "A workout session already exists for %1$s on %2$s.";
+    public static final String MESSAGE_DUPLICATE_SESSION_WITHOUT_TIME =
+            "An unspecified-time workout session already exists for %1$s on %2$s. "
+            + "Add t/TIME to distinguish another session.";
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu", Locale.ENGLISH);
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH);
 
     private final Index index;
     private final WorkoutSession session;
@@ -60,11 +68,16 @@ public class LogCommand extends Command {
         }
 
         Person client = displayedClients.get(index.getZeroBased());
+        String date = session.getDate().format(DATE_FORMAT);
+        String dateTime = date + session.getTime().map(time -> " at " + time.format(TIME_FORMAT)).orElse("");
 
         boolean hasDuplicateSession = client.getWorkoutSessions().stream()
                 .anyMatch(existing -> existing.hasSameDateTime(session));
         if (hasDuplicateSession) {
-            throw new CommandException(MESSAGE_DUPLICATE_SESSION);
+            String message = session.getTime().isPresent()
+                    ? String.format(Locale.ENGLISH, MESSAGE_DUPLICATE_SESSION, client.getName(), dateTime)
+                    : String.format(Locale.ENGLISH, MESSAGE_DUPLICATE_SESSION_WITHOUT_TIME, client.getName(), date);
+            throw new CommandException(message);
         }
 
         List<WorkoutSession> updatedSessions = new ArrayList<>(client.getWorkoutSessions());
@@ -79,10 +92,9 @@ public class LogCommand extends Command {
 
         model.setPerson(client, updatedClient);
 
-        String dateTime = session.getDate().toString()
-                + session.getTime().map(time -> " at " + time).orElse("");
-
-        return new CommandResult(String.format(MESSAGE_SUCCESS, client.getName(), dateTime));
+        int entryCount = session.getEntries().size();
+        return new CommandResult(String.format(Locale.ENGLISH, MESSAGE_SUCCESS, client.getName(), dateTime,
+                entryCount, entryCount == 1 ? "exercise" : "exercises"));
     }
 
     @Override

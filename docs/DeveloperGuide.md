@@ -323,15 +323,15 @@ Each `Person` owns an immutable list of `WorkoutSession` objects. Each session c
 
 For `log INDEX d/DATE [t/TIME] ex/EXERCISE|WEIGHT|SETS|REPS ...`, `AddressBookParser` delegates to `LogCommandParser`. The parser checks required arguments, repeated date or time prefixes, date and time formats, and the four values in every exercise entry. It constructs the complete validated session before returning a `LogCommand`.
 
-`LogCommand` resolves the index against the filtered client list. It rejects a session if that client already has the same date and optional time, using `WorkoutSession#hasSameDateTime`. Exercise contents do not affect this duplicate check. An unspecified time is distinct from every specified time.
+`LogCommand` resolves the index against the filtered client list. It rejects a session if that client already has the same date and optional time, using `WorkoutSession#hasSameDateTime`. Exercise contents do not affect this duplicate check. An unspecified time is distinct from every specified time. Duplicate feedback identifies the client and date, includes the time when specified, and otherwise explains that the collision has unspecified time and suggests adding `t/TIME`.
 
-On success, the command appends the session to a copy of the existing session list and replaces the client through `Model#setPerson`, preserving their other fields and the current filter. Sessions remain in recording order rather than chronological order.
+On success, the command appends the session to a copy of the existing session list and replaces the client through `Model#setPerson`, preserving their other fields and the current filter. Sessions remain in recording order rather than chronological order. Success feedback includes the client, an English `d MMM uuuu` date, optional `HH:mm` time, and the number of exercise entries, using `1 exercise` or `N exercises`. Repeated entries are counted separately.
 
 `JsonAdaptedWorkoutLogEntry`, `JsonAdaptedWorkoutSession`, and `JsonAdaptedPerson` handle persistence. Dates use `yyyy-MM-dd`, specified times use `HH:mm`, and exercise order is preserved. Older person records without a workout-session field load with an empty session list. Invalid entries and duplicate session keys are rejected during conversion to model objects.
 
 `LogicManager` saves the updated address book through the storage component. If saving throws an `IOException`, it restores the address-book snapshot taken before command execution and reports the save error.
 
-`MainWindow` observes the selected client and changes to the client list. `ClientContextPanel#showHistory` displays every completed session under **HISTORY** / **Completed workouts**, numbering rows consistently with `history`. It sorts a copy by date descending, then places unspecified times before specified times on the same date, with specified times descending. Unspecified times are distinct from midnight and display as `Time not specified`. The stored recording order and exercise order are unchanged. For a client without sessions, the section keeps its heading and shows no rows; with no client selected, the context column is blank. Exercise labels wrap, and the workspace scrolls as a whole.
+`MainWindow` observes the selected client and changes to the client list. `ClientContextPanel#showHistory` displays every completed session under **HISTORY** / **Completed workouts**, numbering rows consistently with `history`. It sorts a copy by date descending, then places unspecified times before specified times on the same date, with specified times descending. Unspecified times are distinct from midnight and display as `Time not specified`. The stored recording order and exercise order are unchanged. For a client without sessions, the section shows `No workout sessions recorded for NAME.` instead of session rows. The placeholder hides when sessions exist and refreshes when switching clients; with no client selected, the context column is blank. Exercise and empty-state labels wrap, and the workspace scrolls as a whole.
 
 `HistoryCommand` reads the filtered client list and formats all sessions without modifying data. `EditLogCommandParser` reuses `LogCommandParser` validation to construct a complete replacement session. `EditLogCommand` resolves the displayed client and history indexes, rejects unchanged and duplicate-key replacements, replaces the selected session in the client's stored list, and preserves every unrelated client field. `MainWindow` selects the targeted client before command execution. The usual `LogicManager` save and snapshot restoration protect edits from failed writes.
 
@@ -1165,13 +1165,13 @@ Use a fresh, disposable roster. Add `Priya Nair` and `Daniel Tan` in that order,
 Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, providing the required contact fields, then run `find WorkoutLogManualTest`. The following commands assume that client is displayed at index 1.
 
 1. Run `log 1 d/2020-01-15 t/18:00 ex/Back squat|60|3|10 ex/Bench press|40.25|3|8`.
-   Expected: The success message names the client and session date and time. Selecting the client shows both exercises in the entered order in the right-hand **HISTORY** / **Completed workouts** section.
+   Expected: `Logged workout for WorkoutLogManualTest on 15 Jan 2020 at 18:00: 2 exercises.` Selecting the client shows both exercises in the entered order in the right-hand **HISTORY** / **Completed workouts** section.
 
 2. Repeat the same command.
-   Expected: `This client already has a workout session with the same date and time.` The existing session remains unchanged.
+   Expected: `A workout session already exists for WorkoutLogManualTest on 15 Jan 2020 at 18:00.` The existing session remains unchanged.
 
 3. Run `log 1 d/2020-01-16 ex/Push-up|0|3|12`.
-   Expected: The session is recorded. A new history row shows `Thu 16 Jan 2020`, `Time not specified`, and the Push-up entry above the session dated 2020-01-15.
+   Expected: `Logged workout for WorkoutLogManualTest on 16 Jan 2020: 1 exercise.` A new history row shows `Thu 16 Jan 2020`, `Time not specified`, and the Push-up entry above the session dated 2020-01-15. Repeating this command reports `An unspecified-time workout session already exists for WorkoutLogManualTest on 16 Jan 2020. Add t/TIME to distinguish another session.` and leaves the session unchanged.
 
 4. Run `log 1 d/2020-01-16 t/19:00 ex/Push-up|0|3|12`.
    Expected: The session is accepted because a specified time differs from an unspecified time. Its `19:00` row appears below the unspecified-time row on the same date. Among specified times on that date, later times appear first; midnight remains distinct from an unspecified time.
@@ -1189,7 +1189,7 @@ Use a disposable copy of the data. Add a client named `WorkoutLogManualTest`, pr
    Expected: All recorded sessions remain visible in newest-first workout-date/time order, including the session dated 2020-01-14. Repeating the command from step 1 is rejected as a duplicate, confirming that the earlier entry was retained.
 
 9. Select another client with no recorded sessions.
-   Expected: The history section keeps its heading but shows no rows, and the previous client's workout details disappear.
+   Expected: The history section shows `No workout sessions recorded for NAME.` for the newly selected client, and the previous client's workout details disappear. Record that client's first workout and check that the empty-state message disappears; selecting the empty client again after undoing the log restores the message.
 
 ### Membership plan management
 

@@ -25,7 +25,8 @@ public class EditLogCommand extends Command {
             + "Example: editlog 1 2 d/2020-01-15 t/18:00 ex/Back squat|60|3|10";
     public static final String MESSAGE_INVALID_SESSION_INDEX =
             "The workout session index provided is invalid.";
-    public static final String MESSAGE_DUPLICATE_SESSION = LogCommand.MESSAGE_DUPLICATE_SESSION;
+    public static final String MESSAGE_DUPLICATE_SESSION =
+            "This client already has a workout session with the same date and time.";
     public static final String MESSAGE_NO_CHANGE = "The workout session is unchanged.";
     public static final String MESSAGE_SUCCESS = "Edited workout session %1$d for %2$s.";
 

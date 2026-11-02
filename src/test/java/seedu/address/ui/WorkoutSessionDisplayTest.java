@@ -247,6 +247,58 @@ public class WorkoutSessionDisplayTest {
     }
 
     @Test
+    public void completedWorkouts_emptyHistory_updatesPlaceholderForSelectedClient() throws Exception {
+        runOnFxThread(() -> {
+            ClientContextPanel panel = new ClientContextPanel();
+            Person alice = new PersonBuilder().withName("Alice Lee").build();
+            Person priya = new PersonBuilder().withName("Priya Nair").build();
+            panel.showPerson(alice, 1);
+
+            Label empty = label(panel, "workoutHistoryEmpty");
+            assertEquals("No workout sessions recorded for Alice Lee.", empty.getText());
+            assertTrue(empty.isVisible());
+            assertTrue(empty.isManaged());
+            assertFalse(region(panel, "historyRows").isManaged());
+
+            panel.showPerson(priya, 2);
+            assertEquals("No workout sessions recorded for Priya Nair.", empty.getText());
+            panel.showPerson(null, -1);
+            assertEquals("", empty.getText());
+            assertFalse(empty.isVisible());
+            assertFalse(empty.isManaged());
+            assertFalse(region(panel, "selectedContent").isManaged());
+            return null;
+        });
+    }
+
+    @Test
+    public void completedWorkouts_recordedSession_hidesEmptyPlaceholder() throws Exception {
+        runOnFxThread(() -> {
+            Person empty = new PersonBuilder().withName("Priya Nair").build();
+            Person populated = new PersonBuilder(empty).withWorkoutSessions(List.of(
+                    new WorkoutSession(LocalDate.of(2020, 1, 15), Optional.empty(), List.of(SQUAT)))).build();
+            ClientContextPanel panel = new ClientContextPanel();
+            panel.showPerson(empty, 1);
+            assertTrue(region(panel, "workoutHistoryEmpty").isManaged());
+
+            panel.showPerson(populated, 1);
+            assertFalse(region(panel, "workoutHistoryEmpty").isVisible());
+            assertFalse(region(panel, "workoutHistoryEmpty").isManaged());
+            assertEquals("", label(panel, "workoutHistoryEmpty").getText());
+            assertTrue(region(panel, "historyRows").isManaged());
+            assertEquals(1, vbox(panel, "historyRows").getChildren().size());
+
+            panel.showPerson(empty, 1);
+            assertEquals("No workout sessions recorded for Priya Nair.",
+                    label(panel, "workoutHistoryEmpty").getText());
+            assertTrue(region(panel, "workoutHistoryEmpty").isVisible());
+            assertTrue(region(panel, "workoutHistoryEmpty").isManaged());
+            assertTrue(vbox(panel, "historyRows").getChildren().isEmpty());
+            return null;
+        });
+    }
+
+    @Test
     public void revealBodyProgress_requestForAnotherClient_isIgnored() throws Exception {
         runOnFxThread(() -> {
             Person displayed = new PersonBuilder().withName("Alice Lee").build();

@@ -66,8 +66,7 @@ public class LogCommandTest {
         assertEquals(List.of(expected), model.getAddressBook().getPersonList());
         assertEquals(List.of(existing), original.getWorkoutSessions());
         assertEquals(original.getGoal(), model.getAddressBook().getPersonList().get(0).getGoal());
-        assertEquals(String.format(
-                        LogCommand.MESSAGE_SUCCESS, original.getName(), "2020-01-15 at 18:00"),
+        assertEquals("Logged workout for " + original.getName() + " on 15 Jan 2020 at 18:00: 2 exercises.",
                 result.getFeedbackToUser());
     }
 
@@ -84,15 +83,42 @@ public class LogCommandTest {
         Model model = createModel(original);
 
         CommandResult firstResult = new LogCommand(FIRST_CLIENT, withoutTime).execute(model);
-        new LogCommand(FIRST_CLIENT, firstTimed).execute(model);
+        CommandResult timedResult = new LogCommand(FIRST_CLIENT, firstTimed).execute(model);
         new LogCommand(FIRST_CLIENT, secondTimed).execute(model);
 
         Person expected = withSessions(
                 original, List.of(withoutTime, firstTimed, secondTimed));
         assertEquals(List.of(expected), model.getAddressBook().getPersonList());
-        assertEquals(String.format(
-                        LogCommand.MESSAGE_SUCCESS, original.getName(), "2020-01-15"),
+        assertEquals("Logged workout for " + original.getName() + " on 15 Jan 2020: 1 exercise.",
                 firstResult.getFeedbackToUser());
+        assertEquals("Logged workout for " + original.getName() + " on 15 Jan 2020 at 18:00: 1 exercise.",
+                timedResult.getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_repeatedExerciseEntries_reportsAllEntries() throws Exception {
+        Person original = new PersonBuilder().withName("Priya Nair").build();
+        Model model = createModel(original);
+        WorkoutSession session = new WorkoutSession(LocalDate.of(2026, 9, 16),
+                Optional.of(TIME), List.of(SQUAT, BENCH, SQUAT));
+
+        CommandResult result = new LogCommand(FIRST_CLIENT, session).execute(model);
+
+        assertEquals("Logged workout for Priya Nair on 16 Sep 2026 at 18:00: 3 exercises.",
+                result.getFeedbackToUser());
+        assertEquals(List.of(SQUAT, BENCH, SQUAT),
+                model.getFilteredPersonList().get(0).getWorkoutSessions().get(0).getEntries());
+    }
+
+    @Test
+    public void execute_midnight_reportsSpecifiedTime() throws Exception {
+        Model model = createModel(new PersonBuilder().withName("Priya Nair").build());
+        WorkoutSession session = new WorkoutSession(DATE, Optional.of(LocalTime.MIDNIGHT), List.of(SQUAT));
+
+        CommandResult result = new LogCommand(FIRST_CLIENT, session).execute(model);
+
+        assertEquals("Logged workout for Priya Nair on 15 Jan 2020 at 00:00: 1 exercise.",
+                result.getFeedbackToUser());
     }
 
     @Test
@@ -107,7 +133,7 @@ public class LogCommandTest {
 
         assertFailureLeavesModelUnchanged(
                 new LogCommand(FIRST_CLIENT, duplicate),
-                model, LogCommand.MESSAGE_DUPLICATE_SESSION);
+                model, "A workout session already exists for " + original.getName() + " on 15 Jan 2020 at 18:00.");
     }
 
     @Test
@@ -122,7 +148,8 @@ public class LogCommandTest {
 
         assertFailureLeavesModelUnchanged(
                 new LogCommand(FIRST_CLIENT, duplicate),
-                model, LogCommand.MESSAGE_DUPLICATE_SESSION);
+                model, "An unspecified-time workout session already exists for " + original.getName()
+                        + " on 15 Jan 2020. Add t/TIME to distinguish another session.");
     }
 
     @Test
