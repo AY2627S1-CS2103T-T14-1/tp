@@ -5,6 +5,9 @@ import java.util.Locale;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddExerciseCommand;
+import seedu.address.logic.commands.AddMembershipPlanCommand;
+import seedu.address.logic.commands.AdjustMembershipSessionsCommand;
+import seedu.address.logic.commands.AssignMembershipPlanCommand;
 import seedu.address.logic.commands.BodyBaselineCommand;
 import seedu.address.logic.commands.BodyCompareCommand;
 import seedu.address.logic.commands.BodyDeleteCommand;
@@ -12,9 +15,11 @@ import seedu.address.logic.commands.BodyHistoryCommand;
 import seedu.address.logic.commands.BodyLogCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.ClearPlanCommand;
+import seedu.address.logic.commands.ClearmemCommand;
 import seedu.address.logic.commands.DayScheduleCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteExerciseCommand;
+import seedu.address.logic.commands.DeleteMembershipPlanCommand;
 import seedu.address.logic.commands.DietCommand;
 import seedu.address.logic.commands.DietaryRestrictionsCommand;
 import seedu.address.logic.commands.EditCommand;
@@ -31,9 +36,11 @@ import seedu.address.logic.commands.MeetingCommand;
 import seedu.address.logic.commands.PayCommand;
 import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.RemarkCommand;
+import seedu.address.logic.commands.RemoveMembershipPlanCommand;
 import seedu.address.logic.commands.ScheduleCommand;
 import seedu.address.logic.commands.SetExerciseDayCommand;
 import seedu.address.logic.commands.UndoCommand;
+import seedu.address.logic.commands.ViewMembershipPlansCommand;
 import seedu.address.logic.commands.ViewScheduleCommand;
 
 /** UI-facing catalogue of the existing command words and usage strings. */
@@ -68,6 +75,16 @@ final class CommandCatalog {
             new Entry(DeleteExerciseCommand.COMMAND_WORD, DeleteExerciseCommand.MESSAGE_USAGE),
             new Entry(ClearPlanCommand.COMMAND_WORD, ClearPlanCommand.MESSAGE_USAGE),
             new Entry(SetExerciseDayCommand.COMMAND_WORD, SetExerciseDayCommand.MESSAGE_USAGE),
+            new Entry(AddMembershipPlanCommand.COMMAND_WORD, AddMembershipPlanCommand.MESSAGE_USAGE),
+            new Entry(AssignMembershipPlanCommand.COMMAND_WORD, AssignMembershipPlanCommand.MESSAGE_USAGE),
+            new Entry(AdjustMembershipSessionsCommand.COMMAND_WORD_INCREASE,
+                    AdjustMembershipSessionsCommand.MESSAGE_USAGE_INCREASE),
+            new Entry(AdjustMembershipSessionsCommand.COMMAND_WORD_DECREASE,
+                    AdjustMembershipSessionsCommand.MESSAGE_USAGE_DECREASE),
+            new Entry(RemoveMembershipPlanCommand.COMMAND_WORD, RemoveMembershipPlanCommand.MESSAGE_USAGE),
+            new Entry(DeleteMembershipPlanCommand.COMMAND_WORD, DeleteMembershipPlanCommand.MESSAGE_USAGE),
+            new Entry(ViewMembershipPlansCommand.COMMAND_WORD, ViewMembershipPlansCommand.MESSAGE_USAGE),
+            new Entry(ClearmemCommand.COMMAND_WORD, ClearmemCommand.MESSAGE_USAGE),
             new Entry(UndoCommand.COMMAND_WORD, UndoCommand.MESSAGE_USAGE),
             new Entry(RedoCommand.COMMAND_WORD, RedoCommand.MESSAGE_USAGE),
             new Entry(ExitCommand.COMMAND_WORD, "exit: Exits Fittix."),
