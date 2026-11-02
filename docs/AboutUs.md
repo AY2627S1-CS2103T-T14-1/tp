@@ -45,7 +45,7 @@ title: About Us
         <img src="images/zkw2004.png" alt="Portrait of Zhang Kaiwen">
         <h3>Zhang Kaiwen</h3>
         <p class="about-role">Developer</p>
-        <p>Desktop UI design and implementation, including the client workspace and command terminal</p>
+        <p>Client details and search, fitness goals, health considerations, dietary restrictions, and desktop UI design and implementation</p>
         <p class="about-links"><a href="https://www.linkedin.com/in/zhang-kaiwen2004/">Kaiwen's LinkedIn</a><a href="https://github.com/zkw2004">Kaiwen's GitHub</a></p>
       </article>
     </div>
