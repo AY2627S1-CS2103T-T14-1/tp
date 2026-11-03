@@ -1077,12 +1077,12 @@ testers are expected to do more *exploratory* testing.
 1. Initial launch
    1. Download the release JAR into a new, empty folder where the app may create files. Use only demonstration data for these checks.
    1. Open a terminal in that folder and run `java -version`. Confirm that Java 25 is active; Mac users should follow the [Java installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
-   1. Run `java -jar "fittix-v1.jar"`, adapting the filename to the downloaded asset.<br>
+   1. Run `java -jar "fittix-v1.6.jar"`, adapting the filename to the downloaded asset.<br>
       Expected: The GUI opens with sample clients. Typing a command opens the terminal panel. Saved data and window preferences belong to this working folder.
 
 1. Saving window preferences
    1. Resize and move the window, then close the app.
-   1. From the same terminal folder, run `java -jar "fittix-v1.jar"` again.<br>
+   1. From the same terminal folder, run `java -jar "fittix-v1.6.jar"` again.<br>
       Expected: The saved window size and location are restored. Reuse this folder to access the same client records.
 
 ### Deleting a client

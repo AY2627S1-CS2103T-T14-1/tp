@@ -16,11 +16,11 @@ Fittix is a **desktop application for gym trainers to manage clients, workout pl
 1. Ensure that Java `25` is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the JAR from the **Assets** section of the [latest Fittix release](https://github.com/AY2627S1-CS2103T-T14-1/tp/releases/latest). For v1.5, the file is named **`fittix-v1.jar`**. The same JAR supports Windows x64, macOS Intel or Apple silicon, and Linux x64 or ARM64.
+1. Download the JAR from the **Assets** section of the [latest Fittix release](https://github.com/AY2627S1-CS2103T-T14-1/tp/releases/latest). For v1.6, the file is named **`fittix-v1.6.jar`**. The same JAR supports Windows x64, macOS Intel or Apple silicon, and Linux x64 or ARM64.
 
 1. Copy the file to a folder where you have write permission. Use this folder as your Fittix _home folder_.
 
-1. Open a terminal, `cd` to that folder, and run `java -jar "fittix-v1.jar"` (adapt the filename if your downloaded file has a different name).<br>
+1. Open a terminal, `cd` to that folder, and run `java -jar "fittix-v1.6.jar"` (adapt the filename if your downloaded file has a different name).<br>
    Fittix saves its `data` folder and `preferences.json` in the terminal's current folder. Always start it from the same home folder to use the same client records.<br>
    A GUI similar to the one below should appear in a few seconds. The screenshot illustrates the current workspace with demonstration client records; the initial sample data may differ.<br>
    ![Fittix workspace with demonstration client records](images/Ui.png)
