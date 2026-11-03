@@ -20,7 +20,7 @@ guide: true
 
 #### Pham Doan Gia Hien (@HienPahm)
 
-Pham Doan Gia Hien ([@HienPahm](https://github.com/HienPahm)) used **OpenAI ChatGPT/Codex extensively** during development of Fittix. AI assistance covered substantial parts of implementation, testing, documentation, review and release preparation. This describes the extent of assistance; it is not a measured percentage of AI-generated source lines.
+Pham Doan Gia Hien ([@HienPahm](https://github.com/HienPahm)) used **OpenAI ChatGPT/Codex, primarily with GPT-6 and GPT-6.1 Sol models, extensively** during development of Fittix. AI assistance covered substantial parts of implementation, testing, documentation, review and release preparation. This describes the extent of assistance; it is not a measured percentage of AI-generated source lines.
 
 AI assisted with:
 
@@ -32,7 +32,7 @@ AI assisted with:
 - **Pull-request reviews:** analysing teammates' code and documentation changes, identifying potential defects, preparing review comments, testing fixes and submitting reviews through GitHub. AI also assisted with authorized merges earlier in the project.
 - **Development workflow and releases:** interpreting task-delegation notes, planning changes, resolving merge conflicts, preparing commits, branches and pull requests, and preparing the v1.4 release and release notes.
 
-This declaration describes Hien's use of AI, not other team members' use. Hien remains responsible for understanding, reviewing and validating his contributions and submitted deliverables, including work generated or refined with AI assistance.
+Hien remains responsible for understanding, reviewing and validating his contributions and submitted deliverables, including work generated or refined with AI assistance.
 
 ---
 
