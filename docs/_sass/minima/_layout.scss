@@ -29,16 +29,26 @@
 }
 
 .site-nav {
-  position: absolute;
-  top: 9px;
-  right: $spacing-unit / 2;
-  background-color: $background-color;
-  border: 1px solid $brand-color-light;
+  float: right;
   border-radius: 5px;
   text-align: right;
 
-  .nav-trigger {
-      display: none;
+  .nav-toggle {
+    display: none;
+    float: right;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid #d8f24a;
+      outline-offset: 3px;
+    }
   }
 
   .menu-icon {
@@ -54,23 +64,26 @@
     }
   }
 
-  label[for="nav-trigger"] {
-    display: block;
-    float: right;
-    width: 36px;
-    height: 36px;
-    z-index: 2;
-    cursor: pointer;
-  }
+  &.nav-ready {
+    position: absolute;
+    top: 9px;
+    right: $spacing-unit / 2;
+    background-color: $background-color;
+    border: 1px solid $brand-color-light;
 
-  input ~ .trigger {
-    clear: both;
-    display: none;
-  }
+    .nav-toggle:not([hidden]) {
+      display: block;
+    }
 
-  input:checked ~ .trigger {
-    display: block;
-    padding-bottom: 5px;
+    .trigger {
+      clear: both;
+      display: none;
+    }
+
+    .nav-toggle[aria-expanded="true"] ~ .trigger {
+      display: block;
+      padding-bottom: 5px;
+    }
   }
 
   .page-link {
@@ -87,21 +100,21 @@
   }
 
   @media screen and (min-width: $on-medium) {
-    position: static;
-    float: right;
-    border: none;
-    background-color: inherit;
+    &,
+    &.nav-ready {
+      position: static;
+      float: right;
+      border: none;
+      background-color: inherit;
 
-    label[for="nav-trigger"] {
-      display: none;
-    }
+      .nav-toggle:not([hidden]) {
+        display: none;
+      }
 
-    .menu-icon {
-      display: none;
-    }
-
-    input ~ .trigger {
-      display: block;
+      .trigger {
+        display: block;
+        padding-bottom: 0;
+      }
     }
 
     .page-link {
