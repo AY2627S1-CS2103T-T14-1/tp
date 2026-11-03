@@ -16,11 +16,11 @@ guide: true
 - The interface bundles the [Manrope](https://github.com/sharanda/manrope) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) fonts under the SIL Open Font License; their licence files are in `src/main/resources/fonts/`.
 - Architecture and design diagrams were created with [PlantUML](https://plantuml.com/).
 
-### Notable uses of AI
+### AI assistance
 
 #### Pham Doan Gia Hien (@HienPahm)
 
-Pham Doan Gia Hien ([@HienPahm](https://github.com/HienPahm)) used **OpenAI ChatGPT/Codex, primarily with GPT-6 and GPT-6.1 Sol models, extensively** during development of Fittix. AI assistance covered substantial parts of implementation, testing, documentation, review and release preparation. This describes the extent of assistance; it is not a measured percentage of AI-generated source lines.
+Pham Doan Gia Hien ([@HienPahm](https://github.com/HienPahm)) used **OpenAI ChatGPT/Codex, primarily with GPT-6 and GPT-6.1 Sol models, extensively** during development of Fittix. Hien estimates that approximately **90–95% of his development work involved AI assistance**, including implementation, testing, documentation, review and release preparation. This is a personal estimate of the extent of AI involvement, not a measured percentage of AI-generated source lines.
 
 AI assisted with:
 
