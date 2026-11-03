@@ -18,35 +18,35 @@ title: About Us
         <img src="images/winhks25.png" alt="Portrait of Win Htut Khaung Soe">
         <h3>Win Htut Khaung Soe</h3>
         <p class="about-role">Developer</p>
-        <p>Workout plan management, membership plans, and payment records</p>
+        <p>Workout plans, membership plans, and payment records.</p>
         <p class="about-links"><a href="https://winhks25.github.io/winhtutkhaungsoe/">Win's homepage</a><a href="https://github.com/winhks25">Win's GitHub</a></p>
       </article>
       <article class="about-card">
         <img src="images/itzkhoadao.png" alt="Portrait of Dao Anh Khoa">
         <h3>Dao Anh Khoa</h3>
         <p class="about-role">Developer</p>
-        <p>Diet goals and body progress tracking</p>
+        <p>Diet plans and body progress tracking.</p>
         <p class="about-links"><a href="https://www.linkedin.com/in/anhkhoadao/">Khoa's LinkedIn</a><a href="https://github.com/itzkhoadao">Khoa's GitHub</a></p>
       </article>
       <article class="about-card">
         <img src="images/hienpahm.png" alt="Portrait of Pham Doan Gia Hien">
         <h3>Pham Doan Gia Hien</h3>
         <p class="about-role">Developer</p>
-        <p>Training sessions and meetings, day schedules, and inactive-client monitoring</p>
+        <p>Training schedules, advanced scheduling, and client monitoring.</p>
         <p class="about-links"><a href="https://github.com/HienPahm">Hien's GitHub</a></p>
       </article>
       <article class="about-card">
         <img src="images/fikoww.png" alt="Portrait of Frederico Samuel Halim">
         <h3>Frederico Samuel Halim</h3>
         <p class="about-role">Developer</p>
-        <p>Workout session logging, workout history and corrections, and undo/redo</p>
+        <p>Workout logging, workout history, and undo/redo.</p>
         <p class="about-links"><a href="https://github.com/fikoww">Frederico's GitHub</a></p>
       </article>
       <article class="about-card">
         <img src="images/zkw2004.png" alt="Portrait of Zhang Kaiwen">
         <h3>Zhang Kaiwen</h3>
         <p class="about-role">Developer</p>
-        <p>Client details and search, fitness goals, health considerations, dietary restrictions, and desktop UI design and implementation</p>
+        <p>Client details and search, fitness goals, health considerations, dietary restrictions, and desktop UI.</p>
         <p class="about-links"><a href="https://www.linkedin.com/in/zhang-kaiwen2004/">Kaiwen's LinkedIn</a><a href="https://github.com/zkw2004">Kaiwen's GitHub</a></p>
       </article>
     </div>
