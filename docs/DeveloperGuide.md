@@ -16,6 +16,10 @@ guide: true
 - The interface bundles the [Manrope](https://github.com/sharanda/manrope) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) fonts under the SIL Open Font License; their licence files are in `src/main/resources/fonts/`.
 - Architecture and design diagrams were created with [PlantUML](https://plantuml.com/).
 
+### Notable uses of AI
+
+- @HienPahm used OpenAI ChatGPT/Codex extensively to generate and revise implementation code, regression tests, documentation and diagrams; investigate bugs and resolve conflicts; review teammates' pull requests; run automated and manual checks; and prepare release materials.
+
 ---
 
 ## **Setting up, getting started**
