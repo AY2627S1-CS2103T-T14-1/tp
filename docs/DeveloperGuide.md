@@ -18,7 +18,21 @@ guide: true
 
 ### Notable uses of AI
 
-- @HienPahm used OpenAI ChatGPT/Codex extensively to generate and revise implementation code, regression tests, documentation and diagrams; investigate bugs and resolve conflicts; review teammates' pull requests; run automated and manual checks; and prepare release materials.
+#### Pham Doan Gia Hien (@HienPahm)
+
+Pham Doan Gia Hien ([@HienPahm](https://github.com/HienPahm)) used **OpenAI ChatGPT/Codex extensively** during development of Fittix. AI assistance covered substantial parts of implementation, testing, documentation, review and release preparation. This describes the extent of assistance; it is not a measured percentage of AI-generated source lines.
+
+AI assisted with:
+
+- **Scheduling and client monitoring:** generating and refining training-session and meeting models, command handling and parsing, date/time and location validation, client schedule views, daily appointment lists, inactivity queries, and shared appointment start-time conflict checks.
+- **Persistence and compatibility:** implementing and checking saved appointment types, compatibility with older saved records, preservation of schedules during unrelated client updates, and recovery behavior when saving fails.
+- **Testing and debugging:** generating and expanding JUnit tests for models, parsers, commands, storage and UI behavior; investigating reported bugs and regressions; and adding integration coverage for filtered indexes, JSON reloads, failed-save recovery, and undo/redo history.
+- **Manual and release testing:** preparing and executing command-based UI checks with synthetic data, checking persistence after restart, validating published JAR checksums, and running automated tests, style checks and packaged builds. Verification was limited to the environments and workflows recorded in the relevant reviews and test reports.
+- **Documentation and diagrams:** drafting and revising feature specifications, the User Guide, Developer Guide, README, About Us responsibilities, command examples, manual-testing instructions and model diagrams; checking rendered documentation and navigation.
+- **Pull-request reviews:** analysing teammates' code and documentation changes, identifying potential defects, preparing review comments, testing fixes and submitting reviews through GitHub. AI also assisted with authorized merges earlier in the project.
+- **Development workflow and releases:** interpreting task-delegation notes, planning changes, resolving merge conflicts, preparing commits, branches and pull requests, and preparing the v1.4 release and release notes.
+
+This declaration describes Hien's use of AI, not other team members' use. Hien remains responsible for understanding, reviewing and validating his contributions and submitted deliverables, including work generated or refined with AI assistance.
 
 ---
 
