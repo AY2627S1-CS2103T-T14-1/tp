@@ -150,44 +150,44 @@ public class ParserUtilTest {
     }
 
     @Test
-    public void parseAddressForAdd_null_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> ParserUtil.parseAddressForAdd(null));
+    public void parseAddressForInput_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseAddressForInput(null));
     }
 
     @Test
-    public void parseAddressForAdd_blankAddress_retainsExistingValidation() {
+    public void parseAddressForInput_blankAddress_retainsExistingValidation() {
         for (String address : List.of("", " ", WHITESPACE)) {
             assertThrows(ParseException.class, Address.MESSAGE_CONSTRAINTS, () ->
-                    ParserUtil.parseAddressForAdd(address));
+                    ParserUtil.parseAddressForInput(address));
         }
     }
 
     @Test
-    public void parseAddressForAdd_lengthBoundaries_returnsAddressOrRejectsOverflow() throws Exception {
+    public void parseAddressForInput_lengthBoundaries_returnsAddressOrRejectsOverflow() throws Exception {
         for (int length : List.of(1, 199, 200)) {
             String address = "A".repeat(length);
-            assertEquals(new Address(address), ParserUtil.parseAddressForAdd(address));
+            assertEquals(new Address(address), ParserUtil.parseAddressForInput(address));
         }
-        assertThrows(ParseException.class, ParserUtil.MESSAGE_ADD_ADDRESS_CONSTRAINTS, () ->
-                ParserUtil.parseAddressForAdd("A".repeat(201)));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_ADDRESS_INPUT_CONSTRAINTS, () ->
+                ParserUtil.parseAddressForInput("A".repeat(201)));
     }
 
     @Test
-    public void parseAddressForAdd_outerWhitespaceExcluded_preservesInternalSpacingAndCase() throws Exception {
+    public void parseAddressForInput_outerWhitespaceExcluded_preservesInternalSpacingAndCase() throws Exception {
         String address = "Mixed  Case " + "A".repeat(188);
         assertEquals(200, address.length());
-        assertEquals(new Address(address), ParserUtil.parseAddressForAdd(WHITESPACE + address + WHITESPACE));
-        assertThrows(ParseException.class, ParserUtil.MESSAGE_ADD_ADDRESS_CONSTRAINTS, () ->
-                ParserUtil.parseAddressForAdd("  " + address + "A  "));
+        assertEquals(new Address(address), ParserUtil.parseAddressForInput(WHITESPACE + address + WHITESPACE));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_ADDRESS_INPUT_CONSTRAINTS, () ->
+                ParserUtil.parseAddressForInput("  " + address + "A  "));
     }
 
     @Test
-    public void parseAddressForAdd_supplementaryCharacters_countsUnicodeCodePoints() throws Exception {
+    public void parseAddressForInput_supplementaryCharacters_countsUnicodeCodePoints() throws Exception {
         String character = "\uD83C\uDFE0";
         String address = character.repeat(200);
-        assertEquals(new Address(address), ParserUtil.parseAddressForAdd(address));
-        assertThrows(ParseException.class, ParserUtil.MESSAGE_ADD_ADDRESS_CONSTRAINTS, () ->
-                ParserUtil.parseAddressForAdd(address + character));
+        assertEquals(new Address(address), ParserUtil.parseAddressForInput(address));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_ADDRESS_INPUT_CONSTRAINTS, () ->
+                ParserUtil.parseAddressForInput(address + character));
     }
 
     @Test

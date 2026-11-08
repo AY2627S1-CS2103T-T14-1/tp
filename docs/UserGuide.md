@@ -151,7 +151,7 @@ Fittix stores appointment start times, not durations. Conflict detection checks 
 
 ### Editing a client: `edit`
 
-Edits an existing client in Fittix.
+Edits an existing client in Fittix. New address values follow the same 200-Unicode-code-point limit as `add`; existing longer saved addresses remain readable.
 
 Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [g/GOAL] [t/TAG]…​`
 

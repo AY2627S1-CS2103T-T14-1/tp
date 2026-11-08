@@ -52,7 +52,7 @@ public class StringUtil {
         String preppedKeyword = keyword.strip();
         checkArgument(!preppedKeyword.isEmpty(), "Word parameter cannot be empty");
 
-        return sentence.toLowerCase(Locale.ROOT).contains(preppedKeyword.toLowerCase(Locale.ROOT));
+        return foldCaseForSearch(sentence).contains(foldCaseForSearch(preppedKeyword));
     }
 
     /**

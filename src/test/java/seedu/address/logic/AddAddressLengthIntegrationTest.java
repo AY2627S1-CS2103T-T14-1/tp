@@ -100,11 +100,13 @@ public class AddAddressLengthIntegrationTest {
     }
 
     @Test
-    public void execute_editOversizedAddress_retainsExistingEditContract() throws Exception {
+    public void execute_editOversizedAddress_rejectedWithoutChangingSavedData() throws Exception {
         logic.execute(ADD_ALICE + "1 Alpha Road");
         String address = "E".repeat(201);
-        logic.execute("edit 1 a/" + address);
-        assertEquals(address, model.getAddressBook().getPersonList().get(0).getAddress().value);
+        String saved = Files.readString(dataFile);
+        assertThrows(ParseException.class, LENGTH_ERROR, () -> logic.execute("edit 1 a/" + address));
+        assertEquals("1 Alpha Road", model.getAddressBook().getPersonList().get(0).getAddress().value);
+        assertEquals(saved, Files.readString(dataFile));
         assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
     }
 

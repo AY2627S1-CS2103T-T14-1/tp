@@ -31,8 +31,8 @@ import seedu.address.model.tag.Tag;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
-    public static final int MAX_ADD_ADDRESS_LENGTH = 200;
-    public static final String MESSAGE_ADD_ADDRESS_CONSTRAINTS =
+    public static final int MAX_ADDRESS_LENGTH = 200;
+    public static final String MESSAGE_ADDRESS_INPUT_CONSTRAINTS =
             "Address must contain 1 to 200 printable characters without line breaks.";
     private static final Pattern UNKNOWN_PREFIX_TOKEN = Pattern.compile("[A-Za-z]{1,2}/.*|[A-Za-z]{3,}/[^A-Za-z]*");
 
@@ -111,16 +111,16 @@ public class ParserUtil {
     }
 
     /**
-     * Parses an address supplied to {@code add}, limiting its trimmed value to 200 Unicode code points.
-     * The existing address parser remains unrestricted in length for edit and legacy-data compatibility.
+     * Parses an address supplied to {@code add} or {@code edit}, limiting its trimmed value to 200 Unicode code points.
+     * Stored legacy addresses remain unrestricted in length for loading compatibility.
      *
-     * @throws ParseException if the address is invalid or exceeds the add-command length limit.
+     * @throws ParseException if the address is invalid or exceeds the command-input length limit.
      */
-    public static Address parseAddressForAdd(String address) throws ParseException {
+    public static Address parseAddressForInput(String address) throws ParseException {
         Address parsedAddress = parseAddress(address);
         String value = parsedAddress.value;
-        if (value.codePointCount(0, value.length()) > MAX_ADD_ADDRESS_LENGTH) {
-            throw new ParseException(MESSAGE_ADD_ADDRESS_CONSTRAINTS);
+        if (value.codePointCount(0, value.length()) > MAX_ADDRESS_LENGTH) {
+            throw new ParseException(MESSAGE_ADDRESS_INPUT_CONSTRAINTS);
         }
         return parsedAddress;
     }
