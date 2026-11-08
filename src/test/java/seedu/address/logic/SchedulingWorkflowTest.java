@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,17 @@ public class SchedulingWorkflowTest {
         storage.saveAddressBook(book);
         logic = new LogicManager(model, new StorageManager(storage,
                 new JsonUserPrefsStorage(directory.resolve("preferences.json"))));
+    }
+
+    @Test
+    public void legacyExpandedYearAppointment_remainsReadableAfterInputValidationChange() throws Exception {
+        Person first = model.getAddressBook().getPersonList().getFirst();
+        LocalDateTime legacyTime = LocalDateTime.of(10000, 1, 1, 10, 0);
+        model.setPerson(first, first.withTrainingSession(
+                new seedu.address.model.person.TrainingSession(legacyTime, "Legacy gym")));
+        storage.saveAddressBook(model.getAddressBook());
+        assertEquals(legacyTime, storage.readAddressBook().orElseThrow().getPersonList().getFirst()
+                .getTrainingSessions().getFirst().getDateTime());
     }
 
     @Test

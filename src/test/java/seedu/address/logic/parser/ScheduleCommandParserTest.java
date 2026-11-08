@@ -25,12 +25,14 @@ public class ScheduleCommandParserTest {
 
     @Test
     public void parse_invalidDateTimeAndLocation_failure() {
-        String message = "Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.";
-        assertParseFailure(parser, "1 d/2099-02-30 tm/14:30 l/Gym", message);
-        assertParseFailure(parser, "1 d/2099-03-15 tm/25:30 l/Gym", message);
-        assertParseFailure(parser, "1 d/2099-03-15 tm/14:30 l/", message);
-        assertParseFailure(parser, "1 d/2099-03-15 tm/14:30 l/\u00a0\u00a0\u00a0", message);
-        assertParseFailure(parser, "1 d/2099-03-15 tm/14:30", message);
+        String dateMessage = "Invalid date: use a real date in YYYY-MM-DD format (year 0001 to 9999).";
+        String timeMessage = "Invalid time: use HH:mm in the range 00:00 to 23:59.";
+        String locationMessage = "Location must not be blank.";
+        assertParseFailure(parser, "1 d/2099-02-30 tm/14:30 l/Gym", dateMessage);
+        assertParseFailure(parser, "1 d/2099-03-15 tm/25:30 l/Gym", timeMessage);
+        assertParseFailure(parser, "1 d/2099-03-15 tm/14:30 l/", locationMessage);
+        assertParseFailure(parser, "1 d/2099-03-15 tm/14:30 l/\u00a0\u00a0\u00a0", locationMessage);
+        assertParseFailure(parser, "1 d/2099-03-15 tm/14:30", locationMessage);
         assertParseFailure(parser, "1 d/2000-01-01 tm/14:30 l/Gym", "Training sessions must be in the future.");
     }
 

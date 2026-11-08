@@ -28,6 +28,23 @@ public class AdvancedSchedulingCommandTest {
     private static final LocalDateTime APPOINTMENT_TIME = LocalDateTime.of(2099, 3, 15, 14, 30);
 
     @Test
+    public void inactive_nonAlphabeticalRoster_doesNotInventActionableIndexes() {
+        Model model = new ModelManager();
+        model.addPerson(new PersonBuilder().withName("Zoe").build());
+        model.addPerson(new PersonBuilder().withName("Alice").build());
+        model.addPerson(new PersonBuilder().withName("Mark").build());
+        model.updateFilteredPersonList(person -> person.getName().fullName.equals("Zoe"));
+        List<Person> previousView = List.copyOf(model.getFilteredPersonList());
+        String result = new InactiveCommand(14).execute(model).getFeedbackToUser();
+        assertEquals("Clients without a recorded workout in the last 14 days:"
+                + "\nNames below are not client-list indexes; use list or find before an indexed command."
+                + "\n- Alice — last workout: never recorded"
+                + "\n- Mark — last workout: never recorded"
+                + "\n- Zoe — last workout: never recorded", result);
+        assertEquals(previousView, model.getFilteredPersonList());
+    }
+
+    @Test
     public void meeting_andDaySchedule_showBothAppointmentTypes() throws Exception {
         Model model = modelWithClients();
         new MeetingCommand(Index.fromOneBased(1), new TrainingSession(APPOINTMENT_TIME, "Cafe", Kind.MEETING))
@@ -68,16 +85,18 @@ public class AdvancedSchedulingCommandTest {
         model.setPerson(bob, new PersonBuilder(bob)
                 .withWorkoutSessions(List.of(workout(LocalDate.now().minusDays(14)))).build());
 
-        assertEquals("Clients without a recorded workout in the last 14 days:\n"
-                        + "1. Bob Cat — last workout: " + LocalDate.now().minusDays(14),
+        assertEquals("Clients without a recorded workout in the last 14 days:"
+                        + "\nNames below are not client-list indexes; use list or find before an indexed command.\n"
+                        + "- Bob Cat — last workout: " + LocalDate.now().minusDays(14),
                 new InactiveCommand(14).execute(model).getFeedbackToUser());
     }
 
     @Test
     public void inactive_noClientsHaveWorkout_listsNeverRecorded() {
-        assertEquals("Clients without a recorded workout in the last 7 days:\n"
-                        + "1. Amy Bee — last workout: never recorded\n"
-                        + "2. Bob Cat — last workout: never recorded",
+        assertEquals("Clients without a recorded workout in the last 7 days:"
+                        + "\nNames below are not client-list indexes; use list or find before an indexed command.\n"
+                        + "- Amy Bee — last workout: never recorded\n"
+                        + "- Bob Cat — last workout: never recorded",
                 new InactiveCommand(7).execute(modelWithClients()).getFeedbackToUser());
     }
 

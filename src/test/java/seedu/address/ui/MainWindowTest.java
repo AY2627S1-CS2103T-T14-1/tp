@@ -75,6 +75,33 @@ public class MainWindowTest {
     }
 
     @Test
+    public void meeting_selectsAffectedClientAndRestoresSelectionOnFailure() throws Exception {
+        runOnFxThread(() -> {
+            Model model = new ModelManager();
+            model.addPerson(new PersonBuilder().withName("Alice Lee").build());
+            model.addPerson(new PersonBuilder().withName("Bob Tan").build());
+            JsonAddressBookStorage data = new JsonAddressBookStorage(temporaryFolder.resolve("meeting.json"));
+            Logic logic = new LogicManager(model, new StorageManager(data,
+                    new JsonUserPrefsStorage(temporaryFolder.resolve("meetingPrefs.json"))));
+            MainWindow window = new MainWindow(new Stage(), logic, data.getAddressBookFilePath());
+            window.fillInnerParts();
+            window.openTerminal();
+            try {
+                window.getPersonListPanel().selectDisplayedIndex(0);
+                execute(window.getPrimaryStage().getScene(), "meeting 2 d/2099-03-15 tm/14:30 l/Cafe");
+                assertEquals(1, window.getPersonListPanel().getSelectedIndex());
+                assertEquals("Bob Tan", window.getPersonListPanel().getSelectedPerson().getName().fullName);
+                assertEquals(1, window.getPersonListPanel().getSelectedPerson().getTrainingSessions().size());
+                execute(window.getPrimaryStage().getScene(), "meeting 1 d/2099-02-30 tm/14:30 l/Cafe");
+                assertEquals(1, window.getPersonListPanel().getSelectedIndex());
+            } finally {
+                window.getPrimaryStage().hide();
+            }
+            return null;
+        });
+    }
+
+    @Test
     public void payCommand_keepsTargetSelectedAndRefreshesPaymentRows() throws Exception {
         runOnFxThread(() -> {
             Model model = new ModelManager();

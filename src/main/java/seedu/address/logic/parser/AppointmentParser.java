@@ -19,6 +19,10 @@ import seedu.address.model.person.TrainingSession.Kind;
 
 /** Parses the common index, date, time and location arguments for an appointment. */
 final class AppointmentParser {
+    private static final String MESSAGE_DATE =
+            "Invalid date: use a real date in YYYY-MM-DD format (year 0001 to 9999).";
+    private static final String MESSAGE_TIME = "Invalid time: use HH:mm in the range 00:00 to 23:59.";
+    private static final String MESSAGE_LOCATION = "Location must not be blank.";
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm")
             .withResolverStyle(ResolverStyle.STRICT);
 
@@ -37,15 +41,37 @@ final class AppointmentParser {
         String date = arguments.getValue(PREFIX_DATE).orElse("");
         String time = arguments.getValue(PREFIX_TIME).orElse("");
         String location = arguments.getValue(PREFIX_LOCATION).orElse("");
+        LocalDate parsedDate = parseDate(date);
+        LocalTime parsedTime;
         try {
-            LocalDateTime dateTime = LocalDateTime.of(LocalDate.parse(date), LocalTime.parse(time, TIME_FORMAT));
-            if (!dateTime.isAfter(LocalDateTime.now())) {
-                String type = kind == Kind.TRAINING ? "Training sessions" : "Meetings";
-                throw new ParseException(type + " must be in the future.");
+            parsedTime = LocalTime.parse(time, TIME_FORMAT);
+        } catch (DateTimeParseException exception) {
+            throw new ParseException(MESSAGE_TIME);
+        }
+        if (location.codePoints().allMatch(character -> Character.isWhitespace(character)
+                || Character.isSpaceChar(character))) {
+            throw new ParseException(MESSAGE_LOCATION);
+        }
+        LocalDateTime dateTime = LocalDateTime.of(parsedDate, parsedTime);
+        if (!dateTime.isAfter(LocalDateTime.now())) {
+            String type = kind == Kind.TRAINING ? "Training sessions" : "Meetings";
+            throw new ParseException(type + " must be in the future.");
+        }
+        return new Appointment(index, new TrainingSession(dateTime, location, kind));
+    }
+
+    private static LocalDate parseDate(String date) throws ParseException {
+        if (!date.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")) {
+            throw new ParseException(MESSAGE_DATE);
+        }
+        try {
+            LocalDate result = LocalDate.parse(date);
+            if (result.getYear() < 1) {
+                throw new ParseException(MESSAGE_DATE);
             }
-            return new Appointment(index, new TrainingSession(dateTime, location, kind));
-        } catch (DateTimeParseException | IllegalArgumentException exception) {
-            throw new ParseException("Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.");
+            return result;
+        } catch (DateTimeParseException exception) {
+            throw new ParseException(MESSAGE_DATE);
         }
     }
 

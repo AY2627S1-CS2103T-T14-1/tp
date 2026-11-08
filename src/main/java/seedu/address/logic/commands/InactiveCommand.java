@@ -36,11 +36,12 @@ public class InactiveCommand extends Command {
             return new CommandResult("All clients have a recorded workout in the last " + days + " days.");
         }
         StringBuilder result = new StringBuilder("Clients without a recorded workout in the last " + days + " days:");
+        result.append("\nNames below are not client-list indexes; use list or find before an indexed command.");
         for (int i = 0; i < inactive.size(); i++) {
             Person person = inactive.get(i);
             Optional<LocalDate> latest = person.getWorkoutSessions().stream()
                     .map(WorkoutSession::getDate).max(LocalDate::compareTo);
-            result.append("\n").append(i + 1).append(". ").append(person.getName())
+            result.append("\n- ").append(person.getName())
                     .append(" — last workout: ").append(latest.map(LocalDate::toString).orElse("never recorded"));
         }
         return new CommandResult(result.toString());

@@ -111,7 +111,9 @@ Adds a future training session to the client at the displayed index. Sessions ar
 
 Format: `schedule INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
 
-The date and 24-hour time must be valid and in the future, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client. Fittix rejects an appointment when any client, including the selected client, already has a training session or meeting at the same start time.
+Use a real date in exact `YYYY-MM-DD` format (years 0001 to 9999) and zero-padded 24-hour time `HH:mm` (00:00 to 23:59). The appointment must be in the future, and the location must not be blank. The index refers to the current client list. For example, `schedule 1 d/2099-03-15 tm/14:30 l/Main gym` schedules a session for the first listed client. Fittix rejects an appointment when any client, including the selected client, already has a training session or meeting at the same start time.
+
+Invalid appointment input identifies the affected field: date, time or location. For example, `tm/9:00` must be corrected to `tm/09:00`.
 
 ### Viewing a client's training sessions: `viewschedule`
 
@@ -129,7 +131,7 @@ Format: `meeting INDEX d/YYYY-MM-DD tm/HH:mm l/LOCATION`
 
 Example: `meeting 1 d/2099-03-15 tm/14:30 l/Cafe`
 
-The meeting appears in `viewschedule` and `dayschedule`. The selected client's Schedule card identifies a meeting as a **Next meeting**, **Upcoming meeting**, or **Past meeting**. A meeting cannot use a start time already occupied by any client's training session or meeting.
+After a successful meeting command, the affected client is selected so the new meeting is immediately visible. The meeting appears in `viewschedule` and `dayschedule`. The selected client's Schedule card identifies a meeting as a **Next meeting**, **Upcoming meeting**, or **Past meeting**. A meeting cannot use a start time already occupied by any client's training session or meeting.
 
 ### Viewing all appointments on a day: `dayschedule`
 
@@ -141,7 +143,7 @@ Example: `dayschedule d/2099-03-15`
 
 ### Finding clients who have not trained recently: `inactive`
 
-Lists clients without a **recorded completed workout** in the last `DAYS` calendar days, including today. Clients with no recorded workout are included. Scheduled appointments alone do not count as completed workouts. The command checks the full client roster.
+Lists clients without a **recorded completed workout** in the last `DAYS` calendar days, including today. Clients with no recorded workout are included. Scheduled appointments alone do not count as completed workouts. The command checks the full client roster. Results are alphabetical bullet points, not client-list indexes; your displayed list and filter stay unchanged. Use `list` or `find` to locate a client before entering an indexed command.
 
 Format: `inactive DAYS` (a positive whole number)
 

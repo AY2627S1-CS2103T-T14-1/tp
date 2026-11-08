@@ -28,7 +28,7 @@ public class AdvancedSchedulingCommandParserTest {
                         new TrainingSession(LocalDateTime.of(2099, 3, 15, 14, 30), "Cafe", Kind.MEETING)));
         assertParseFailure(parser, "1 d/2000-01-01 tm/14:30 l/Cafe", "Meetings must be in the future.");
         assertParseFailure(parser, "1 d/2099-03-15 tm/14:30 l/",
-                "Use a valid date (YYYY-MM-DD), time (HH:mm) and non-empty location.");
+                "Location must not be blank.");
     }
 
     @Test

@@ -62,7 +62,7 @@ public class MainWindow extends UiPart<Stage> {
             DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale.ENGLISH);
     private static final DateTimeFormatter CLOCK_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
     private static final Set<String> INDEX_COMMANDS = Set.of(
-            "edit", "delete", "diet", "remark", "schedule", "viewschedule",
+            "edit", "delete", "diet", "remark", "schedule", "meeting", "viewschedule",
             "addex", "delex", "clearplan", "dayex", "log", "editlog", "history", PayCommand.COMMAND_WORD,
             DietaryRestrictionsCommand.COMMAND_WORD, HealthCommand.COMMAND_WORD);
     private static final Set<String> RESET_FILTER_COMMANDS = Set.of(
